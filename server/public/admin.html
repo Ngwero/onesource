@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>One Source — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Gabarito:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232e5e4a'/%3E%3Cpath fill='%23f0c947' d='M8 22V10h4.2l3.4 7.2L19 10h4v12h-3.4V14l-3.8 8H15l-3.8-8v8z'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/admin-theme.css" />
+</head>
+<body>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo">
+          <span class="brand-mark" aria-hidden="true">OS</span>
+          <div class="brand-copy">
+            <span class="brand-text-logo">One <span>Source</span></span>
+            <span class="brand-tag">Admin Console</span>
+          </div>
+        </div>
+        <p class="brand-desc">Catalogue, inventory, storefront & fulfilment.</p>
+      </div>
+      <nav class="nav" aria-label="Admin navigation">
+        <div class="nav-label">Overview</div>
+        <button type="button" class="nav-btn active" data-view="dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          Dashboard
+        </button>
+        <button type="button" class="nav-btn" data-view="analytics">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 5 5-9"/></svg>
+          Analytics
+        </button>
+        <div class="nav-label">Catalogue</div>
+        <button type="button" class="nav-btn" data-view="products">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Products
+          <span class="nav-badge" id="navProductsCount">—</span>
+        </button>
+        <button type="button" class="nav-btn" data-view="inventory">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+          Inventory
+        </button>
+        <button type="button" class="nav-btn" data-view="catalog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+          Categories
+        </button>
+        <div class="nav-label">Storefront</div>
+        <button type="button" class="nav-btn" data-view="categories">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          Category banners
+        </button>
+        <button type="button" class="nav-btn" data-view="hero">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          Hero carousel
+        </button>
+        <div class="nav-label">Sales</div>
+        <button type="button" class="nav-btn" data-view="orders">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+          Orders
+          <span class="nav-badge" id="navOrdersBadge" style="display:none">0</span>
+        </button>
+        <button type="button" class="nav-btn" data-view="customers">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Customers
+        </button>
+        <div class="nav-label">System</div>
+        <button type="button" class="nav-btn" data-view="settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Settings
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="http://localhost:5173" data-shop-link target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Open storefront
+        </a>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button type="button" class="menu-toggle" id="menuToggle" aria-label="Open menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div class="topbar-titles">
+            <p class="topbar-eyebrow">One Source</p>
+            <h1 id="pageTitle">Dashboard</h1>
+            <p class="topbar-meta" id="topbarMeta">Loading…</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="status-pill" id="apiStatus">
+            <span class="status-dot"></span>
+            <span id="apiStatusText">Checking API…</span>
+          </span>
+          <button type="button" class="btn btn-secondary btn-icon-label" id="exportCsvBtn" title="Export filtered products">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span>Export</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-icon-label" id="refreshBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span>Refresh</span>
+          </button>
+          <button type="button" class="btn btn-primary btn-icon-label" id="addProductBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add product</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="alert-banner" id="errorBanner"></div>
+
+        <section class="view active" id="view-dashboard">
+          <div class="stats-grid" id="dashStats"></div>
+          <div class="panel" style="margin-bottom:1.25rem">
+            <div class="panel-head"><h2>Quick actions</h2></div>
+            <div class="quick-links" id="dashQuickLinks"></div>
+          </div>
+          <div class="dash-charts-grid">
+            <div class="panel chart-panel">
+              <div class="panel-head">
+                <h2>Catalogue mix</h2>
+                <p class="panel-desc">Products by category</p>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartCategoryPie" aria-label="Products by category pie chart"></canvas>
+                <p class="chart-empty" id="chartCategoryPieEmpty" hidden>No products in catalogue yet</p>
+              </div>
+            </div>
+            <div class="panel chart-panel">
+              <div class="panel-head">
+                <h2>Stock health</h2>
+                <p class="panel-desc">In stock, low &amp; out of stock</p>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartStockPie" aria-label="Stock health pie chart"></canvas>
+              </div>
+            </div>
+            <div class="panel chart-panel">
+              <div class="panel-head">
+                <h2>Orders</h2>
+                <p class="panel-desc">Breakdown by status</p>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartOrdersPie" aria-label="Orders by status pie chart"></canvas>
+                <p class="chart-empty" id="chartOrdersPieEmpty" hidden>No orders yet</p>
+              </div>
+            </div>
+          </div>
+          <div class="dash-grid">
+            <div class="panel">
+              <div class="panel-head"><h2>Products by category</h2></div>
+              <div class="bar-chart" id="categoryChart"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>Needs attention</h2></div>
+              <div class="panel-body" id="attentionList"></div>
+            </div>
+          </div>
+          <div class="dash-grid" style="margin-top:1.25rem">
+            <div class="panel">
+              <div class="panel-head">
+                <h2>Recent orders</h2>
+                <button type="button" class="btn btn-ghost btn-sm" data-view="orders">View all →</button>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr></thead>
+                  <tbody id="dashRecentOrders"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <h2>Recently updated products</h2>
+                <button type="button" class="btn btn-ghost btn-sm" data-view="products">View all →</button>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead><tr><th>Product</th><th>Category</th><th>Stock</th><th></th></tr></thead>
+                  <tbody id="recentTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-analytics">
+          <div class="stats-grid" id="analyticsStats"></div>
+          <div class="dash-grid">
+            <div class="panel">
+              <div class="panel-head"><h2>Orders by status</h2></div>
+              <div class="bar-chart" id="ordersStatusChart"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>Top categories (products)</h2></div>
+              <div class="bar-chart" id="analyticsCategoryChart"></div>
+            </div>
+          </div>
+          <div class="panel" style="margin-top:1.25rem">
+            <div class="panel-head"><h2>Best sellers (from orders)</h2></div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Product</th><th>Units sold</th><th>Revenue</th></tr></thead>
+                <tbody id="topSellersTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-products">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Product catalogue</h2>
+              <div class="toolbar">
+                <div class="search-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="search" id="searchProducts" placeholder="Search title, ID, category…" />
+                </div>
+                <select class="filter-select" id="filterCategory"><option value="">All categories</option></select>
+                <select class="filter-select" id="filterStock">
+                  <option value="">All stock</option>
+                  <option value="in">In stock</option>
+                  <option value="low">Low (≤10)</option>
+                  <option value="out">Out of stock</option>
+                </select>
+                <select class="filter-select" id="filterPrime">
+                  <option value="">Prime: any</option>
+                  <option value="yes">Prime only</option>
+                  <option value="no">Non-prime</option>
+                </select>
+                <select class="filter-select" id="filterSale">
+                  <option value="">Deals: any</option>
+                  <option value="yes">On sale</option>
+                </select>
+                <select class="filter-select" id="productsPageSize">
+                  <option value="25">25 / page</option>
+                  <option value="50" selected>50 / page</option>
+                  <option value="100">100 / page</option>
+                </select>
+              </div>
+            </div>
+            <div class="bulk-bar" id="bulkBar">
+              <span id="bulkCount">0 selected</span>
+              <input type="number" id="bulkStockValue" min="0" value="50" style="width:72px;padding:0.35rem 0.5rem;border:1px solid var(--border);border-radius:6px" />
+              <button type="button" class="btn btn-secondary btn-sm" id="bulkSetStockBtn">Set stock</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="bulkClearBtn">Clear selection</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width:36px"><input type="checkbox" id="selectAllProducts" title="Select all on page" /></th>
+                    <th class="sortable" data-sort="title">Product <span class="sort-ind">↕</span></th>
+                    <th class="sortable" data-sort="category">Category <span class="sort-ind">↕</span></th>
+                    <th class="sortable" data-sort="price">Price <span class="sort-ind">↕</span></th>
+                    <th>Was</th>
+                    <th class="sortable" data-sort="rating">Rating <span class="sort-ind">↕</span></th>
+                    <th class="sortable" data-sort="stockQuantity">Stock <span class="sort-ind">↕</span></th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="productsTable"></tbody>
+              </table>
+            </div>
+            <div class="table-foot">
+              <span id="productsTableMeta">—</span>
+              <div class="pagination" id="productsPagination"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-inventory">
+          <div class="stats-grid" id="invStats"></div>
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Stock management</h2>
+              <div class="toolbar">
+                <div class="search-wrap">
+                  <input type="search" id="searchInventory" placeholder="Filter inventory…" />
+                </div>
+                <select class="filter-select" id="filterInvStock">
+                  <option value="">All</option>
+                  <option value="low">Low stock</option>
+                  <option value="out">Out of stock</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Adjust</th><th>Status</th><th></th></tr></thead>
+                <tbody id="inventoryTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-catalog">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Category catalogue</h2>
+                <p class="panel-desc">Manage visibility, banners, and jump to products per category.</p>
+              </div>
+            </div>
+            <div class="tabs" role="tablist">
+              <button type="button" class="tab-btn active" data-catalog-tab="list">All categories</button>
+              <button type="button" class="tab-btn" data-catalog-tab="banners">Banner images</button>
+            </div>
+            <div class="tab-panel active" id="catalogTabList">
+              <div class="table-wrap">
+                <table class="data-table catalog-table">
+                  <thead>
+                    <tr><th>Category</th><th>Products</th><th>Live on shop</th><th>Banner</th><th>Actions</th></tr>
+                  </thead>
+                  <tbody id="catalogTable"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="tab-panel" id="catalogTabBanners">
+              <div class="banner-editor-grid" id="categoryBannerGrid"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-categories">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Category banner images</h2>
+                <p class="panel-desc">Homepage “Shop by Category” tiles. Upload WebP or paste a URL.</p>
+              </div>
+              <a href="#" data-shop-link target="_blank" rel="noopener" class="btn btn-secondary btn-sm">Preview shop →</a>
+            </div>
+            <div class="banner-editor-grid" id="categoryBannerGridLegacy"></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-hero">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Homepage hero carousel</h2>
+                <p class="panel-desc">Use <code>{{price}}</code> and <code>{{amount}}</code> in subtitles for live currency.</p>
+              </div>
+              <label class="checkbox-field" style="margin:0">
+                <input type="checkbox" id="showInactiveHero" />
+                Show inactive slides
+              </label>
+            </div>
+            <div class="banner-editor-grid" id="heroSlideGrid"></div>
+            <div class="hero-inactive-section" id="heroInactiveSection" style="display:none">
+              <h3>Inactive slides</h3>
+              <div class="banner-editor-grid" id="heroInactiveGrid"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-orders">
+          <div class="stats-grid" id="orderStats"></div>
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Customer orders</h2>
+              <div class="toolbar">
+                <div class="search-wrap">
+                  <input type="search" id="searchOrders" placeholder="Search orders…" />
+                </div>
+                <select class="filter-select" id="filterOrderStatus">
+                  <option value="">All statuses</option>
+                  <option value="placed">Placed</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="out_for_delivery">Out for delivery</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <select class="filter-select" id="ordersPageSize">
+                  <option value="25">25 / page</option>
+                  <option value="50" selected>50 / page</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Order</th><th>Customer</th><th>Location</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr>
+                </thead>
+                <tbody id="ordersTable"></tbody>
+              </table>
+            </div>
+            <div class="table-foot">
+              <span id="ordersTableMeta">—</span>
+              <div class="pagination" id="ordersPagination"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-customers">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Customers</h2>
+              <div class="toolbar">
+                <div class="search-wrap">
+                  <input type="search" id="searchCustomers" placeholder="Search name or email…" />
+                </div>
+              </div>
+            </div>
+            <div class="customer-card-grid" id="customersGrid"></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-settings">
+          <div class="dash-grid">
+            <div class="panel">
+              <div class="panel-head"><h2>Store links</h2></div>
+              <div class="panel-body padded" id="settingsLinks"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>Setup checklist</h2></div>
+              <ul class="setup-list panel-body padded" id="setupChecklist"></ul>
+            </div>
+          </div>
+          <div class="panel" style="margin-top:1.25rem">
+            <div class="panel-head"><h2>Data tools</h2></div>
+            <div class="panel-body padded" style="display:flex;flex-wrap:wrap;gap:0.6rem">
+              <button type="button" class="btn btn-secondary" id="exportAllCsvBtn">Export all products (CSV)</button>
+              <button type="button" class="btn btn-secondary" id="refreshAllBtn">Reload all data</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div>
+        <h2 id="drawerTitle">Add product</h2>
+        <p id="drawerSubtitle">New listing appears on the shop when stock &gt; 0</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-icon" id="closeDrawer" aria-label="Close">✕</button>
+    </div>
+    <form id="productForm" class="drawer-body">
+      <input type="hidden" id="editId" />
+      <div class="form-section">
+        <h3>Identification</h3>
+        <div class="field"><label class="field-label" for="id">Product ID</label><input type="text" id="id" placeholder="Auto-generated if empty" /></div>
+        <div class="field"><label class="field-label" for="title">Title *</label><input type="text" id="title" required /></div>
+        <div class="field"><label class="field-label" for="description">Description *</label><textarea id="description" required></textarea></div>
+      </div>
+      <div class="form-section">
+        <h3>Pricing</h3>
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="price">Price (USh) *</label><input type="number" id="price" step="0.01" min="0" required /></div>
+          <div class="field"><label class="field-label" for="originalPrice">Was price</label><input type="number" id="originalPrice" step="0.01" min="0" /></div>
+        </div>
+        <div class="field"><label class="field-label" for="unit">Unit</label><input type="text" id="unit" value="each" /></div>
+      </div>
+      <div class="form-section">
+        <h3>Inventory</h3>
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="stockQuantity">Stock *</label><input type="number" id="stockQuantity" min="0" value="100" required /></div>
+          <div class="field"><label class="field-label" for="category">Category *</label><select id="category" required></select></div>
+        </div>
+        <div class="field"><label class="field-label" for="delivery">Delivery message</label><input type="text" id="delivery" value="FREE same-day delivery on orders over USh 100,000" /></div>
+        <label class="checkbox-field"><input type="checkbox" id="prime" checked /> Prime eligible</label>
+      </div>
+      <div class="form-section">
+        <h3>Media</h3>
+        <div class="field">
+          <label class="field-label" for="image">Image *</label>
+          <p class="upload-hint">Upload → WebP or paste URL</p>
+          <div class="upload-row">
+            <input type="file" id="imageFile" accept="image/jpeg,image/png,image/webp,image/gif" />
+            <button type="button" class="btn btn-secondary btn-sm" id="uploadProductImageBtn">Upload</button>
+          </div>
+          <input type="text" id="image" required placeholder="/uploads/…" />
+          <img class="img-preview" id="preview" alt="" />
+        </div>
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="rating">Rating</label><input type="number" id="rating" step="0.1" min="0" max="5" value="4.5" /></div>
+          <div class="field"><label class="field-label" for="reviewCount">Reviews</label><input type="number" id="reviewCount" min="0" value="0" /></div>
+        </div>
+      </div>
+    </form>
+    <div class="drawer-foot">
+      <button type="submit" form="productForm" class="btn btn-primary" id="submitBtn">Save product</button>
+      <button type="button" class="btn btn-secondary" id="resetFormBtn">Clear</button>
+      <button type="button" class="btn btn-danger" id="deleteBtn" style="display:none">Delete</button>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="heroDrawer">
+    <div class="drawer-head">
+      <div><h2 id="heroDrawerTitle">Add hero slide</h2><p id="heroDrawerSubtitle"></p></div>
+      <button type="button" class="btn btn-ghost btn-icon" id="closeHeroDrawer" aria-label="Close">✕</button>
+    </div>
+    <form id="heroForm" class="drawer-body">
+      <input type="hidden" id="heroEditId" />
+      <div class="form-section">
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="heroId">Slide ID</label><input type="text" id="heroId" /></div>
+          <div class="field"><label class="field-label" for="heroSortOrder">Sort</label><input type="number" id="heroSortOrder" min="0" value="0" /></div>
+        </div>
+        <label class="checkbox-field"><input type="checkbox" id="heroActive" checked /> Active</label>
+      </div>
+      <div class="form-section">
+        <div class="field">
+          <label class="field-label" for="heroImage">Image *</label>
+          <div class="upload-row">
+            <input type="file" id="heroImageFile" accept="image/*" />
+            <button type="button" class="btn btn-secondary btn-sm" id="uploadHeroImageBtn">Upload</button>
+          </div>
+          <input type="text" id="heroImage" required />
+          <img class="img-preview" id="heroPreview" alt="" />
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="field"><label class="field-label" for="heroBadge">Badge</label><input type="text" id="heroBadge" /></div>
+        <div class="field"><label class="field-label" for="heroTitle">Title *</label><input type="text" id="heroTitle" required /></div>
+        <div class="field"><label class="field-label" for="heroSubtitle">Subtitle</label><textarea id="heroSubtitle"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="heroCta">CTA *</label><input type="text" id="heroCta" value="Shop now" /></div>
+          <div class="field"><label class="field-label" for="heroCtaHref">Link *</label><input type="text" id="heroCtaHref" value="/categories" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="heroCta2">CTA 2</label><input type="text" id="heroCta2" /></div>
+          <div class="field"><label class="field-label" for="heroCta2Href">Link 2</label><input type="text" id="heroCta2Href" /></div>
+        </div>
+      </div>
+    </form>
+    <div class="drawer-foot">
+      <button type="submit" form="heroForm" class="btn btn-primary" id="heroSubmitBtn">Save slide</button>
+      <button type="button" class="btn btn-secondary" id="resetHeroFormBtn">Clear</button>
+      <button type="button" class="btn btn-danger" id="deleteHeroBtn" style="display:none">Remove</button>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="orderDrawer">
+    <div class="drawer-head">
+      <div><h2 id="orderDrawerTitle">Order</h2><p id="orderDrawerSubtitle"></p></div>
+      <button type="button" class="btn btn-ghost btn-icon" id="closeOrderDrawer" aria-label="Close">✕</button>
+    </div>
+    <div class="drawer-body" id="orderDrawerBody"></div>
+    <div class="drawer-foot" style="align-items:flex-end">
+      <div class="field" style="flex:1;margin:0"><label class="field-label" for="orderStatusSelect">Status</label><select id="orderStatusSelect" style="width:100%"></select></div>
+      <button type="button" class="btn btn-primary" id="saveOrderStatusBtn">Save status</button>
+    </div>
+    <p id="orderSaveError" style="display:none;margin:0;padding:0 1.5rem 1rem;font-size:0.8rem;color:var(--danger)"></p>
+  </aside>
+
+  <div class="modal" id="confirmModal">
+    <div class="modal-backdrop" id="confirmBackdrop"></div>
+    <div class="modal-box">
+      <h3 id="confirmTitle">Confirm</h3>
+      <p id="confirmMessage"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="confirmCancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmOk">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+  <script src="/admin/admin.js" defer></script>
+</body>
+</html>

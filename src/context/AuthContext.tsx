@@ -1,0 +1,239 @@
+import i18n from "../i18n";
+import { requestPasswordReset as requestPasswordResetApi } from "../api/client";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { getSupabase, isSupabaseConfigured, type Profile } from "../lib/supabase";
+
+type AuthContextValue = {
+  user: User | null;
+  session: Session | null;
+  profile: Profile | null;
+  loading: boolean;
+  configured: boolean;
+  passwordRecovery: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
+  requestPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (password: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    if (!isSupabaseConfigured) return;
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, created_at, updated_at")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!error && data) {
+      setProfile(data as Profile);
+      return;
+    }
+
+    const { data: userData } = await supabase.auth.getUser();
+    const metaName = userData.user?.user_metadata?.full_name as string | undefined;
+    if (metaName) {
+      setProfile({
+        id: userId,
+        full_name: metaName,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    } else {
+      setProfile(null);
+    }
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (user?.id) await fetchProfile(user.id);
+  }, [user?.id, fetchProfile]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
+    const supabase = getSupabase();
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      if (data.session?.user) {
+        fetchProfile(data.session.user.id).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setPasswordRecovery(true);
+      }
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      if (nextSession?.user) {
+        fetchProfile(nextSession.user.id);
+      } else {
+        setProfile(null);
+        setPasswordRecovery(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [fetchProfile]);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error: error?.message ?? null };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : i18n.t("errors.signInFailed") };
+    }
+  }, []);
+
+  const signUp = useCallback(
+    async (email: string, password: string, fullName: string) => {
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName.trim() },
+          },
+        });
+
+        if (error) {
+          return { error: error.message, needsEmailConfirmation: false };
+        }
+
+        if (data.user?.id) {
+          try {
+            await supabase.from("profiles").upsert({
+              id: data.user.id,
+              full_name: fullName.trim(),
+              updated_at: new Date().toISOString(),
+            });
+          } catch {
+            /* profiles table may not exist yet — auth still succeeds via user_metadata */
+          }
+        }
+
+        if (data.session?.user) {
+          setSession(data.session);
+          setUser(data.session.user);
+          await fetchProfile(data.session.user.id);
+        }
+
+        const needsEmailConfirmation = !data.session;
+        return { error: null, needsEmailConfirmation };
+      } catch (e) {
+        return {
+          error: e instanceof Error ? e.message : i18n.t("errors.signUpFailed"),
+          needsEmailConfirmation: false,
+        };
+      }
+    },
+    [fetchProfile]
+  );
+
+  const requestPasswordReset = useCallback(async (email: string) => {
+    try {
+      const redirectTo = `${window.location.origin}/reset-password`;
+      return await requestPasswordResetApi(email.trim(), redirectTo);
+    } catch (e) {
+      return {
+        error: e instanceof Error ? e.message : i18n.t("errors.passwordResetFailed"),
+      };
+    }
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.updateUser({ password });
+      if (!error) {
+        setPasswordRecovery(false);
+      }
+      return { error: error?.message ?? null };
+    } catch (e) {
+      return {
+        error: e instanceof Error ? e.message : i18n.t("errors.passwordUpdateFailed"),
+      };
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    const supabase = getSupabase();
+    await supabase.auth.signOut();
+    setProfile(null);
+    setPasswordRecovery(false);
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      user,
+      session,
+      profile,
+      loading,
+      configured: isSupabaseConfigured,
+      passwordRecovery,
+      signIn,
+      signUp,
+      requestPasswordReset,
+      updatePassword,
+      signOut,
+      refreshProfile,
+    }),
+    [
+      user,
+      session,
+      profile,
+      loading,
+      passwordRecovery,
+      signIn,
+      signUp,
+      requestPasswordReset,
+      updatePassword,
+      signOut,
+      refreshProfile,
+    ]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}
