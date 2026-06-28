@@ -78,8 +78,16 @@ app.get(["/admin", "/admin/"], (_req, res) => {
 });
 app.use("/admin", express.static(adminDir));
 
-app.get("/", (_req, res) => {
-  res.redirect("/admin");
+// Serve the built Vite frontend from the repo root dist/ directory.
+// In production the frontend is built before the server starts, so
+// Express handles both the API and the static SPA on a single port.
+const distDir = path.join(__dirname, "..", "dist");
+app.use(express.static(distDir));
+
+// SPA fallback: any route not matched above returns index.html so that
+// client-side routing (react-router) works on hard refresh / direct URL.
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(distDir, "index.html"));
 });
 
 app.listen(PORT, () => {
