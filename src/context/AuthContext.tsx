@@ -87,6 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabase();
 
     supabase.auth.getSession().then(({ data }) => {
+      const hashType = new URLSearchParams(window.location.hash.replace(/^#/, "")).get(
+        "type"
+      );
+      if (hashType === "recovery") {
+        setPasswordRecovery(true);
+      }
+
       setSession(data.session);
       setUser(data.session?.user ?? null);
       if (data.session?.user) {
@@ -102,13 +109,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "PASSWORD_RECOVERY") {
         setPasswordRecovery(true);
       }
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        const hashType = new URLSearchParams(window.location.hash.replace(/^#/, "")).get(
+          "type"
+        );
+        if (hashType === "recovery") {
+          setPasswordRecovery(true);
+        }
+      }
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       if (nextSession?.user) {
         fetchProfile(nextSession.user.id);
       } else {
         setProfile(null);
-        setPasswordRecovery(false);
+        const onResetPage = window.location.pathname === "/reset-password";
+        if (!onResetPage) {
+          setPasswordRecovery(false);
+        }
       }
     });
 
@@ -230,7 +248,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const supabase = getSupabase();
       const { error } = await supabase.auth.updateUser({ password });
       if (!error) {
-        setPasswordRecovery(false);
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        if (window.location.hash) {
+          window.history.replaceState(null, "", window.location.pathname);
+        }
       }
       return { error: error?.message ?? null };
     } catch (e) {

@@ -12,20 +12,18 @@ export function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [completed, setCompleted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (success) {
-      const timer = window.setTimeout(() => navigate("/login", { replace: true }), 2500);
-      return () => window.clearTimeout(timer);
-    }
-  }, [success, navigate]);
+    if (!completed) return;
+    const timer = window.setTimeout(() => navigate("/login", { replace: true }), 2500);
+    return () => window.clearTimeout(timer);
+  }, [completed, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
 
     if (password !== confirmPassword) {
       setError(t("auth.passwordMismatch"));
@@ -45,10 +43,11 @@ export function ResetPasswordPage() {
       return;
     }
 
-    setSuccess(t("auth.passwordUpdated"));
+    setCompleted(true);
   };
 
-  const showForm = !loading && passwordRecovery;
+  const showInvalidLink = !loading && !passwordRecovery && !completed;
+  const showForm = !loading && passwordRecovery && !completed;
 
   return (
     <AuthShell>
@@ -61,7 +60,7 @@ export function ResetPasswordPage() {
         <p className="auth-shell-subtitle mt-4">{t("auth.verifyingResetLink")}</p>
       )}
 
-      {!loading && !passwordRecovery && (
+      {showInvalidLink && (
         <div className="auth-shell-form">
           <p className="auth-shell-error">{t("auth.resetLinkInvalid")}</p>
           <Link to="/forgot-password" className="auth-shell-link block text-center">
@@ -104,16 +103,24 @@ export function ResetPasswordPage() {
           </div>
 
           {error && <p className="auth-shell-error">{error}</p>}
-          {success && <p className="auth-shell-success">{success}</p>}
 
           <button
             type="submit"
-            disabled={submitting || !configured || Boolean(success)}
+            disabled={submitting || !configured}
             className="btn-primary w-full min-h-[48px] disabled:opacity-50"
           >
             {submitting ? t("auth.updatingPassword") : t("auth.updatePassword")}
           </button>
         </form>
+      )}
+
+      {completed && (
+        <div className="auth-shell-form">
+          <p className="auth-shell-success">{t("auth.passwordUpdated")}</p>
+          <Link to="/login" className="auth-shell-link block text-center mt-4">
+            {t("auth.backToSignIn")}
+          </Link>
+        </div>
       )}
     </AuthShell>
   );
