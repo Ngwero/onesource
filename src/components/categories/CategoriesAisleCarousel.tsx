@@ -37,20 +37,31 @@ export function CategoriesAisleCarousel({
   const updateArrows = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
-    setCanPrev(el.scrollLeft > 8);
-    setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+    const prev = el.scrollLeft > 8;
+    const next = el.scrollLeft < el.scrollWidth - el.clientWidth - 8;
+    setCanPrev((v) => (v === prev ? v : prev));
+    setCanNext((v) => (v === next ? v : next));
   }, []);
 
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
     updateArrows();
-    el.addEventListener("scroll", updateArrows, { passive: true });
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        updateArrows();
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
     const ro = new ResizeObserver(updateArrows);
     ro.observe(el);
     return () => {
-      el.removeEventListener("scroll", updateArrows);
+      el.removeEventListener("scroll", onScroll);
       ro.disconnect();
+      if (raf) cancelAnimationFrame(raf);
     };
   }, [products.length, updateArrows]);
 
@@ -61,7 +72,7 @@ export function CategoriesAisleCarousel({
     const style = getComputedStyle(el);
     const gap = parseFloat(style.columnGap || style.gap || "0") || 0;
     const step = item ? (item.offsetWidth + gap) * 2 : el.clientWidth * 0.92;
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
+    el.scrollBy({ left: dir * step, behavior: "auto" });
   };
 
   if (products.length === 0) return null;

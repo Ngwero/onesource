@@ -52,7 +52,7 @@ export function MobileBottomNav() {
     },
     {
       key: "categories",
-      label: t("nav.allCategories"),
+      label: t("nav.categoriesLabel"),
       to: "/categories",
       match: (p) => p.startsWith("/categories") || p.startsWith("/category/"),
       icon: (active) => (

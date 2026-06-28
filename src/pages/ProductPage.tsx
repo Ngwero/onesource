@@ -165,7 +165,7 @@ export function ProductPage() {
   };
 
   return (
-    <div className="pdp-page w-full pb-20 lg:pb-12">
+    <div className="pdp-page w-full">
       <PageContainer className="py-3 sm:py-5 max-w-[1500px]">
         <nav className="pdp-breadcrumbs" aria-label={t("common.breadcrumb")}>
           <Link to="/">{t("common.home")}</Link>

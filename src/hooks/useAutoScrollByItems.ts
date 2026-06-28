@@ -35,47 +35,35 @@ export function useAutoScrollByItems(
 
     let paused = false;
     let resumeTimer: ReturnType<typeof setTimeout> | null = null;
+    let scrollEndTimer: ReturnType<typeof setTimeout> | null = null;
+    let cachedStep = 0;
 
-    const getStep = () => {
+    const measureStep = () => {
       const item = el.querySelector(itemSelector) as HTMLElement | null;
-      if (!item) return el.clientWidth * 0.5;
+      if (!item) {
+        cachedStep = el.clientWidth * 0.5;
+        return;
+      }
       const style = getComputedStyle(el);
       const gap = parseFloat(style.columnGap || style.gap || "0") || 0;
-      return (item.offsetWidth + gap) * itemsPerStep;
+      cachedStep = (item.offsetWidth + gap) * itemsPerStep;
     };
 
-    const stopInFlightScroll = () => {
-      const current = el.scrollLeft;
-      el.style.scrollBehavior = "auto";
-      el.scrollLeft = current;
-      el.style.scrollBehavior = "";
-    };
+    measureStep();
+    const ro = new ResizeObserver(measureStep);
+    ro.observe(el);
 
-    const scrollNext = () => {
-      if (paused || isHovered(hoverRoot())) return;
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      if (maxScroll <= 0) return;
-
-      const step = getStep();
-      if (el.scrollLeft >= maxScroll - 4) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        el.scrollBy({ left: step, behavior: "smooth" });
+    const pause = () => {
+      paused = true;
+      if (resumeTimer) {
+        clearTimeout(resumeTimer);
+        resumeTimer = null;
       }
     };
 
     const tryResume = () => {
       if (isHovered(hoverRoot())) return;
       paused = false;
-    };
-
-    const pause = () => {
-      paused = true;
-      stopInFlightScroll();
-      if (resumeTimer) {
-        clearTimeout(resumeTimer);
-        resumeTimer = null;
-      }
     };
 
     const pauseBriefly = () => {
@@ -87,30 +75,60 @@ export function useAutoScrollByItems(
       }, intervalMs * 2);
     };
 
-    const onHoverEnter = () => pause();
-    const onHoverLeave = () => tryResume();
+    const onUserScroll = () => {
+      pause();
+      if (scrollEndTimer) clearTimeout(scrollEndTimer);
+      scrollEndTimer = setTimeout(() => {
+        scrollEndTimer = null;
+        tryResume();
+      }, 180);
+    };
+
+    const scrollNext = () => {
+      if (paused || isHovered(hoverRoot())) return;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (maxScroll <= 0) return;
+
+      const step = cachedStep || el.clientWidth * 0.5;
+      if (el.scrollLeft >= maxScroll - 4) {
+        el.scrollLeft = 0;
+      } else {
+        el.scrollLeft += step;
+      }
+    };
 
     const timer = window.setInterval(scrollNext, intervalMs);
 
     const root = hoverRoot();
-    root.addEventListener("mouseenter", onHoverEnter);
-    root.addEventListener("mouseleave", onHoverLeave);
+    root.addEventListener("mouseenter", pause);
+    root.addEventListener("mouseleave", tryResume);
+    el.addEventListener("scroll", onUserScroll, { passive: true });
     el.addEventListener("touchstart", pauseBriefly, { passive: true });
     el.addEventListener("pointerdown", pauseBriefly);
     el.addEventListener("wheel", pauseBriefly, { passive: true });
     el.addEventListener("focusin", pause);
     el.addEventListener("focusout", tryResume);
 
+    if ("onscrollend" in el) {
+      el.addEventListener("scrollend", tryResume);
+    }
+
     return () => {
       window.clearInterval(timer);
+      ro.disconnect();
       if (resumeTimer) clearTimeout(resumeTimer);
-      root.removeEventListener("mouseenter", onHoverEnter);
-      root.removeEventListener("mouseleave", onHoverLeave);
+      if (scrollEndTimer) clearTimeout(scrollEndTimer);
+      root.removeEventListener("mouseenter", pause);
+      root.removeEventListener("mouseleave", tryResume);
+      el.removeEventListener("scroll", onUserScroll);
       el.removeEventListener("touchstart", pauseBriefly);
       el.removeEventListener("pointerdown", pauseBriefly);
       el.removeEventListener("wheel", pauseBriefly);
       el.removeEventListener("focusin", pause);
       el.removeEventListener("focusout", tryResume);
+      if ("onscrollend" in el) {
+        el.removeEventListener("scrollend", tryResume);
+      }
     };
   }, [trackRef, pauseRootRef, itemCount, itemsPerStep, intervalMs, itemSelector, minItems]);
 }

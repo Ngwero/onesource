@@ -24,7 +24,7 @@ export function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-xl border border-border bg-surface hover:bg-muted transition-colors text-sm font-medium min-h-[44px] min-w-[44px] sm:min-w-0 justify-center"
+        className="header-switcher-btn flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-xl border border-border bg-surface hover:bg-muted transition-colors text-sm font-medium min-h-[44px] min-w-[44px] sm:min-w-0 justify-center"
         aria-label={t("lang.select")}
         aria-expanded={open}
       >
@@ -41,7 +41,7 @@ export function LanguageSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-border bg-surface shadow-xl py-2 z-[60]">
+        <div className="header-switcher-menu absolute right-0 top-full mt-2 w-56 max-w-[min(16rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface shadow-xl py-2 z-[60]">
           <p className="px-4 py-2 text-xs font-semibold text-text-muted uppercase tracking-wide">
             {t("lang.select")}
           </p>

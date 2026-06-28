@@ -25,7 +25,7 @@ export function ProductImage({ src, alt, className = "", size = "card" }: Props)
       <img
         src={imageSrc}
         alt={alt}
-        className="max-w-full max-h-full w-auto h-auto object-contain object-center drop-shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+        className="max-w-full max-h-full w-auto h-auto object-contain object-center"
         loading="lazy"
         decoding="async"
       />

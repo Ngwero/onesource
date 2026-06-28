@@ -109,14 +109,15 @@ export function Header() {
 
       <div className="page-container w-full relative">
         {/* Logo · Search (centre) · Actions — one row */}
-        <div className="site-header-row flex items-center gap-2 sm:gap-3 lg:gap-4 py-3 sm:py-4 w-full">
-          <Link to="/" className="site-header-brand flex-shrink-0 min-w-0">
-            <BrandLogo responsive />
+        <div className="site-header-row flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4 py-3 sm:py-4 w-full">
+          <Link to="/" className="site-header-brand flex-shrink-0 min-w-0 order-1">
+            <BrandLogo variant="icon" className="site-header-brand-icon md:hidden" />
+            <BrandLogo responsive className="hidden md:block" />
           </Link>
 
           <form
             onSubmit={handleSearch}
-            className="flex-1 min-w-0 w-full"
+            className="site-header-search-form flex-1 min-w-0 w-full order-3 md:order-2"
           >
             <div className="site-header-search flex w-full rounded-xl sm:rounded-2xl bg-muted border border-border overflow-hidden focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20 transition-all">
               <select
@@ -152,7 +153,7 @@ export function Header() {
             </div>
           </form>
 
-          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-shrink-0">
+          <div className="site-header-actions flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-shrink-0 order-2 md:order-3 ml-auto md:ml-0">
             <CurrencySwitcher />
             <LanguageSwitcher />
 
@@ -184,7 +185,7 @@ export function Header() {
 
             <button
               type="button"
-              className={`header-basket-btn${basketOpen ? " is-active" : ""}`}
+              className={`header-basket-btn header-basket-btn--desktop${basketOpen ? " is-active" : ""}`}
               aria-label={t("header.basket")}
               onClick={() => openBasket()}
             >
@@ -210,7 +211,7 @@ export function Header() {
 
         {/* Category nav — horizontal scroll */}
         <nav
-          className="site-header-nav flex items-center gap-2 pb-3 sm:pb-4 overflow-x-auto scrollbar-hide -mx-1 px-1 touch-pan-x"
+          className="site-header-nav horizontal-scroll flex items-center gap-2 pb-3 sm:pb-4 scrollbar-hide -mx-1 px-1"
           aria-label={t("nav.categoriesLabel")}
         >
           <Link

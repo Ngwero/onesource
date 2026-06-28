@@ -10,9 +10,7 @@ type Props = {
 
 export function ProductImageGallery({ imageSrc, alt, discount = 0 }: Props) {
   const { t } = useTranslation();
-  const [activeImage, setActiveImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const thumbSlots = [0, 1, 2, 3];
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -29,28 +27,7 @@ export function ProductImageGallery({ imageSrc, alt, discount = 0 }: Props) {
 
   return (
     <div className="pdp-gallery">
-      <div className="pdp-gallery-tabs" role="tablist" aria-label={t("product.mediaTabs")}>
-        <span className="pdp-gallery-tab is-active" role="tab" aria-selected>
-          {t("product.tabImages")}
-        </span>
-      </div>
-
       <div className="pdp-gallery-inner">
-        <div className="hidden sm:flex flex-col gap-2 shrink-0" aria-label={t("product.thumbnailStrip")}>
-          {thumbSlots.map((i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setActiveImage(i)}
-              className={`pdp-thumb pdp-thumb-vertical ${activeImage === i ? "pdp-thumb-active" : ""}`}
-              aria-label={t("product.imageN", { n: i + 1 })}
-              aria-current={activeImage === i ? "true" : undefined}
-            >
-              <img src={imageSrc} alt="" />
-            </button>
-          ))}
-        </div>
-
         <ProductImageZoom
           imageSrc={imageSrc}
           alt={alt}
@@ -59,20 +36,6 @@ export function ProductImageGallery({ imageSrc, alt, discount = 0 }: Props) {
           enlargeLabel={t("product.clickToEnlarge")}
           rollOverHint={t("product.rollOverToZoom")}
         />
-      </div>
-
-      <div className="flex sm:hidden gap-2 overflow-x-auto scrollbar-hide mt-2 pb-1">
-        {thumbSlots.map((i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setActiveImage(i)}
-            className={`pdp-thumb ${activeImage === i ? "pdp-thumb-active" : ""}`}
-            aria-label={t("product.imageN", { n: i + 1 })}
-          >
-            <img src={imageSrc} alt="" />
-          </button>
-        ))}
       </div>
 
       {lightboxOpen && (

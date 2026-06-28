@@ -15,8 +15,8 @@ export function Footer() {
   const ordersState = user ? undefined : { from: "/orders" };
 
   return (
-    <footer className="mt-auto border-t border-border bg-surface w-full pb-0 md:pb-0">
-      <div className="page-container py-8 sm:py-12 max-md:pb-4">
+    <footer className="site-footer mt-auto border-t border-border bg-surface w-full">
+      <div className="page-container py-8 sm:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div className="sm:col-span-2 md:col-span-1">
             <div className="mb-4">
