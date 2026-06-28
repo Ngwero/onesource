@@ -12,6 +12,8 @@ import {
 
 let transporter = null;
 
+const SMTP_TIMEOUT_MS = Number(process.env.SMTP_TIMEOUT_MS) || 20_000;
+
 function getTransporter() {
   assertSmtpConfigured();
   if (!transporter) {
@@ -23,24 +25,42 @@ function getTransporter() {
         user: env.smtp.user,
         pass: env.smtp.pass,
       },
+      connectionTimeout: SMTP_TIMEOUT_MS,
+      greetingTimeout: SMTP_TIMEOUT_MS,
+      socketTimeout: SMTP_TIMEOUT_MS,
     });
   }
   return transporter;
 }
 
-function greetingLine(fullName) {
-  return fullName?.trim() ? `Hi ${fullName.trim()},` : "Hi there,";
+function withTimeout(promise, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(
+        () => reject(new Error(`${label} timed out after ${SMTP_TIMEOUT_MS / 1000}s`)),
+        SMTP_TIMEOUT_MS
+      );
+    }),
+  ]);
 }
 
 async function sendBrandedMail({ to, subject, html, text }) {
   const transport = getTransporter();
-  await transport.sendMail({
-    from: env.smtp.from,
-    to,
-    subject,
-    html,
-    text,
-  });
+  await withTimeout(
+    transport.sendMail({
+      from: env.smtp.from,
+      to,
+      subject,
+      html,
+      text,
+    }),
+    "SMTP send"
+  );
+}
+
+function greetingLine(fullName) {
+  return fullName?.trim() ? `Hi ${fullName.trim()},` : "Hi there,";
 }
 
 export async function sendPasswordResetEmail({ email, fullName, resetLink }) {

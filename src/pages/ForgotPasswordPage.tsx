@@ -23,15 +23,16 @@ export function ForgotPasswordPage() {
     setError(null);
     setSuccess(null);
     setSubmitting(true);
-    const { error: err } = await requestPasswordReset(email.trim());
-    setSubmitting(false);
-
-    if (err) {
-      setError(err);
-      return;
+    try {
+      const { error: err } = await requestPasswordReset(email.trim());
+      if (err) {
+        setError(err);
+        return;
+      }
+      setSuccess(t("auth.resetEmailSent"));
+    } finally {
+      setSubmitting(false);
     }
-
-    setSuccess(t("auth.resetEmailSent"));
   };
 
   return (

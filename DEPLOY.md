@@ -127,6 +127,9 @@ Check `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Railway variables.
 **Auth errors in browser**  
 Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set (needed at **build** time — redeploy after adding them).
 
+**Forgot password stuck on “Sending reset link…”**  
+Usually SMTP hanging from Railway to your mail host. The API now responds immediately; check Railway logs for `[auth] forgot-password email failed`. If SMTP times out, use a relay (Brevo, SendGrid, Resend) or port `587` with `SMTP_SECURE=false`. Some hosts block cloud SMTP entirely.
+
 **Forgot password returns 503**  
 Set all SMTP variables in Railway. Also set `SUPABASE_ANON_KEY` for login OTP.
 

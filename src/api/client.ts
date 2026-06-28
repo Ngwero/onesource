@@ -91,16 +91,31 @@ export async function requestPasswordReset(
   email: string,
   redirectTo: string
 ): Promise<{ error: string | null }> {
-  const res = await fetch(`${API_BASE}/auth/forgot-password`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, redirectTo }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    return { error: (data.error as string) || i18n.t("errors.passwordResetFailed") };
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 30_000);
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, redirectTo }),
+      signal: controller.signal,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: (data.error as string) || i18n.t("errors.passwordResetFailed") };
+    }
+    return { error: null };
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      return { error: i18n.t("errors.passwordResetTimeout") };
+    }
+    return {
+      error: e instanceof Error ? e.message : i18n.t("errors.passwordResetFailed"),
+    };
+  } finally {
+    window.clearTimeout(timeout);
   }
-  return { error: null };
 }
 
 export type LoginOtpStartResult =

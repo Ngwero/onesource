@@ -74,13 +74,15 @@ router.post("/forgot-password", async (req, res) => {
       (await lookupProfileName(supabase, data.user?.id)) ||
       "";
 
-    await sendPasswordResetEmail({
-      email,
-      fullName,
-      resetLink: data.properties.action_link,
-    });
+    const resetLink = data.properties.action_link;
 
-    return res.json({ ok: true });
+    // Respond immediately — SMTP from cloud hosts can be slow or hang.
+    res.json({ ok: true });
+
+    void sendPasswordResetEmail({ email, fullName, resetLink }).catch((err) => {
+      console.error("[auth] forgot-password email failed:", err);
+    });
+    return;
   } catch (e) {
     console.error("[auth] forgot-password failed:", e);
     return res.status(500).json({
@@ -172,9 +174,12 @@ router.post("/login/request-otp", async (req, res) => {
       refreshToken: verified.refreshToken,
     });
 
-    await sendLoginOtpEmail({ email, fullName, otp });
+    res.json({ ok: true, otpRequired: true });
 
-    return res.json({ ok: true, otpRequired: true });
+    void sendLoginOtpEmail({ email, fullName, otp }).catch((err) => {
+      console.error("[auth] login OTP email failed:", err);
+    });
+    return;
   } catch (e) {
     console.error("[auth] login/request-otp failed:", e);
     return res.status(500).json({
