@@ -22,6 +22,15 @@ const PORT = env.port;
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: "2mb" }));
 
+// Allow the browser to load external images (Unsplash, Supabase Storage, etc.)
+// without being blocked by COEP / CORP policies.
+app.use((_req, res, next) => {
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  next();
+});
+
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/upload") || req.path.startsWith("/uploads/")) {
     res.on("finish", () => {
@@ -90,7 +99,16 @@ if (serveShop) {
       setHeaders(res, filePath) {
         if (filePath.endsWith(".html")) {
           res.setHeader("Cache-Control", "no-cache");
+        } else if (
+          filePath.endsWith(".js") ||
+          filePath.endsWith(".css") ||
+          filePath.endsWith(".woff2") ||
+          filePath.endsWith(".woff")
+        ) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
         }
+        // Ensure external images (Unsplash, Supabase) are never blocked by CORP
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
       },
     })
   );

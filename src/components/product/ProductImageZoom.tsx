@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { PLACEHOLDER_IMAGE } from "../../utils/imageUrl";
 
 const ZOOM_LEVEL = 2.5;
 const LENS_RATIO = 0.42;
@@ -128,7 +129,19 @@ export function ProductImageZoom({
         aria-label={enlargeLabel}
       >
         {discount > 0 && <span className="pdp-badge-deal">-{discount}%</span>}
-        <img src={imageSrc} alt={alt} className="pdp-main-image" draggable={false} />
+        <img
+          src={imageSrc}
+          alt={alt}
+          className="pdp-main-image"
+          draggable={false}
+          crossOrigin="anonymous"
+          onError={(e) => {
+            const img = e.currentTarget;
+            if (img.src !== PLACEHOLDER_IMAGE) {
+              img.src = PLACEHOLDER_IMAGE;
+            }
+          }}
+        />
         {flyoutVisible && lens && (
           <span
             className="pdp-zoom-lens"
@@ -157,10 +170,17 @@ export function ProductImageZoom({
             alt=""
             className="pdp-zoom-flyout-image"
             draggable={false}
+            crossOrigin="anonymous"
             style={{
               width: zoomW,
               height: zoomH,
               transform: `translate(${-offsetX}px, ${-offsetY}px)`,
+            }}
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (img.src !== PLACEHOLDER_IMAGE) {
+                img.src = PLACEHOLDER_IMAGE;
+              }
             }}
           />
         </div>

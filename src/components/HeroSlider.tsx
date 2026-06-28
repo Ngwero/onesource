@@ -9,6 +9,7 @@ import {
   mergeHeroSlideWithI18n,
   type HeroSlideContent,
 } from "../i18n/mergeHeroSlide";
+import { PLACEHOLDER_IMAGE } from "../utils/imageUrl";
 
 const AUTOPLAY_MS = 6000;
 
@@ -137,6 +138,19 @@ export function HeroSlider() {
               }
               alt=""
               className="absolute inset-0 w-full h-full object-cover"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                const img = e.currentTarget;
+                // Try the next fallback Unsplash image, then give up with placeholder
+                const currentSrc = img.src;
+                const fallbackIdx = FALLBACK_IMAGES.findIndex((f) => currentSrc.includes(f.split("?")[0].split("/").pop() ?? ""));
+                const nextFallback = fallbackIdx >= 0 && fallbackIdx < FALLBACK_IMAGES.length - 1
+                  ? FALLBACK_IMAGES[fallbackIdx + 1]
+                  : PLACEHOLDER_IMAGE;
+                if (img.src !== nextFallback) {
+                  img.src = nextFallback;
+                }
+              }}
             />
             <div
               className="absolute inset-y-0 left-0 z-[5] w-full sm:w-[78%] lg:w-[62%] bg-gradient-to-r from-text/92 via-text/65 to-transparent pointer-events-none"

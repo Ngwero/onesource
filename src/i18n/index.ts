@@ -36,6 +36,12 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
   returnEmptyString: false,
   returnNull: false,
+  // Ensure translations are available synchronously on first render.
+  // The locale JSON files are bundled by Vite — no async loading needed.
+  initImmediate: false,
+  react: {
+    useSuspense: false,
+  },
 });
 
 i18n.on("languageChanged", (lng) => {
