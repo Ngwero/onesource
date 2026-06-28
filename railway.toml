@@ -5,7 +5,7 @@
 buildCommand = "npm run build && npm ci --prefix server"
 
 [deploy]
-startCommand = "npm start --prefix server"
+startCommand = "npm start"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
