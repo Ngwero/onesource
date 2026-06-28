@@ -1,4 +1,5 @@
 import dns from "dns/promises";
+import { isAnonKeyConfigured } from "../lib/authCredentials.js";
 import { env, getSupabaseConfigErrors, getSmtpConfigErrors, isSupabaseConfigured, isSmtpConfigured } from "../lib/env.js";
 import { verifySmtpConnection } from "../lib/mail.js";
 
@@ -10,6 +11,7 @@ console.log(`  SUPABASE_URL: ${env.supabaseUrl ? "set" : "missing"}`);
 console.log(
   `  SUPABASE_SERVICE_ROLE_KEY: ${env.supabaseServiceRoleKey ? "set" : "missing"}`
 );
+console.log(`  SUPABASE_ANON_KEY: ${isAnonKeyConfigured() ? "set" : "missing (needed for login OTP)"}`);
 
 if (!isSupabaseConfigured()) {
   console.error(
@@ -44,7 +46,7 @@ console.log("\nSupabase env vars look good.");
 const smtpMissing = getSmtpConfigErrors();
 if (!isSmtpConfigured()) {
   console.warn(`\nSMTP: not configured (missing ${smtpMissing.join(", ")}).`);
-  console.warn("Password reset emails will not send until SMTP is set in server/.env.");
+  console.warn("Password reset, welcome, and login OTP emails will not send until SMTP is set in server/.env.");
 } else {
   console.log(`\nSMTP: ${env.smtp.host}:${env.smtp.port} (${env.smtp.from})`);
   const smtpCheck = await verifySmtpConnection();

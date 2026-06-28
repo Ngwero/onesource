@@ -103,6 +103,63 @@ export async function requestPasswordReset(
   return { error: null };
 }
 
+export type LoginOtpStartResult =
+  | { error: string | null; otpRequired?: false; access_token?: string; refresh_token?: string }
+  | { error: null; otpRequired: true };
+
+export async function requestLoginOtp(
+  email: string,
+  password: string
+): Promise<LoginOtpStartResult> {
+  const res = await fetch(`${API_BASE}/auth/login/request-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return { error: (data.error as string) || i18n.t("errors.signInFailed") };
+  }
+  if (data.otpRequired === false && data.access_token && data.refresh_token) {
+    return {
+      error: null,
+      otpRequired: false,
+      access_token: data.access_token as string,
+      refresh_token: data.refresh_token as string,
+    };
+  }
+  return { error: null, otpRequired: true };
+}
+
+export async function verifyLoginOtp(
+  email: string,
+  otp: string
+): Promise<{ error: string | null; access_token?: string; refresh_token?: string }> {
+  const res = await fetch(`${API_BASE}/auth/login/verify-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return { error: (data.error as string) || i18n.t("errors.otpInvalid") };
+  }
+  return {
+    error: null,
+    access_token: data.access_token as string,
+    refresh_token: data.refresh_token as string,
+  };
+}
+
+export async function sendWelcomeEmail(accessToken: string): Promise<void> {
+  await fetch(`${API_BASE}/auth/welcome`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
 export async function checkApiHealth(): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/health`);

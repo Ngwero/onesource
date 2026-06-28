@@ -108,7 +108,13 @@
     "updatingPassword": "Updating password…",
     "passwordUpdated": "Your password has been updated. You can sign in with your new password.",
     "resetLinkInvalid": "This reset link is invalid or has expired. Request a new one to continue.",
-    "verifyingResetLink": "Verifying your reset link…"
+    "verifyingResetLink": "Verifying your reset link…",
+    "otpTitle": "Enter your login code",
+    "otpSubtitle": "We sent a 6-digit code to {{email}}. It expires in 5 minutes.",
+    "otpLabel": "One-time code (OTP)",
+    "verifyOtp": "Verify and sign in",
+    "verifyingOtp": "Verifying…",
+    "welcomeEmailNote": "We've sent a welcome email to your inbox."
   },
   "accountMenu": {
     "helloGuest": "Hello, guest",
@@ -835,6 +841,7 @@
     "signUpFailed": "Sign up failed",
     "passwordResetFailed": "Could not send password reset email",
     "passwordUpdateFailed": "Could not update password",
+    "otpInvalid": "Invalid or expired login code",
     "supabaseNotConfigured": "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to a .env file in the project root.",
     "updateCategoryImage": "Failed to update category image"
   },

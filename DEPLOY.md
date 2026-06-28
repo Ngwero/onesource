@@ -31,6 +31,7 @@ In Railway → your service → **Variables**, add:
 |----------|-----------------|
 | `SUPABASE_URL` | Supabase → Project Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Same page (service role — keep secret) |
+| `SUPABASE_ANON_KEY` | Anon public key (needed for login OTP on server) |
 
 ### Required (shop build — Vite bakes these into the bundle)
 
@@ -39,18 +40,18 @@ In Railway → your service → **Variables**, add:
 | `VITE_SUPABASE_URL` | Same as `SUPABASE_URL` |
 | `VITE_SUPABASE_ANON_KEY` | Supabase → anon public key (not service role) |
 
-### Optional but recommended
+### Email (welcome, login OTP, password reset)
 
 | Variable | Purpose |
 |----------|---------|
-| `USE_SUPABASE_STORAGE` | Optional — defaults to **on** when Supabase is configured. Admin uploads go to the `images` bucket (live on Railway). Set `false` for local-only disk uploads. |
-| `SHOP_URL` | Public shop URL for password-reset emails. If omitted, Railway uses `https://YOUR-RAILWAY-DOMAIN` automatically. |
-| `SMTP_HOST` | Password reset emails |
-| `SMTP_PORT` | Usually `587` |
-| `SMTP_SECURE` | `false` for port 587 |
+| `SMTP_HOST` | Outgoing mail server |
+| `SMTP_PORT` | `465` (SSL) or `587` (STARTTLS) |
+| `SMTP_SECURE` | `true` for port 465 |
 | `SMTP_USER` | SMTP username |
 | `SMTP_PASS` | SMTP password |
-| `SMTP_FROM` | e.g. `One Source <noreply@yourdomain.com>` |
+| `SMTP_FROM` | e.g. `One Source <noreply@one-sourcebrand.com>` |
+| `SHOP_URL` | Public shop URL in emails (logo, links). Optional on Railway — uses `RAILWAY_PUBLIC_DOMAIN` |
+| `OTP_TTL_SECONDS` | Optional — login code validity (default `300`) |
 
 You do **not** need `VITE_API_URL` on Railway — shop and API share the same domain (`/api`).
 
@@ -75,6 +76,11 @@ Supabase → **Authentication** → **URL configuration**:
 - **Site URL:** `https://YOUR-RAILWAY-DOMAIN`
 - **Redirect URLs:** add `https://YOUR-RAILWAY-DOMAIN/reset-password`
 
+Supabase → **Authentication** → **Providers** → **Email**:
+
+- Turn **off** “Confirm email” if you want instant signup + welcome email from One Source SMTP.
+- Password reset and login OTP emails are sent by **your API** (not Supabase’s mailer) when SMTP is configured.
+
 If you set a custom domain later, update these too.
 
 ---
@@ -91,7 +97,9 @@ Then set `SHOP_URL=https://onesource.com` and update Supabase redirect URLs.
 
 - [ ] Shop loads at `/`
 - [ ] Products appear (API + Supabase connected)
-- [ ] Login / signup works
+- [ ] Login works (email + password → OTP emailed when SMTP is set)
+- [ ] Signup sends welcome email (when SMTP is set)
+- [ ] Forgot password sends reset email (when SMTP is set)
 - [ ] `/admin` loads
 - [ ] `/api/health` returns `"ok": true`
 - [ ] Forgot password sends email (if SMTP is set)
@@ -118,6 +126,15 @@ Check `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Railway variables.
 
 **Auth errors in browser**  
 Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set (needed at **build** time — redeploy after adding them).
+
+**Forgot password returns 503**  
+Set all SMTP variables in Railway. Also set `SUPABASE_ANON_KEY` for login OTP.
+
+**Login works locally but OTP never arrives in production**  
+Check Railway logs for `[auth] login/request-otp failed`. Verify SMTP on port 465 uses `SMTP_SECURE=true`.
+
+**Welcome email not sent**  
+Requires SMTP + user signed up with email confirmation **disabled** in Supabase (instant session).
 
 **Uploads disappear after redeploy**  
 Railway disk is ephemeral. Enable Supabase Storage (`USE_SUPABASE_STORAGE=true` in server env) for production images.

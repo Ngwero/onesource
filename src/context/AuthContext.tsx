@@ -1,5 +1,10 @@
 import i18n from "../i18n";
-import { requestPasswordReset as requestPasswordResetApi } from "../api/client";
+import {
+  requestLoginOtp,
+  requestPasswordReset as requestPasswordResetApi,
+  sendWelcomeEmail as sendWelcomeEmailApi,
+  verifyLoginOtp as verifyLoginOtpApi,
+} from "../api/client";
 import {
   createContext,
   useCallback,
@@ -19,7 +24,8 @@ type AuthContextValue = {
   loading: boolean;
   configured: boolean;
   passwordRecovery: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null; requiresOtp?: boolean }>;
+  verifyLoginOtp: (email: string, otp: string) => Promise<{ error: string | null }>;
   signUp: (
     email: string,
     password: string,
@@ -111,11 +117,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const supabase = getSupabase();
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error: error?.message ?? null };
+      const result = await requestLoginOtp(email.trim(), password);
+      if (result.error) {
+        return { error: result.error };
+      }
+
+      if (result.otpRequired) {
+        return { error: null, requiresOtp: true };
+      }
+
+      if (result.access_token && result.refresh_token) {
+        const supabase = getSupabase();
+        const { error } = await supabase.auth.setSession({
+          access_token: result.access_token,
+          refresh_token: result.refresh_token,
+        });
+        return { error: error?.message ?? null };
+      }
+
+      return { error: i18n.t("errors.signInFailed") };
     } catch (e) {
       return { error: e instanceof Error ? e.message : i18n.t("errors.signInFailed") };
+    }
+  }, []);
+
+  const verifyLoginOtp = useCallback(async (email: string, otp: string) => {
+    try {
+      const result = await verifyLoginOtpApi(email.trim(), otp.trim());
+      if (result.error) {
+        return { error: result.error };
+      }
+
+      if (result.access_token && result.refresh_token) {
+        const supabase = getSupabase();
+        const { error } = await supabase.auth.setSession({
+          access_token: result.access_token,
+          refresh_token: result.refresh_token,
+        });
+        return { error: error?.message ?? null };
+      }
+
+      return { error: i18n.t("errors.otpInvalid") };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : i18n.t("errors.otpInvalid") };
     }
   }, []);
 
@@ -151,6 +195,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(data.session);
           setUser(data.session.user);
           await fetchProfile(data.session.user.id);
+          if (data.session.access_token) {
+            sendWelcomeEmailApi(data.session.access_token).catch(() => {
+              /* welcome email is best-effort */
+            });
+          }
         }
 
         const needsEmailConfirmation = !data.session;
@@ -208,6 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       configured: isSupabaseConfigured,
       passwordRecovery,
       signIn,
+      verifyLoginOtp,
       signUp,
       requestPasswordReset,
       updatePassword,
@@ -221,6 +271,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       passwordRecovery,
       signIn,
+      verifyLoginOtp,
       signUp,
       requestPasswordReset,
       updatePassword,
