@@ -2,7 +2,7 @@
 # https://docs.railway.com/guides/config-as-code
 
 [build]
-buildCommand = "npm ci && npm run build && npm ci --prefix server"
+buildCommand = "npm run build && npm ci --prefix server"
 
 [deploy]
 startCommand = "npm start --prefix server"
