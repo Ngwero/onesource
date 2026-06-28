@@ -84,6 +84,8 @@ Supabase → **Authentication** → **Providers** → **Email**:
 - Turn **off** “Confirm email” if you want instant signup + welcome email from One Source SMTP.
 - **Password reset** emails are sent by **Supabase** (not Railway). Configure **Custom SMTP** under Project Settings → Authentication if you want `noreply@one-sourcebrand.com` as the sender.
 
+**Branded email HTML** (One Source logo, no Supabase branding): copy from `server/supabase/email-templates/` into Supabase → **Authentication → Email Templates**. See `README.md` in that folder for subject lines.
+
 ### Why cPanel mail (`mail.one-sourcebrand.com`) fails on Railway
 
 Railway and most cloud hosts **cannot connect** to your cPanel SMTP (ports 465/587 time out). Password reset therefore uses **Supabase’s mailer**, which works from the cloud.
