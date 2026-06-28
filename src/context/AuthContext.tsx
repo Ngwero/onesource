@@ -13,6 +13,32 @@ import type { Session, User } from "@supabase/supabase-js";
 import { isPasswordRecoveryCallback } from "../lib/authRecovery";
 import { getSupabase, isSupabaseConfigured, type Profile } from "../lib/supabase";
 
+const AUTH_EMAIL_TIMEOUT_MS = 30_000;
+
+function mapAuthEmailError(message: string): string {
+  const lower = message.toLowerCase();
+  if (lower.includes("rate limit")) {
+    return i18n.t("errors.otpEmailRateLimit");
+  }
+  if (
+    lower.includes("smtp") ||
+    lower.includes("email provider") ||
+    lower.includes("error sending")
+  ) {
+    return i18n.t("errors.otpEmailSendFailed");
+  }
+  return message;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      window.setTimeout(() => reject(new Error(timeoutMessage)), ms);
+    }),
+  ]);
+}
+
 type AuthContextValue = {
   user: User | null;
   session: Session | null;
@@ -149,18 +175,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const supabase = getSupabase();
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: trimmedEmail,
-        options: { shouldCreateUser: false },
-      });
+      const { error: otpError } = await withTimeout(
+        supabase.auth.signInWithOtp({
+          email: trimmedEmail,
+          options: { shouldCreateUser: false },
+        }),
+        AUTH_EMAIL_TIMEOUT_MS,
+        i18n.t("errors.signInTimeout")
+      );
 
       if (otpError) {
-        return { error: otpError.message };
+        return { error: mapAuthEmailError(otpError.message) };
       }
 
       return { error: null, requiresOtp: true };
     } catch (e) {
-      return { error: e instanceof Error ? e.message : i18n.t("errors.signInFailed") };
+      const message = e instanceof Error ? e.message : i18n.t("errors.signInFailed");
+      return { error: mapAuthEmailError(message) };
     }
   }, []);
 

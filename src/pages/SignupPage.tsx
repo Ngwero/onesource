@@ -1,8 +1,17 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AuthShell } from "../components/AuthShell";
+import { AuthSubmitButton } from "../components/auth/AuthSubmitButton";
+import { PasswordField } from "../components/auth/PasswordField";
 import { useAuth } from "../context/AuthContext";
+
+function passwordStrength(password: string): 0 | 1 | 2 | 3 {
+  if (password.length < 6) return 0;
+  if (password.length < 8) return 1;
+  if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) return 3;
+  return 2;
+}
 
 export function SignupPage() {
   const { t } = useTranslation();
@@ -20,6 +29,9 @@ export function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const strength = useMemo(() => passwordStrength(password), [password]);
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -58,6 +70,7 @@ export function SignupPage() {
 
   return (
     <AuthShell
+      mode="signup"
       footer={
         <p>
           {t("auth.hasAccount")}{" "}
@@ -67,8 +80,10 @@ export function SignupPage() {
         </p>
       }
     >
-      <h1 className="auth-shell-title">{t("auth.signupTitle")}</h1>
-      <p className="auth-shell-subtitle">{t("auth.signupSubtitle")}</p>
+      <div className="auth-shell-header">
+        <h1 className="auth-shell-title">{t("auth.signupTitle")}</h1>
+        <p className="auth-shell-subtitle">{t("auth.signupSubtitle")}</p>
+      </div>
 
       {!configured && <p className="auth-shell-alert">{t("auth.notConfigured")}</p>}
 
@@ -85,8 +100,10 @@ export function SignupPage() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             className="form-input"
+            placeholder={t("auth.fullNamePlaceholder")}
           />
         </div>
+
         <div className="form-field">
           <label htmlFor="signup-email" className="form-label">
             {t("auth.email")}
@@ -99,49 +116,67 @@ export function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="form-input"
-          />
-        </div>
-        <div className="form-field">
-          <label htmlFor="signup-password" className="form-label">
-            {t("auth.password")}
-          </label>
-          <input
-            id="signup-password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="form-input"
-          />
-        </div>
-        <div className="form-field">
-          <label htmlFor="signup-confirm" className="form-label">
-            {t("auth.confirmPassword")}
-          </label>
-          <input
-            id="signup-confirm"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="form-input"
+            placeholder="you@example.com"
           />
         </div>
 
-        {error && <p className="auth-shell-error">{error}</p>}
-        {success && <p className="auth-shell-success">{success}</p>}
+        <PasswordField
+          id="signup-password"
+          label={t("auth.password")}
+          autoComplete="new-password"
+          required
+          minLength={6}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          hint={t("auth.passwordHint")}
+        />
 
-        <button
-          type="submit"
-          disabled={submitting || !configured}
-          className="btn-primary w-full min-h-[48px] disabled:opacity-50"
-        >
+        {password.length > 0 ? (
+          <div className="auth-strength" aria-hidden>
+            <div className="auth-strength-track">
+              <span className={`auth-strength-bar auth-strength-bar--${strength}`} />
+            </div>
+            <p className="auth-field-hint">
+              {strength === 0
+                ? t("auth.passwordTooShort")
+                : strength === 1
+                  ? t("auth.passwordStrengthFair")
+                  : strength === 2
+                    ? t("auth.passwordStrengthGood")
+                    : t("auth.passwordStrengthStrong")}
+            </p>
+          </div>
+        ) : null}
+
+        <PasswordField
+          id="signup-confirm"
+          label={t("auth.confirmPassword")}
+          autoComplete="new-password"
+          required
+          minLength={6}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          hint={
+            passwordsMatch ? (
+              <span className="auth-field-hint--success">{t("auth.passwordsMatch")}</span>
+            ) : undefined
+          }
+        />
+
+        {error ? (
+          <p className="auth-shell-error" role="alert">
+            {error}
+          </p>
+        ) : null}
+        {success ? (
+          <p className="auth-shell-success" role="status">
+            {success}
+          </p>
+        ) : null}
+
+        <AuthSubmitButton loading={submitting} disabled={!configured}>
           {submitting ? t("auth.signingUp") : t("auth.signUp")}
-        </button>
+        </AuthSubmitButton>
       </form>
     </AuthShell>
   );

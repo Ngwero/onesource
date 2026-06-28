@@ -124,16 +124,31 @@ export async function requestLoginOtp(
   email: string,
   password: string
 ): Promise<LoginVerifyResult> {
-  const res = await fetch(`${API_BASE}/auth/login/request-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    return { error: (data.error as string) || i18n.t("errors.signInFailed") };
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 30_000);
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/login/request-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+      signal: controller.signal,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: (data.error as string) || i18n.t("errors.signInFailed") };
+    }
+    return { error: null, verified: Boolean(data.verified) };
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      return { error: i18n.t("errors.signInTimeout") };
+    }
+    return {
+      error: e instanceof Error ? e.message : i18n.t("errors.signInFailed"),
+    };
+  } finally {
+    window.clearTimeout(timeout);
   }
-  return { error: null, verified: Boolean(data.verified) };
 }
 
 export async function sendWelcomeEmail(accessToken: string): Promise<void> {
