@@ -22,6 +22,7 @@
     "seed:habanero": "node scripts/seed-habanero.js",
     "seed:peri-peri": "node scripts/seed-peri-peri.js",
     "seed:yams": "node scripts/seed-yams.js",
+    "seed:blueberries": "node scripts/seed-blueberries.js",
     "seed:lamb": "node scripts/seed-lamb.js",
     "seed:broccoli": "node scripts/seed-broccoli.js",
     "seed:lentils": "node scripts/seed-lentils.js",
