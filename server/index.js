@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { env, isSupabaseConfigured, isSmtpConfigured } from "./lib/env.js";
@@ -78,12 +79,49 @@ app.get(["/admin", "/admin/"], (_req, res) => {
 });
 app.use("/admin", express.static(adminDir));
 
+const shopDist = path.join(__dirname, "..", "dist");
+const shopIndex = path.join(shopDist, "index.html");
+const serveShop = fs.existsSync(shopIndex);
+
+if (serveShop) {
+  app.use(
+    express.static(shopDist, {
+      index: false,
+      setHeaders(res, filePath) {
+        if (filePath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache");
+        }
+      },
+    })
+  );
+}
+
 app.get("/", (_req, res) => {
+  if (serveShop) {
+    res.sendFile(shopIndex);
+    return;
+  }
   res.redirect("/admin");
 });
 
+if (serveShop) {
+  app.get("*", (req, res, next) => {
+    if (
+      req.path.startsWith("/api") ||
+      req.path.startsWith("/admin") ||
+      req.path.startsWith("/uploads")
+    ) {
+      return next();
+    }
+    res.sendFile(shopIndex);
+  });
+}
+
 app.listen(PORT, () => {
   console.log(`Stock API running at http://localhost:${PORT}`);
+  if (serveShop) {
+    console.log(`Shop: served from dist/ (same origin, /api)`);
+  }
   console.log(`Admin panel: http://localhost:${PORT}/admin`);
   console.log(
     isSupabaseConfigured()

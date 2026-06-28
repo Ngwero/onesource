@@ -18,11 +18,21 @@ function parseBool(value, fallback = false) {
   return normalized === "1" || normalized === "true" || normalized === "yes";
 }
 
+function resolveShopUrl() {
+  const explicit = process.env.SHOP_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+
+  const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN?.trim();
+  if (railwayDomain) return `https://${railwayDomain.replace(/\/$/, "")}`;
+
+  return "http://localhost:5174";
+}
+
 export const env = {
   port: Number.isFinite(parsedPort) && parsedPort > 0 ? parsedPort : 3001,
   supabaseUrl: process.env.SUPABASE_URL?.trim() ?? "",
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ?? "",
-  shopUrl: (process.env.SHOP_URL?.trim() || "http://localhost:5174").replace(/\/$/, ""),
+  shopUrl: resolveShopUrl(),
   smtp: {
     host: process.env.SMTP_HOST?.trim() ?? "",
     port: Number.isFinite(parsedSmtpPort) && parsedSmtpPort > 0 ? parsedSmtpPort : 587,
