@@ -1,7 +1,6 @@
 import i18n from "../i18n";
 import {
   requestLoginOtp,
-  requestPasswordReset as requestPasswordResetApi,
   sendWelcomeEmail as sendWelcomeEmailApi,
   verifyLoginOtp as verifyLoginOtpApi,
 } from "../api/client";
@@ -235,7 +234,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const requestPasswordReset = useCallback(async (email: string) => {
     try {
       const redirectTo = `${window.location.origin}/reset-password`;
-      return await requestPasswordResetApi(email.trim(), redirectTo);
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo,
+      });
+      return { error: error?.message ?? null };
     } catch (e) {
       return {
         error: e instanceof Error ? e.message : i18n.t("errors.passwordResetFailed"),

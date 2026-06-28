@@ -73,15 +73,24 @@ You do **not** need `VITE_API_URL` on Railway — shop and API share the same do
 
 Supabase → **Authentication** → **URL configuration**:
 
-- **Site URL:** `https://YOUR-RAILWAY-DOMAIN`
-- **Redirect URLs:** add `https://YOUR-RAILWAY-DOMAIN/reset-password`
+- **Site URL:** `https://www.onesourco.com` (or your live shop URL)
+- **Redirect URLs:** add every domain you use, for example:
+  - `https://www.onesourco.com/reset-password`
+  - `https://onesourco.com/reset-password`
+  - `https://onesource-production.up.railway.app/reset-password`
 
 Supabase → **Authentication** → **Providers** → **Email**:
 
 - Turn **off** “Confirm email” if you want instant signup + welcome email from One Source SMTP.
-- Password reset and login OTP emails are sent by **your API** (not Supabase’s mailer) when SMTP is configured.
+- **Password reset** emails are sent by **Supabase** (not Railway). Configure **Custom SMTP** under Project Settings → Authentication if you want `noreply@one-sourcebrand.com` as the sender.
 
-If you set a custom domain later, update these too.
+### Why cPanel mail (`mail.one-sourcebrand.com`) fails on Railway
+
+Railway and most cloud hosts **cannot connect** to your cPanel SMTP (ports 465/587 time out). Password reset therefore uses **Supabase’s mailer**, which works from the cloud.
+
+For **welcome** and **login OTP** emails (still sent from Railway), use a cloud-friendly SMTP relay such as [Brevo](https://www.brevo.com) (free tier), SendGrid, or Resend — then set those credentials in Railway variables.
+
+If you set a custom domain later, update Supabase redirect URLs too.
 
 ---
 
@@ -126,6 +135,9 @@ Check `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Railway variables.
 
 **Auth errors in browser**  
 Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set (needed at **build** time — redeploy after adding them).
+
+**Reset email never arrives**  
+Password reset is sent by **Supabase**. Check Supabase → Authentication → URL configuration (add your `/reset-password` URL). Check spam. If using custom domain, Site URL must match. cPanel SMTP does not work from Railway — use Supabase mail or Brevo for other emails.
 
 **Forgot password stuck on “Sending reset link…”**  
 Usually SMTP hanging from Railway to your mail host. The API now responds immediately; check Railway logs for `[auth] forgot-password email failed`. If SMTP times out, use a relay (Brevo, SendGrid, Resend) or port `587` with `SMTP_SECURE=false`. Some hosts block cloud SMTP entirely.
