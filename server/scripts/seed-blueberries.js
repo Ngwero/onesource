@@ -1,11 +1,12 @@
 /**
  * Seed 20 blueberry products in fresh-fruits.
- * Replaces former Garden Sprayer bulk rows in place (same IDs, new titles).
+ * Images are stored in Supabase Storage (works on Railway + local).
  *
  *   cd server && npm run seed:blueberries
  */
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
+import { seedImageToSupabase } from "../lib/seedImage.js";
 import {
   BLUEBERRIES_CATEGORY_ID,
   BLUEBERRY_PRODUCTS,
@@ -21,6 +22,10 @@ function descriptionFor(name) {
   return `Plump, antioxidant-rich ${name.toLowerCase()}. Great for breakfast bowls, baking, smoothies, and snacking.`;
 }
 
+function safeObjectId(productId) {
+  return productId.replace(/[^a-zA-Z0-9-_]/g, "-");
+}
+
 async function main() {
   const db = requireSupabase();
   const rows = [];
@@ -29,6 +34,9 @@ async function main() {
     const item = BLUEBERRY_PRODUCTS[i];
     const title = item.name.includes("One Source") ? item.name : `${item.name} – One Source`;
     const price = randomPrice(i);
+    const sourceUrl = blueberryImage(item.photo ?? i);
+    const objectPath = `products/seed-blueberry-${safeObjectId(item.id)}.webp`;
+    const image = await seedImageToSupabase(sourceUrl, objectPath);
 
     rows.push(
       seedRowFromJson({
@@ -38,7 +46,7 @@ async function main() {
         originalPrice: i % 4 === 0 ? Math.round(price * 1.12) : undefined,
         rating: Number((4.2 + Math.random() * 0.7).toFixed(1)),
         reviewCount: Math.floor(120 + Math.random() * 4800),
-        image: blueberryImage(item.photo ?? i),
+        image,
         category: BLUEBERRIES_CATEGORY_ID,
         unit: item.unit,
         prime: Math.random() > 0.25,
