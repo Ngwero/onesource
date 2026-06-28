@@ -1,4 +1,4 @@
-import { resolveImageUrl } from "../utils/imageUrl";
+import { resolveImageUrl, PLACEHOLDER_IMAGE } from "../utils/imageUrl";
 
 type Props = {
   src: string;
@@ -28,6 +28,13 @@ export function ProductImage({ src, alt, className = "", size = "card" }: Props)
         className="max-w-full max-h-full w-auto h-auto object-contain object-center drop-shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
         loading="lazy"
         decoding="async"
+        crossOrigin="anonymous"
+        onError={(e) => {
+          const img = e.currentTarget;
+          if (img.src !== PLACEHOLDER_IMAGE) {
+            img.src = PLACEHOLDER_IMAGE;
+          }
+        }}
       />
     </div>
   );

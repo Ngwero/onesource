@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ProductImageZoom } from "./ProductImageZoom";
+import { PLACEHOLDER_IMAGE } from "../../utils/imageUrl";
 
 type Props = {
   imageSrc: string;
@@ -46,7 +47,15 @@ export function ProductImageGallery({ imageSrc, alt, discount = 0 }: Props) {
               aria-label={t("product.imageN", { n: i + 1 })}
               aria-current={activeImage === i ? "true" : undefined}
             >
-              <img src={imageSrc} alt="" />
+              <img
+                src={imageSrc}
+                alt=""
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (img.src !== PLACEHOLDER_IMAGE) img.src = PLACEHOLDER_IMAGE;
+                }}
+              />
             </button>
           ))}
         </div>
@@ -70,7 +79,15 @@ export function ProductImageGallery({ imageSrc, alt, discount = 0 }: Props) {
             className={`pdp-thumb ${activeImage === i ? "pdp-thumb-active" : ""}`}
             aria-label={t("product.imageN", { n: i + 1 })}
           >
-            <img src={imageSrc} alt="" />
+            <img
+              src={imageSrc}
+              alt=""
+              crossOrigin="anonymous"
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (img.src !== PLACEHOLDER_IMAGE) img.src = PLACEHOLDER_IMAGE;
+              }}
+            />
           </button>
         ))}
       </div>
@@ -95,7 +112,12 @@ export function ProductImageGallery({ imageSrc, alt, discount = 0 }: Props) {
             src={imageSrc}
             alt={alt}
             className="pdp-lightbox-image"
+            crossOrigin="anonymous"
             onClick={(e) => e.stopPropagation()}
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (img.src !== PLACEHOLDER_IMAGE) img.src = PLACEHOLDER_IMAGE;
+            }}
           />
         </div>
       )}
