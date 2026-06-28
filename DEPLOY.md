@@ -44,6 +44,7 @@ In Railway → your service → **Variables**, add:
 | Variable | Purpose |
 |----------|---------|
 | `USE_SUPABASE_STORAGE` | Optional — defaults to **on** when Supabase is configured. Admin uploads go to the `images` bucket (live on Railway). Set `false` for local-only disk uploads. |
+| `SHOP_URL` | Public shop URL for password-reset emails. If omitted, Railway uses `https://YOUR-RAILWAY-DOMAIN` automatically. |
 | `SMTP_HOST` | Password reset emails |
 | `SMTP_PORT` | Usually `587` |
 | `SMTP_SECURE` | `false` for port 587 |
