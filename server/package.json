@@ -24,6 +24,7 @@
     "seed:yams": "node scripts/seed-yams.js",
     "seed:blueberries": "node scripts/seed-blueberries.js",
     "seed:raspberries": "node scripts/seed-raspberries.js",
+    "seed:cow-peas": "node scripts/seed-cow-peas.js",
     "restore:blueberry-images": "node scripts/restore-blueberry-images.js",
     "seed:lamb": "node scripts/seed-lamb.js",
     "seed:broccoli": "node scripts/seed-broccoli.js",
