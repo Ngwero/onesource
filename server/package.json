@@ -8,6 +8,7 @@
     "seed": "node seed.js",
     "check:env": "node scripts/check-env.js",
     "migrate:categories": "node scripts/migrate-categories.js",
+    "migrate:uploads": "node scripts/migrate-uploads-to-supabase.js",
     "seed:categories": "node scripts/seed-categories.js",
     "seed:hero": "node scripts/seed-hero.js",
     "seed:bulk": "node scripts/seed-bulk.js",

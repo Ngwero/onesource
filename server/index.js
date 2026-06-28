@@ -62,14 +62,27 @@ app.use("/api/hero", heroRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "uploads"), {
-    setHeaders(res) {
-      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    },
-  })
-);
+
+const uploadsDir = path.join(__dirname, "uploads");
+const storageBucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
+
+app.get(/^\/uploads\/(.+)$/, async (req, res) => {
+  const rel = req.params[0];
+  const localPath = path.join(uploadsDir, rel);
+
+  if (fs.existsSync(localPath)) {
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    return res.sendFile(localPath);
+  }
+
+  if (isSupabaseConfigured()) {
+    const base = env.supabaseUrl.replace(/\/$/, "");
+    const url = `${base}/storage/v1/object/public/${storageBucket}/${rel}`;
+    return res.redirect(302, url);
+  }
+
+  res.status(404).end();
+});
 
 const adminDir = path.join(__dirname, "public");
 const adminHtml = path.join(adminDir, "admin.html");
