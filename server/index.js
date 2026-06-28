@@ -3,7 +3,7 @@ import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { env, isSupabaseConfigured, isSmtpConfigured } from "./lib/env.js";
+import { env, isSupabaseConfigured, isSmtpConfigured, useSupabaseStorage } from "./lib/env.js";
 import productsRouter from "./routes/products.js";
 import categoriesRouter from "./routes/categories.js";
 import uploadRouter from "./routes/upload.js";
@@ -138,7 +138,9 @@ app.listen(PORT, () => {
   console.log(`Admin panel: http://localhost:${PORT}/admin`);
   console.log(
     isSupabaseConfigured()
-      ? "Database: Supabase"
+      ? useSupabaseStorage()
+        ? "Uploads: Supabase Storage (live URLs — shop + Railway)"
+        : "Uploads: local disk (USE_SUPABASE_STORAGE=false)"
       : "Warning: Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in server/.env (npm run check:env)"
   );
   console.log(

@@ -47,6 +47,13 @@ export function isSupabaseConfigured() {
   return Boolean(env.supabaseUrl && env.supabaseServiceRoleKey);
 }
 
+export function useSupabaseStorage() {
+  if (!isSupabaseConfigured()) return false;
+  const flag = process.env.USE_SUPABASE_STORAGE?.trim().toLowerCase();
+  if (!flag) return true;
+  return flag === "1" || flag === "true" || flag === "yes";
+}
+
 export function isSmtpConfigured() {
   const { host, user, pass, from } = env.smtp;
   return Boolean(host && user && pass && from);

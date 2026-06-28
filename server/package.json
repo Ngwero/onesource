@@ -23,6 +23,7 @@
     "seed:peri-peri": "node scripts/seed-peri-peri.js",
     "seed:yams": "node scripts/seed-yams.js",
     "seed:blueberries": "node scripts/seed-blueberries.js",
+    "restore:blueberry-images": "node scripts/restore-blueberry-images.js",
     "seed:lamb": "node scripts/seed-lamb.js",
     "seed:broccoli": "node scripts/seed-broccoli.js",
     "seed:lentils": "node scripts/seed-lentils.js",

@@ -1,8 +1,9 @@
 /**
  * Seed 20 blueberry products in fresh-fruits.
- * Images are stored in Supabase Storage (works on Railway + local).
+ * Does NOT overwrite images unless you pass --with-images.
  *
  *   cd server && npm run seed:blueberries
+ *   cd server && npm run seed:blueberries -- --with-images
  */
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
@@ -12,6 +13,8 @@ import {
   BLUEBERRY_PRODUCTS,
   blueberryImage,
 } from "../data/blueberriesCatalog.js";
+
+const withImages = process.argv.includes("--with-images");
 
 function randomPrice(i) {
   const base = 4500 + i * 280;
@@ -28,15 +31,23 @@ function safeObjectId(productId) {
 
 async function main() {
   const db = requireSupabase();
+  const ids = BLUEBERRY_PRODUCTS.map((p) => p.id);
+  const { data: existingRows } = await db.from("products").select("id, image").in("id", ids);
+  const imageById = Object.fromEntries((existingRows ?? []).map((r) => [r.id, r.image]));
+
   const rows = [];
 
   for (let i = 0; i < BLUEBERRY_PRODUCTS.length; i++) {
     const item = BLUEBERRY_PRODUCTS[i];
     const title = item.name.includes("One Source") ? item.name : `${item.name} – One Source`;
     const price = randomPrice(i);
-    const sourceUrl = blueberryImage(item.photo ?? i);
-    const objectPath = `products/seed-blueberry-${safeObjectId(item.id)}.webp`;
-    const image = await seedImageToSupabase(sourceUrl, objectPath);
+
+    let image = imageById[item.id];
+    if (withImages || !image) {
+      const sourceUrl = blueberryImage(item.photo ?? i);
+      const objectPath = `products/seed-blueberry-${safeObjectId(item.id)}.webp`;
+      image = await seedImageToSupabase(sourceUrl, objectPath);
+    }
 
     rows.push(
       seedRowFromJson({
@@ -64,10 +75,10 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Seeded ${rows.length} blueberry products (${BLUEBERRIES_CATEGORY_ID}).`);
-  for (const item of BLUEBERRY_PRODUCTS) {
-    console.log(`  • ${item.id} — ${item.name}`);
-  }
+  console.log(
+    `Seeded ${rows.length} blueberry products` +
+      (withImages ? " (images replaced)" : " (images preserved)")
+  );
 }
 
 main().catch((e) => {

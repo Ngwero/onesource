@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs/promises";
 import { fileURLToPath } from "url";
 import { requireSupabase } from "./supabase.js";
+import { isSupabaseConfigured, useSupabaseStorage } from "./env.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_ROOT = path.join(__dirname, "..", "uploads");
@@ -66,10 +67,6 @@ async function saveSupabaseWebp(webpBuffer, folder) {
  * @param {Buffer} fileBuffer
  * @param {{ folder?: string, mime?: string }} options
  */
-function useSupabaseStorage() {
-  return process.env.USE_SUPABASE_STORAGE === "true";
-}
-
 /** Relative path works on admin (:3001) and shop (:5173 via Vite /uploads proxy). */
 function localPublicPath(relativePath) {
   return `/uploads/${relativePath}`;
@@ -107,16 +104,9 @@ export async function processAndStoreImage(req, fileBuffer, options = {}) {
       size: webpBuffer.length,
     };
   } catch (storageErr) {
-    log(`supabase failed (${storageErr.message}), using local`);
-    const local = await saveLocalWebp(webpBuffer, folder);
-    const url = localPublicPath(local.path);
-    return {
-      url,
-      storage: "local",
-      format: "webp",
-      size: webpBuffer.length,
-      storageNote:
-        "Supabase Storage failed — saved locally. Set USE_SUPABASE_STORAGE=true and bucket “images” for cloud URLs.",
-    };
+    console.error(`[upload] supabase failed (${storageErr.message})`);
+    throw new Error(
+      `Cloud upload failed: ${storageErr.message}. Fix Supabase Storage (bucket "images") — images are not saved locally in production mode.`
+    );
   }
 }
