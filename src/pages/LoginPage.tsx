@@ -134,11 +134,11 @@ export function LoginPage() {
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
-              pattern="\d{6}"
-              maxLength={6}
+              pattern="\d{6,8}"
+              maxLength={8}
               required
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))}
               className="form-input text-center text-lg tracking-[0.3em] font-semibold"
               placeholder="000000"
             />
@@ -148,7 +148,7 @@ export function LoginPage() {
 
           <button
             type="submit"
-            disabled={submitting || otp.length !== 6}
+            disabled={submitting || otp.length < 6}
             className="btn-primary w-full min-h-[48px] disabled:opacity-50"
           >
             {submitting ? t("auth.verifyingOtp") : t("auth.verifyOtp")}

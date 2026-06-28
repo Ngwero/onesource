@@ -1,8 +1,8 @@
 import nodemailer from "nodemailer";
 import { assertSmtpConfigured, env, isSmtpConfigured } from "./env.js";
 import {
-  defaultOtpFootnotes,
-  defaultSecurityFootnotes,
+  defaultOtpSecurityNote,
+  defaultSecurityNote,
   OTP_VALID_SECONDS,
   renderBrandedEmail,
   renderOtpActionBox,
@@ -65,17 +65,15 @@ function greetingLine(fullName) {
 
 export async function sendPasswordResetEmail({ email, fullName, resetLink }) {
   const html = renderBrandedEmail({
-    headerLabel: "Account",
-    heroTag: "Password reset",
-    heroTitle: "Reset your One Source password",
-    heroSubtitle: "We received a request to reset the password for your account.",
+    eyebrow: "Account security",
+    title: "Reset your password",
+    subtitle: "We received a request to change your account password.",
     greeting: fullName,
     bodyParagraphs: [
-      `Please use the link below to choose a new password for <strong style="color:#2e5e4a;">${email}</strong>.`,
-      "If you did not request a password reset, you can safely ignore this email.",
+      `A password reset was requested for <strong style="color:#244a3b;">${email}</strong>. Click the button below to choose a new password.`,
     ],
     actionBox: renderResetActionBox(resetLink),
-    footnotes: defaultSecurityFootnotes(),
+    securityNote: defaultSecurityNote(),
   });
 
   await sendBrandedMail({
@@ -98,21 +96,15 @@ export async function sendPasswordResetEmail({ email, fullName, resetLink }) {
 export async function sendWelcomeEmail({ email, fullName }) {
   const shopUrl = env.shopUrl;
   const html = renderBrandedEmail({
-    headerLabel: "Welcome",
-    heroTag: "Welcome",
-    heroTitle: "Welcome to One Source",
-    heroSubtitle: "Fresh produce delivered across Uganda — your account is ready.",
+    eyebrow: "Welcome aboard",
+    title: "Welcome to One Source",
+    subtitle: "Fresh produce delivered across Uganda — your account is ready.",
     greeting: fullName,
     bodyParagraphs: [
       "Thank you for creating your One Source account. You can now track orders, save items, and checkout faster.",
       `Sign in any time at <a href="${shopUrl}/login" style="color:#2e5e4a;">${shopUrl}/login</a>.`,
     ],
     actionBox: renderWelcomeActionBox(shopUrl),
-    footnotes: [
-      "Please keep your password secure and do not share it with anyone.",
-      `Bookmark <a href="${shopUrl}" style="color:#2e5e4a;">${shopUrl}</a> for quick access.`,
-      "This is an auto-generated message. Please do not reply to this email.",
-    ],
   });
 
   await sendBrandedMail({
@@ -132,16 +124,15 @@ export async function sendWelcomeEmail({ email, fullName }) {
 
 export async function sendLoginOtpEmail({ email, fullName, otp }) {
   const html = renderBrandedEmail({
-    headerLabel: "Login",
-    heroTag: "Secure login",
-    heroTitle: "OTP to sign in",
-    heroSubtitle: "Use this one-time code to complete your login on the One Source shop.",
+    eyebrow: "Secure account access",
+    title: "Sign-in verification code",
+    subtitle: "Use the code below to complete your login.",
     greeting: fullName,
     bodyParagraphs: [
-      "Please find the OTP below for one-time login on the One Source shop portal.",
+      "We received a sign-in request for your One Source account. Enter this one-time code on the login screen to continue.",
     ],
     actionBox: renderOtpActionBox(otp),
-    footnotes: defaultOtpFootnotes(),
+    securityNote: defaultOtpSecurityNote(),
   });
 
   await sendBrandedMail({

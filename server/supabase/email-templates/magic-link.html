@@ -7,72 +7,88 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Your One Source sign-in code</title>
   </head>
-  <body style="margin:0;padding:0;background-color:#f3f2ee;font-family:Arial,Helvetica,sans-serif;color:#1c1c1c;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f3f2ee;">
+  <body style="margin:0;padding:0;background-color:#eceee9;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1c1c;-webkit-font-smoothing:antialiased;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#eceee9;">
       <tr>
-        <td align="center" style="padding:20px 12px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;">
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width:560px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #dde3dc;">
 
+            <!-- Logo header -->
             <tr>
-              <td style="background-color:#244a3b;padding:14px 20px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <td style="background:linear-gradient(180deg,#2e5e4a 0%,#244a3b 100%);padding:28px 32px 24px;text-align:center;">
+                <a href="{{ .SiteURL }}" style="text-decoration:none;display:inline-block;">
+                  <img
+                    src="{{ .SiteURL }}/brand/logo-on-dark-horizontal.png"
+                    alt="One Source"
+                    width="200"
+                    style="display:block;margin:0 auto;border:0;max-width:200px;height:auto;"
+                  />
+                </a>
+                <p style="margin:14px 0 0;font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#b4cf5a;">Secure account access</p>
+              </td>
+            </tr>
+
+            <!-- Title band -->
+            <tr>
+              <td style="background-color:#faf9f6;padding:24px 32px 8px;border-bottom:1px solid #e8ebe4;">
+                <h1 style="margin:0;font-size:22px;line-height:1.3;font-weight:700;color:#1c1c1c;letter-spacing:-0.02em;">Sign-in verification code</h1>
+                <p style="margin:8px 0 0;font-size:15px;line-height:1.5;color:#5c5c58;">Use the code below to complete your login.</p>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding:28px 32px 8px;">
+                <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#1c1c1c;">
+                  {{ if .Data.full_name }}Dear {{ .Data.full_name }},{{ else }}Dear customer,{{ end }}
+                </p>
+                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#3d3d3d;">
+                  We received a sign-in request for your One Source account. Enter this one-time code on the login screen to continue.
+                </p>
+
+                <!-- OTP card -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 28px;">
                   <tr>
-                    <td align="left" valign="middle" width="45%">
-                      <img src="{{ .SiteURL }}/brand/logo-on-dark-stacked.png" alt="One Source" width="130" style="display:block;border:0;max-width:130px;height:auto;" />
-                    </td>
-                    <td align="center" valign="middle" width="30%">
-                      <span style="font-size:13px;font-weight:700;color:#f0c947;">One Source</span>
-                    </td>
-                    <td align="right" valign="middle" width="25%">
-                      <a href="{{ .SiteURL }}" style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#edf3e0;text-decoration:none;">Go to shop</a>
+                    <td align="center" style="background-color:#f4f8f5;border:1px solid #c8dcc8;border-radius:12px;padding:28px 20px;">
+                      <p style="margin:0 0 12px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#5c7a68;">Your verification code</p>
+                      <p style="margin:0;font-size:34px;font-weight:700;letter-spacing:0.28em;color:#244a3b;font-family:'Courier New',Courier,monospace;line-height:1.2;">{{ .Token }}</p>
+                      <p style="margin:14px 0 0;font-size:12px;color:#5c5c58;">Valid for a short time · Do not share this code</p>
                     </td>
                   </tr>
                 </table>
-              </td>
-            </tr>
 
-            <tr>
-              <td style="background:linear-gradient(135deg,#2e5e4a 0%,#244a3b 60%,#1a3d30 100%);padding:28px 24px;">
-                <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#b4cf5a;">Secure login</p>
-                <h1 style="margin:0 0 10px;font-size:24px;line-height:1.2;font-weight:800;color:#ffffff;">OTP to sign in</h1>
-                <p style="margin:0;font-size:14px;line-height:1.5;color:#d8e8d8;">Use this one-time code to complete your login on the One Source shop.</p>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="background-color:#ffffff;padding:28px 24px 20px;">
-                <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#1c1c1c;">
-                  {{ if .Data.full_name }}Hi {{ .Data.full_name }},{{ else }}Hi there,{{ end }}
-                </p>
-
-                <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#1c1c1c;">
-                  Please find the OTP below for one-time login on the One Source shop portal.
-                </p>
-
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0;">
+                <!-- Security notice -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px;background-color:#faf9f6;border-radius:10px;border:1px solid #e8ebe4;">
                   <tr>
-                    <td style="border:2px dashed #2e5e4a;border-radius:8px;padding:22px 20px;background-color:#faf9f6;text-align:center;">
-                      <p style="margin:0 0 6px;font-size:12px;color:#5c5c58;">Your login code</p>
-                      <p style="margin:0;font-size:28px;font-weight:800;letter-spacing:0.2em;color:#2e5e4a;">OTP : {{ .Token }}</p>
+                    <td style="padding:16px 18px;">
+                      <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#244a3b;">Security reminder</p>
+                      <p style="margin:0;font-size:13px;line-height:1.55;color:#5c5c58;">One Source will never ask for this code by phone or message. If you did not try to sign in, you can ignore this email and your account will remain secure.</p>
                     </td>
                   </tr>
                 </table>
 
-                <p style="margin:0 0 8px;font-size:11px;line-height:1.55;color:#5c5c58;"><strong style="color:#2e5e4a;">a.</strong> This code expires shortly. Do not share it with anyone.</p>
-                <p style="margin:0;font-size:11px;line-height:1.55;color:#5c5c58;"><strong style="color:#2e5e4a;">b.</strong> This is an auto-generated message from One Source. Please do not reply.</p>
-
-                <p style="margin:24px 0 0;font-size:14px;line-height:1.5;color:#1c1c1c;">
-                  Regards,<br />
-                  <strong>One Source Account Team</strong>
+                <p style="margin:0;font-size:15px;line-height:1.6;color:#1c1c1c;">
+                  Kind regards,<br />
+                  <strong style="color:#244a3b;">The One Source Team</strong>
                 </p>
               </td>
             </tr>
 
+            <!-- Footer -->
             <tr>
-              <td style="background-color:#1c3d2f;padding:18px 24px;text-align:center;">
-                <p style="margin:0;font-size:10px;line-height:1.5;color:#9bb5a8;">© One Source. Quality fresh produce delivered across Uganda.</p>
+              <td style="background-color:#244a3b;padding:22px 32px;text-align:center;">
+                <p style="margin:0 0 12px;font-size:12px;font-weight:600;">
+                  <a href="{{ .SiteURL }}" style="color:#edf3e0;text-decoration:none;margin:0 8px;">Shop</a>
+                  <span style="color:#5c7a68;">·</span>
+                  <a href="{{ .SiteURL }}/account" style="color:#edf3e0;text-decoration:none;margin:0 8px;">Account</a>
+                  <span style="color:#5c7a68;">·</span>
+                  <a href="{{ .SiteURL }}/orders" style="color:#edf3e0;text-decoration:none;margin:0 8px;">Orders</a>
+                </p>
+                <p style="margin:0;font-size:11px;line-height:1.5;color:#9bb5a8;">© One Source · Fresh produce delivered across Uganda</p>
+                <p style="margin:8px 0 0;font-size:10px;color:#7a9488;">This is an automated message. Please do not reply.</p>
               </td>
             </tr>
 

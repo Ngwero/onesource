@@ -110,7 +110,7 @@
     "resetLinkInvalid": "This reset link is invalid or has expired. Request a new one to continue.",
     "verifyingResetLink": "Verifying your reset link…",
     "otpTitle": "Enter your login code",
-    "otpSubtitle": "We sent a 6-digit code to {{email}}. It expires in 5 minutes.",
+    "otpSubtitle": "We sent a verification code to {{email}}. It expires in 5 minutes.",
     "otpLabel": "One-time code (OTP)",
     "verifyOtp": "Verify and sign in",
     "verifyingOtp": "Verifying…",
