@@ -11,6 +11,10 @@ Set **Site URL** to your live shop (e.g. `https://www.onesourco.com`) so the log
 | **Reset password** | `Reset your One Source password` |
 | **Confirm signup** | `Welcome to One Source — confirm your email` |
 | **Magic link** | `Your One Source sign-in code` |
+
+Paste `magic-link.html` into the **Magic link** template — it shows the 6-digit `{{ .Token }}` for login OTP.
+
+Enable in Supabase → **Authentication** → **Providers** → **Email** → turn on **Email OTP** (or “Confirm email with OTP” depending on dashboard version).
 | **Invite user** | `You're invited to One Source` |
 
 ## Sender name

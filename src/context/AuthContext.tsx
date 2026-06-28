@@ -1,9 +1,5 @@
 import i18n from "../i18n";
-import {
-  requestLoginOtp,
-  sendWelcomeEmail as sendWelcomeEmailApi,
-  verifyLoginOtp as verifyLoginOtpApi,
-} from "../api/client";
+import { requestLoginOtp, sendWelcomeEmail as sendWelcomeEmailApi } from "../api/client";
 import {
   createContext,
   useCallback,
@@ -14,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { isPasswordRecoveryCallback } from "../lib/authRecovery";
 import { getSupabase, isSupabaseConfigured, type Profile } from "../lib/supabase";
 
 type AuthContextValue = {
@@ -84,13 +81,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const supabase = getSupabase();
+    const recoveryCallback = isPasswordRecoveryCallback();
+
+    if (recoveryCallback) {
+      setPasswordRecovery(true);
+    }
 
     supabase.auth.getSession().then(({ data }) => {
-      const hashType = new URLSearchParams(window.location.hash.replace(/^#/, "")).get(
-        "type"
-      );
-      if (hashType === "recovery") {
-        setPasswordRecovery(true);
+      if (recoveryCallback || data.session) {
+        const hashType = new URLSearchParams(window.location.hash.replace(/^#/, "")).get(
+          "type"
+        );
+        if (hashType === "recovery" || recoveryCallback) {
+          setPasswordRecovery(true);
+        }
       }
 
       setSession(data.session);
@@ -109,11 +113,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPasswordRecovery(true);
       }
       if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-        const hashType = new URLSearchParams(window.location.hash.replace(/^#/, "")).get(
-          "type"
-        );
-        if (hashType === "recovery") {
+        if (isPasswordRecoveryCallback()) {
           setPasswordRecovery(true);
+        } else {
+          const hashType = new URLSearchParams(window.location.hash.replace(/^#/, "")).get(
+            "type"
+          );
+          if (hashType === "recovery") {
+            setPasswordRecovery(true);
+          }
         }
       }
       setSession(nextSession);
@@ -134,25 +142,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const result = await requestLoginOtp(email.trim(), password);
-      if (result.error) {
-        return { error: result.error };
+      const trimmedEmail = email.trim().toLowerCase();
+      const verified = await requestLoginOtp(trimmedEmail, password);
+      if (verified.error) {
+        return { error: verified.error };
       }
 
-      if (result.otpRequired) {
-        return { error: null, requiresOtp: true };
+      const supabase = getSupabase();
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: trimmedEmail,
+        options: { shouldCreateUser: false },
+      });
+
+      if (otpError) {
+        return { error: otpError.message };
       }
 
-      if (result.access_token && result.refresh_token) {
-        const supabase = getSupabase();
-        const { error } = await supabase.auth.setSession({
-          access_token: result.access_token,
-          refresh_token: result.refresh_token,
-        });
-        return { error: error?.message ?? null };
-      }
-
-      return { error: i18n.t("errors.signInFailed") };
+      return { error: null, requiresOtp: true };
     } catch (e) {
       return { error: e instanceof Error ? e.message : i18n.t("errors.signInFailed") };
     }
@@ -160,21 +166,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const verifyLoginOtp = useCallback(async (email: string, otp: string) => {
     try {
-      const result = await verifyLoginOtpApi(email.trim(), otp.trim());
-      if (result.error) {
-        return { error: result.error };
-      }
-
-      if (result.access_token && result.refresh_token) {
-        const supabase = getSupabase();
-        const { error } = await supabase.auth.setSession({
-          access_token: result.access_token,
-          refresh_token: result.refresh_token,
-        });
-        return { error: error?.message ?? null };
-      }
-
-      return { error: i18n.t("errors.otpInvalid") };
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: otp.trim(),
+        type: "email",
+      });
+      return { error: error?.message ?? null };
     } catch (e) {
       return { error: e instanceof Error ? e.message : i18n.t("errors.otpInvalid") };
     }
@@ -251,13 +249,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const supabase = getSupabase();
       const { error } = await supabase.auth.updateUser({ password });
       if (!error) {
+        setPasswordRecovery(false);
         await supabase.auth.signOut();
         setSession(null);
         setUser(null);
         setProfile(null);
-        if (window.location.hash) {
-          window.history.replaceState(null, "", window.location.pathname);
-        }
+        window.history.replaceState(null, "", window.location.pathname);
       }
       return { error: error?.message ?? null };
     } catch (e) {

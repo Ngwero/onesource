@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AuthShell } from "../components/AuthShell";
 import { useAuth } from "../context/AuthContext";
+import { isPasswordRecoveryCallback } from "../lib/authRecovery";
 
 export function ResetPasswordPage() {
   const { t } = useTranslation();
   const { updatePassword, configured, loading, passwordRecovery } = useAuth();
   const navigate = useNavigate();
+  const recoveryCallback = isPasswordRecoveryCallback();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -46,8 +48,9 @@ export function ResetPasswordPage() {
     setCompleted(true);
   };
 
-  const showInvalidLink = !loading && !passwordRecovery && !completed;
-  const showForm = !loading && passwordRecovery && !completed;
+  const canReset = passwordRecovery || recoveryCallback;
+  const showInvalidLink = !loading && !completed && !canReset;
+  const showForm = !loading && !completed && canReset;
 
   return (
     <AuthShell>

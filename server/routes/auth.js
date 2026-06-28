@@ -2,16 +2,12 @@ import { Router } from "express";
 import { verifyUserCredentials } from "../lib/authCredentials.js";
 import { env, isSmtpConfigured } from "../lib/env.js";
 import {
-  sendLoginOtpEmail,
   sendPasswordResetEmail,
   sendWelcomeEmail,
 } from "../lib/mail.js";
 import {
   canRequestOtp,
-  generateOtp,
   recordOtpRequest,
-  storeLoginOtp,
-  verifyLoginOtp,
 } from "../lib/otpStore.js";
 import { requireSupabase } from "../lib/supabase.js";
 
@@ -139,47 +135,21 @@ router.post("/login/request-otp", async (req, res) => {
       return res.status(400).json({ error: "Password is required." });
     }
 
-    const verified = await verifyUserCredentials(email, password);
-    if (!verified.ok) {
-      return res.status(401).json({ error: "Invalid email or password." });
-    }
-
-    if (!isSmtpConfigured()) {
-      return res.json({
-        ok: true,
-        otpRequired: false,
-        access_token: verified.accessToken,
-        refresh_token: verified.refreshToken,
-      });
-    }
-
     if (!canRequestOtp(email)) {
       return res.status(429).json({
         error: "Too many login attempts. Please wait a few minutes and try again.",
       });
     }
 
+    const verified = await verifyUserCredentials(email, password);
+    if (!verified.ok) {
+      return res.status(401).json({ error: "Invalid email or password." });
+    }
+
     recordOtpRequest(email);
 
-    const supabase = requireSupabase();
-    const metaName = verified.user?.user_metadata?.full_name;
-    const fullName =
-      (typeof metaName === "string" ? metaName.trim() : "") ||
-      (await lookupProfileName(supabase, verified.user?.id)) ||
-      "";
-
-    const otp = generateOtp();
-    storeLoginOtp(email, otp, {
-      accessToken: verified.accessToken,
-      refreshToken: verified.refreshToken,
-    });
-
-    res.json({ ok: true, otpRequired: true });
-
-    void sendLoginOtpEmail({ email, fullName, otp }).catch((err) => {
-      console.error("[auth] login OTP email failed:", err);
-    });
-    return;
+    // OTP email is sent by Supabase on the client (signInWithOtp) — not Railway SMTP.
+    return res.json({ ok: true, verified: true });
   } catch (e) {
     console.error("[auth] login/request-otp failed:", e);
     return res.status(500).json({
@@ -188,48 +158,12 @@ router.post("/login/request-otp", async (req, res) => {
   }
 });
 
-router.post("/login/verify-otp", async (req, res) => {
-  try {
-    const email = String(req.body?.email ?? "")
-      .trim()
-      .toLowerCase();
-    const otp = String(req.body?.otp ?? "").trim();
-
-    if (!email || !isValidEmail(email)) {
-      return res.status(400).json({ error: "A valid email address is required." });
-    }
-    if (!/^\d{6}$/.test(otp)) {
-      return res.status(400).json({ error: "Enter the 6-digit code from your email." });
-    }
-
-    const result = verifyLoginOtp(email, otp);
-    if (!result.ok) {
-      const messages = {
-        invalid_or_expired: "This code has expired. Please sign in again.",
-        invalid_code: "Incorrect code. Please try again.",
-        too_many_attempts: "Too many incorrect attempts. Please sign in again.",
-      };
-      return res.status(401).json({ error: messages[result.error] ?? "Invalid code." });
-    }
-
-    return res.json({
-      ok: true,
-      access_token: result.accessToken,
-      refresh_token: result.refreshToken,
-    });
-  } catch (e) {
-    console.error("[auth] login/verify-otp failed:", e);
-    return res.status(500).json({
-      error: e instanceof Error ? e.message : "Could not verify login code",
-    });
-  }
-});
-
 router.get("/status", (_req, res) => {
   res.json({
     smtp: isSmtpConfigured(),
     shopUrl: env.shopUrl,
-    otpLogin: isSmtpConfigured(),
+    otpLogin: true,
+    otpProvider: "supabase",
   });
 });
 
