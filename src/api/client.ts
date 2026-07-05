@@ -92,7 +92,7 @@ export async function requestPasswordReset(
   redirectTo: string
 ): Promise<{ error: string | null }> {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 30_000);
+  const timeout = window.setTimeout(() => controller.abort(), 45_000);
 
   try {
     const res = await fetch(`${API_BASE}/auth/forgot-password`, {

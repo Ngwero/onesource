@@ -5,6 +5,7 @@ import {
   sendPasswordResetEmail,
   sendWelcomeEmail,
   sendLoginOtpEmail,
+  verifySmtpConnection,
 } from "../lib/mail.js";
 import {
   canRequestOtp,
@@ -82,10 +83,16 @@ router.post("/forgot-password", async (req, res) => {
             "Too many password reset emails. Wait about an hour, or in Supabase go to Authentication → SMTP (set up custom SMTP) and Authentication → Rate Limits to raise the email cap.",
         });
       }
-      console.warn("[auth] forgot-password generateLink:", error.message);
+      if (error.code === "user_not_found" || error.status === 404) {
+        // Do not reveal whether the email is registered.
+        return res.json({ ok: true });
+      }
+      console.warn("[auth] forgot-password generateLink:", error.code ?? error.message);
+      return res.json({ ok: true });
     }
 
-    if (error || !data?.properties?.action_link) {
+    if (!data?.properties?.action_link) {
+      console.warn("[auth] forgot-password generateLink: missing action_link");
       return res.json({ ok: true });
     }
 
@@ -97,13 +104,16 @@ router.post("/forgot-password", async (req, res) => {
 
     const resetLink = data.properties.action_link;
 
-    // Respond immediately — SMTP from cloud hosts can be slow or hang.
-    res.json({ ok: true });
-
-    void sendPasswordResetEmail({ email, fullName, resetLink }).catch((err) => {
+    try {
+      await sendPasswordResetEmail({ email, fullName, resetLink });
+      return res.json({ ok: true, sent: true });
+    } catch (err) {
       console.error("[auth] forgot-password email failed:", err);
-    });
-    return;
+      return res.status(503).json({
+        error:
+          "We could not send the reset email right now. The mail server may be unreachable from production — use Brevo or SendGrid for SMTP on Railway, or try again shortly.",
+      });
+    }
   } catch (e) {
     console.error("[auth] forgot-password failed:", e);
     return res.status(500).json({
@@ -242,13 +252,21 @@ router.post("/login/verify-otp", async (req, res) => {
   }
 });
 
-router.get("/status", (_req, res) => {
-  res.json({
+router.get("/status", async (req, res) => {
+  const payload = {
     smtp: isSmtpConfigured(),
     shopUrl: env.shopUrl,
     otpLogin: true,
     otpProvider: "onesource-smtp",
-  });
+  };
+
+  if (req.query.verify === "1" && isSmtpConfigured()) {
+    const check = await verifySmtpConnection();
+    payload.smtpVerified = check.ok;
+    if (!check.ok) payload.smtpError = check.error;
+  }
+
+  res.json(payload);
 });
 
 export default router;
