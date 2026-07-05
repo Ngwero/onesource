@@ -18,8 +18,6 @@ import type { Session, User } from "@supabase/supabase-js";
 import { isPasswordRecoveryCallback } from "../lib/authRecovery";
 import { getSupabase, isSupabaseConfigured, type Profile } from "../lib/supabase";
 
-const AUTH_EMAIL_TIMEOUT_MS = 45_000;
-
 function mapAuthEmailError(message: string): string {
   const lower = message.toLowerCase();
   if (lower.includes("rate limit")) {
@@ -33,15 +31,6 @@ function mapAuthEmailError(message: string): string {
     return i18n.t("errors.otpEmailSendFailed");
   }
   return message;
-}
-
-function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      window.setTimeout(() => reject(new Error(timeoutMessage)), ms);
-    }),
-  ]);
 }
 
 type AuthContextValue = {
