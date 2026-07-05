@@ -1,4 +1,5 @@
 import { env } from "./env.js";
+import { EMAIL_IMAGE_CIDS } from "./emailAssets.js";
 
 const OTP_VALID_SECONDS = Number(process.env.OTP_TTL_SECONDS) || 300;
 
@@ -89,12 +90,13 @@ function renderCtaButton(href, label) {
   </table>`;
 }
 
-function renderEmailHeader(shopUrl, logoUrl, headerLabel) {
+function renderEmailHeader(shopUrl, headerLabel) {
+  const logoSrc = `cid:${EMAIL_IMAGE_CIDS.logo}`;
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
       <td align="left" valign="middle" width="34%">
         <a href="${shopUrl}" style="text-decoration:none;">
-          <img src="${logoUrl}" alt="One Source" width="108" style="display:block;border:0;max-width:108px;height:auto;" />
+          <img src="${logoSrc}" alt="One Source" width="108" height="auto" style="display:block;border:0;max-width:108px;height:auto;" />
         </a>
       </td>
       <td align="center" valign="middle" width="32%" style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;line-height:1.3;">
@@ -105,6 +107,22 @@ function renderEmailHeader(shopUrl, logoUrl, headerLabel) {
       </td>
     </tr>
   </table>`;
+}
+
+function renderHeroSection(heroEyebrow, heroTitle, heroSubtitle) {
+  const heroSrc = `cid:${EMAIL_IMAGE_CIDS.hero}`;
+  return `<tr>
+            <td style="padding:0;line-height:0;font-size:0;">
+              <img src="${heroSrc}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:${EMAIL_BRAND.accentDark};padding:28px 30px 32px;">
+              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${EMAIL_BRAND.lemon};">${escapeHtml(heroEyebrow)}</p>
+              <h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;font-weight:800;color:#ffffff;letter-spacing:-0.02em;">${escapeHtml(heroTitle)}</h1>
+              ${heroSubtitle ? `<p style="margin:0;font-size:14px;line-height:1.55;color:${EMAIL_BRAND.accentLight};">${escapeHtml(heroSubtitle)}</p>` : ""}
+            </td>
+          </tr>`;
 }
 
 /**
@@ -124,8 +142,6 @@ export function renderBrandedEmail({
   closingName = "One Source Account Team",
 }) {
   const shopUrl = env.shopUrl;
-  const heroImage = `${shopUrl}/brand/email-hero.jpg`;
-  const logoUrl = `${shopUrl}/brand/logo-on-dark-stacked.png`;
   const greetingLine = formatGreeting(greeting);
 
   const bodyHtml = bodyParagraphs
@@ -159,24 +175,11 @@ export function renderBrandedEmail({
           <!-- Top bar -->
           <tr>
             <td style="background-color:${EMAIL_BRAND.accentDark};padding:16px 22px;">
-              ${renderEmailHeader(shopUrl, logoUrl, headerLabel)}
+              ${renderEmailHeader(shopUrl, headerLabel)}
             </td>
           </tr>
 
-          <!-- Hero banner -->
-          <tr>
-            <td bgcolor="${EMAIL_BRAND.accentDark}" background="${heroImage}" style="background-color:${EMAIL_BRAND.accentDark};background-image:linear-gradient(105deg, rgba(26,61,48,0.92) 0%, rgba(36,74,59,0.72) 45%, rgba(46,94,74,0.35) 100%), url('${heroImage}');background-size:cover;background-position:center center;padding:40px 30px 36px;">
-              <!--[if gte mso 9]>
-              <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;">
-                <v:fill type="frame" src="${heroImage}" color="${EMAIL_BRAND.accentDark}" />
-                <v:textbox inset="0,0,0,0">
-              <![endif]-->
-              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${EMAIL_BRAND.lemon};">${escapeHtml(heroEyebrow)}</p>
-              <h1 style="margin:0 0 12px;font-size:28px;line-height:1.18;font-weight:800;color:#ffffff;letter-spacing:-0.02em;max-width:440px;">${escapeHtml(heroTitle)}</h1>
-              ${heroSubtitle ? `<p style="margin:0;font-size:14px;line-height:1.55;color:${EMAIL_BRAND.accentLight};max-width:420px;">${escapeHtml(heroSubtitle)}</p>` : ""}
-              <!--[if gte mso 9]></v:textbox></v:rect><![endif]-->
-            </td>
-          </tr>
+          ${renderHeroSection(heroEyebrow, heroTitle, heroSubtitle)}
 
           <!-- Body -->
           <tr>
@@ -222,12 +225,9 @@ export function renderResetActionBox(resetLink, email) {
       { label: "Account", value: `<strong>${escapeHtml(email)}</strong>` },
       { label: "Action", value: "Password reset requested" },
     ])}
-    <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:${EMAIL_BRAND.textMuted};">Click below to choose a new password. This link can only be used once.</p>
+    <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:${EMAIL_BRAND.textMuted};">Click the button below to choose a new password. This link can only be used once.</p>
     ${renderCtaButton(resetLink, "Reset password")}
-    <p style="margin:16px 0 0;font-size:11px;line-height:1.5;word-break:break-all;color:${EMAIL_BRAND.textMuted};text-align:left;">
-      Or copy this link:<br />
-      <a href="${resetLink}" style="color:${EMAIL_BRAND.accent};text-decoration:underline;">${escapeHtml(resetLink)}</a>
-    </p>`;
+    <p style="margin:16px 0 0;font-size:11px;line-height:1.5;color:${EMAIL_BRAND.textMuted};">If the button does not work, open this email on your phone or computer and tap Reset password again.</p>`;
   return renderDashedActionBox(inner, "Password reset");
 }
 

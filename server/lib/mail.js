@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { assertSmtpConfigured, env, isSmtpConfigured } from "./env.js";
+import { getEmailInlineAttachments } from "./emailAssets.js";
 import {
   defaultOtpFootnotes,
   defaultResetFootnotes,
@@ -52,11 +53,13 @@ async function sendBrandedMail({ to, subject, html, text }) {
     transport.sendMail({
       from: env.smtp.from,
       to,
+      replyTo: env.smtp.user || env.smtp.from,
       subject,
       html,
       text,
+      attachments: getEmailInlineAttachments(),
       headers: {
-        "X-Mailer": "One Source",
+        "X-Entity-Ref-ID": `onesource-${Date.now()}`,
       },
     }),
     "SMTP send"
