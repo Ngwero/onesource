@@ -47,7 +47,7 @@ type AuthContextValue = {
     password: string,
     fullName: string
   ) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
-  requestPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  requestPasswordReset: (email: string) => Promise<{ error: string | null; sent?: boolean }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -250,7 +250,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const requestPasswordReset = useCallback(async (email: string) => {
     try {
       const redirectTo = `${window.location.origin}/reset-password`;
-      return await requestPasswordResetApi(email.trim(), redirectTo);
+      const result = await requestPasswordResetApi(email.trim(), redirectTo);
+      return result;
     } catch (e) {
       return {
         error: e instanceof Error ? e.message : i18n.t("errors.passwordResetFailed"),

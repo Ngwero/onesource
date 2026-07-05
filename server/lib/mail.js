@@ -13,7 +13,7 @@ import {
 
 let transporter = null;
 
-const SMTP_TIMEOUT_MS = Number(process.env.SMTP_TIMEOUT_MS) || 20_000;
+const SMTP_TIMEOUT_MS = Number(process.env.SMTP_TIMEOUT_MS) || 45_000;
 
 function getTransporter() {
   assertSmtpConfigured();
@@ -48,16 +48,20 @@ function withTimeout(promise, label) {
 
 async function sendBrandedMail({ to, subject, html, text }) {
   const transport = getTransporter();
-  await withTimeout(
+  const info = await withTimeout(
     transport.sendMail({
       from: env.smtp.from,
       to,
       subject,
       html,
       text,
+      headers: {
+        "X-Mailer": "One Source",
+      },
     }),
     "SMTP send"
   );
+  return info;
 }
 
 function greetingLine(fullName) {
@@ -94,6 +98,7 @@ export async function sendPasswordResetEmail({ email, fullName, resetLink }) {
       "One Source Account Team",
     ].join("\n"),
   });
+  console.info(`[mail] password reset queued for ${email}`);
 }
 
 export async function sendWelcomeEmail({ email, fullName }) {

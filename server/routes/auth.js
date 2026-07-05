@@ -84,16 +84,22 @@ router.post("/forgot-password", async (req, res) => {
         });
       }
       if (error.code === "user_not_found" || error.status === 404) {
-        // Do not reveal whether the email is registered.
-        return res.json({ ok: true });
+        return res.status(404).json({
+          error:
+            "No account is registered with this email. Check for typos or sign up for a new account.",
+        });
       }
       console.warn("[auth] forgot-password generateLink:", error.code ?? error.message);
-      return res.json({ ok: true });
+      return res.status(400).json({
+        error: "Could not start password reset. Try again in a few minutes.",
+      });
     }
 
     if (!data?.properties?.action_link) {
       console.warn("[auth] forgot-password generateLink: missing action_link");
-      return res.json({ ok: true });
+      return res.status(400).json({
+        error: "Could not create a password reset link. Try again in a few minutes.",
+      });
     }
 
     const metaName = data.user?.user_metadata?.full_name;
@@ -106,6 +112,7 @@ router.post("/forgot-password", async (req, res) => {
 
     try {
       await sendPasswordResetEmail({ email, fullName, resetLink });
+      console.info(`[auth] forgot-password sent to ${email}`);
       return res.json({ ok: true, sent: true });
     } catch (err) {
       console.error("[auth] forgot-password email failed:", err);

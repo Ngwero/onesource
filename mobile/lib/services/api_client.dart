@@ -208,8 +208,11 @@ class ApiClient {
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'email': email.trim().toLowerCase(), 'redirectTo': redirectTo}),
         )
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 45));
 
+    if (res.statusCode == 404) {
+      throw ApiException(_errorMessage(res));
+    }
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
     }

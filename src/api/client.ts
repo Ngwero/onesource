@@ -90,7 +90,7 @@ export async function fetchOrderById(id: string, userId?: string): Promise<Order
 export async function requestPasswordReset(
   email: string,
   redirectTo: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; sent?: boolean }> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 45_000);
 
@@ -102,10 +102,13 @@ export async function requestPasswordReset(
       signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 404) {
+      return { error: (data.error as string) || i18n.t("errors.emailNotRegistered") };
+    }
     if (!res.ok) {
       return { error: (data.error as string) || i18n.t("errors.passwordResetFailed") };
     }
-    return { error: null };
+    return { error: null, sent: Boolean(data.sent) };
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") {
       return { error: i18n.t("errors.passwordResetTimeout") };

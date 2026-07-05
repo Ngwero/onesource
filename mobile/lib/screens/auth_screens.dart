@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../widgets/auth_shell.dart';
 
@@ -307,6 +308,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _email = TextEditingController();
   bool _submitting = false;
   String? _message;
+  bool _isError = false;
 
   @override
   void dispose() {
@@ -318,12 +320,25 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     setState(() {
       _submitting = true;
       _message = null;
+      _isError = false;
     });
     try {
       await ref.read(authServiceProvider).requestPasswordReset(_email.text);
-      setState(() => _message = 'If an account exists, a reset link has been sent.');
+      setState(() {
+        _message =
+            'We\'ve sent a password reset link to your email. Check your inbox and spam folder.';
+        _isError = false;
+      });
+    } on ApiException catch (e) {
+      setState(() {
+        _message = e.message;
+        _isError = true;
+      });
     } catch (e) {
-      setState(() => _message = e.toString());
+      setState(() {
+        _message = 'Could not send reset email. Please try again.';
+        _isError = true;
+      });
     } finally {
       setState(() => _submitting = false);
     }
@@ -351,7 +366,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           if (_message != null) ...[
             const SizedBox(height: 14),
-            Text(_message!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+            Text(
+              _message!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: _isError ? Colors.red : AppColors.darkGreen,
+                fontSize: 13,
+              ),
+            ),
           ],
           const SizedBox(height: 24),
           AuthPrimaryButton(
