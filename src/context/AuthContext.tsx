@@ -1,5 +1,10 @@
 import i18n from "../i18n";
-import { requestLoginOtp, sendWelcomeEmail as sendWelcomeEmailApi } from "../api/client";
+import {
+  requestLoginOtp,
+  verifyLoginOtp as verifyLoginOtpApi,
+  requestPasswordReset as requestPasswordResetApi,
+  sendWelcomeEmail as sendWelcomeEmailApi,
+} from "../api/client";
 import {
   createContext,
   useCallback,
@@ -13,7 +18,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { isPasswordRecoveryCallback } from "../lib/authRecovery";
 import { getSupabase, isSupabaseConfigured, type Profile } from "../lib/supabase";
 
-const AUTH_EMAIL_TIMEOUT_MS = 30_000;
+const AUTH_EMAIL_TIMEOUT_MS = 45_000;
 
 function mapAuthEmailError(message: string): string {
   const lower = message.toLowerCase();
@@ -174,20 +179,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: verified.error };
       }
 
-      const supabase = getSupabase();
-      const { error: otpError } = await withTimeout(
-        supabase.auth.signInWithOtp({
-          email: trimmedEmail,
-          options: { shouldCreateUser: false },
-        }),
-        AUTH_EMAIL_TIMEOUT_MS,
-        i18n.t("errors.signInTimeout")
-      );
-
-      if (otpError) {
-        return { error: mapAuthEmailError(otpError.message) };
-      }
-
       return { error: null, requiresOtp: true };
     } catch (e) {
       const message = e instanceof Error ? e.message : i18n.t("errors.signInFailed");
@@ -198,10 +189,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyLoginOtp = useCallback(async (email: string, otp: string) => {
     try {
       const supabase = getSupabase();
-      const { error } = await supabase.auth.verifyOtp({
-        email: email.trim().toLowerCase(),
-        token: otp.trim(),
-        type: "email",
+      const result = await verifyLoginOtpApi(email.trim().toLowerCase(), otp.trim());
+      if (result.error) {
+        return { error: result.error };
+      }
+      if (!result.accessToken || !result.refreshToken) {
+        return { error: i18n.t("errors.otpInvalid") };
+      }
+
+      const { error } = await supabase.auth.setSession({
+        access_token: result.accessToken,
+        refresh_token: result.refreshToken,
       });
       return { error: error?.message ?? null };
     } catch (e) {
@@ -263,11 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const requestPasswordReset = useCallback(async (email: string) => {
     try {
       const redirectTo = `${window.location.origin}/reset-password`;
-      const supabase = getSupabase();
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo,
-      });
-      return { error: error?.message ?? null };
+      return await requestPasswordResetApi(email.trim(), redirectTo);
     } catch (e) {
       return {
         error: e instanceof Error ? e.message : i18n.t("errors.passwordResetFailed"),

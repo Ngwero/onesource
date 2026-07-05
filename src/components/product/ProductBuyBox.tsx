@@ -53,6 +53,12 @@ export function ProductBuyBox({
 
       {!compact && (
         <div className="pdp-delivery-box">
+          {product.supplierName && (
+            <p className="text-sm text-text-muted mb-2">
+              {t("product.soldBy")}{" "}
+              <span className="font-semibold text-text">{product.supplierName}</span>
+            </p>
+          )}
           <p className="font-semibold text-text text-sm">{t("product.freeDelivery")}</p>
           <p className="text-sm text-text-muted mt-1">{localized.localizedDelivery}</p>
           <p className="text-sm text-text-muted mt-1">

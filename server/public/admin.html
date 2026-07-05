@@ -10,6 +10,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232e5e4a'/%3E%3Cpath fill='%23f0c947' d='M8 22V10h4.2l3.4 7.2L19 10h4v12h-3.4V14l-3.8 8H15l-3.8-8v8z'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/admin/admin.css" />
   <link rel="stylesheet" href="/admin/admin-theme.css" />
+  <link rel="stylesheet" href="/admin/admin-zaga.css" />
 </head>
 <body>
   <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
@@ -23,7 +24,16 @@
             <span class="brand-tag">Admin Console</span>
           </div>
         </div>
-        <p class="brand-desc">Catalogue, inventory, storefront & fulfilment.</p>
+        <p class="brand-desc">Uganda's agricultural marketplace.</p>
+      </div>
+      <button type="button" class="sidebar-new-btn" id="sidebarNewBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New listing
+      </button>
+      <div class="sidebar-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="globalSearch" placeholder="Search admin…" autocomplete="off" />
+        <kbd>⌘K</kbd>
       </div>
       <nav class="nav" aria-label="Admin navigation">
         <div class="nav-label">Overview</div>
@@ -58,6 +68,12 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
           Hero carousel
         </button>
+        <div class="nav-label">Marketplace</div>
+        <button type="button" class="nav-btn" data-view="suppliers">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Suppliers
+          <span class="nav-badge" id="navSuppliersBadge" style="display:none">0</span>
+        </button>
         <div class="nav-label">Sales</div>
         <button type="button" class="nav-btn" data-view="orders">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
@@ -88,13 +104,17 @@
           <button type="button" class="menu-toggle" id="menuToggle" aria-label="Open menu">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
-          <div class="topbar-titles">
+          <div class="topbar-titles" aria-hidden="true">
             <p class="topbar-eyebrow">One Source</p>
-            <h1 id="pageTitle">Dashboard</h1>
-            <p class="topbar-meta" id="topbarMeta">Loading…</p>
+            <h1>Admin</h1>
+            <p class="topbar-meta" id="topbarMeta"></p>
           </div>
         </div>
         <div class="topbar-actions">
+          <button type="button" class="btn btn-secondary btn-icon-label" id="orderAlertMuteBtn" title="Toggle new order sounds">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="orderAlertMuteIcon"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <span id="orderAlertMuteLabel">Alerts on</span>
+          </button>
           <span class="status-pill" id="apiStatus">
             <span class="status-dot"></span>
             <span id="apiStatusText">Checking API…</span>
@@ -116,43 +136,108 @@
 
       <div class="content">
         <div class="alert-banner" id="errorBanner"></div>
+        <div class="order-alert-banner" id="orderAlertBanner" hidden>
+          <div class="order-alert-copy">
+            <strong id="orderAlertTitle">New order received</strong>
+            <span id="orderAlertText"></span>
+          </div>
+          <div class="order-alert-actions">
+            <button type="button" class="btn btn-primary btn-sm" id="orderAlertViewBtn">View order</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="orderAlertDismissBtn">Dismiss</button>
+          </div>
+        </div>
+
+        <header class="page-header" id="pageHeader">
+          <nav class="breadcrumbs" id="breadcrumbs" aria-label="Breadcrumb">
+            <button type="button" data-view="dashboard">Home</button>
+            <span class="sep">›</span>
+            <span class="current" id="breadcrumbCurrent">Dashboard</span>
+          </nav>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p class="page-meta" id="pageMeta">Loading statistics…</p>
+        </header>
 
         <section class="view active" id="view-dashboard">
-          <div class="stats-grid" id="dashStats"></div>
-          <div class="panel" style="margin-bottom:1.25rem">
-            <div class="panel-head"><h2>Quick actions</h2></div>
-            <div class="quick-links" id="dashQuickLinks"></div>
+          <div class="kpi-grid" id="dashKpis"></div>
+
+          <div class="browse-section">
+            <h3>Browse by area</h3>
+            <div class="browse-grid" id="dashBrowse"></div>
           </div>
-          <div class="dash-charts-grid">
-            <div class="panel chart-panel">
+
+          <div class="charts-row-2">
+            <div class="panel chart-panel chart-lg">
               <div class="panel-head">
-                <h2>Catalogue mix</h2>
-                <p class="panel-desc">Products by category</p>
+                <h2>Revenue trend</h2>
+                <p class="panel-desc">Daily order revenue — last 14 days</p>
               </div>
               <div class="chart-wrap">
-                <canvas id="chartCategoryPie" aria-label="Products by category pie chart"></canvas>
-                <p class="chart-empty" id="chartCategoryPieEmpty" hidden>No products in catalogue yet</p>
+                <canvas id="chartRevenueLine" aria-label="Revenue line chart"></canvas>
+                <p class="chart-empty" id="chartRevenueLineEmpty" hidden>No revenue data yet</p>
+              </div>
+            </div>
+            <div class="panel chart-panel chart-lg">
+              <div class="panel-head">
+                <h2>Orders volume</h2>
+                <p class="panel-desc">Orders placed per day</p>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartOrdersBar" aria-label="Orders bar chart"></canvas>
+                <p class="chart-empty" id="chartOrdersBarEmpty" hidden>No orders yet</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-row-4">
+            <div class="panel chart-panel">
+              <div class="panel-head"><h2>Catalogue mix</h2><p class="panel-desc">By category</p></div>
+              <div class="chart-wrap">
+                <canvas id="chartCategoryPie" aria-label="Products by category"></canvas>
+                <p class="chart-empty" id="chartCategoryPieEmpty" hidden>No products yet</p>
               </div>
             </div>
             <div class="panel chart-panel">
-              <div class="panel-head">
-                <h2>Stock health</h2>
-                <p class="panel-desc">In stock, low &amp; out of stock</p>
-              </div>
+              <div class="panel-head"><h2>Stock health</h2><p class="panel-desc">Inventory status</p></div>
               <div class="chart-wrap">
-                <canvas id="chartStockPie" aria-label="Stock health pie chart"></canvas>
+                <canvas id="chartStockPie" aria-label="Stock health"></canvas>
               </div>
             </div>
             <div class="panel chart-panel">
-              <div class="panel-head">
-                <h2>Orders</h2>
-                <p class="panel-desc">Breakdown by status</p>
-              </div>
+              <div class="panel-head"><h2>Order pipeline</h2><p class="panel-desc">By status</p></div>
               <div class="chart-wrap">
-                <canvas id="chartOrdersPie" aria-label="Orders by status pie chart"></canvas>
+                <canvas id="chartOrdersPie" aria-label="Orders by status"></canvas>
                 <p class="chart-empty" id="chartOrdersPieEmpty" hidden>No orders yet</p>
               </div>
             </div>
+            <div class="panel chart-panel">
+              <div class="panel-head"><h2>Suppliers</h2><p class="panel-desc">Marketplace sellers</p></div>
+              <div class="chart-wrap">
+                <canvas id="chartSuppliersPie" aria-label="Suppliers by status"></canvas>
+                <p class="chart-empty" id="chartSuppliersPieEmpty" hidden>No suppliers yet</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-row-2" style="margin-bottom:1.25rem">
+            <div class="panel chart-panel">
+              <div class="panel-head"><h2>Revenue by category</h2><p class="panel-desc">From fulfilled orders</p></div>
+              <div class="chart-wrap">
+                <canvas id="chartCategoryRevenue" aria-label="Revenue by category"></canvas>
+                <p class="chart-empty" id="chartCategoryRevenueEmpty" hidden>No sales by category yet</p>
+              </div>
+            </div>
+            <div class="panel chart-panel">
+              <div class="panel-head"><h2>Top products</h2><p class="panel-desc">By units sold</p></div>
+              <div class="chart-wrap">
+                <canvas id="chartTopProducts" aria-label="Top products bar chart"></canvas>
+                <p class="chart-empty" id="chartTopProductsEmpty" hidden>No sales data yet</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-bottom:1.25rem">
+            <div class="panel-head"><h2>Quick actions</h2></div>
+            <div class="quick-links" id="dashQuickLinks"></div>
           </div>
           <div class="dash-grid">
             <div class="panel">
@@ -193,7 +278,21 @@
         </section>
 
         <section class="view" id="view-analytics">
-          <div class="stats-grid" id="analyticsStats"></div>
+          <div class="kpi-grid" id="analyticsKpis"></div>
+          <div class="charts-row-2">
+            <div class="panel chart-panel chart-lg">
+              <div class="panel-head"><h2>Revenue trend</h2><p class="panel-desc">Last 30 days</p></div>
+              <div class="chart-wrap">
+                <canvas id="chartAnalyticsRevenue" aria-label="Analytics revenue"></canvas>
+              </div>
+            </div>
+            <div class="panel chart-panel chart-lg">
+              <div class="panel-head"><h2>Average order value</h2><p class="panel-desc">Daily AOV trend</p></div>
+              <div class="chart-wrap">
+                <canvas id="chartAovLine" aria-label="Average order value"></canvas>
+              </div>
+            </div>
+          </div>
           <div class="dash-grid">
             <div class="panel">
               <div class="panel-head"><h2>Orders by status</h2></div>
@@ -231,6 +330,9 @@
                   <option value="low">Low (≤10)</option>
                   <option value="out">Out of stock</option>
                 </select>
+                <select class="filter-select" id="filterSupplier">
+                  <option value="">All suppliers</option>
+                </select>
                 <select class="filter-select" id="filterPrime">
                   <option value="">Prime: any</option>
                   <option value="yes">Prime only</option>
@@ -260,6 +362,7 @@
                     <th style="width:36px"><input type="checkbox" id="selectAllProducts" title="Select all on page" /></th>
                     <th class="sortable" data-sort="title">Product <span class="sort-ind">↕</span></th>
                     <th class="sortable" data-sort="category">Category <span class="sort-ind">↕</span></th>
+                    <th>Supplier</th>
                     <th class="sortable" data-sort="price">Price <span class="sort-ind">↕</span></th>
                     <th>Was</th>
                     <th class="sortable" data-sort="rating">Rating <span class="sort-ind">↕</span></th>
@@ -360,6 +463,46 @@
             <div class="hero-inactive-section" id="heroInactiveSection" style="display:none">
               <h3>Inactive slides</h3>
               <div class="banner-editor-grid" id="heroInactiveGrid"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-suppliers">
+          <div class="kpi-grid" id="supplierStats"></div>
+          <div class="filter-tabs" id="supplierTabs"></div>
+          <div class="resource-grid" id="suppliersCardGrid"></div>
+          <div class="panel" style="margin-top:1.25rem">
+            <div class="panel-head">
+              <h2>All suppliers</h2>
+              <div class="toolbar">
+                <div class="search-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="search" id="searchSuppliers" placeholder="Search business, email, location…" />
+                </div>
+                <select class="filter-select" id="filterSupplierStatus">
+                  <option value="">All statuses</option>
+                  <option value="pending">Pending review</option>
+                  <option value="approved">Approved</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Supplier</th>
+                    <th>Contact</th>
+                    <th>Location</th>
+                    <th>Products</th>
+                    <th>Commission</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="suppliersTable"></tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -470,6 +613,7 @@
           <div class="field"><label class="field-label" for="stockQuantity">Stock *</label><input type="number" id="stockQuantity" min="0" value="100" required /></div>
           <div class="field"><label class="field-label" for="category">Category *</label><select id="category" required></select></div>
         </div>
+        <div class="field"><label class="field-label" for="supplierId">Supplier</label><select id="supplierId"><option value="">One Source (platform)</option></select></div>
         <div class="field"><label class="field-label" for="delivery">Delivery message</label><input type="text" id="delivery" value="FREE same-day delivery on orders over USh 100,000" /></div>
         <label class="checkbox-field"><input type="checkbox" id="prime" checked /> Prime eligible</label>
       </div>
@@ -495,6 +639,61 @@
       <button type="submit" form="productForm" class="btn btn-primary" id="submitBtn">Save product</button>
       <button type="button" class="btn btn-secondary" id="resetFormBtn">Clear</button>
       <button type="button" class="btn btn-danger" id="deleteBtn" style="display:none">Delete</button>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="supplierDrawer">
+    <div class="drawer-head">
+      <div>
+        <h2 id="supplierDrawerTitle">Add supplier</h2>
+        <p id="supplierDrawerSubtitle">New seller application or manual onboarding</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-icon" id="closeSupplierDrawer" aria-label="Close">✕</button>
+    </div>
+    <form id="supplierForm" class="drawer-body">
+      <input type="hidden" id="supplierEditId" />
+      <div class="form-section">
+        <h3>Business</h3>
+        <div class="field"><label class="field-label" for="supplierBusinessName">Business name *</label><input type="text" id="supplierBusinessName" required /></div>
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="supplierContactName">Contact name</label><input type="text" id="supplierContactName" /></div>
+          <div class="field"><label class="field-label" for="supplierEmail">Email *</label><input type="email" id="supplierEmail" required /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="supplierPhone">Phone</label><input type="tel" id="supplierPhone" /></div>
+          <div class="field"><label class="field-label" for="supplierLocation">Location</label><input type="text" id="supplierLocation" placeholder="e.g. Kampala, Uganda" /></div>
+        </div>
+        <div class="field"><label class="field-label" for="supplierDescription">About</label><textarea id="supplierDescription" placeholder="What they sell, farm size, certifications…"></textarea></div>
+      </div>
+      <div class="form-section">
+        <h3>Marketplace settings</h3>
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="supplierStatus">Status</label><select id="supplierStatus">
+            <option value="pending">Pending review</option>
+            <option value="approved">Approved — can sell</option>
+            <option value="suspended">Suspended</option>
+            <option value="rejected">Rejected</option>
+          </select></div>
+          <div class="field"><label class="field-label" for="supplierCommission">Commission %</label><input type="number" id="supplierCommission" min="0" max="100" step="0.5" value="15" /></div>
+        </div>
+        <div class="field"><label class="field-label" for="supplierNotes">Internal notes</label><textarea id="supplierNotes" placeholder="Admin-only notes"></textarea></div>
+      </div>
+      <div class="form-section">
+        <h3>Logo</h3>
+        <div class="field">
+          <div class="upload-row">
+            <input type="file" id="supplierLogoFile" accept="image/*" />
+            <button type="button" class="btn btn-secondary btn-sm" id="uploadSupplierLogoBtn">Upload</button>
+          </div>
+          <input type="text" id="supplierLogo" placeholder="/uploads/suppliers/…" />
+          <img class="img-preview" id="supplierLogoPreview" alt="" />
+        </div>
+      </div>
+    </form>
+    <div class="drawer-foot">
+      <button type="submit" form="supplierForm" class="btn btn-primary" id="supplierSubmitBtn">Save supplier</button>
+      <button type="button" class="btn btn-secondary" id="resetSupplierFormBtn">Clear</button>
+      <button type="button" class="btn btn-danger" id="deleteSupplierBtn" style="display:none">Delete</button>
     </div>
   </aside>
 

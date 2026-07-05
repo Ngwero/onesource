@@ -118,14 +118,19 @@ export async function requestPasswordReset(
   }
 }
 
-export type LoginVerifyResult = { error: string | null; verified?: boolean };
+export type LoginVerifyResult = {
+  error: string | null;
+  verified?: boolean;
+  accessToken?: string;
+  refreshToken?: string;
+};
 
 export async function requestLoginOtp(
   email: string,
   password: string
 ): Promise<LoginVerifyResult> {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 30_000);
+  const timeout = window.setTimeout(() => controller.abort(), 45_000);
 
   try {
     const res = await fetch(`${API_BASE}/auth/login/request-otp`, {
@@ -145,6 +150,41 @@ export async function requestLoginOtp(
     }
     return {
       error: e instanceof Error ? e.message : i18n.t("errors.signInFailed"),
+    };
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+export async function verifyLoginOtp(
+  email: string,
+  otp: string
+): Promise<LoginVerifyResult> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 30_000);
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/login/verify-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp }),
+      signal: controller.signal,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: (data.error as string) || i18n.t("errors.otpInvalid") };
+    }
+    return {
+      error: null,
+      accessToken: data.accessToken as string,
+      refreshToken: data.refreshToken as string,
+    };
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      return { error: i18n.t("errors.signInTimeout") };
+    }
+    return {
+      error: e instanceof Error ? e.message : i18n.t("errors.otpInvalid"),
     };
   } finally {
     window.clearTimeout(timeout);

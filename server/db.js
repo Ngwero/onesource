@@ -23,6 +23,7 @@ export function rowToProduct(row) {
     inStock: Boolean(row.in_stock) && row.stock_quantity > 0,
     stockQuantity: row.stock_quantity,
     delivery: row.delivery,
+    supplierId: row.supplier_id ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -55,6 +56,10 @@ export function parseBody(body, { id } = {}) {
     delivery: String(
       body.delivery ?? "FREE same-day delivery Tomorrow"
     ).trim(),
+    supplier_id:
+      body.supplierId?.trim() ||
+      body.supplier_id?.trim() ||
+      null,
   };
 }
 
@@ -74,6 +79,7 @@ export function seedRowFromJson(p) {
     in_stock: p.inStock !== false,
     stock_quantity: p.stockQuantity ?? 100,
     delivery: p.delivery,
+    supplier_id: p.supplierId ?? null,
   };
 }
 

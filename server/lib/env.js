@@ -36,7 +36,10 @@ export const env = {
   smtp: {
     host: process.env.SMTP_HOST?.trim() ?? "",
     port: Number.isFinite(parsedSmtpPort) && parsedSmtpPort > 0 ? parsedSmtpPort : 587,
-    secure: parseBool(process.env.SMTP_SECURE, false),
+    secure: parseBool(
+      process.env.SMTP_SECURE,
+      (Number.isFinite(parsedSmtpPort) && parsedSmtpPort > 0 ? parsedSmtpPort : 587) === 465
+    ),
     user: process.env.SMTP_USER?.trim() ?? "",
     pass: process.env.SMTP_PASS?.trim() ?? "",
     from: process.env.SMTP_FROM?.trim() ?? "",

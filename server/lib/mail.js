@@ -1,11 +1,12 @@
 import nodemailer from "nodemailer";
 import { assertSmtpConfigured, env, isSmtpConfigured } from "./env.js";
 import {
-  defaultOtpSecurityNote,
-  defaultSecurityNote,
+  defaultOtpFootnotes,
+  defaultResetFootnotes,
   OTP_VALID_SECONDS,
   renderBrandedEmail,
   renderOtpActionBox,
+  renderOrderStatusActionBox,
   renderResetActionBox,
   renderWelcomeActionBox,
 } from "./emailTemplate.js";
@@ -60,20 +61,22 @@ async function sendBrandedMail({ to, subject, html, text }) {
 }
 
 function greetingLine(fullName) {
-  return fullName?.trim() ? `Hi ${fullName.trim()},` : "Hi there,";
+  const name = fullName?.trim();
+  return name ? `HI ${name.toUpperCase()},` : "HI THERE,";
 }
 
 export async function sendPasswordResetEmail({ email, fullName, resetLink }) {
   const html = renderBrandedEmail({
-    eyebrow: "Account security",
-    title: "Reset your password",
-    subtitle: "We received a request to change your account password.",
+    headerLabel: "One Source Account",
+    heroEyebrow: "Account security",
+    heroTitle: "Reset your password",
+    heroSubtitle: "Keep your One Source account secure with a new password.",
     greeting: fullName,
     bodyParagraphs: [
-      `A password reset was requested for <strong style="color:#244a3b;">${email}</strong>. Click the button below to choose a new password.`,
+      `A password reset was requested for your One Source account linked to <strong style="color:#244a3b;">${email}</strong>.`,
     ],
-    actionBox: renderResetActionBox(resetLink),
-    securityNote: defaultSecurityNote(),
+    actionBox: renderResetActionBox(resetLink, email),
+    footnotes: defaultResetFootnotes(),
   });
 
   await sendBrandedMail({
@@ -96,15 +99,20 @@ export async function sendPasswordResetEmail({ email, fullName, resetLink }) {
 export async function sendWelcomeEmail({ email, fullName }) {
   const shopUrl = env.shopUrl;
   const html = renderBrandedEmail({
-    eyebrow: "Welcome aboard",
-    title: "Welcome to One Source",
-    subtitle: "Fresh produce delivered across Uganda — your account is ready.",
+    headerLabel: "One Source Shop",
+    heroEyebrow: "Welcome aboard",
+    heroTitle: "Welcome to One Source",
+    heroSubtitle: "Fresh produce delivered across Uganda — your account is ready.",
     greeting: fullName,
     bodyParagraphs: [
       "Thank you for creating your One Source account. You can now track orders, save items, and checkout faster.",
-      `Sign in any time at <a href="${shopUrl}/login" style="color:#2e5e4a;">${shopUrl}/login</a>.`,
+      `Sign in any time at <a href="${shopUrl}/login" style="color:#2e5e4a;font-weight:600;">${shopUrl}/login</a>.`,
     ],
     actionBox: renderWelcomeActionBox(shopUrl),
+    footnotes: [
+      "Browse the shop to discover fresh produce delivered across Uganda.",
+      "If you did not create this account, please contact our support team.",
+    ],
   });
 
   await sendBrandedMail({
@@ -122,17 +130,149 @@ export async function sendWelcomeEmail({ email, fullName }) {
   });
 }
 
+function formatUgx(amount) {
+  return `USh ${Number(amount).toLocaleString("en-UG", { maximumFractionDigits: 0 })}`;
+}
+
+function shortOrderRef(id) {
+  return String(id || "").replace(/-/g, "").slice(0, 8).toUpperCase();
+}
+
+function orderItemsSummary(items = []) {
+  if (!items.length) return "Your order items";
+  const head = items.slice(0, 3).map((i) => `${i.product_title} × ${i.quantity}`);
+  const tail = items.length > 3 ? ` and ${items.length - 3} more` : "";
+  return head.join(", ") + tail;
+}
+
+function orderDeliveryAddress(order) {
+  const parts = [
+    order.address_line1,
+    order.address_line2,
+    order.city,
+    order.district,
+  ].filter(Boolean);
+  return parts.join(", ");
+}
+
+function orderTrackUrl(orderId) {
+  return `${env.shopUrl}/orders/${orderId}`;
+}
+
+async function sendOrderStatusEmail(order, { heroTitle, heroSubtitle, bodyParagraphs, statusLabel, subject }) {
+  if (!isSmtpConfigured()) {
+    console.warn("[mail] SMTP not configured — skipping order email");
+    return { sent: false, reason: "smtp_not_configured" };
+  }
+
+  const items = order.order_items ?? [];
+  const html = renderBrandedEmail({
+    headerLabel: "One Source Orders",
+    heroEyebrow: "Order update",
+    heroTitle,
+    heroSubtitle,
+    greeting: order.full_name,
+    bodyParagraphs,
+    actionBox: renderOrderStatusActionBox({
+      orderRef: shortOrderRef(order.id),
+      totalFormatted: formatUgx(order.total),
+      itemsSummary: orderItemsSummary(items),
+      deliveryAddress: orderDeliveryAddress(order),
+      trackUrl: orderTrackUrl(order.id),
+      statusLabel,
+    }),
+    footnotes: [
+      "Delivery times may vary depending on your location and order volume.",
+      "If you did not place this order, please contact One Source support immediately.",
+    ],
+    footerNote: "You are receiving this because you placed an order with One Source.",
+    closingName: "One Source Fulfilment Team",
+  });
+
+  await sendBrandedMail({
+    to: order.email,
+    subject,
+    html,
+    text: [
+      greetingLine(order.full_name),
+      "",
+      ...bodyParagraphs.map((p) => p.replace(/<[^>]+>/g, "")),
+      "",
+      `Order #${shortOrderRef(order.id)} · ${statusLabel}`,
+      `Total: ${formatUgx(order.total)}`,
+      `Track: ${orderTrackUrl(order.id)}`,
+      "",
+      "One Source Fulfilment Team",
+    ].join("\n"),
+  });
+
+  return { sent: true };
+}
+
+export async function sendOrderConfirmedEmail(order) {
+  return sendOrderStatusEmail(order, {
+    heroTitle: "Your order is confirmed",
+    heroSubtitle: "We're preparing your fresh produce for delivery.",
+    statusLabel: "Confirmed — on its way",
+    subject: `Order confirmed — #${shortOrderRef(order.id)} · One Source`,
+    bodyParagraphs: [
+      "Great news — we've confirmed your order and our team is now preparing your items.",
+      "Your order is on its way. We'll notify you again when it's dispatched for delivery.",
+    ],
+  });
+}
+
+export async function sendOrderDispatchedEmail(order) {
+  return sendOrderStatusEmail(order, {
+    heroTitle: "Your order is on its way",
+    heroSubtitle: "Our delivery team has dispatched your order.",
+    statusLabel: "Out for delivery",
+    subject: `Order dispatched — #${shortOrderRef(order.id)} · One Source`,
+    bodyParagraphs: [
+      "Your One Source order has been dispatched and is heading to your delivery address.",
+      "Please ensure someone is available to receive the order. You can track progress using the link below.",
+    ],
+  });
+}
+
+export async function sendOrderPlacedEmail(order) {
+  return sendOrderStatusEmail(order, {
+    heroTitle: "We've received your order",
+    heroSubtitle: "Thank you for shopping with One Source.",
+    statusLabel: "Order placed",
+    subject: `Order received — #${shortOrderRef(order.id)} · One Source`,
+    bodyParagraphs: [
+      "Thank you for your order. We've received it and will confirm it shortly.",
+      "You'll get another email when your order is confirmed and prepared for delivery.",
+    ],
+  });
+}
+
+export async function sendOrderDeliveredEmail(order) {
+  return sendOrderStatusEmail(order, {
+    heroTitle: "Your order was delivered",
+    heroSubtitle: "We hope you enjoy your fresh produce.",
+    statusLabel: "Delivered",
+    subject: `Order delivered — #${shortOrderRef(order.id)} · One Source`,
+    bodyParagraphs: [
+      "Your One Source order has been marked as delivered.",
+      "Thank you for shopping with us — we'd love to see you again soon.",
+    ],
+  });
+}
+
 export async function sendLoginOtpEmail({ email, fullName, otp }) {
   const html = renderBrandedEmail({
-    eyebrow: "Secure account access",
-    title: "Sign-in verification code",
-    subtitle: "Use the code below to complete your login.",
+    headerLabel: "One Source Account",
+    heroEyebrow: "Secure sign-in",
+    heroTitle: "Your verification code",
+    heroSubtitle: "Enter this code to complete your One Source login.",
     greeting: fullName,
     bodyParagraphs: [
-      "We received a sign-in request for your One Source account. Enter this one-time code on the login screen to continue.",
+      "We received a sign-in request for your One Source account. Use the code below on the login screen to continue.",
     ],
     actionBox: renderOtpActionBox(otp),
-    securityNote: defaultOtpSecurityNote(),
+    footnotes: defaultOtpFootnotes(),
   });
 
   await sendBrandedMail({

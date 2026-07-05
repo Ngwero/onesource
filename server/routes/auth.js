@@ -4,10 +4,14 @@ import { env, isSmtpConfigured } from "../lib/env.js";
 import {
   sendPasswordResetEmail,
   sendWelcomeEmail,
+  sendLoginOtpEmail,
 } from "../lib/mail.js";
 import {
   canRequestOtp,
   recordOtpRequest,
+  generateOtp,
+  storeLoginOtp,
+  verifyLoginOtp as checkStoredOtp,
 } from "../lib/otpStore.js";
 import { requireSupabase } from "../lib/supabase.js";
 
@@ -146,9 +150,29 @@ router.post("/login/request-otp", async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
+    if (!isSmtpConfigured()) {
+      return res.status(503).json({
+        error:
+          "Login email is not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM in server/.env.",
+      });
+    }
+
     recordOtpRequest(email);
 
-    // OTP email is sent by Supabase on the client (signInWithOtp) — not Railway SMTP.
+    const otp = generateOtp();
+    const metaName = verified.user?.user_metadata?.full_name;
+    const fullName =
+      (typeof metaName === "string" ? metaName.trim() : "") ||
+      (await lookupProfileName(requireSupabase(), verified.user?.id)) ||
+      "";
+
+    storeLoginOtp(email, otp, {
+      accessToken: verified.accessToken,
+      refreshToken: verified.refreshToken,
+    });
+
+    await sendLoginOtpEmail({ email, fullName, otp });
+
     return res.json({ ok: true, verified: true });
   } catch (e) {
     console.error("[auth] login/request-otp failed:", e);
@@ -158,12 +182,51 @@ router.post("/login/request-otp", async (req, res) => {
   }
 });
 
+router.post("/login/verify-otp", async (req, res) => {
+  try {
+    const email = String(req.body?.email ?? "")
+      .trim()
+      .toLowerCase();
+    const otp = String(req.body?.otp ?? "").trim();
+
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: "A valid email address is required." });
+    }
+    if (!/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ error: "Enter the 6-digit code from your email." });
+    }
+
+    const result = checkStoredOtp(email, otp);
+    if (!result.ok) {
+      const messages = {
+        invalid_or_expired: "Code expired or not found. Sign in again to get a new code.",
+        invalid_code: "Incorrect code. Check your email and try again.",
+        too_many_attempts: "Too many wrong attempts. Sign in again to get a new code.",
+      };
+      return res.status(401).json({
+        error: messages[result.error] ?? "Could not verify code.",
+      });
+    }
+
+    return res.json({
+      ok: true,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+  } catch (e) {
+    console.error("[auth] login/verify-otp failed:", e);
+    return res.status(500).json({
+      error: e instanceof Error ? e.message : "Could not verify login code",
+    });
+  }
+});
+
 router.get("/status", (_req, res) => {
   res.json({
     smtp: isSmtpConfigured(),
     shopUrl: env.shopUrl,
     otpLogin: true,
-    otpProvider: "supabase",
+    otpProvider: "onesource-smtp",
   });
 });
 

@@ -1,5 +1,12 @@
 import { Router } from "express";
 import { requireSupabase } from "../lib/supabase.js";
+import {
+  sendOrderConfirmedEmail,
+  sendOrderDispatchedEmail,
+  sendOrderDeliveredEmail,
+  sendOrderPlacedEmail,
+  isSmtpConfigured,
+} from "../lib/mail.js";
 
 const router = Router();
 
@@ -143,6 +150,20 @@ router.post("/", async (req, res) => {
       throw itemsErr;
     }
 
+    const { data: fullOrder, error: fetchErr } = await db
+      .from("orders")
+      .select(ORDER_SELECT)
+      .eq("id", order.id)
+      .single();
+
+    if (!fetchErr && fullOrder) {
+      sendOrderPlacedEmail(fullOrder)
+        .then((r) => {
+          if (r?.sent) console.log(`[orders] placed email sent → ${fullOrder.email}`);
+        })
+        .catch((e) => console.error("[orders] placed email failed:", e.message));
+    }
+
     res.status(201).json({ order: { ...order, ...parsed.order } });
   } catch (e) {
     console.error("[orders] POST", e.message);
@@ -194,6 +215,17 @@ router.patch("/:id", async (req, res) => {
 
   try {
     const db = requireSupabase();
+    const { data: existing, error: fetchErr } = await db
+      .from("orders")
+      .select("id, status")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchErr) throw fetchErr;
+    if (!existing) return res.status(404).json({ error: "Order not found" });
+
+    const previousStatus = existing.status;
+
     const { data: order, error } = await db
       .from("orders")
       .update({ status, updated_at: new Date().toISOString() })
@@ -203,7 +235,34 @@ router.patch("/:id", async (req, res) => {
 
     if (error) throw error;
     if (!order) return res.status(404).json({ error: "Order not found" });
-    res.json({ order });
+
+    let emailSent = null;
+    if (previousStatus !== status) {
+      if (status === "confirmed") {
+        sendOrderConfirmedEmail(order)
+          .then((r) => {
+            if (r?.sent) console.log(`[orders] confirmation email sent → ${order.email}`);
+          })
+          .catch((e) => console.error("[orders] confirmation email failed:", e.message));
+        emailSent = isSmtpConfigured() ? "confirmation_pending" : "smtp_not_configured";
+      } else if (status === "out_for_delivery") {
+        sendOrderDispatchedEmail(order)
+          .then((r) => {
+            if (r?.sent) console.log(`[orders] dispatch email sent → ${order.email}`);
+          })
+          .catch((e) => console.error("[orders] dispatch email failed:", e.message));
+        emailSent = isSmtpConfigured() ? "dispatch_pending" : "smtp_not_configured";
+      } else if (status === "delivered") {
+        sendOrderDeliveredEmail(order)
+          .then((r) => {
+            if (r?.sent) console.log(`[orders] delivered email sent → ${order.email}`);
+          })
+          .catch((e) => console.error("[orders] delivered email failed:", e.message));
+        emailSent = isSmtpConfigured() ? "delivered_pending" : "smtp_not_configured";
+      }
+    }
+
+    res.json({ order, emailSent });
   } catch (e) {
     console.error("[orders] PATCH", e.message);
     res.status(500).json({ error: e.message || "Failed to update order" });

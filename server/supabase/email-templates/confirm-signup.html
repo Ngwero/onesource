@@ -13,63 +13,82 @@
   <body style="margin:0;padding:0;background-color:#eceee9;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1c1c;-webkit-font-smoothing:antialiased;">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#eceee9;">
       <tr>
-        <td align="center" style="padding:32px 16px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width:560px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #dde3dc;">
+        <td align="center" style="padding:24px 12px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:4px;overflow:hidden;box-shadow:0 2px 8px rgba(28,28,28,0.06);">
 
             <tr>
-              <td style="background:linear-gradient(180deg,#2e5e4a 0%,#244a3b 100%);padding:28px 32px 24px;text-align:center;">
-                <a href="{{ .SiteURL }}" style="text-decoration:none;display:inline-block;">
-                  <img
-                    src="{{ .SiteURL }}/brand/logo-on-dark-horizontal.png"
-                    alt="One Source"
-                    width="200"
-                    style="display:block;margin:0 auto;border:0;max-width:200px;height:auto;"
-                  />
-                </a>
-                <p style="margin:14px 0 0;font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#b4cf5a;">Welcome aboard</p>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="background-color:#faf9f6;padding:24px 32px 8px;border-bottom:1px solid #e8ebe4;">
-                <h1 style="margin:0;font-size:22px;line-height:1.3;font-weight:700;color:#1c1c1c;letter-spacing:-0.02em;">Confirm your email address</h1>
-                <p style="margin:8px 0 0;font-size:15px;line-height:1.5;color:#5c5c58;">One step left to start shopping fresh produce.</p>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:28px 32px 8px;">
-                <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#1c1c1c;">
-                  {{ if .Data.full_name }}Dear {{ .Data.full_name }},{{ else }}Dear customer,{{ end }}
-                </p>
-                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#3d3d3d;">
-                  Thank you for joining One Source. Please confirm <strong style="color:#244a3b;">{{ .Email }}</strong> to activate your account and start browsing our range of fresh produce.
-                </p>
-
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 28px;">
+              <td style="background-color:#244a3b;padding:16px 22px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                   <tr>
-                    <td align="center" style="padding:8px 0 24px;">
-                      <a
-                        href="{{ .ConfirmationURL }}"
-                        style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;background-color:#2e5e4a;border-radius:8px;letter-spacing:0.02em;"
-                      >Confirm email address</a>
+                    <td align="left" valign="middle" width="34%">
+                      <a href="{{ .SiteURL }}" style="text-decoration:none;">
+                        <img src="{{ .SiteURL }}/brand/logo-on-dark-stacked.png" alt="One Source" width="108" style="display:block;border:0;max-width:108px;height:auto;" />
+                      </a>
+                    </td>
+                    <td align="center" valign="middle" width="32%" style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;line-height:1.3;">One Source Shop</td>
+                    <td align="right" valign="middle" width="34%">
+                      <a href="{{ .SiteURL }}" style="font-size:10px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:underline;">Go to shop</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td bgcolor="#244a3b" background="{{ .SiteURL }}/brand/email-hero.jpg" style="background-color:#244a3b;background-image:linear-gradient(105deg, rgba(26,61,48,0.92) 0%, rgba(36,74,59,0.72) 45%, rgba(46,94,74,0.35) 100%), url('{{ .SiteURL }}/brand/email-hero.jpg');background-size:cover;background-position:center;padding:40px 30px 36px;">
+                <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#b4cf5a;">Welcome aboard</p>
+                <h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;font-weight:800;color:#ffffff;letter-spacing:-0.02em;">Welcome to One Source</h1>
+                <p style="margin:0;font-size:14px;line-height:1.55;color:#edf3e0;max-width:420px;">Fresh produce delivered across Uganda — confirm your email to start shopping.</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:28px 28px 24px;background-color:#ffffff;">
+                <p style="margin:0 0 14px;font-size:14px;font-weight:700;color:#1c1c1c;">
+                  {{ if .Data.full_name }}HI {{ .Data.full_name }},{{ else }}HI THERE,{{ end }}
+                </p>
+                <p style="margin:0 0 16px;font-size:14px;line-height:1.65;color:#1c1c1c;">
+                  Thank you for joining One Source. Please confirm your email address to activate your account.
+                </p>
+
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:22px 0 8px;">
+                  <tr>
+                    <td style="border:2px dashed #2e5e4a;border-radius:12px;padding:26px 24px 24px;background-color:#f4f7ef;text-align:center;">
+                      <p style="margin:0 0 10px;font-size:13px;line-height:1.5;color:#1c1c1c;text-align:left;">
+                        <span style="font-weight:700;color:#244a3b;">Email:</span> <strong>{{ .Email }}</strong>
+                      </p>
+                      <p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:#1c1c1c;text-align:left;">
+                        <span style="font-weight:700;color:#244a3b;">Action:</span> Confirm your email address
+                      </p>
+                      <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:#5c5c58;">One step left to activate your account and start shopping fresh produce.</p>
+                      <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 28px;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;text-decoration:none;background-color:#244a3b;border-radius:6px;border:1px solid #1a3d30;">Confirm email</a>
                     </td>
                   </tr>
                 </table>
 
-                <p style="margin:0;font-size:15px;line-height:1.6;color:#1c1c1c;">
-                  Kind regards,<br />
-                  <strong style="color:#244a3b;">The One Source Team</strong>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0 0;">
+                  <tr>
+                    <td valign="top" width="18" style="padding:0 8px 10px 0;font-size:12px;line-height:1.55;color:#5c5c58;font-weight:700;">a.</td>
+                    <td style="padding:0 0 10px;font-size:12px;line-height:1.55;color:#5c5c58;">Confirm your email to activate your One Source account.</td>
+                  </tr>
+                  <tr>
+                    <td valign="top" width="18" style="padding:0 8px 10px 0;font-size:12px;line-height:1.55;color:#5c5c58;font-weight:700;">b.</td>
+                    <td style="padding:0 0 10px;font-size:12px;line-height:1.55;color:#5c5c58;">If you did not create an account, you can safely ignore this email.</td>
+                  </tr>
+                </table>
+
+                <p style="margin:24px 0 0;font-size:14px;line-height:1.6;color:#1c1c1c;">
+                  Regards,<br />
+                  <strong style="color:#244a3b;">One Source Account Team</strong>
                 </p>
               </td>
             </tr>
 
             <tr>
-              <td style="background-color:#244a3b;padding:22px 32px;text-align:center;">
-                <p style="margin:0 0 12px;font-size:12px;font-weight:600;">
-                  <a href="{{ .SiteURL }}" style="color:#edf3e0;text-decoration:none;">Visit the shop</a>
-                </p>
-                <p style="margin:0;font-size:11px;line-height:1.5;color:#9bb5a8;">© One Source · Fresh produce delivered across Uganda</p>
+              <td style="background-color:#1c3d2f;padding:18px 28px;text-align:center;">
+                <p style="margin:0 0 8px;font-size:11px;line-height:1.5;color:#9bb5a8;">You are receiving this because you signed up for One Source.</p>
+                <p style="margin:0;font-size:10px;line-height:1.5;color:#7a9488;">© One Source · Fresh produce delivered across Uganda</p>
+                <p style="margin:8px 0 0;font-size:10px;color:#6a8578;">This is an automated message. Please do not reply.</p>
               </td>
             </tr>
 

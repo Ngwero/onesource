@@ -16,7 +16,21 @@ server/data/*.db-shm
 server/data/*.db-wal
 server/uploads
 dist-ssr
+server/public/email-previews/
 *.local
+
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/**/Generated.xcconfig
+mobile/**/flutter_export_environment.sh
+mobile/**/Pods/
+mobile/**/.symlinks/
+mobile/**/ephemeral/
+mobile/**/local.properties
 
 # Editor directories and files
 .vscode/*

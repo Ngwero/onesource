@@ -2,6 +2,7 @@ const API = "/api/products";
 const CATEGORIES_API = "/api/categories";
 const HERO_API = "/api/hero/slides";
 const ORDERS_API = "/api/orders";
+const SUPPLIERS_API = "/api/suppliers";
 const HEALTH = "/api/health";
 const ADMIN_STATS = "/api/admin/stats";
 let SHOP = "http://localhost:5173";
@@ -29,9 +30,11 @@ let categories = [];
 let products = [];
 let heroSlides = [];
 let orders = [];
+let suppliers = [];
 let editingOrderId = null;
 let editingId = null;
 let editingHeroId = null;
+let editingSupplierId = null;
 let currentView = "dashboard";
 let confirmCallback = null;
 let lastRefresh = null;
@@ -42,6 +45,11 @@ let ordersPageSize = 50;
 let productsSort = { key: "updatedAt", dir: "desc" };
 const selectedProductIds = new Set();
 let showInactiveHero = false;
+let orderAlertsMuted = localStorage.getItem("os_admin_order_mute") === "1";
+let knownPlacedOrderIds = new Set();
+let orderPollTimer = null;
+let pendingAlertOrderId = null;
+const ORDER_POLL_MS = 12_000;
 
 const CHART_PALETTE = [
   "#2e5e4a",
@@ -200,7 +208,7 @@ function renderDashboardCharts(stats, orderStats) {
   renderDashboardPieChart(
     "chartStockPie",
     null,
-    ["In stock (>10 units)", "Low stock (1–10)", "Out of stock"],
+    ["In stock (>10)", "Low (1–10)", "Out of stock"],
     [stock.healthy, stock.low, stock.out],
     { colors: ["#2e5e4a", "#e8b82a", "#b42318"] }
   );
@@ -220,6 +228,99 @@ function renderDashboardCharts(stats, orderStats) {
     }
   }
   renderDashboardPieChart("chartOrdersPie", "chartOrdersPieEmpty", orderLabels, orderData);
+
+  const supCounts = { pending: 0, approved: 0, suspended: 0, rejected: 0 };
+  suppliers.forEach((s) => {
+    supCounts[s.status] = (supCounts[s.status] ?? 0) + 1;
+  });
+  renderDashboardPieChart(
+    "chartSuppliersPie",
+    "chartSuppliersPieEmpty",
+    ["Approved", "Pending", "Suspended", "Rejected"],
+    [supCounts.approved, supCounts.pending, supCounts.suspended, supCounts.rejected],
+    { colors: ["#2e5e4a", "#e8b82a", "#6b7280", "#b42318"] }
+  );
+
+  const daily = buildDailyBuckets(14);
+  renderCartesianChart("chartRevenueLine", "chartRevenueLineEmpty", {
+    labels: daily.labels,
+    datasets: [{
+      label: "Revenue",
+      data: daily.revenue,
+      borderColor: "#2e5e4a",
+      backgroundColor: "rgba(46,94,74,0.12)",
+      fill: true,
+      tension: 0.35,
+      pointRadius: 3,
+      pointBackgroundColor: "#2e5e4a",
+    }],
+    type: "line",
+    tooltipCallbacks: {
+      label(ctx) {
+        return ` ${formatMoney(ctx.parsed.y)}`;
+      },
+    },
+  });
+
+  renderCartesianChart("chartOrdersBar", "chartOrdersBarEmpty", {
+    labels: daily.labels,
+    datasets: [{
+      label: "Orders",
+      data: daily.counts,
+      backgroundColor: "#111827",
+      borderRadius: 6,
+    }],
+    type: "bar",
+  });
+
+  const catRev = buildCategoryRevenue();
+  renderHorizontalBarChart(
+    "chartCategoryRevenue",
+    "chartCategoryRevenueEmpty",
+    catRev.labels,
+    catRev.data,
+    "#2e5e4a"
+  );
+
+  const topP = buildTopProducts(8);
+  renderHorizontalBarChart(
+    "chartTopProducts",
+    "chartTopProductsEmpty",
+    topP.labels,
+    topP.data,
+    "#374151"
+  );
+
+  const daily30 = buildDailyBuckets(30);
+  const aov = daily30.revenue.map((r, i) =>
+    daily30.counts[i] > 0 ? Math.round(r / daily30.counts[i]) : 0
+  );
+  renderCartesianChart("chartAnalyticsRevenue", null, {
+    labels: daily30.labels,
+    datasets: [{
+      label: "Revenue",
+      data: daily30.revenue,
+      borderColor: "#2e5e4a",
+      backgroundColor: "rgba(46,94,74,0.1)",
+      fill: true,
+      tension: 0.3,
+    }],
+    type: "line",
+    tooltipCallbacks: { label: (ctx) => ` ${formatMoney(ctx.parsed.y)}` },
+  });
+  renderCartesianChart("chartAovLine", null, {
+    labels: daily30.labels,
+    datasets: [{
+      label: "AOV",
+      data: aov,
+      borderColor: "#e8b82a",
+      backgroundColor: "rgba(232,184,42,0.15)",
+      fill: true,
+      tension: 0.3,
+    }],
+    type: "line",
+    tooltipCallbacks: { label: (ctx) => ` ${formatMoney(ctx.parsed.y)}` },
+  });
 }
 
 const LEGACY_CATEGORY_MAP = {
@@ -244,9 +345,200 @@ const viewTitles = {
   categories: "Category banners",
   hero: "Hero carousel",
   orders: "Orders",
+  suppliers: "Suppliers",
   customers: "Customers",
   settings: "Settings",
 };
+
+const viewBreadcrumbs = {
+  dashboard: ["Home"],
+  analytics: ["Home", "Analytics"],
+  products: ["Home", "Catalogue", "Products"],
+  inventory: ["Home", "Catalogue", "Inventory"],
+  catalog: ["Home", "Catalogue", "Categories"],
+  categories: ["Home", "Storefront", "Category banners"],
+  hero: ["Home", "Storefront", "Hero carousel"],
+  suppliers: ["Home", "Marketplace", "Suppliers"],
+  orders: ["Home", "Sales", "Orders"],
+  customers: ["Home", "Sales", "Customers"],
+  settings: ["Home", "System", "Settings"],
+};
+
+function updatePageHeader() {
+  const name = currentView;
+  const title = viewTitles[name] || name;
+  const crumbs = viewBreadcrumbs[name] || ["Home", title];
+  const bc = $("breadcrumbs");
+  if (bc) {
+    bc.innerHTML = crumbs
+      .map((c, i) => {
+        const isLast = i === crumbs.length - 1;
+        if (isLast) return `<span class="current">${escapeHtml(c)}</span>`;
+        const viewKey = Object.entries(viewBreadcrumbs).find(([, v]) => v[v.length - 1] === c)?.[0];
+        if (i === 0) {
+          return `<button type="button" data-view="dashboard">${escapeHtml(c)}</button><span class="sep">›</span>`;
+        }
+        if (viewKey) {
+          return `<button type="button" data-view="${viewKey}">${escapeHtml(c)}</button><span class="sep">›</span>`;
+        }
+        return `<span>${escapeHtml(c)}</span><span class="sep">›</span>`;
+      })
+      .join("");
+    bc.querySelectorAll("[data-view]").forEach((btn) => {
+      btn.addEventListener("click", () => switchView(btn.dataset.view));
+    });
+  }
+  const pt = $("pageTitle");
+  if (pt) pt.textContent = title;
+  const meta = $("pageMeta");
+  if (meta) meta.innerHTML = buildPageMeta(name);
+}
+
+function buildPageMeta(view) {
+  const stats = computeStats();
+  const os = computeOrderStats();
+  const approved = suppliers.filter((s) => s.status === "approved").length;
+  const pending = suppliers.filter((s) => s.status === "pending").length;
+  const refreshed = lastRefresh
+    ? ` · Updated ${lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+    : "";
+  const maps = {
+    dashboard: `<strong>${products.length}</strong> products · <strong>${orders.length}</strong> orders · <strong>${formatMoney(os.revenue)}</strong> revenue · <strong>${suppliers.length}</strong> suppliers${refreshed}`,
+    analytics: `<strong>${formatMoney(os.revenue)}</strong> total revenue · <strong>${os.delivered}</strong> delivered · <strong>${os.placed}</strong> awaiting action`,
+    products: `<strong>${stats.live}</strong> live · <strong>${stats.low}</strong> low stock · <strong>${stats.out}</strong> out of stock`,
+    inventory: `<strong>${stats.units.toLocaleString()}</strong> units on hand · stock value <strong>${formatMoney(stats.value)}</strong>`,
+    suppliers: `<strong>${suppliers.length}</strong> sellers · <strong>${approved}</strong> approved · <strong>${pending}</strong> pending review`,
+    orders: `<strong>${os.total}</strong> orders · <strong>${os.placed}</strong> new · <strong>${formatMoney(os.revenue)}</strong> revenue`,
+    customers: `<strong>${getCustomers().length}</strong> customers from order history`,
+    catalog: `<strong>${categories.length}</strong> categories in catalogue`,
+    settings: `Store admin · API at <code>${location.origin}/api</code>`,
+  };
+  return maps[view] || `${products.length} products · ${orders.length} orders${refreshed}`;
+}
+
+function renderKpiCard({ icon, iconClass, label, value, sub, trend }) {
+  return `
+    <div class="kpi-card">
+      <div class="kpi-card-top">
+        <div class="kpi-icon ${iconClass}">${icon}</div>
+        ${trend ? `<span class="kpi-trend ${trend.cls}">${trend.text}</span>` : ""}
+      </div>
+      <div class="kpi-label">${escapeHtml(label)}</div>
+      <div class="kpi-value">${value}</div>
+      ${sub ? `<div class="kpi-sub">${escapeHtml(sub)}</div>` : ""}
+    </div>`;
+}
+
+function buildDailyBuckets(days = 14) {
+  const labels = [];
+  const revenue = [];
+  const counts = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    labels.push(d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }));
+    let dayRev = 0;
+    let dayCount = 0;
+    for (const o of orders) {
+      if (o.status === "cancelled") continue;
+      const oDay = (o.created_at || "").slice(0, 10);
+      if (oDay === key) {
+        dayRev += Number(o.total || 0);
+        dayCount += 1;
+      }
+    }
+    revenue.push(dayRev);
+    counts.push(dayCount);
+  }
+  return { labels, revenue, counts };
+}
+
+function buildCategoryRevenue() {
+  const byCat = new Map();
+  const productCat = new Map(products.map((p) => [p.id, normalizeCategoryId(p.category)]));
+  for (const o of orders) {
+    if (o.status === "cancelled") continue;
+    for (const item of o.order_items || []) {
+      const catId = productCat.get(item.product_id) || "uncategorized";
+      const name = catName(catId);
+      const prev = byCat.get(catId) || { label: name, rev: 0 };
+      prev.rev += Number(item.line_total || 0);
+      byCat.set(catId, prev);
+    }
+  }
+  const sorted = [...byCat.values()].sort((a, b) => b.rev - a.rev).slice(0, 8);
+  return { labels: sorted.map((x) => x.label), data: sorted.map((x) => x.rev) };
+}
+
+function buildTopProducts(limit = 8) {
+  const sales = new Map();
+  for (const o of orders) {
+    if (o.status === "cancelled") continue;
+    for (const item of o.order_items || []) {
+      const prev = sales.get(item.product_id) || { title: item.product_title, qty: 0 };
+      prev.qty += Number(item.quantity);
+      sales.set(item.product_id, prev);
+    }
+  }
+  const top = [...sales.values()].sort((a, b) => b.qty - a.qty).slice(0, limit);
+  return {
+    labels: top.map((x) => (x.title.length > 22 ? x.title.slice(0, 20) + "…" : x.title)),
+    data: top.map((x) => x.qty),
+  };
+}
+
+function renderCartesianChart(canvasId, emptyId, { labels, datasets, type = "line", options = {} }) {
+  const canvas = $(canvasId);
+  const emptyEl = emptyId ? $(emptyId) : null;
+  if (!canvas) return;
+  const hasData = datasets.some((ds) => ds.data.some((v) => v > 0));
+  if (!hasData) {
+    if (dashboardCharts[canvasId]) {
+      dashboardCharts[canvasId].destroy();
+      delete dashboardCharts[canvasId];
+    }
+    canvas.style.display = "none";
+    if (emptyEl) emptyEl.hidden = false;
+    return;
+  }
+  canvas.style.display = "";
+  if (emptyEl) emptyEl.hidden = true;
+  if (typeof Chart === "undefined") return;
+  if (dashboardCharts[canvasId]) dashboardCharts[canvasId].destroy();
+  dashboardCharts[canvasId] = new Chart(canvas, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: options.indexAxis,
+      plugins: {
+        legend: { display: datasets.length > 1, position: "top", labels: { boxWidth: 10, font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: "#111827",
+          padding: 10,
+          callbacks: options.tooltipCallbacks || {},
+        },
+      },
+      scales: type !== "doughnut" && type !== "pie" ? {
+        x: { grid: { display: options.indexAxis === "y" }, ticks: { font: { size: 10 }, maxRotation: 0 } },
+        y: { beginAtZero: true, grid: { color: options.indexAxis === "y" ? "transparent" : "#f3f4f6" }, ticks: { font: { size: 10 } } },
+      } : undefined,
+      ...(options.chartOptions || {}),
+    },
+  });
+}
+
+function renderHorizontalBarChart(canvasId, emptyId, labels, data, color = "#2e5e4a") {
+  renderCartesianChart(canvasId, emptyId, {
+    labels,
+    datasets: [{ data, backgroundColor: color, borderRadius: 6 }],
+    type: "bar",
+    indexAxis: "y",
+  });
+}
 
 function normalizeCategoryId(raw) {
   if (!raw?.trim()) return "uncategorized";
@@ -310,12 +602,50 @@ function renderPagination(elId, metaId, { page, pages, total }, onPage) {
 }
 
 function updateTopbarMeta() {
-  const el = $("topbarMeta");
+  updatePageHeader();
+}
+
+function renderDashBrowse() {
+  const el = $("dashBrowse");
   if (!el) return;
-  const refreshed = lastRefresh
-    ? `Updated ${lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
-    : "";
-  el.textContent = `${products.length} products · ${orders.length} orders${refreshed ? ` · ${refreshed}` : ""}`;
+  const os = computeOrderStats();
+  const pending = suppliers.filter((s) => s.status === "pending").length;
+  const items = [
+    { view: "products", icon: "📦", cls: "c0", name: "Products", count: `${products.length} listings` },
+    { view: "orders", icon: "🛒", cls: "c1", name: "Orders", count: `${os.placed} awaiting` },
+    { view: "suppliers", icon: "🏪", cls: "c2", name: "Suppliers", count: `${pending} pending` },
+    { view: "inventory", icon: "📊", cls: "c3", name: "Inventory", count: `${computeStats().low} low stock` },
+    { view: "customers", icon: "👥", cls: "c4", name: "Customers", count: `${getCustomers().length} accounts` },
+  ];
+  el.innerHTML = items
+    .map(
+      (it) => `
+    <button type="button" class="browse-card" data-view="${it.view}">
+      <span class="browse-card-icon ${it.cls}">${it.icon}</span>
+      <div><strong>${it.name}</strong><span>${it.count}</span></div>
+    </button>`
+    )
+    .join("");
+  el.querySelectorAll("[data-view]").forEach((btn) => {
+    btn.addEventListener("click", () => switchView(btn.dataset.view));
+  });
+}
+
+function renderDashKpis() {
+  const stats = computeStats();
+  const os = computeOrderStats();
+  const approved = suppliers.filter((s) => s.status === "approved").length;
+  const aov = os.total > 0 ? Math.round(os.revenue / orders.filter((o) => o.status !== "cancelled").length) : 0;
+  const el = $("dashKpis");
+  if (!el) return;
+  el.innerHTML = [
+    renderKpiCard({ icon: "💰", iconClass: "green", label: "Revenue", value: formatMoney(os.revenue), sub: "All non-cancelled orders" }),
+    renderKpiCard({ icon: "🛒", iconClass: "blue", label: "Orders", value: os.total, sub: `${os.placed} new · ${os.delivered} delivered` }),
+    renderKpiCard({ icon: "📦", iconClass: "teal", label: "Products", value: stats.total, sub: `${stats.live} live on shop` }),
+    renderKpiCard({ icon: "🏪", iconClass: "purple", label: "Suppliers", value: suppliers.length, sub: `${approved} approved sellers` }),
+    renderKpiCard({ icon: "⚠️", iconClass: "amber", label: "Low stock", value: stats.low, sub: `${stats.out} out of stock` }),
+    renderKpiCard({ icon: "📈", iconClass: "green", label: "Avg order", value: aov ? formatMoney(aov) : "—", sub: "Order value (AOV)" }),
+  ].join("");
 }
 
 function updateNavBadges() {
@@ -331,6 +661,16 @@ function updateNavBadges() {
       ob.style.display = "none";
     }
   }
+  const pending = suppliers.filter((s) => s.status === "pending").length;
+  const sb = $("navSuppliersBadge");
+  if (sb) {
+    if (pending > 0) {
+      sb.textContent = String(pending);
+      sb.style.display = "";
+    } else {
+      sb.style.display = "none";
+    }
+  }
 }
 
 const ORDER_STATUS_LABELS = {
@@ -341,8 +681,35 @@ const ORDER_STATUS_LABELS = {
   cancelled: "Cancelled",
 };
 
+const SUPPLIER_STATUS_LABELS = {
+  pending: "Pending",
+  approved: "Approved",
+  suspended: "Suspended",
+  rejected: "Rejected",
+};
+
+function supplierStatusBadge(status) {
+  const label = SUPPLIER_STATUS_LABELS[status] ?? status;
+  const cls =
+    status === "approved"
+      ? "badge-in"
+      : status === "pending"
+        ? "badge-low"
+        : status === "suspended"
+          ? "badge-out"
+          : "badge-out";
+  return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+}
+
+function supplierName(id) {
+  if (!id) return "One Source";
+  const s = suppliers.find((x) => x.id === id);
+  return s?.businessName ?? id;
+}
+
 const addProductBtnDefaultHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add product</span>`;
 const addHeroBtnHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add slide</span>`;
+const addSupplierBtnHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add supplier</span>`;
 
 function setLoading(on) {
   $("loading").classList.toggle("show", on);
@@ -465,11 +832,14 @@ function getFilteredProducts(opts = {}) {
   const stock = opts.stock ?? "";
   const prime = opts.prime ?? "";
   const sale = opts.sale ?? "";
+  const supplier = opts.supplier ?? "";
 
   let list = products.filter((p) => {
-    if (q && !`${p.title} ${p.id} ${p.category} ${p.description}`.toLowerCase().includes(q))
+    if (q && !`${p.title} ${p.id} ${p.category} ${p.description} ${supplierName(p.supplierId)}`.toLowerCase().includes(q))
       return false;
     if (cat && !productMatchesCategory(p.category, cat)) return false;
+    if (supplier === "platform" && p.supplierId) return false;
+    if (supplier && supplier !== "platform" && p.supplierId !== supplier) return false;
     if (stock === "in" && (!p.inStock || p.stockQuantity <= 0)) return false;
     if (stock === "low" && (p.stockQuantity <= 0 || p.stockQuantity > 10)) return false;
     if (stock === "out" && p.inStock && p.stockQuantity > 0) return false;
@@ -556,6 +926,7 @@ function productRow(p, opts = {}) {
         </div>
       </td>
       <td>${catIcon(p.category)} ${escapeHtml(catName(p.category))}</td>
+      <td>${p.supplierId ? `<span class="badge badge-prime" style="background:var(--surface-2);color:var(--text)">${escapeHtml(supplierName(p.supplierId))}</span>` : '<span style="color:var(--muted)">Platform</span>'}</td>
       ${compact ? "" : `<td>${formatMoney(p.price)}</td>`}
       ${compact ? "" : `<td>${p.originalPrice ? formatMoney(p.originalPrice) : "—"}</td>`}
       ${compact ? "" : `<td>★ ${p.rating} <small style="color:var(--muted)">(${p.reviewCount})</small></td>`}
@@ -711,6 +1082,116 @@ async function loadOrders(showToastOnError = false) {
   }
 }
 
+function seedOrderAlertBaseline() {
+  knownPlacedOrderIds = new Set(
+    orders.filter((o) => o.status === "placed").map((o) => o.id)
+  );
+}
+
+function playOrderRingtone() {
+  if (orderAlertsMuted) return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const tone = (freq, start, duration, volume = 0.12) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(volume, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + duration + 0.02);
+    };
+    const t = ctx.currentTime;
+    tone(880, t, 0.18);
+    tone(1108.73, t + 0.2, 0.18);
+    tone(1318.51, t + 0.4, 0.28, 0.1);
+    tone(880, t + 0.75, 0.18, 0.08);
+    setTimeout(() => ctx.close().catch(() => {}), 1500);
+  } catch {
+    /* audio blocked until user gesture */
+  }
+}
+
+function showNewOrderAlert(newOrders) {
+  if (!newOrders.length) return;
+  const first = newOrders[0];
+  pendingAlertOrderId = first.id;
+  const banner = $("orderAlertBanner");
+  const title = $("orderAlertTitle");
+  const text = $("orderAlertText");
+  if (!banner) return;
+  const count = newOrders.length;
+  if (title) {
+    title.textContent = count === 1 ? "New order received" : `${count} new orders received`;
+  }
+  if (text) {
+    const extra = count > 1 ? ` (+${count - 1} more)` : "";
+    text.textContent = `#${shortOrderId(first.id)} · ${first.full_name} · ${formatMoney(first.total)}${extra}`;
+  }
+  banner.hidden = false;
+}
+
+function dismissOrderAlert() {
+  const banner = $("orderAlertBanner");
+  if (banner) banner.hidden = true;
+  pendingAlertOrderId = null;
+}
+
+function updateOrderMuteButton() {
+  const btn = $("orderAlertMuteBtn");
+  const label = $("orderAlertMuteLabel");
+  if (!btn) return;
+  btn.classList.toggle("muted", orderAlertsMuted);
+  if (label) label.textContent = orderAlertsMuted ? "Alerts off" : "Alerts on";
+}
+
+async function pollForNewOrders() {
+  try {
+    const data = await ordersApi("?admin=true");
+    const incoming = data.orders || [];
+    const fresh = incoming.filter(
+      (o) => o.status === "placed" && !knownPlacedOrderIds.has(o.id)
+    );
+    for (const o of incoming) {
+      if (o.status === "placed") knownPlacedOrderIds.add(o.id);
+    }
+    if (fresh.length > 0) {
+      orders = incoming;
+      playOrderRingtone();
+      showNewOrderAlert(fresh);
+      updateNavBadges();
+      if (currentView === "dashboard") renderDashboard();
+      if (currentView === "orders") renderOrdersTable();
+      toast(
+        fresh.length === 1
+          ? `New order #${shortOrderId(fresh[0].id)} — ${fresh[0].full_name}`
+          : `${fresh.length} new orders received`
+      );
+    } else {
+      orders = incoming;
+    }
+  } catch {
+    /* silent background poll */
+  }
+}
+
+function startOrderPolling() {
+  if (orderPollTimer) clearInterval(orderPollTimer);
+  orderPollTimer = setInterval(pollForNewOrders, ORDER_POLL_MS);
+}
+
+function stopOrderPolling() {
+  if (orderPollTimer) {
+    clearInterval(orderPollTimer);
+    orderPollTimer = null;
+  }
+}
+
 function renderOrderDrawer(order) {
   const items = order.order_items || [];
   $("orderDrawerTitle").textContent = `Order #${shortOrderId(order.id)}`;
@@ -785,7 +1266,7 @@ function closeOrderDrawer() {
     errEl.style.display = "none";
     errEl.textContent = "";
   }
-  if (!$("drawer").classList.contains("open") && !$("heroDrawer").classList.contains("open")) {
+  if (!$("drawer").classList.contains("open") && !$("heroDrawer").classList.contains("open") && !$("supplierDrawer").classList.contains("open")) {
     $("overlay").classList.remove("open");
     document.body.style.overflow = "";
   }
@@ -802,20 +1283,15 @@ window.viewOrder = (id) => {
 function renderDashboard() {
   const stats = computeStats();
   const os = computeOrderStats();
-  $("dashStats").innerHTML =
-    renderStatsHtml(stats) +
-    `
-        <div class="stat-card accent">
-          <div class="label">Orders</div>
-          <div class="value">${os.total}</div>
-          <div class="sub">${os.placed} new · <button type="button" class="btn btn-ghost btn-sm" data-view="orders" style="padding:0;min-height:auto">Manage →</button></div>
-        </div>`;
+  renderDashKpis();
+  renderDashBrowse();
 
   const ql = $("dashQuickLinks");
   if (ql) {
     ql.innerHTML = `
       <a class="quick-link-card" href="#" data-view="products"><strong>Add product</strong><span>Create a new listing</span></a>
       <a class="quick-link-card" href="#" data-view="orders"><strong>Review orders</strong><span>${os.placed} awaiting action</span></a>
+      <a class="quick-link-card" href="#" data-view="suppliers"><strong>Review suppliers</strong><span>${suppliers.filter((s) => s.status === "pending").length} pending applications</span></a>
       <a class="quick-link-card" href="#" data-view="inventory"><strong>Low stock</strong><span>${stats.low} SKUs need restock</span></a>
       <a class="quick-link-card" href="${SHOP}" target="_blank" rel="noopener"><strong>View shop</strong><span>Open storefront</span></a>
     `;
@@ -916,6 +1392,7 @@ function renderProductsTable() {
     stock: $("filterStock")?.value,
     prime: $("filterPrime")?.value,
     sale: $("filterSale")?.value,
+    supplier: $("filterSupplier")?.value,
     sortKey: productsSort.key,
     sortDir: productsSort.dir,
   });
@@ -924,7 +1401,7 @@ function renderProductsTable() {
   productsPage = page;
   $("productsTable").innerHTML =
     items.length === 0
-      ? `<tr><td colspan="9"><div class="empty">No products match your filters</div></td></tr>`
+      ? `<tr><td colspan="10"><div class="empty">No products match your filters</div></td></tr>`
       : items.map((p) => productRow(p)).join("");
   renderPagination("productsPagination", "productsTableMeta", { page, pages, total }, (p) => {
     productsPage = p;
@@ -1259,6 +1736,7 @@ function closeHeroDrawer() {
   $("heroDrawer").classList.remove("open");
   if (
     !$("drawer").classList.contains("open") &&
+    !$("supplierDrawer").classList.contains("open") &&
     !$("orderDrawer").classList.contains("open")
   ) {
     $("overlay").classList.remove("open");
@@ -1340,10 +1818,160 @@ window.deleteHeroSlide = (id) => {
   );
 };
 
+let suppliersTableReady = true;
+
+async function suppliersApi(path, opts = {}) {
+  const res = await fetch(SUPPLIERS_API + path, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+async function loadSuppliers() {
+  try {
+    const data = await suppliersApi("?admin=true");
+    suppliers = data.suppliers || [];
+    suppliersTableReady = true;
+    populateSupplierSelects();
+  } catch {
+    suppliers = [];
+    suppliersTableReady = false;
+    populateSupplierSelects();
+  }
+}
+
+function populateSupplierSelects() {
+  const approved = suppliers.filter((s) => s.status === "approved");
+  const productOpts = [
+    '<option value="">One Source (platform)</option>',
+    ...approved.map(
+      (s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.businessName)}</option>`
+    ),
+  ];
+  const filterOpts = [
+    '<option value="">All suppliers</option>',
+    '<option value="platform">Platform only</option>',
+    ...suppliers.map(
+      (s) =>
+        `<option value="${escapeHtml(s.id)}">${escapeHtml(s.businessName)} (${SUPPLIER_STATUS_LABELS[s.status] ?? s.status})</option>`
+    ),
+  ];
+  const productEl = $("supplierId");
+  if (productEl) productEl.innerHTML = productOpts.join("");
+  const filterEl = $("filterSupplier");
+  if (filterEl) {
+    const prev = filterEl.value;
+    filterEl.innerHTML = filterOpts.join("");
+    if (prev) filterEl.value = prev;
+  }
+}
+
+function openSupplierDrawer(mode = "add") {
+  $("overlay").classList.add("open");
+  $("supplierDrawer").classList.add("open");
+  document.body.style.overflow = "hidden";
+  if (mode === "add") resetSupplierForm();
+}
+
+function closeSupplierDrawer() {
+  $("supplierDrawer").classList.remove("open");
+  if (
+    !$("drawer").classList.contains("open") &&
+    !$("heroDrawer").classList.contains("open") &&
+    !$("orderDrawer").classList.contains("open")
+  ) {
+    $("overlay").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+}
+
+function resetSupplierForm() {
+  editingSupplierId = null;
+  $("supplierForm")?.reset();
+  $("supplierDrawerTitle").textContent = "Add supplier";
+  $("supplierDrawerSubtitle").textContent = "New seller application or manual onboarding";
+  $("supplierEditId").value = "";
+  $("supplierStatus").value = "pending";
+  $("supplierCommission").value = 15;
+  $("deleteSupplierBtn").style.display = "none";
+  $("supplierSubmitBtn").textContent = "Save supplier";
+  $("supplierLogoPreview")?.classList.remove("visible");
+}
+
+function updateSupplierLogoPreview() {
+  const url = resolveUploadUrl($("supplierLogo")?.value.trim());
+  const img = $("supplierLogoPreview");
+  if (!img) return;
+  if (url) {
+    img.src = url;
+    img.classList.add("visible");
+  } else {
+    img.classList.remove("visible");
+  }
+}
+
+window.editSupplier = (id) => {
+  const s = suppliers.find((x) => x.id === id);
+  if (!s) return;
+  editingSupplierId = id;
+  $("supplierDrawerTitle").textContent = "Edit supplier";
+  $("supplierDrawerSubtitle").textContent = `${s.businessName} · ${s.productCount ?? 0} products`;
+  $("supplierEditId").value = id;
+  $("supplierBusinessName").value = s.businessName;
+  $("supplierContactName").value = s.contactName || "";
+  $("supplierEmail").value = s.email;
+  $("supplierPhone").value = s.phone || "";
+  $("supplierLocation").value = s.location || "";
+  $("supplierDescription").value = s.description || "";
+  $("supplierStatus").value = s.status;
+  $("supplierCommission").value = s.commissionRate;
+  $("supplierNotes").value = s.notes || "";
+  $("supplierLogo").value = s.logo || "";
+  $("deleteSupplierBtn").style.display = "inline-flex";
+  $("supplierSubmitBtn").textContent = "Save changes";
+  updateSupplierLogoPreview();
+  openSupplierDrawer("edit");
+};
+
+window.setSupplierStatus = async (id, status) => {
+  setLoading(true);
+  try {
+    await suppliersApi(`/${encodeURIComponent(id)}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    toast(`Supplier ${SUPPLIER_STATUS_LABELS[status] ?? status}`);
+    await loadSuppliers();
+    renderSuppliers();
+    updateNavBadges();
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    setLoading(false);
+  }
+};
+
 function renderAnalytics() {
   const os = computeOrderStats();
-  $("analyticsStats").innerHTML = renderOrderStatsHtml() + `
-    <div class="stat-card"><div class="label">Catalogue</div><div class="value">${products.length}</div><div class="sub">Total SKUs</div></div>`;
+  const stats = computeStats();
+  const aov = orders.filter((o) => o.status !== "cancelled").length
+    ? Math.round(os.revenue / orders.filter((o) => o.status !== "cancelled").length)
+    : 0;
+  const el = $("analyticsKpis");
+  if (el) {
+    el.innerHTML = [
+      renderKpiCard({ icon: "💰", iconClass: "green", label: "Total revenue", value: formatMoney(os.revenue), sub: "Excludes cancelled" }),
+      renderKpiCard({ icon: "📦", iconClass: "blue", label: "Orders", value: os.total, sub: `${os.active} in progress` }),
+      renderKpiCard({ icon: "✅", iconClass: "teal", label: "Delivered", value: os.delivered, sub: "Completed orders" }),
+      renderKpiCard({ icon: "📈", iconClass: "amber", label: "AOV", value: aov ? formatMoney(aov) : "—", sub: "Average order value" }),
+      renderKpiCard({ icon: "🛍️", iconClass: "purple", label: "SKUs", value: products.length, sub: `${stats.live} in stock` }),
+      renderKpiCard({ icon: "🏪", iconClass: "green", label: "Sellers", value: suppliers.filter((s) => s.status === "approved").length, sub: "Approved suppliers" }),
+    ].join("");
+  }
+  renderDashboardCharts(stats, os);
 
   const statusCounts = {};
   for (const s of Object.keys(ORDER_STATUS_LABELS)) statusCounts[s] = 0;
@@ -1453,6 +2081,166 @@ function getCustomers() {
   return [...map.values()].sort((a, b) => b.spent - a.spent);
 }
 
+function getFilteredSuppliers() {
+  const q = ($("searchSuppliers")?.value ?? "").toLowerCase();
+  const status = $("filterSupplierStatus")?.value ?? "";
+  return suppliers.filter((s) => {
+    if (status && s.status !== status) return false;
+    if (
+      q &&
+      !`${s.businessName} ${s.contactName} ${s.email} ${s.phone} ${s.location} ${s.description}`
+        .toLowerCase()
+        .includes(q)
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function renderSupplierStats() {
+  const el = $("supplierStats");
+  if (!el) return;
+  const approved = suppliers.filter((s) => s.status === "approved").length;
+  const pending = suppliers.filter((s) => s.status === "pending").length;
+  const suspended = suppliers.filter((s) => s.status === "suspended").length;
+  const withProducts = suppliers.filter((s) => (s.productCount ?? 0) > 0).length;
+  el.innerHTML = [
+    renderKpiCard({ icon: "🏪", iconClass: "purple", label: "Total suppliers", value: suppliers.length, sub: "Marketplace sellers" }),
+    renderKpiCard({ icon: "✅", iconClass: "green", label: "Approved", value: approved, sub: "Can list products" }),
+    renderKpiCard({ icon: "⏳", iconClass: "amber", label: "Pending", value: pending, sub: "Awaiting review" }),
+    renderKpiCard({ icon: "📦", iconClass: "blue", label: "With listings", value: withProducts, sub: `${suspended} suspended` }),
+  ].join("");
+}
+
+function renderSupplierTabs() {
+  const el = $("supplierTabs");
+  if (!el) return;
+  const counts = { "": suppliers.length, pending: 0, approved: 0, suspended: 0, rejected: 0 };
+  suppliers.forEach((s) => {
+    counts[s.status] = (counts[s.status] ?? 0) + 1;
+  });
+  const tabs = [
+    { id: "", label: "All" },
+    { id: "pending", label: "Pending" },
+    { id: "approved", label: "Approved" },
+    { id: "suspended", label: "Suspended" },
+    { id: "rejected", label: "Rejected" },
+  ];
+  const current = $("filterSupplierStatus")?.value ?? "";
+  el.innerHTML = tabs
+    .map(
+      (t) => `
+    <button type="button" class="filter-tab${current === t.id ? " active" : ""}" data-status="${t.id}">
+      ${t.label} <span class="tab-count">${counts[t.id] ?? 0}</span>
+    </button>`
+    )
+    .join("");
+  el.querySelectorAll("[data-status]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      $("filterSupplierStatus").value = btn.dataset.status;
+      renderSuppliers();
+    });
+  });
+}
+
+function renderSuppliersCardGrid() {
+  const grid = $("suppliersCardGrid");
+  if (!grid) return;
+  if (!suppliersTableReady) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">Run <code>server/supabase/suppliers.sql</code> in Supabase to enable suppliers.</div>`;
+    return;
+  }
+  const list = getFilteredSuppliers();
+  grid.innerHTML =
+    list.length === 0
+      ? `<div class="empty" style="grid-column:1/-1">No suppliers match your filters</div>`
+      : list
+          .map((s) => {
+            const initials = escapeHtml(s.businessName.slice(0, 2).toUpperCase());
+            const icon = s.logo
+              ? `<img src="${escapeHtml(resolveUploadUrl(s.logo))}" alt="" />`
+              : initials;
+            return `
+    <article class="resource-card">
+      <div class="resource-card-head">
+        <div class="resource-card-icon">${icon}</div>
+        <div>
+          <h3>${escapeHtml(s.businessName)}</h3>
+          <span class="resource-tag">${SUPPLIER_STATUS_LABELS[s.status] ?? s.status}</span>
+        </div>
+      </div>
+      <p class="resource-desc">${escapeHtml(s.description || s.location || "No description")}</p>
+      <div class="resource-card-meta">
+        <span>📍 ${escapeHtml(s.location || "—")}</span>
+        <span>📦 ${s.productCount ?? 0} products</span>
+        <span>💼 ${s.commissionRate}% commission</span>
+      </div>
+      <div class="resource-card-foot">
+        <span style="font-size:0.72rem;color:var(--muted)">${escapeHtml(s.email)}</span>
+        <button type="button" class="open-link" onclick="editSupplier('${s.id}')">Manage →</button>
+      </div>
+    </article>`;
+          })
+          .join("");
+}
+
+function renderSuppliers() {
+  renderSupplierStats();
+  renderSupplierTabs();
+  renderSuppliersCardGrid();
+  const list = getFilteredSuppliers();
+  const tbody = $("suppliersTable");
+  if (!tbody) return;
+  if (!suppliersTableReady) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Run <code>server/supabase/suppliers.sql</code> in Supabase SQL Editor to enable suppliers.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML =
+    list.length === 0
+      ? `<tr><td colspan="7"><div class="empty">No suppliers match your filters</div></td></tr>`
+      : list
+          .map((s) => {
+            const logo = s.logo
+              ? `<img class="product-thumb" src="${escapeHtml(resolveUploadUrl(s.logo))}" alt="" loading="lazy" />`
+              : `<span class="brand-mark" style="width:36px;height:36px;font-size:0.7rem">${escapeHtml(s.businessName.slice(0, 2).toUpperCase())}</span>`;
+            const actions = [];
+            if (s.status === "pending") {
+              actions.push(`<button type="button" class="btn btn-primary btn-sm" onclick="setSupplierStatus('${s.id}', 'approved')">Approve</button>`);
+              actions.push(`<button type="button" class="btn btn-ghost btn-sm" onclick="setSupplierStatus('${s.id}', 'rejected')">Reject</button>`);
+            } else if (s.status === "approved") {
+              actions.push(`<button type="button" class="btn btn-ghost btn-sm" onclick="setSupplierStatus('${s.id}', 'suspended')">Suspend</button>`);
+            } else if (s.status === "suspended") {
+              actions.push(`<button type="button" class="btn btn-primary btn-sm" onclick="setSupplierStatus('${s.id}', 'approved')">Reinstate</button>`);
+            } else if (s.status === "rejected") {
+              actions.push(`<button type="button" class="btn btn-primary btn-sm" onclick="setSupplierStatus('${s.id}', 'approved')">Approve</button>`);
+            }
+            actions.push(`<button type="button" class="btn btn-secondary btn-sm" onclick="editSupplier('${s.id}')">Edit</button>`);
+            if ((s.productCount ?? 0) > 0) {
+              actions.push(`<button type="button" class="btn btn-ghost btn-sm" onclick="filterBySupplier('${s.id}')">Products</button>`);
+            }
+            return `
+    <tr>
+      <td>
+        <div class="product-cell">
+          ${logo}
+          <div class="product-meta">
+            <strong>${escapeHtml(s.businessName)}</strong>
+            <small><code>${escapeHtml(s.id)}</code></small>
+          </div>
+        </div>
+      </td>
+      <td>${escapeHtml(s.contactName || "—")}<br><small style="color:var(--muted)">${escapeHtml(s.email)}</small>${s.phone ? `<br><small>${escapeHtml(s.phone)}</small>` : ""}</td>
+      <td>${escapeHtml(s.location || "—")}</td>
+      <td><strong>${s.productCount ?? 0}</strong></td>
+      <td>${s.commissionRate}%</td>
+      <td>${supplierStatusBadge(s.status)}</td>
+      <td><div class="row-actions">${actions.join("")}</div></td>
+    </tr>`;
+          })
+          .join("");
+}
+
 function renderCustomers() {
   const q = ($("searchCustomers")?.value ?? "").toLowerCase();
   const list = getCustomers().filter(
@@ -1492,6 +2280,7 @@ function renderSettings() {
       { ok: categoriesTableReady, label: "Categories table", hint: "server/supabase/categories.sql" },
       { ok: heroSlides.length > 0, label: "Hero slides", hint: "server/supabase/hero-slides.sql + npm run seed:hero" },
       { ok: orders.length >= 0, label: "Orders table", hint: "server/supabase/orders.sql" },
+      { ok: suppliersTableReady, label: "Suppliers table", hint: "server/supabase/suppliers.sql" },
     ];
     setup.innerHTML = checks
       .map(
@@ -1507,7 +2296,7 @@ function renderSettings() {
 
 function exportProductsCsv(list) {
   const rows = list || products;
-  const headers = ["id", "title", "category", "price", "originalPrice", "stockQuantity", "inStock", "unit", "rating", "reviewCount", "prime", "image"];
+  const headers = ["id", "title", "category", "supplierId", "price", "originalPrice", "stockQuantity", "inStock", "unit", "rating", "reviewCount", "prime", "image"];
   const lines = [headers.join(",")];
   for (const p of rows) {
     lines.push(
@@ -1537,6 +2326,7 @@ function renderAll() {
   renderCatalog();
   renderCategories();
   renderHeroSlides();
+  renderSuppliers();
   renderOrdersTable();
   renderCustomers();
   renderSettings();
@@ -1550,10 +2340,17 @@ window.filterByCategory = (id) => {
   renderProductsTable();
 };
 
+window.filterBySupplier = (id) => {
+  switchView("products");
+  $("filterSupplier").value = id;
+  renderProductsTable();
+};
+
 function switchView(name) {
   currentView = name;
   closeDrawer();
   closeHeroDrawer();
+  closeSupplierDrawer();
   closeOrderDrawer();
   document.querySelectorAll(".nav-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.view === name);
@@ -1562,12 +2359,18 @@ function switchView(name) {
     v.classList.toggle("active", v.id === `view-${name}`);
   });
   $("pageTitle").textContent = viewTitles[name] || name;
+  updatePageHeader();
   const hideAdd = ["orders", "customers", "analytics", "settings", "catalog"].includes(name);
   $("addProductBtn").style.display = hideAdd ? "none" : "";
   const addBtn = $("addProductBtn");
   if (addBtn) {
     addBtn.className = "btn btn-primary btn-icon-label";
-    addBtn.innerHTML = name === "hero" ? addHeroBtnHtml : addProductBtnDefaultHtml;
+    addBtn.innerHTML =
+      name === "hero"
+        ? addHeroBtnHtml
+        : name === "suppliers"
+          ? addSupplierBtnHtml
+          : addProductBtnDefaultHtml;
   }
   $("exportCsvBtn").style.display = name === "products" ? "" : "none";
   if (name === "orders") loadOrders();
@@ -1585,7 +2388,11 @@ function openDrawer(mode = "add") {
 
 function closeDrawer() {
   $("drawer").classList.remove("open");
-  if (!$("heroDrawer").classList.contains("open") && !$("orderDrawer").classList.contains("open")) {
+  if (
+    !$("heroDrawer").classList.contains("open") &&
+    !$("supplierDrawer").classList.contains("open") &&
+    !$("orderDrawer").classList.contains("open")
+  ) {
     $("overlay").classList.remove("open");
     document.body.style.overflow = "";
   }
@@ -1638,6 +2445,7 @@ window.editProduct = (id) => {
   $("stockQuantity").value = p.stockQuantity;
   $("unit").value = p.unit;
   $("category").value = p.category;
+  $("supplierId").value = p.supplierId ?? "";
   $("image").value = p.image;
   $("rating").value = p.rating;
   $("reviewCount").value = p.reviewCount;
@@ -1665,6 +2473,7 @@ window.duplicateProduct = (id) => {
   $("stockQuantity").value = p.stockQuantity;
   $("unit").value = p.unit;
   $("category").value = p.category;
+  $("supplierId").value = p.supplierId ?? "";
   $("image").value = p.image;
   $("rating").value = p.rating;
   $("reviewCount").value = 0;
@@ -1686,6 +2495,7 @@ function resetForm() {
   $("id").disabled = false;
   $("stockQuantity").value = 100;
   $("prime").checked = true;
+  $("supplierId").value = "";
   $("delivery").value = "FREE same-day delivery Tomorrow";
   $("rating").value = 4.5;
   $("deleteBtn").style.display = "none";
@@ -1743,6 +2553,7 @@ async function loadCategories() {
   $("filterCategory").innerHTML =
     '<option value="">All categories</option>' +
     cats.map((c) => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join("");
+  populateSupplierSelects();
 }
 
 async function loadProducts(showLoader = true) {
@@ -1771,10 +2582,71 @@ document.querySelectorAll("[data-view]").forEach((el) => {
   el.addEventListener("click", () => switchView(el.dataset.view));
 });
 
+$("orderAlertMuteBtn")?.addEventListener("click", () => {
+  orderAlertsMuted = !orderAlertsMuted;
+  localStorage.setItem("os_admin_order_mute", orderAlertsMuted ? "1" : "0");
+  updateOrderMuteButton();
+  if (!orderAlertsMuted) playOrderRingtone();
+});
+
+$("orderAlertDismissBtn")?.addEventListener("click", dismissOrderAlert);
+
+$("orderAlertViewBtn")?.addEventListener("click", () => {
+  if (pendingAlertOrderId) {
+    switchView("orders");
+    viewOrder(pendingAlertOrderId);
+  }
+  dismissOrderAlert();
+});
+
+$("sidebarNewBtn")?.addEventListener("click", () => {
+  if (currentView === "suppliers") {
+    resetSupplierForm();
+    openSupplierDrawer("add");
+  } else if (currentView === "hero") {
+    resetHeroForm();
+    openHeroDrawer("add");
+  } else {
+    switchView("products");
+    resetForm();
+    openDrawer("add");
+  }
+});
+
+$("globalSearch")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) return;
+    if (q.includes("order") || q.startsWith("#")) {
+      switchView("orders");
+      $("searchOrders").value = q.replace("#", "");
+      renderOrdersTable();
+    } else if (q.includes("supplier") || q.includes("seller")) {
+      switchView("suppliers");
+      $("searchSuppliers").value = q;
+      renderSuppliers();
+    } else {
+      switchView("products");
+      $("searchProducts").value = q;
+      renderProductsTable();
+    }
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+    e.preventDefault();
+    $("globalSearch")?.focus();
+  }
+});
+
 $("addProductBtn").addEventListener("click", () => {
   if (currentView === "hero") {
     resetHeroForm();
     openHeroDrawer("add");
+  } else if (currentView === "suppliers") {
+    resetSupplierForm();
+    openSupplierDrawer("add");
   } else {
     resetForm();
     openDrawer("add");
@@ -1782,9 +2654,11 @@ $("addProductBtn").addEventListener("click", () => {
 });
 $("closeDrawer").addEventListener("click", closeDrawer);
 $("closeHeroDrawer").addEventListener("click", closeHeroDrawer);
+$("closeSupplierDrawer")?.addEventListener("click", closeSupplierDrawer);
 $("overlay").addEventListener("click", () => {
   closeDrawer();
   closeHeroDrawer();
+  closeSupplierDrawer();
   closeOrderDrawer();
 });
 $("closeOrderDrawer").addEventListener("click", closeOrderDrawer);
@@ -1814,7 +2688,20 @@ async function saveOrderStatus() {
     const idx = orders.findIndex((o) => o.id === editingOrderId);
     if (idx >= 0) orders[idx] = data.order;
 
-    toast("Order status updated");
+    let msg = "Order status updated";
+    const needsEmail = status === "confirmed" || status === "out_for_delivery" || status === "delivered";
+    if (data.emailSent === "smtp_not_configured" && needsEmail) {
+      msg = "Status saved — configure SMTP in server .env to email customers";
+      toast(msg, true);
+    } else if (status === "confirmed" && data.emailSent) {
+      toast("Order confirmed — customer notified by email");
+    } else if (status === "out_for_delivery" && data.emailSent) {
+      toast("Order dispatched — customer notified by email");
+    } else if (status === "delivered" && data.emailSent) {
+      toast("Order delivered — customer notified by email");
+    } else {
+      toast(msg);
+    }
     renderOrdersTable();
     renderDashboard();
     renderOrderDrawer(data.order);
@@ -1839,6 +2726,7 @@ $("refreshBtn").addEventListener("click", async () => {
   setLoading(true);
   try {
     await loadHeroSlides().catch(() => {});
+    await loadSuppliers().catch(() => {});
     await loadOrders().catch(() => {});
     await loadProducts(false);
   } finally {
@@ -1859,6 +2747,8 @@ $("ordersPageSize")?.addEventListener("change", () => {
   renderOrdersTable();
 });
 $("searchCustomers")?.addEventListener("input", renderCustomers);
+$("searchSuppliers")?.addEventListener("input", renderSuppliers);
+$("filterSupplierStatus")?.addEventListener("change", renderSuppliers);
 $("showInactiveHero")?.addEventListener("change", (e) => {
   showInactiveHero = e.target.checked;
   renderHeroSlides();
@@ -1923,6 +2813,10 @@ $("searchProducts")?.addEventListener("input", () => {
   renderProductsTable();
 });
 $("filterCategory")?.addEventListener("change", () => {
+  productsPage = 1;
+  renderProductsTable();
+});
+$("filterSupplier")?.addEventListener("change", () => {
   productsPage = 1;
   renderProductsTable();
 });
@@ -2010,6 +2904,7 @@ $("productForm").addEventListener("submit", async (e) => {
     prime: $("prime").checked,
     description: $("description").value,
     delivery: $("delivery").value,
+    supplierId: $("supplierId").value.trim() || undefined,
     inStock: Number($("stockQuantity").value) > 0,
   };
 
@@ -2025,6 +2920,80 @@ $("productForm").addEventListener("submit", async (e) => {
     closeDrawer();
     resetForm();
     await loadProducts(false);
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    setLoading(false);
+  }
+});
+
+$("supplierLogo")?.addEventListener("input", updateSupplierLogoPreview);
+$("uploadSupplierLogoBtn")?.addEventListener("click", async () => {
+  const file = $("supplierLogoFile")?.files?.[0];
+  await uploadImageFile(file, {
+    folder: "suppliers",
+    urlInputId: "supplierLogo",
+    previewFn: updateSupplierLogoPreview,
+  });
+  if ($("supplierLogoFile")) $("supplierLogoFile").value = "";
+});
+$("resetSupplierFormBtn")?.addEventListener("click", resetSupplierForm);
+$("deleteSupplierBtn")?.addEventListener("click", () => {
+  if (!editingSupplierId) return;
+  const s = suppliers.find((x) => x.id === editingSupplierId);
+  confirmDialog(
+    "Delete supplier",
+    `Delete "${s?.businessName || editingSupplierId}"? This cannot be undone.`,
+    async () => {
+      closeConfirm();
+      setLoading(true);
+      try {
+        await suppliersApi(`/${encodeURIComponent(editingSupplierId)}`, { method: "DELETE" });
+        toast("Supplier deleted");
+        closeSupplierDrawer();
+        resetSupplierForm();
+        await loadSuppliers();
+        renderSuppliers();
+        updateNavBadges();
+      } catch (e) {
+        toast(e.message, true);
+      } finally {
+        setLoading(false);
+      }
+    }
+  );
+});
+$("supplierForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const body = {
+    businessName: $("supplierBusinessName").value,
+    contactName: $("supplierContactName").value,
+    email: $("supplierEmail").value,
+    phone: $("supplierPhone").value,
+    location: $("supplierLocation").value,
+    description: $("supplierDescription").value,
+    status: $("supplierStatus").value,
+    commissionRate: Number($("supplierCommission").value),
+    notes: $("supplierNotes").value,
+    logo: $("supplierLogo").value.trim() || undefined,
+  };
+  setLoading(true);
+  try {
+    if (editingSupplierId) {
+      await suppliersApi(`/${encodeURIComponent(editingSupplierId)}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+      toast("Supplier updated");
+    } else {
+      await suppliersApi("", { method: "POST", body: JSON.stringify(body) });
+      toast("Supplier created");
+    }
+    closeSupplierDrawer();
+    resetSupplierForm();
+    await loadSuppliers();
+    renderSuppliers();
+    updateNavBadges();
   } catch (err) {
     toast(err.message, true);
   } finally {
@@ -2088,6 +3057,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     closeDrawer();
     closeHeroDrawer();
+    closeSupplierDrawer();
     closeOrderDrawer();
     closeConfirm();
   }
@@ -2111,6 +3081,15 @@ document.addEventListener("keydown", (e) => {
       showError(
         (document.getElementById("errorBanner").textContent || "") +
           " Orders need server/supabase/orders.sql in Supabase SQL Editor."
+      );
+    });
+    seedOrderAlertBaseline();
+    startOrderPolling();
+    updateOrderMuteButton();
+    await loadSuppliers().catch(() => {
+      showError(
+        (document.getElementById("errorBanner").textContent || "") +
+          " Suppliers need server/supabase/suppliers.sql in Supabase SQL Editor."
       );
     });
     await loadProducts(false);

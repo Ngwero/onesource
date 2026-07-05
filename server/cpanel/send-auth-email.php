@@ -50,7 +50,7 @@ $siteUrl = $emailData['site_url'] ?? $SHOP_URL;
 $confirmUrl = $emailData['confirmation_url'] ?? $emailData['redirect_to'] ?? $siteUrl;
 $fullName = trim($user['user_metadata']['full_name'] ?? '');
 
-$greeting = $fullName !== '' ? "Dear {$fullName}," : 'Dear customer,';
+$greeting = $fullName !== '' ? "HI {$fullName}," : 'HI THERE,';
 $sent = false;
 
 switch ($action) {
@@ -72,7 +72,7 @@ switch ($action) {
     case 'invite':
         $subject = 'Welcome to One Source — confirm your email';
         $link = build_verify_link($SUPABASE_URL, $action === 'invite' ? 'invite' : 'signup', $emailData);
-        $html = render_signup_email($greeting, $link, $siteUrl);
+        $html = render_signup_email($greeting, $link, $siteUrl, $to);
         $sent = send_mail($to, $subject, $html, $FROM_EMAIL, $FROM_NAME);
         break;
 
@@ -172,51 +172,70 @@ function build_verify_link(string $supabaseUrl, string $type, array $emailData):
     return $base . '?' . $query;
 }
 
-function email_shell(string $eyebrow, string $title, string $subtitle, string $bodyHtml, string $siteUrl): string
+function email_shell(string $heroEyebrow, string $heroTitle, string $heroSubtitle, string $bodyHtml, string $siteUrl): string
 {
-    $logo = htmlspecialchars(rtrim($siteUrl, '/') . '/brand/logo-on-dark-horizontal.png', ENT_QUOTES, 'UTF-8');
+    $logo = htmlspecialchars(rtrim($siteUrl, '/') . '/brand/logo-on-dark-stacked.png', ENT_QUOTES, 'UTF-8');
+    $hero = htmlspecialchars(rtrim($siteUrl, '/') . '/brand/email-hero.jpg', ENT_QUOTES, 'UTF-8');
     $shop = htmlspecialchars(rtrim($siteUrl, '/'), ENT_QUOTES, 'UTF-8');
 
     return <<<HTML
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><title>{$title}</title></head>
-<body style="margin:0;padding:0;background:#eceee9;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1c1c1c;">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{$heroTitle}</title></head>
+<body style="margin:0;padding:0;background:#eceee9;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1c1c;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eceee9;">
-<tr><td align="center" style="padding:32px 16px;">
-<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:16px;border:1px solid #dde3dc;overflow:hidden;">
-<tr><td style="background:linear-gradient(180deg,#2e5e4a,#244a3b);padding:28px 32px 24px;text-align:center;">
-<img src="{$logo}" alt="One Source" width="200" style="display:block;margin:0 auto;border:0;max-width:200px;">
-<p style="margin:14px 0 0;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#b4cf5a;">{$eyebrow}</p>
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;">
+<tr><td style="background:#244a3b;padding:16px 22px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+<td align="left" width="34%"><a href="{$shop}"><img src="{$logo}" alt="One Source" width="108" style="display:block;border:0;max-width:108px;"></a></td>
+<td align="center" width="32%" style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;">One Source Account</td>
+<td align="right" width="34%"><a href="{$shop}" style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-decoration:underline;">Go to shop</a></td>
+</tr></table>
 </td></tr>
-<tr><td style="background:#faf9f6;padding:24px 32px 8px;border-bottom:1px solid #e8ebe4;">
-<h1 style="margin:0;font-size:22px;font-weight:700;">{$title}</h1>
-<p style="margin:8px 0 0;font-size:15px;color:#5c5c58;">{$subtitle}</p>
+<tr><td bgcolor="#244a3b" background="{$hero}" style="background-color:#244a3b;background-image:linear-gradient(105deg,rgba(26,61,48,.92) 0%,rgba(36,74,59,.72) 45%,rgba(46,94,74,.35) 100%),url('{$hero}');background-size:cover;background-position:center;padding:40px 30px 36px;">
+<p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b4cf5a;">{$heroEyebrow}</p>
+<h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;font-weight:800;color:#fff;">{$heroTitle}</h1>
+<p style="margin:0;font-size:14px;line-height:1.55;color:#edf3e0;max-width:420px;">{$heroSubtitle}</p>
 </td></tr>
-<tr><td style="padding:28px 32px;">{$bodyHtml}
-<p style="margin:24px 0 0;font-size:15px;">Kind regards,<br><strong style="color:#244a3b;">The One Source Team</strong></p>
+<tr><td style="padding:28px 28px 24px;background:#fff;">{$bodyHtml}
+<p style="margin:24px 0 0;font-size:14px;">Regards,<br><strong style="color:#244a3b;">One Source Account Team</strong></p>
 </td></tr>
-<tr><td style="background:#244a3b;padding:22px 32px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#9bb5a8;">© One Source · Fresh produce delivered across Uganda</p>
+<tr><td style="background:#1c3d2f;padding:18px 28px;text-align:center;">
+<p style="margin:0 0 8px;font-size:11px;color:#9bb5a8;">You are receiving this because you have a One Source account.</p>
+<p style="margin:0;font-size:10px;color:#7a9488;">© One Source · Fresh produce delivered across Uganda</p>
 </td></tr>
 </table></td></tr></table></body></html>
 HTML;
+}
+
+function dashed_box(string $inner): string
+{
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 10px;"><tr><td style="border:2px dashed #2e5e4a;border-radius:12px;padding:26px 24px 24px;background:#f4f7ef;text-align:center;">' . $inner . '</td></tr></table>';
+}
+
+function cta_button(string $href, string $label): string
+{
+    $safeHref = htmlspecialchars($href, ENT_QUOTES, 'UTF-8');
+    $safeLabel = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+    return '<a href="' . $safeHref . '" style="display:inline-block;min-width:200px;padding:14px 28px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fff;text-decoration:none;background:#244a3b;border-radius:6px;border:1px solid #1a3d30;">' . $safeLabel . '</a>';
 }
 
 function render_otp_email(string $greeting, string $token, string $siteUrl): string
 {
     $safeGreeting = htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8');
     $safeToken = htmlspecialchars($token, ENT_QUOTES, 'UTF-8');
+    $box = dashed_box(
+        '<p style="margin:0 0 10px;font-size:13px;text-align:left;"><span style="font-weight:700;color:#244a3b;">Verification code:</span>'
+        . '<span style="display:block;margin-top:8px;font-size:32px;font-weight:800;letter-spacing:.22em;color:#244a3b;font-family:Courier New,monospace;">' . $safeToken . '</span></p>'
+        . '<p style="margin:8px 0 0;font-size:12px;color:#5c5c58;">Valid for a short time · Do not share this code</p>'
+    );
     $body = <<<HTML
-<p style="margin:0 0 20px;font-size:15px;">{$safeGreeting}</p>
-<p style="margin:0 0 24px;font-size:15px;color:#3d3d3d;">Enter this one-time code on the login screen to continue.</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
-<tr><td align="center" style="background:#f4f8f5;border:1px solid #c8dcc8;border-radius:12px;padding:28px 20px;">
-<p style="margin:0 0 12px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#5c7a68;">Your verification code</p>
-<p style="margin:0;font-size:34px;font-weight:700;letter-spacing:.28em;color:#244a3b;font-family:Courier New,monospace;">{$safeToken}</p>
-</td></tr></table>
+<p style="margin:0 0 14px;font-size:14px;font-weight:700;">{$safeGreeting}</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.65;">We received a sign-in request for your One Source account. Use the code below on the login screen to continue.</p>
+{$box}
 HTML;
 
-    return email_shell('Secure account access', 'Sign-in verification code', 'Use the code below to complete your login.', $body, $siteUrl);
+    return email_shell('Secure sign-in', 'Your verification code', 'Enter this code to complete your One Source login.', $body, $siteUrl);
 }
 
 function render_reset_email(string $greeting, string $email, string $link, string $siteUrl): string
@@ -224,28 +243,38 @@ function render_reset_email(string $greeting, string $email, string $link, strin
     $safeGreeting = htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8');
     $safeEmail = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
     $safeLink = htmlspecialchars($link, ENT_QUOTES, 'UTF-8');
+    $box = dashed_box(
+        '<p style="margin:0 0 10px;font-size:13px;text-align:left;"><span style="font-weight:700;color:#244a3b;">Account:</span> <strong>' . $safeEmail . '</strong></p>'
+        . '<p style="margin:0 0 16px;font-size:13px;text-align:left;"><span style="font-weight:700;color:#244a3b;">Action:</span> Password reset requested</p>'
+        . '<p style="margin:0 0 14px;font-size:13px;color:#5c5c58;">Click below to choose a new password. This link can only be used once.</p>'
+        . cta_button($link, 'Reset password')
+        . '<p style="margin:16px 0 0;font-size:11px;word-break:break-all;color:#5c5c58;text-align:left;">Or copy this link:<br><a href="' . $safeLink . '" style="color:#2e5e4a;">' . $safeLink . '</a></p>'
+    );
     $body = <<<HTML
-<p style="margin:0 0 20px;font-size:15px;">{$safeGreeting}</p>
-<p style="margin:0 0 24px;font-size:15px;color:#3d3d3d;">A password reset was requested for <strong>{$safeEmail}</strong>.</p>
-<p style="text-align:center;margin:0 0 20px;">
-<a href="{$safeLink}" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#fff;text-decoration:none;background:#2e5e4a;border-radius:8px;">Reset password</a>
-</p>
+<p style="margin:0 0 14px;font-size:14px;font-weight:700;">{$safeGreeting}</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.65;">A password reset was requested for your One Source account linked to <strong style="color:#244a3b;">{$safeEmail}</strong>.</p>
+{$box}
 HTML;
 
-    return email_shell('Account security', 'Reset your password', 'We received a request to change your account password.', $body, $siteUrl);
+    return email_shell('Account security', 'Reset your password', 'Keep your One Source account secure with a new password.', $body, $siteUrl);
 }
 
-function render_signup_email(string $greeting, string $link, string $siteUrl): string
+function render_signup_email(string $greeting, string $link, string $siteUrl, string $email = ''): string
 {
     $safeGreeting = htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8');
-    $safeLink = htmlspecialchars($link, ENT_QUOTES, 'UTF-8');
+    $safeEmail = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
+    $emailLine = $safeEmail !== '' ? '<p style="margin:0 0 10px;font-size:13px;text-align:left;"><span style="font-weight:700;color:#244a3b;">Email:</span> <strong>' . $safeEmail . '</strong></p>' : '';
+    $box = dashed_box(
+        $emailLine
+        . '<p style="margin:0 0 16px;font-size:13px;text-align:left;"><span style="font-weight:700;color:#244a3b;">Action:</span> Confirm your email address</p>'
+        . '<p style="margin:0 0 14px;font-size:13px;color:#5c5c58;">One step left to activate your account and start shopping fresh produce.</p>'
+        . cta_button($link, 'Confirm email')
+    );
     $body = <<<HTML
-<p style="margin:0 0 20px;font-size:15px;">{$safeGreeting}</p>
-<p style="margin:0 0 24px;font-size:15px;color:#3d3d3d;">Please confirm your email to activate your One Source account.</p>
-<p style="text-align:center;margin:0 0 20px;">
-<a href="{$safeLink}" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#fff;text-decoration:none;background:#2e5e4a;border-radius:8px;">Confirm email address</a>
-</p>
+<p style="margin:0 0 14px;font-size:14px;font-weight:700;">{$safeGreeting}</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.65;">Thank you for joining One Source. Please confirm your email address to activate your account.</p>
+{$box}
 HTML;
 
-    return email_shell('Welcome aboard', 'Confirm your email address', 'One step left to start shopping fresh produce.', $body, $siteUrl);
+    return email_shell('Welcome aboard', 'Welcome to One Source', 'Fresh produce delivered across Uganda — confirm your email to start shopping.', $body, $siteUrl);
 }

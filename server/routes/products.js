@@ -10,6 +10,7 @@ import {
 import { listCategories } from "../lib/categoriesService.js";
 import { categoryMatchAliases } from "../data/categories.js";
 import { withLocalProductFallback } from "../lib/localSeed.js";
+import { enrichProductsWithSuppliers } from "../lib/suppliersService.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.get("/", async (req, res) => {
   try {
     const admin = req.query.admin === "true";
     const category = req.query.category;
+    const supplierId = req.query.supplierId ?? req.query.supplier_id;
     const search = req.query.q?.toLowerCase();
     const page = Math.max(0, parseInt(req.query.page ?? "0", 10) || 0);
     const pageSize = Math.min(1000, Math.max(1, parseInt(req.query.pageSize ?? "1000", 10) || 1000));
@@ -33,6 +35,9 @@ router.get("/", async (req, res) => {
         }
         if (category) {
           query = query.in("category", categoryMatchAliases(category));
+        }
+        if (supplierId) {
+          query = query.eq("supplier_id", supplierId);
         }
 
         const from = page * pageSize;
@@ -53,7 +58,11 @@ router.get("/", async (req, res) => {
         }
 
         return {
-          products: filtered.map(rowToProduct),
+          products: await enrichProductsWithSuppliers(
+            db,
+            filtered.map(rowToProduct),
+            { admin }
+          ),
           total: count ?? filtered.length,
         };
       },
@@ -97,7 +106,11 @@ router.get("/:id", async (req, res) => {
           err.status = 404;
           throw err;
         }
-        return { product: rowToProduct(row) };
+        return {
+          product: (
+            await enrichProductsWithSuppliers(db, [rowToProduct(row)], { admin: false })
+          )[0],
+        };
       },
       { productId: req.params.id }
     );

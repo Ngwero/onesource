@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireSupabase } from "../lib/supabase.js";
 import { listCategories } from "../lib/categoriesService.js";
+import { listSuppliers } from "../lib/suppliersService.js";
 
 const router = Router();
 
@@ -26,6 +27,15 @@ router.get("/stats", async (_req, res) => {
       categories = await listCategories(db, { admin: true });
     } catch {
       categories = [];
+    }
+
+    let suppliers = [];
+    let pendingSuppliers = 0;
+    try {
+      suppliers = await listSuppliers(db, { admin: true });
+      pendingSuppliers = suppliers.filter((s) => s.status === "pending").length;
+    } catch {
+      suppliers = [];
     }
 
     const rows = stockRows ?? [];
@@ -62,6 +72,9 @@ router.get("/stats", async (_req, res) => {
       products: productCount ?? rows.length,
       orders: orderCount ?? 0,
       categories: categories.filter((c) => c.active !== false).length,
+      suppliers: suppliers.length,
+      suppliersApproved: suppliers.filter((s) => s.status === "approved").length,
+      suppliersPending: pendingSuppliers,
       inventory: { live, out, low, units, stockValue },
       ordersSummary: { revenue, placed: placedOrders },
       database: "supabase",

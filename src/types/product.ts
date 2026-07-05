@@ -13,6 +13,8 @@ export type Product = {
   inStock: boolean;
   stockQuantity?: number;
   delivery: string;
+  supplierId?: string;
+  supplierName?: string;
 };
 
 export type Category = {

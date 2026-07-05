@@ -2,7 +2,15 @@
 
 Copy each HTML file into **Supabase Dashboard → Authentication → Email Templates**.
 
-Set **Site URL** to your live shop (e.g. `https://www.onesourco.com`) so the logo loads from `{{ .SiteURL }}/brand/logo-on-dark-horizontal.png`.
+Set **Site URL** to your live shop (e.g. `https://www.onesourco.com`) so logos and the hero image load from your domain.
+
+## Hero banner image
+
+Upload a wide produce photo to your site at:
+
+`public/brand/email-hero.jpg` (recommended **1200×480px**)
+
+If the image is missing, the hero still shows your brand green gradient with white headline text.
 
 ## Subject lines (replace default Supabase subjects)
 
@@ -17,6 +25,18 @@ Paste `magic-link.html` into the **Magic link** template — it shows `{{ .Token
 
 Enable in Supabase → **Authentication** → **Providers** → **Email** → turn on **Email OTP**.
 
+## Layout
+
+Templates follow a modern transactional layout (RukaPay-style, One Source branding):
+
+- Dark green header bar with logo · product label · **Go to shop** link
+- Hero banner with fresh produce photo overlay and headline
+- **HI [NAME],** greeting and body copy
+- Dashed green action box with title, details + rectangular CTA button
+- Numbered footnotes (a, b, c), disclaimer, and dark footer
+
+Brand colours: `#244a3b` / `#2e5e4a` (green), `#f0c947` (gold accent), `#b4cf5a` (lemon).
+
 ## Sender name
 
 **Project Settings → Authentication → SMTP** (or default mailer):
@@ -24,4 +44,4 @@ Enable in Supabase → **Authentication** → **Providers** → **Email** → tu
 - **Sender name:** `One Source`
 - **Sender email:** `noreply@one-sourcebrand.com` (when using custom SMTP)
 
-These templates use a card layout with centred logo, solid OTP box, and professional copy — no Supabase branding.
+Server-sent mail (Brevo/SMTP via Railway) uses the same layout from `server/lib/emailTemplate.js`.

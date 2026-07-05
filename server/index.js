@@ -10,6 +10,7 @@ import uploadRouter from "./routes/upload.js";
 import heroRouter from "./routes/hero.js";
 import ordersRouter from "./routes/orders.js";
 import adminRouter from "./routes/admin.js";
+import suppliersRouter from "./routes/suppliers.js";
 import authRouter from "./routes/auth.js";
 import { requireSupabase } from "./lib/supabase.js";
 import { isSupabaseConnectionError } from "./lib/supabaseErrors.js";
@@ -62,6 +63,7 @@ app.use("/api/hero", heroRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/suppliers", suppliersRouter);
 
 const uploadsDir = path.join(__dirname, "uploads");
 const storageBucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
