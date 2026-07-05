@@ -37,6 +37,17 @@ function getBearerToken(req) {
   return header.slice(7).trim();
 }
 
+function isEmailRateLimitError(error) {
+  if (!error) return false;
+  const code = String(error.code ?? "").toLowerCase();
+  const message = String(error.message ?? "").toLowerCase();
+  return (
+    code === "over_email_send_rate_limit" ||
+    message.includes("rate limit") ||
+    message.includes("too many requests")
+  );
+}
+
 router.post("/forgot-password", async (req, res) => {
   try {
     if (!isSmtpConfigured()) {
@@ -63,6 +74,16 @@ router.post("/forgot-password", async (req, res) => {
       email,
       options: { redirectTo },
     });
+
+    if (error) {
+      if (isEmailRateLimitError(error)) {
+        return res.status(429).json({
+          error:
+            "Too many password reset emails. Wait about an hour, or in Supabase go to Authentication → SMTP (set up custom SMTP) and Authentication → Rate Limits to raise the email cap.",
+        });
+      }
+      console.warn("[auth] forgot-password generateLink:", error.message);
+    }
 
     if (error || !data?.properties?.action_link) {
       return res.json({ ok: true });
