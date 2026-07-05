@@ -15,7 +15,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { isPasswordRecoveryCallback } from "../lib/authRecovery";
+import { isPasswordRecoveryCallback, establishPasswordRecoverySession } from "../lib/authRecovery";
 import { getSupabase, isSupabaseConfigured, type Profile } from "../lib/supabase";
 
 function mapAuthEmailError(message: string): string {
@@ -101,13 +101,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const supabase = getSupabase();
-    const recoveryCallback = isPasswordRecoveryCallback();
+    let cancelled = false;
 
-    if (recoveryCallback) {
-      setPasswordRecovery(true);
-    }
+    void (async () => {
+      const recoveryCallback = isPasswordRecoveryCallback();
 
-    supabase.auth.getSession().then(({ data }) => {
+      if (recoveryCallback) {
+        setPasswordRecovery(true);
+        const established = await establishPasswordRecoverySession(supabase);
+        if (!cancelled && !established.ok) {
+          console.warn("[auth] recovery session:", established.error);
+        }
+      }
+
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+
       if (recoveryCallback || data.session) {
         const hashType = new URLSearchParams(window.location.hash.replace(/^#/, "")).get(
           "type"
@@ -120,11 +129,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       if (data.session?.user) {
-        fetchProfile(data.session.user.id).finally(() => setLoading(false));
-      } else {
-        setLoading(false);
+        await fetchProfile(data.session.user.id);
       }
-    });
+      if (!cancelled) setLoading(false);
+    })();
 
     const {
       data: { subscription },
@@ -157,7 +165,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [fetchProfile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -262,6 +273,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updatePassword = useCallback(async (password: string) => {
     try {
       const supabase = getSupabase();
+
+      let { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        const established = await establishPasswordRecoverySession(supabase);
+        if (!established.ok) {
+          return { error: i18n.t("auth.resetLinkInvalid") };
+        }
+        ({ data: sessionData } = await supabase.auth.getSession());
+      }
+      if (!sessionData.session) {
+        return { error: i18n.t("auth.resetLinkInvalid") };
+      }
+
       const { error } = await supabase.auth.updateUser({ password });
       if (!error) {
         setPasswordRecovery(false);
