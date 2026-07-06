@@ -1,34 +1,61 @@
 import { createClient } from "@supabase/supabase-js";
 import { env, isSupabaseConfigured } from "./env.js";
 
+function sanitizeEnv(value) {
+  const trimmed = String(value ?? "").trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
 function getAnonKey() {
-  return (
-    process.env.SUPABASE_ANON_KEY?.trim() ||
-    process.env.VITE_SUPABASE_ANON_KEY?.trim() ||
-    ""
-  );
+  return sanitizeEnv(process.env.SUPABASE_ANON_KEY) || sanitizeEnv(process.env.VITE_SUPABASE_ANON_KEY);
 }
 
 export function isAnonKeyConfigured() {
   return Boolean(env.supabaseUrl && getAnonKey());
 }
 
-/**
- * Verify email + password without persisting a client session.
- * Returns Supabase session tokens on success.
- */
-export async function verifyUserCredentials(email, password) {
-  if (!isSupabaseConfigured() || !isAnonKeyConfigured()) {
-    throw new Error(
-      "SUPABASE_ANON_KEY is required on the server for login OTP. Add it to Railway variables."
-    );
+function getServiceRoleClient() {
+  return createClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+/** Quick check that the anon key is accepted by Supabase (optional env). */
+export async function verifyAnonKey() {
+  if (!isAnonKeyConfigured()) {
+    return { ok: false, error: "SUPABASE_ANON_KEY is not set" };
   }
 
-  const anon = createClient(env.supabaseUrl, getAnonKey(), {
+  const client = createClient(env.supabaseUrl, getAnonKey(), {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data, error } = await anon.auth.signInWithPassword({
+  const { error } = await client.auth.getSession();
+  if (error?.message?.toLowerCase().includes("api key")) {
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+/**
+ * Verify email + password on the server using the service role key.
+ * Returns Supabase session tokens on success (for OTP login flow).
+ */
+export async function verifyUserCredentials(email, password) {
+  if (!isSupabaseConfigured()) {
+    throw new Error(
+      "Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Railway."
+    );
+  }
+
+  const client = getServiceRoleClient();
+  const { data, error } = await client.auth.signInWithPassword({
     email: email.trim().toLowerCase(),
     password,
   });
@@ -37,7 +64,7 @@ export async function verifyUserCredentials(email, password) {
     return { ok: false, error: error?.message ?? "Invalid email or password." };
   }
 
-  await anon.auth.signOut();
+  await client.auth.signOut();
 
   return {
     ok: true,

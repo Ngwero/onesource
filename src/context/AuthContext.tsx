@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const verified = await requestLoginOtp(trimmedEmail, password);
       if (verified.error) {
         const lower = verified.error.toLowerCase();
-        if (lower.includes("supabase_anon_key") || lower.includes("misconfigured")) {
+        if (lower.includes("supabase_anon_key") && lower.includes("required")) {
           return { error: i18n.t("errors.signInServerMisconfigured") };
         }
         if (lower.includes("invalid email or password")) {

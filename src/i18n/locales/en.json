@@ -855,7 +855,7 @@
     "genericLoad": "Failed to load",
     "signInFailed": "Sign in failed",
     "signInInvalidCredentials": "Invalid email or password. If you just reset your password, use the new one and check for typos.",
-    "signInServerMisconfigured": "Sign-in is temporarily unavailable. The server needs SUPABASE_ANON_KEY configured in Railway.",
+    "signInServerMisconfigured": "Sign-in is temporarily unavailable. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Railway.",
     "signUpFailed": "Sign up failed",
     "passwordResetFailed": "Could not send password reset email",
     "emailNotRegistered": "No account is registered with this email. Check for typos or sign up for a new account.",
