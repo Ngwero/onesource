@@ -4,14 +4,8 @@ import { useTranslation } from "react-i18next";
 import { AuthShell } from "../components/AuthShell";
 import { AuthSubmitButton } from "../components/auth/AuthSubmitButton";
 import { PasswordField } from "../components/auth/PasswordField";
+import { PasswordStrengthMeter } from "../components/auth/PasswordStrengthMeter";
 import { useAuth } from "../context/AuthContext";
-
-function passwordStrength(password: string): 0 | 1 | 2 | 3 {
-  if (password.length < 6) return 0;
-  if (password.length < 8) return 1;
-  if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) return 3;
-  return 2;
-}
 
 export function SignupPage() {
   const { t } = useTranslation();
@@ -30,8 +24,10 @@ export function SignupPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const strength = useMemo(() => passwordStrength(password), [password]);
-  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
+  const passwordsMatch = useMemo(
+    () => confirmPassword.length > 0 && password === confirmPassword,
+    [password, confirmPassword]
+  );
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -131,22 +127,7 @@ export function SignupPage() {
           hint={t("auth.passwordHint")}
         />
 
-        {password.length > 0 ? (
-          <div className="auth-strength" aria-hidden>
-            <div className="auth-strength-track">
-              <span className={`auth-strength-bar auth-strength-bar--${strength}`} />
-            </div>
-            <p className="auth-field-hint">
-              {strength === 0
-                ? t("auth.passwordTooShort")
-                : strength === 1
-                  ? t("auth.passwordStrengthFair")
-                  : strength === 2
-                    ? t("auth.passwordStrengthGood")
-                    : t("auth.passwordStrengthStrong")}
-            </p>
-          </div>
-        ) : null}
+        <PasswordStrengthMeter password={password} />
 
         <PasswordField
           id="signup-confirm"

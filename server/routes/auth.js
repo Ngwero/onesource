@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyUserCredentials } from "../lib/authCredentials.js";
+import { verifyUserCredentials, isAnonKeyConfigured } from "../lib/authCredentials.js";
 import { env, isSmtpConfigured } from "../lib/env.js";
 import {
   sendPasswordResetEmail,
@@ -183,8 +183,22 @@ router.post("/login/request-otp", async (req, res) => {
       });
     }
 
+    if (!isAnonKeyConfigured()) {
+      return res.status(503).json({
+        error:
+          "Login is not configured on the server. Set SUPABASE_ANON_KEY in Railway (same value as VITE_SUPABASE_ANON_KEY).",
+      });
+    }
+
     const verified = await verifyUserCredentials(email, password);
     if (!verified.ok) {
+      const message = String(verified.error ?? "");
+      if (message.toLowerCase().includes("api key")) {
+        return res.status(503).json({
+          error:
+            "Login service misconfigured (invalid Supabase anon key). Update SUPABASE_ANON_KEY in Railway.",
+        });
+      }
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
@@ -260,11 +274,20 @@ router.post("/login/verify-otp", async (req, res) => {
 });
 
 router.get("/status", async (req, res) => {
+  let supabaseHost = "";
+  try {
+    supabaseHost = new URL(env.supabaseUrl).hostname;
+  } catch {
+    supabaseHost = "";
+  }
+
   const payload = {
     smtp: isSmtpConfigured(),
     shopUrl: env.shopUrl,
     otpLogin: true,
     otpProvider: "onesource-smtp",
+    anonKeyConfigured: isAnonKeyConfigured(),
+    supabaseHost,
   };
 
   if (req.query.verify === "1" && isSmtpConfigured()) {

@@ -149,6 +149,9 @@ Check deploy logs. Fix locally with `npm run build`.
 **Shop loads but no products**  
 Check `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Railway variables.
 
+**Login returns “Invalid email or password” after reset**  
+Check `https://YOUR-DOMAIN/api/auth/status` — `anonKeyConfigured` must be `true`. Set `SUPABASE_ANON_KEY` in Railway to the **same anon public key** as `VITE_SUPABASE_ANON_KEY` (from Supabase → Project Settings → API). Redeploy after adding it.
+
 **Auth errors in browser**  
 Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set (needed at **build** time — redeploy after adding them).
 

@@ -176,6 +176,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const trimmedEmail = email.trim().toLowerCase();
       const verified = await requestLoginOtp(trimmedEmail, password);
       if (verified.error) {
+        const lower = verified.error.toLowerCase();
+        if (lower.includes("supabase_anon_key") || lower.includes("misconfigured")) {
+          return { error: i18n.t("errors.signInServerMisconfigured") };
+        }
+        if (lower.includes("invalid email or password")) {
+          return { error: i18n.t("errors.signInInvalidCredentials") };
+        }
         return { error: verified.error };
       }
 

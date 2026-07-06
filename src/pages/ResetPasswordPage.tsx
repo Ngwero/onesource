@@ -1,7 +1,10 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AuthShell } from "../components/AuthShell";
+import { AuthSubmitButton } from "../components/auth/AuthSubmitButton";
+import { PasswordField } from "../components/auth/PasswordField";
+import { PasswordStrengthMeter } from "../components/auth/PasswordStrengthMeter";
 import { useAuth } from "../context/AuthContext";
 import { isPasswordRecoveryCallback } from "../lib/authRecovery";
 
@@ -16,6 +19,11 @@ export function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const passwordsMatch = useMemo(
+    () => confirmPassword.length > 0 && password === confirmPassword,
+    [password, confirmPassword]
+  );
 
   useEffect(() => {
     if (!completed) return;
@@ -53,9 +61,11 @@ export function ResetPasswordPage() {
   const showForm = !loading && !completed && canReset;
 
   return (
-    <AuthShell>
-      <h1 className="auth-shell-title">{t("auth.resetPasswordTitle")}</h1>
-      <p className="auth-shell-subtitle">{t("auth.resetPasswordSubtitle")}</p>
+    <AuthShell mode="login">
+      <div className="auth-shell-header">
+        <h1 className="auth-shell-title">{t("auth.resetPasswordTitle")}</h1>
+        <p className="auth-shell-subtitle">{t("auth.resetPasswordSubtitle")}</p>
+      </div>
 
       {!configured && <p className="auth-shell-alert">{t("auth.notConfigured")}</p>}
 
@@ -74,46 +84,43 @@ export function ResetPasswordPage() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="auth-shell-form">
-          <div className="form-field">
-            <label htmlFor="reset-password" className="form-label">
-              {t("auth.newPassword")}
-            </label>
-            <input
-              id="reset-password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="reset-confirm-password" className="form-label">
-              {t("auth.confirmPassword")}
-            </label>
-            <input
-              id="reset-confirm-password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={6}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="form-input"
-            />
-          </div>
+          <PasswordField
+            id="reset-password"
+            label={t("auth.newPassword")}
+            autoComplete="new-password"
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            hint={t("auth.passwordHint")}
+          />
 
-          {error && <p className="auth-shell-error">{error}</p>}
+          <PasswordStrengthMeter password={password} />
 
-          <button
-            type="submit"
-            disabled={submitting || !configured}
-            className="btn-primary w-full min-h-[48px] disabled:opacity-50"
-          >
+          <PasswordField
+            id="reset-confirm-password"
+            label={t("auth.confirmPassword")}
+            autoComplete="new-password"
+            required
+            minLength={6}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            hint={
+              passwordsMatch ? (
+                <span className="auth-field-hint--success">{t("auth.passwordsMatch")}</span>
+              ) : undefined
+            }
+          />
+
+          {error ? (
+            <p className="auth-shell-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <AuthSubmitButton loading={submitting} disabled={!configured}>
             {submitting ? t("auth.updatingPassword") : t("auth.updatePassword")}
-          </button>
+          </AuthSubmitButton>
         </form>
       )}
 
