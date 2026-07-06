@@ -44,8 +44,7 @@ export async function verifyAnonKey() {
 }
 
 /**
- * Verify email + password on the server using the service role key.
- * Returns Supabase session tokens on success (for OTP login flow).
+ * Check email + password (discards the temporary session).
  */
 export async function verifyUserCredentials(email, password) {
   if (!isSupabaseConfigured()) {
@@ -64,7 +63,33 @@ export async function verifyUserCredentials(email, password) {
     return { ok: false, error: error?.message ?? "Invalid email or password." };
   }
 
+  // Discard server-side session — fresh tokens are minted after OTP verification.
   await client.auth.signOut();
+
+  return {
+    ok: true,
+    user: data.user,
+  };
+}
+
+/**
+ * Create a user session after OTP verification. Do not call signOut — tokens are
+ * returned to the client via setSession.
+ */
+export async function createUserSession(email, password) {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const client = getServiceRoleClient();
+  const { data, error } = await client.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password,
+  });
+
+  if (error || !data.session) {
+    return { ok: false, error: error?.message ?? "Could not create session." };
+  }
 
   return {
     ok: true,

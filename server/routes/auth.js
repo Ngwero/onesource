@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyUserCredentials, isAnonKeyConfigured, verifyAnonKey } from "../lib/authCredentials.js";
+import { verifyUserCredentials, isAnonKeyConfigured, verifyAnonKey, createUserSession } from "../lib/authCredentials.js";
 import { env, isSmtpConfigured } from "../lib/env.js";
 import {
   sendPasswordResetEmail,
@@ -204,10 +204,7 @@ router.post("/login/request-otp", async (req, res) => {
       (await lookupProfileName(requireSupabase(), verified.user?.id)) ||
       "";
 
-    storeLoginOtp(email, otp, {
-      accessToken: verified.accessToken,
-      refreshToken: verified.refreshToken,
-    });
+    storeLoginOtp(email, otp, { password });
 
     await sendLoginOtpEmail({ email, fullName, otp });
 
@@ -246,10 +243,18 @@ router.post("/login/verify-otp", async (req, res) => {
       });
     }
 
+    const session = await createUserSession(email, result.password);
+    if (!session.ok) {
+      console.error("[auth] login/verify-otp session failed:", session.error);
+      return res.status(500).json({
+        error: "Could not complete sign-in. Please try again.",
+      });
+    }
+
     return res.json({
       ok: true,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
     });
   } catch (e) {
     console.error("[auth] login/verify-otp failed:", e);

@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { OTP_VALID_SECONDS } from "./emailTemplate.js";
 
-/** @type {Map<string, { otpHash: string, accessToken: string, refreshToken: string, expiresAt: number, attempts: number }>} */
+/** @type {Map<string, { otpHash: string, password: string, expiresAt: number, attempts: number }>} */
 const pendingLogins = new Map();
 
 /** @type {Map<string, number[]>} */
@@ -41,13 +41,13 @@ export function recordOtpRequest(email) {
   requestLog.set(key, hits);
 }
 
-export function storeLoginOtp(email, otp, { accessToken, refreshToken }) {
+/** Password kept in server memory only until OTP expires (same TTL as the code). */
+export function storeLoginOtp(email, otp, { password }) {
   pruneExpired();
   const key = normalizeEmail(email);
   pendingLogins.set(key, {
     otpHash: hashOtp(otp),
-    accessToken,
-    refreshToken,
+    password: String(password),
     expiresAt: Date.now() + OTP_VALID_SECONDS * 1000,
     attempts: 0,
   });
@@ -74,12 +74,9 @@ export function verifyLoginOtp(email, otp) {
     return { ok: false, error: "invalid_code" };
   }
 
+  const password = entry.password;
   pendingLogins.delete(key);
-  return {
-    ok: true,
-    accessToken: entry.accessToken,
-    refreshToken: entry.refreshToken,
-  };
+  return { ok: true, password };
 }
 
 export function generateOtp() {

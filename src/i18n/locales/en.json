@@ -863,6 +863,7 @@
     "passwordResetTimeout": "The request took too long. Please try again in a moment.",
     "passwordUpdateFailed": "Could not update password",
     "otpInvalid": "Invalid or expired login code",
+    "otpSessionExpired": "Your login code expired. Sign in again to get a new code.",
     "signInTimeout": "Sign-in timed out. Supabase could not send the login email — cPanel SMTP does not work from the cloud. Use Brevo or Resend in Supabase SMTP settings, or turn off custom SMTP temporarily.",
     "otpEmailRateLimit": "Too many login emails sent. Wait about an hour, or raise the limit under Supabase → Authentication → Rate Limits.",
     "otpEmailSendFailed": "Could not send the login email. Check Supabase → Authentication → SMTP settings (use Brevo or Resend, not cPanel mail).",

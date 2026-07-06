@@ -208,7 +208,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         access_token: result.accessToken,
         refresh_token: result.refreshToken,
       });
-      return { error: error?.message ?? null };
+      if (error) {
+        const msg = error.message ?? "";
+        if (msg.toLowerCase().includes("session missing")) {
+          return { error: i18n.t("errors.otpSessionExpired") };
+        }
+        return { error: msg };
+      }
+      return { error: null };
     } catch (e) {
       return { error: e instanceof Error ? e.message : i18n.t("errors.otpInvalid") };
     }

@@ -57,7 +57,10 @@ class AuthService {
 
   Future<void> verifyLoginOtp(String email, String otp) async {
     final tokens = await _api.verifyLoginOtp(email, otp);
-    await _client.auth.setSession(tokens.refreshToken);
+    await _client.auth.setSession(
+      tokens.refreshToken,
+      accessToken: tokens.accessToken,
+    );
   }
 
   Future<bool> signUp({
