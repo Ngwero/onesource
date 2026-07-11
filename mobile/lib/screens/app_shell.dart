@@ -17,10 +17,8 @@ class AppShell extends ConsumerWidget {
   final String location;
 
   int _indexForLocation(String location) {
-    if (location.startsWith('/shop') || location.startsWith('/category') || location.startsWith('/categories')) {
-      return 1;
-    }
-    if (location.startsWith('/cart') || location.startsWith('/checkout')) return 2;
+    if (location.startsWith('/shop') || location.startsWith('/category')) return 1;
+    if (location.startsWith('/categories')) return 2;
     if (location.startsWith('/account') || location.startsWith('/orders')) return 3;
     return 0;
   }
@@ -37,50 +35,63 @@ class AppShell extends ConsumerWidget {
         child: child,
       ),
       extendBody: true,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: FloatingActionButton(
+          onPressed: () => context.go('/cart'),
+          elevation: 6,
+          backgroundColor: AppColors.darkGreen,
+          shape: const CircleBorder(),
+          child: Badge(
+            isLabelVisible: cartCount > 0,
+            label: Text('$cartCount'),
+            backgroundColor: AppColors.amber,
+            child: const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 26),
+          ),
+        ),
+      ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
         child: Container(
-          height: 68,
+          height: 72,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.white,
-                Colors.white.withValues(alpha: 0.96),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(34),
-            border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.darkGreen.withValues(alpha: 0.12),
+                color: AppColors.darkGreen.withValues(alpha: 0.1),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavIcon(
+              _NavItem(
                 icon: Icons.home_rounded,
+                label: 'Home',
                 selected: index == 0,
                 onTap: () => context.go('/home'),
               ),
-              _NavIcon(
+              _NavItem(
                 icon: Icons.storefront_rounded,
+                label: 'Shop',
                 selected: index == 1,
                 onTap: () => context.go('/shop'),
               ),
-              _NavIcon(
-                icon: Icons.shopping_bag_outlined,
+              const SizedBox(width: 56),
+              _NavItem(
+                icon: Icons.grid_view_rounded,
+                label: 'Categories',
                 selected: index == 2,
-                badge: cartCount > 0 ? cartCount : null,
-                onTap: () => context.go('/cart'),
+                onTap: () => context.go('/categories'),
               ),
-              _NavIcon(
+              _NavItem(
                 icon: Icons.person_outline_rounded,
+                label: 'Account',
                 selected: index == 3,
                 onTap: () => context.go('/account'),
               ),
@@ -92,63 +103,42 @@ class AppShell extends ConsumerWidget {
   }
 }
 
-class _NavIcon extends StatelessWidget {
-  const _NavIcon({
+class _NavItem extends StatelessWidget {
+  const _NavItem({
     required this.icon,
+    required this.label,
     required this.selected,
     required this.onTap,
-    this.badge,
   });
 
   final IconData icon;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
-  final int? badge;
 
   @override
   Widget build(BuildContext context) {
+    final color = selected ? AppColors.darkGreen : AppColors.textMuted;
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 56,
-        height: 56,
-        child: Center(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: selected ? 48 : 40,
-            height: selected ? 48 : 40,
-            decoration: BoxDecoration(
-              gradient: selected ? AppGradients.navSelected : null,
-              color: selected ? null : Colors.transparent,
-              shape: BoxShape.circle,
+        width: 64,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  icon,
-                  color: selected ? Colors.white : AppColors.textMuted,
-                  size: 24,
-                ),
-                if (badge != null)
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(color: AppColors.deal, shape: BoxShape.circle),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        '$badge',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
@@ -158,7 +148,7 @@ class _NavIcon extends StatelessWidget {
 class TabHomeScreen extends StatelessWidget {
   const TabHomeScreen({super.key});
   @override
-  Widget build(BuildContext context) => const SafeArea(child: HomeScreen());
+  Widget build(BuildContext context) => const HomeScreen();
 }
 
 class TabCategoriesScreen extends StatelessWidget {

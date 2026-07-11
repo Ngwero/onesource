@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
+import '../providers/currency_provider.dart';
 import '../models/order.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/order_progress.dart';
 
-final _currency = NumberFormat.currency(symbol: 'UGX ', decimalDigits: 0);
+import '../widgets/locale_currency_bar.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -62,6 +63,7 @@ class AccountScreen extends ConsumerWidget {
 
     final name = profileAsync.value?.fullName ?? user.email ?? 'Customer';
     final initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
+    final strings = ref.watch(stringsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Account')),
@@ -91,6 +93,15 @@ class AccountScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(strings.preferences, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.textMuted)),
+          const SizedBox(height: 8),
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: LocaleCurrencyBar(),
             ),
           ),
           const SizedBox(height: 20),
@@ -172,18 +183,42 @@ class _HubCard extends StatelessWidget {
   }
 }
 
-class OrdersScreen extends ConsumerWidget {
+class OrdersScreen extends ConsumerStatefulWidget {
   const OrdersScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  bool _isCompleted(String status) {
+    final n = status.toLowerCase();
+    return n.contains('delivered') || n.contains('cancelled');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider).value?.session?.user;
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Orders')),
+        appBar: AppBar(title: const Text('My orders')),
         body: Center(
-          child: ElevatedButton(
+          child: FilledButton(
             onPressed: () => context.push('/login'),
             child: const Text('Sign in to view orders'),
           ),
@@ -192,54 +227,136 @@ class OrdersScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your orders')),
+      backgroundColor: AppColors.canvas,
+      appBar: AppBar(
+        title: const Text('My orders'),
+        centerTitle: true,
+        backgroundColor: AppColors.canvas,
+        bottom: TabBar(
+          controller: _tabs,
+          labelColor: AppColors.darkGreen,
+          unselectedLabelColor: AppColors.textMuted,
+          indicatorColor: AppColors.darkGreen,
+          indicatorWeight: 3,
+          tabs: const [
+            Tab(text: 'In progress'),
+            Tab(text: 'Completed'),
+          ],
+        ),
+      ),
       body: FutureBuilder<List<Order>>(
         future: apiClientProvider.fetchOrders(user.id),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: AppColors.darkGreen));
           }
           if (snapshot.hasError) {
             return Center(child: Text(snapshot.error.toString()));
           }
           final orders = snapshot.data ?? [];
-          if (orders.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('No orders yet'),
-                  TextButton(onPressed: () => context.go('/shop'), child: const Text('Start shopping')),
-                ],
+
+          return TabBarView(
+            controller: _tabs,
+            children: [
+              _OrderList(
+                orders: orders.where((o) => !_isCompleted(o.status)).toList(),
+                emptyMessage: 'No orders in progress',
               ),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: orders.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final order = orders[index];
-              return Card(
-                child: ListTile(
-                  title: Text('Order #${order.id.substring(0, 8)}'),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('${order.status} · ${_currency.format(order.total)}'),
-                      const SizedBox(height: 6),
-                      OrderProgress(status: order.status, compact: true),
-                    ],
-                  ),
-                  isThreeLine: true,
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/orders/${order.id}'),
-                ),
-              );
-            },
+              _OrderList(
+                orders: orders.where((o) => _isCompleted(o.status)).toList(),
+                emptyMessage: 'No completed orders yet',
+              ),
+            ],
           );
         },
       ),
+    );
+  }
+}
+
+class _OrderList extends ConsumerWidget {
+  const _OrderList({required this.orders, required this.emptyMessage});
+
+  final List<Order> orders;
+  final String emptyMessage;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formatPrice = ref.watch(formatPriceProvider);
+    if (orders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emptyMessage, style: const TextStyle(color: AppColors.textMuted)),
+            TextButton(onPressed: () => context.go('/shop'), child: const Text('Start shopping')),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(20),
+      itemCount: orders.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final order = orders[index];
+        final shortId = order.id.length > 8 ? order.id.substring(0, 8).toUpperCase() : order.id.toUpperCase();
+
+        return Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          elevation: 0,
+          shadowColor: AppColors.darkGreen.withValues(alpha: 0.08),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => context.push('/orders/${order.id}'),
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: softCardShadow,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('#$shortId', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                      Text(
+                        formatPrice(order.total),
+                        style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.darkGreen),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    order.status.replaceAll('_', ' '),
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  ),
+                  const SizedBox(height: 10),
+                  OrderProgress(status: order.status, compact: true),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 42,
+                    child: OutlinedButton(
+                      onPressed: () => context.push('/orders/${order.id}'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.darkGreen,
+                        side: const BorderSide(color: AppColors.darkGreen),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Track order', style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

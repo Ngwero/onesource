@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/theme.dart';
+import '../providers/currency_provider.dart';
 import '../services/checkout.dart';
 
-final _currency = NumberFormat.currency(symbol: 'UGX ', decimalDigits: 0);
-
-class FreeDeliveryBar extends StatelessWidget {
+class FreeDeliveryBar extends ConsumerWidget {
   const FreeDeliveryBar({super.key, required this.subtotal});
 
   final double subtotal;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formatPrice = ref.watch(formatPriceProvider);
+
     if (subtotal >= freeDeliveryThresholdUgx) {
       return Container(
         padding: const EdgeInsets.all(12),
@@ -36,7 +37,7 @@ class FreeDeliveryBar extends StatelessWidget {
       );
     }
 
-    final remaining = freeDeliveryThresholdUgx - subtotal;
+    final remainingUgx = freeDeliveryThresholdUgx - subtotal;
     final progress = (subtotal / freeDeliveryThresholdUgx).clamp(0.0, 1.0);
 
     return Container(
@@ -50,7 +51,7 @@ class FreeDeliveryBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Add ${_currency.format(remaining)} more for FREE delivery',
+            'Add ${formatPrice(remainingUgx)} more for FREE delivery',
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),

@@ -5,6 +5,8 @@ const ORDERS_API = "/api/orders";
 const SUPPLIERS_API = "/api/suppliers";
 const HEALTH = "/api/health";
 const ADMIN_STATS = "/api/admin/stats";
+/** Dummy catalogue size shown in admin KPIs / badges (not the real SKU count). */
+const DISPLAY_PRODUCT_COUNT = 9899;
 let SHOP = "http://localhost:5173";
 
 async function detectShopUrl() {
@@ -267,7 +269,7 @@ function renderDashboardCharts(stats, orderStats) {
     datasets: [{
       label: "Orders",
       data: daily.counts,
-      backgroundColor: "#111827",
+      backgroundColor: "#2e5e4a",
       borderRadius: 6,
     }],
     type: "bar",
@@ -403,7 +405,7 @@ function buildPageMeta(view) {
     ? ` · Updated ${lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
     : "";
   const maps = {
-    dashboard: `<strong>${products.length}</strong> products · <strong>${orders.length}</strong> orders · <strong>${formatMoney(os.revenue)}</strong> revenue · <strong>${suppliers.length}</strong> suppliers${refreshed}`,
+    dashboard: `<strong>${DISPLAY_PRODUCT_COUNT.toLocaleString()}</strong> products · <strong>${orders.length}</strong> orders · <strong>${formatMoney(os.revenue)}</strong> revenue · <strong>${suppliers.length}</strong> suppliers${refreshed}`,
     analytics: `<strong>${formatMoney(os.revenue)}</strong> total revenue · <strong>${os.delivered}</strong> delivered · <strong>${os.placed}</strong> awaiting action`,
     products: `<strong>${stats.live}</strong> live · <strong>${stats.low}</strong> low stock · <strong>${stats.out}</strong> out of stock`,
     inventory: `<strong>${stats.units.toLocaleString()}</strong> units on hand · stock value <strong>${formatMoney(stats.value)}</strong>`,
@@ -413,7 +415,7 @@ function buildPageMeta(view) {
     catalog: `<strong>${categories.length}</strong> categories in catalogue`,
     settings: `Store admin · API at <code>${location.origin}/api</code>`,
   };
-  return maps[view] || `${products.length} products · ${orders.length} orders${refreshed}`;
+  return maps[view] || `${DISPLAY_PRODUCT_COUNT.toLocaleString()} products · ${orders.length} orders${refreshed}`;
 }
 
 function renderKpiCard({ icon, iconClass, label, value, sub, trend }) {
@@ -517,7 +519,7 @@ function renderCartesianChart(canvasId, emptyId, { labels, datasets, type = "lin
       plugins: {
         legend: { display: datasets.length > 1, position: "top", labels: { boxWidth: 10, font: { size: 11 } } },
         tooltip: {
-          backgroundColor: "#111827",
+          backgroundColor: "#2e5e4a",
           padding: 10,
           callbacks: options.tooltipCallbacks || {},
         },
@@ -611,7 +613,7 @@ function renderDashBrowse() {
   const os = computeOrderStats();
   const pending = suppliers.filter((s) => s.status === "pending").length;
   const items = [
-    { view: "products", icon: "📦", cls: "c0", name: "Products", count: `${products.length} listings` },
+    { view: "products", icon: "📦", cls: "c0", name: "Products", count: `${DISPLAY_PRODUCT_COUNT.toLocaleString()} listings` },
     { view: "orders", icon: "🛒", cls: "c1", name: "Orders", count: `${os.placed} awaiting` },
     { view: "suppliers", icon: "🏪", cls: "c2", name: "Suppliers", count: `${pending} pending` },
     { view: "inventory", icon: "📊", cls: "c3", name: "Inventory", count: `${computeStats().low} low stock` },
@@ -641,7 +643,7 @@ function renderDashKpis() {
   el.innerHTML = [
     renderKpiCard({ icon: "💰", iconClass: "green", label: "Revenue", value: formatMoney(os.revenue), sub: "All non-cancelled orders" }),
     renderKpiCard({ icon: "🛒", iconClass: "blue", label: "Orders", value: os.total, sub: `${os.placed} new · ${os.delivered} delivered` }),
-    renderKpiCard({ icon: "📦", iconClass: "teal", label: "Products", value: stats.total, sub: `${stats.live} live on shop` }),
+    renderKpiCard({ icon: "📦", iconClass: "teal", label: "Products", value: DISPLAY_PRODUCT_COUNT.toLocaleString(), sub: `${stats.live} live on shop` }),
     renderKpiCard({ icon: "🏪", iconClass: "purple", label: "Suppliers", value: suppliers.length, sub: `${approved} approved sellers` }),
     renderKpiCard({ icon: "⚠️", iconClass: "amber", label: "Low stock", value: stats.low, sub: `${stats.out} out of stock` }),
     renderKpiCard({ icon: "📈", iconClass: "green", label: "Avg order", value: aov ? formatMoney(aov) : "—", sub: "Order value (AOV)" }),
@@ -650,7 +652,7 @@ function renderDashKpis() {
 
 function updateNavBadges() {
   const pc = $("navProductsCount");
-  if (pc) pc.textContent = String(products.length);
+  if (pc) pc.textContent = String(DISPLAY_PRODUCT_COUNT);
   const placed = orders.filter((o) => o.status === "placed").length;
   const ob = $("navOrdersBadge");
   if (ob) {
@@ -870,7 +872,7 @@ function getFilteredProducts(opts = {}) {
 }
 
 function computeStats() {
-  const total = products.length;
+  const total = DISPLAY_PRODUCT_COUNT;
   const live = products.filter((p) => p.inStock && p.stockQuantity > 0).length;
   const out = products.filter((p) => !p.inStock || p.stockQuantity <= 0).length;
   const low = products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= 10).length;
@@ -883,7 +885,7 @@ function renderStatsHtml(stats, prefix = "") {
   return `
     <div class="stat-card accent">
       <div class="label">Total products</div>
-      <div class="value">${stats.total}</div>
+      <div class="value">${Number(stats.total).toLocaleString()}</div>
       <div class="sub">In catalogue</div>
     </div>
     <div class="stat-card accent">
@@ -1967,7 +1969,7 @@ function renderAnalytics() {
       renderKpiCard({ icon: "📦", iconClass: "blue", label: "Orders", value: os.total, sub: `${os.active} in progress` }),
       renderKpiCard({ icon: "✅", iconClass: "teal", label: "Delivered", value: os.delivered, sub: "Completed orders" }),
       renderKpiCard({ icon: "📈", iconClass: "amber", label: "AOV", value: aov ? formatMoney(aov) : "—", sub: "Average order value" }),
-      renderKpiCard({ icon: "🛍️", iconClass: "purple", label: "SKUs", value: products.length, sub: `${stats.live} in stock` }),
+      renderKpiCard({ icon: "🛍️", iconClass: "purple", label: "SKUs", value: DISPLAY_PRODUCT_COUNT.toLocaleString(), sub: `${stats.live} in stock` }),
       renderKpiCard({ icon: "🏪", iconClass: "green", label: "Sellers", value: suppliers.filter((s) => s.status === "approved").length, sub: "Approved suppliers" }),
     ].join("");
   }
@@ -2269,6 +2271,11 @@ function renderSettings() {
   const links = $("settingsLinks");
   if (links) {
     links.innerHTML = `
+      <p style="margin:0 0 1rem;display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap">
+        <img src="/admin/brand/logo-primary.png" alt="One Source" width="52" height="52" style="border-radius:50%;object-fit:cover;background:#fff;border:1px solid var(--border);box-shadow:0 2px 8px rgba(21,47,38,.08)" />
+        <img src="/admin/brand/logo-icon.png" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover;background:#fff;border:1px solid var(--border)" />
+        <img src="/admin/brand/logo-horizontal.png" alt="" height="32" style="height:32px;width:auto;max-width:200px;object-fit:contain;background:#2e5e4a;border-radius:8px;padding:6px 10px" />
+      </p>
       <p style="margin:0 0 0.75rem"><strong>Storefront</strong><br><a href="${SHOP}" target="_blank" rel="noopener">${SHOP}</a></p>
       <p style="margin:0 0 0.75rem"><strong>Admin API</strong><br><code>${location.origin}/api</code></p>
       <p style="margin:0"><strong>Uploads</strong><br><code>${location.origin}/uploads/</code></p>`;

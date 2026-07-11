@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/product.dart';
+import 'popular_product_card.dart';
 import 'product_card.dart';
 import 'scroll_slide_in.dart';
 
@@ -24,6 +25,13 @@ class ProductGrid extends StatelessWidget {
     mainAxisSpacing: 12,
   );
 
+  static const popularGridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 2,
+    mainAxisExtent: 248,
+    crossAxisSpacing: 14,
+    mainAxisSpacing: 14,
+  );
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
@@ -41,6 +49,43 @@ class ProductGrid extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Compact popular-item grid for the home screen.
+class PopularProductSliverGrid extends StatelessWidget {
+  const PopularProductSliverGrid({
+    super.key,
+    required this.products,
+    this.onAdd,
+    this.padding = EdgeInsets.zero,
+  });
+
+  final List<Product> products;
+  final void Function(Product product)? onAdd;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: padding,
+      sliver: SliverGrid(
+        gridDelegate: ProductGrid.popularGridDelegate,
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final product = products[index];
+            return ScrollSlideIn(
+              index: index,
+              child: PopularProductCard(
+                product: product,
+                onAdd: onAdd == null ? null : () => onAdd!(product),
+              ),
+            );
+          },
+          childCount: products.length,
+        ),
+      ),
     );
   }
 }

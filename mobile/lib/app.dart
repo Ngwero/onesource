@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'config/theme.dart';
+import 'i18n/languages.dart';
+import 'providers/locale_provider.dart';
 import 'router/app_router.dart';
 import 'services/auth_service.dart';
 
@@ -20,8 +22,15 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize auth in the background so home loads immediately.
-    unawaited(_initSupabase());
+    onSupabaseInitialized = () {
+      if (mounted) {
+        ref.read(supabaseReadyProvider.notifier).state = isSupabaseReady;
+      }
+    };
+    // Defer auth init until after the first frame so the UI appears immediately.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_initSupabase());
+    });
   }
 
   Future<void> _initSupabase() async {
@@ -41,11 +50,13 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
+    final language = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: 'One Source',
       debugShowCheckedModeBanner: false,
       theme: _theme,
+      locale: Locale(languageCodeLabel(language)),
       routerConfig: router,
     );
   }

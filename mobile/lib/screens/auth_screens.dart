@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../config/theme.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
+import '../utils/auth_errors.dart';
 import '../widgets/auth_shell.dart';
+import '../widgets/auth_step_indicator.dart';
+import '../widgets/password_strength_meter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -39,9 +42,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
     try {
       await ref.read(authServiceProvider).startLogin(_email.text, _password.text);
+      if (!mounted) return;
       setState(() => _otpStep = true);
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = formatAuthError(e));
     } finally {
       setState(() => _submitting = false);
     }
@@ -57,7 +61,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
       context.go('/account');
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = formatAuthError(e));
     } finally {
       setState(() => _submitting = false);
     }
@@ -91,6 +95,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          AuthStepIndicator(otpStep: _otpStep),
+          const SizedBox(height: 24),
           if (!_otpStep) ...[
             AuthFormField(
               label: 'Email address',
@@ -144,9 +150,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               hint: '000000',
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              maxLength: 8,
-              onChanged: (_) => setState(() {}),
+              maxLength: 6,
+              onChanged: (value) {
+                final digits = value.replaceAll(RegExp(r'\D'), '');
+                if (digits != value) {
+                  _otp.value = TextEditingValue(
+                    text: digits,
+                    selection: TextSelection.collapsed(offset: digits.length),
+                  );
+                }
+                setState(() {});
+              },
               style: const TextStyle(fontSize: 22, letterSpacing: 6, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Enter the 6-digit code from your email. It expires in about 5 minutes.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: AppColors.textMuted, height: 1.4),
             ),
           ],
           if (_error != null) ...[
@@ -160,7 +181,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 : 'Log in',
             loading: _submitting,
             onPressed: _otpStep
-                ? (_otp.text.length >= 6 ? _submitOtp : null)
+                ? (_otp.text.length == 6 ? _submitOtp : null)
                 : _submitCredentials,
           ),
         ],
@@ -223,7 +244,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         context.go('/account');
       }
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = formatAuthError(e));
     } finally {
       setState(() => _submitting = false);
     }
@@ -266,17 +287,27 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             label: 'Password',
             controller: _password,
             obscureText: !_showPassword,
+            onChanged: (_) => setState(() {}),
             suffix: IconButton(
               icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
               onPressed: () => setState(() => _showPassword = !_showPassword),
             ),
           ),
+          PasswordStrengthMeter(password: _password.text),
           const SizedBox(height: 18),
           AuthFormField(
             label: 'Confirm password',
             controller: _confirm,
             obscureText: !_showPassword,
+            onChanged: (_) => setState(() {}),
           ),
+          if (_confirm.text.isNotEmpty && _password.text == _confirm.text) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Passwords match.',
+              style: TextStyle(fontSize: 12, color: AppColors.darkGreen, fontWeight: FontWeight.w600),
+            ),
+          ],
           if (_error != null) ...[
             const SizedBox(height: 14),
             Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red, fontSize: 13)),

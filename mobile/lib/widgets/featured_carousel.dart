@@ -27,7 +27,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
   @override
   void initState() {
     super.initState();
-    _controller = PageController(viewportFraction: 0.78);
+    _controller = PageController(viewportFraction: 0.82);
     _startAutoplay();
   }
 
@@ -68,7 +68,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
     if (widget.slides.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
-      height: 312,
+      height: 220,
       child: PageView.builder(
         controller: _controller,
         itemCount: widget.slides.length,
@@ -80,15 +80,15 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
               : HeroSlide.fallbackImages[index % HeroSlide.fallbackImages.length];
 
           return AnimatedScale(
-            scale: index == _active ? 1.0 : 0.94,
+            scale: index == _active ? 1.0 : 0.96,
             duration: const Duration(milliseconds: 300),
             child: Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.only(right: 10),
               child: GestureDetector(
                 onTap: () => _openSlide(slide),
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(22),
                     boxShadow: softCardShadow,
                   ),
                   clipBehavior: Clip.antiAlias,
@@ -110,7 +110,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                         decoration: const BoxDecoration(gradient: AppGradients.heroOverlay),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(14),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -119,7 +119,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                                 slide.badge,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.85),
-                                  fontSize: 13,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -130,12 +130,12 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 22,
+                                fontSize: 17,
                                 fontWeight: FontWeight.w800,
                                 height: 1.15,
                               ),
                             ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 10),
                             Row(
                               children: [
                                 Expanded(
@@ -145,29 +145,27 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       color: Colors.white.withValues(alpha: 0.9),
-                                      fontSize: 12,
+                                      fontSize: 11,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                DecoratedBox(
-                                  decoration: const BoxDecoration(
-                                    gradient: AppGradients.brand,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    shape: const CircleBorder(),
-                                    child: InkWell(
-                                      onTap: () => _openSlide(slide),
-                                      customBorder: const CircleBorder(),
-                                      child: const SizedBox(
-                                        width: 44,
-                                        height: 44,
-                                        child: Icon(Icons.north_east_rounded, color: Colors.white, size: 20),
-                                      ),
+                                const SizedBox(width: 8),
+                                FilledButton(
+                                  onPressed: () => _openSlide(slide),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.lemonGreen,
+                                    foregroundColor: AppColors.text,
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    minimumSize: Size.zero,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    textStyle: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
                                     ),
                                   ),
+                                  child: const Text('Shop now'),
                                 ),
                               ],
                             ),

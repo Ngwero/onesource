@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { rowToProduct, seedRowFromJson } from "../db.js";
 import { categoryMatchAliases } from "../data/categories.js";
 import { isSupabaseConnectionError, supabaseConnectionHint } from "./supabaseErrors.js";
+import { productMatchesSearch, rankSearchResults } from "./productSearchMatch.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SEED_PATH = path.join(__dirname, "..", "seed-data.json");
@@ -37,17 +38,16 @@ export function filterLocalProducts({ admin = false, category, search, page = 0,
     filtered = filtered.filter((r) => aliases.includes(r.category));
   }
   if (search) {
-    const q = search.toLowerCase();
-    filtered = filtered.filter(
-      (r) =>
-        r.title.toLowerCase().includes(q) ||
-        r.description.toLowerCase().includes(q) ||
-        r.category.toLowerCase().includes(q)
+    const all = rankSearchResults(
+      filtered.map(rowToProduct).filter((p) => productMatchesSearch(p, search)),
+      search
     );
+    const from = page * pageSize;
+    return { products: all.slice(from, from + pageSize), total: all.length };
   }
   const from = page * pageSize;
   const slice = filtered.slice(from, from + pageSize);
-  return slice.map(rowToProduct);
+  return { products: slice.map(rowToProduct), total: filtered.length };
 }
 
 export function getLocalProductById(id) {
@@ -75,6 +75,10 @@ export async function withLocalProductFallback(query, options = {}) {
       return { product, source: "local-seed" };
     }
     const products = filterLocalProducts(options);
-    return { products, total: products.length, source: "local-seed" };
+    return {
+      products: products.products,
+      total: products.total,
+      source: "local-seed",
+    };
   }
 }

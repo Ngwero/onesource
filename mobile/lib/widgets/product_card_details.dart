@@ -1,10 +1,10 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
 import '../models/product.dart';
-import 'package:flutter/material.dart';
-
-final _currency = NumberFormat.currency(symbol: 'UGX ', decimalDigits: 0);
+import '../providers/currency_provider.dart';
 
 /// Shared copy and formatting for product cards.
 class ProductCardDetails {
@@ -43,7 +43,8 @@ class ProductCardDetails {
 
   static bool isBestSeller(Product product) => product.reviewCount >= 2000;
 
-  static String formatPrice(double price) => _currency.format(price);
+  static String formatPrice(double price) =>
+      NumberFormat.currency(symbol: 'UGX ', decimalDigits: 0).format(price);
 
   static String socialProof(Product product) {
     if (product.reviewCount >= 500) {
@@ -157,7 +158,7 @@ class ProductDeliveryRow extends StatelessWidget {
   }
 }
 
-class ProductPriceBlock extends StatelessWidget {
+class ProductPriceBlock extends ConsumerWidget {
   const ProductPriceBlock({
     super.key,
     required this.product,
@@ -168,7 +169,8 @@ class ProductPriceBlock extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formatPrice = ref.watch(formatPriceProvider);
     final discount = ProductCardDetails.discountPercent(product);
     final unit = ProductCardDetails.unitLabel(product);
 
@@ -197,7 +199,7 @@ class ProductPriceBlock extends StatelessWidget {
               ),
             ],
             Text(
-              ProductCardDetails.formatPrice(product.price),
+              formatPrice(product.price),
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: compact ? 14 : 16,
@@ -210,7 +212,7 @@ class ProductPriceBlock extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Text(
-              'RRP ${ProductCardDetails.formatPrice(product.originalPrice!)}',
+              'RRP ${formatPrice(product.originalPrice!)}',
               style: TextStyle(
                 fontSize: compact ? 10 : 11,
                 color: AppColors.textMuted,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
 
-/// Circular brand mark + optional wordmark (splash & auth header).
+/// Circular official brand mark (splash, auth, account).
 class BrandLogoMark extends StatelessWidget {
   const BrandLogoMark({
     super.key,
@@ -11,57 +11,43 @@ class BrandLogoMark extends StatelessWidget {
   });
 
   final double size;
+
+  /// Kept for call-site compatibility; the official logo already includes the wordmark.
   final bool showWordmark;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: AppColors.leafPale,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.leafPale),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.darkGreen.withValues(alpha: 0.12),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.darkGreen.withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
-          padding: EdgeInsets.all(size * 0.18),
-          child: Image.asset(
-            'assets/brand/logo-icon.png',
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Icon(
-              Icons.eco_rounded,
-              size: size * 0.45,
-              color: AppColors.darkGreen,
+        ],
+      ),
+      child: ClipOval(
+        child: ColoredBox(
+          color: Colors.white,
+          child: Padding(
+            padding: EdgeInsets.all(size * 0.14),
+            child: Image.asset(
+              'assets/brand/logo-primary.png',
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.eco_rounded,
+                size: size * 0.45,
+                color: AppColors.darkGreen,
+              ),
             ),
           ),
         ),
-        if (showWordmark) ...[
-          SizedBox(height: size * 0.22),
-          Image.asset(
-            'assets/brand/logo-primary.png',
-            height: size * 0.42,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Text(
-              'One Source',
-              style: TextStyle(
-                fontSize: size * 0.26,
-                fontWeight: FontWeight.w800,
-                color: AppColors.darkGreen,
-                letterSpacing: -0.3,
-              ),
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
@@ -78,7 +64,7 @@ class BrandLogo extends StatelessWidget {
       'assets/brand/logo-primary.png',
       height: height,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => BrandLogoMark(size: height * 1.4, showWordmark: true),
+      errorBuilder: (_, __, ___) => BrandLogoMark(size: height * 1.4),
     );
   }
 }

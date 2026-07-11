@@ -169,6 +169,9 @@ class ApiClient {
     if (res.statusCode == 429) {
       throw ApiException('Too many login attempts. Please wait a few minutes.');
     }
+    if (res.statusCode == 503) {
+      throw ApiException(_errorMessage(res));
+    }
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
     }
@@ -187,8 +190,11 @@ class ApiClient {
             'otp': otp.trim(),
           }),
         )
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 45));
 
+    if (res.statusCode == 401) {
+      throw ApiException(_errorMessage(res));
+    }
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
     }

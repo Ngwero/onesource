@@ -11,6 +11,7 @@ import { listCategories } from "../lib/categoriesService.js";
 import { categoryMatchAliases } from "../data/categories.js";
 import { withLocalProductFallback } from "../lib/localSeed.js";
 import { enrichProductsWithSuppliers } from "../lib/suppliersService.js";
+import { productMatchesSearch, rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.get("/", async (req, res) => {
     const admin = req.query.admin === "true";
     const category = req.query.category;
     const supplierId = req.query.supplierId ?? req.query.supplier_id;
-    const search = req.query.q?.toLowerCase();
+    const search = req.query.q?.trim();
     const page = Math.max(0, parseInt(req.query.page ?? "0", 10) || 0);
     const pageSize = Math.min(1000, Math.max(1, parseInt(req.query.pageSize ?? "1000", 10) || 1000));
 
@@ -40,6 +41,31 @@ router.get("/", async (req, res) => {
           query = query.eq("supplier_id", supplierId);
         }
 
+        if (search) {
+          const orFilter = buildSearchOrFilter(search);
+          if (orFilter) {
+            query = query.or(orFilter);
+          }
+
+          const from = page * pageSize;
+          const to = from + pageSize - 1;
+          query = query.range(from, to);
+
+          const { data: rows, error, count } = await query;
+          if (error) throw error;
+
+          let products = (rows ?? []).map(rowToProduct);
+          products = rankSearchResults(
+            products.filter((p) => productMatchesSearch(p, search)),
+            search
+          );
+
+          return {
+            products: await enrichProductsWithSuppliers(db, products, { admin }),
+            total: count ?? products.length,
+          };
+        }
+
         const from = page * pageSize;
         const to = from + pageSize - 1;
         query = query.range(from, to);
@@ -47,23 +73,13 @@ router.get("/", async (req, res) => {
         const { data: rows, error, count } = await query;
         if (error) throw error;
 
-        let filtered = rows ?? [];
-        if (search) {
-          filtered = filtered.filter(
-            (r) =>
-              r.title.toLowerCase().includes(search) ||
-              r.description.toLowerCase().includes(search) ||
-              r.category.toLowerCase().includes(search)
-          );
-        }
-
         return {
           products: await enrichProductsWithSuppliers(
             db,
-            filtered.map(rowToProduct),
+            (rows ?? []).map(rowToProduct),
             { admin }
           ),
-          total: count ?? filtered.length,
+          total: count ?? (rows ?? []).length,
         };
       },
       { admin, category, search, page, pageSize }

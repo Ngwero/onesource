@@ -10,11 +10,11 @@ import '../screens/order_detail_screen.dart';
 import '../screens/product_detail_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/category_screen.dart';
-import '../screens/products_screen.dart';
+import '../screens/search_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/home',
+    initialLocation: '/splash',
     debugLogDiagnostics: true,
     errorBuilder: (context, state) => Scaffold(
       appBar: AppBar(title: const Text('One Source')),
@@ -51,7 +51,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/category/:id',
         builder: (context, state) => CategoryScreen(categoryId: state.pathParameters['id']!),
       ),
-      GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) => SearchScreen(
+          initialQuery: state.uri.queryParameters['q'],
+        ),
+      ),
       GoRoute(path: '/checkout', builder: (_, __) => const CheckoutScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),

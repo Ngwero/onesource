@@ -55,7 +55,7 @@ class PaginatedProductsState {
 }
 
 class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, ProductsQuery> {
-  static const pageSize = 24;
+  static const pageSize = 48;
 
   int _loadedPage = -1;
 

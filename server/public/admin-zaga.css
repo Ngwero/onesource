@@ -46,14 +46,29 @@ body::before { display: none; }
   border-bottom: 1px solid var(--border);
 }
 
+.brand-mark-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.brand-wordmark {
+  height: 26px;
+  max-width: 150px;
+}
+
 .brand-mark {
   width: 38px;
   height: 38px;
-  border-radius: 10px;
-  background: linear-gradient(145deg, var(--accent) 0%, #1a3d31 100%);
-  color: #fff;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--accent);
   font-size: 0.75rem;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 .brand-text-logo { color: var(--text); font-size: 1.1rem; }
@@ -71,7 +86,7 @@ body::before { display: none; }
   padding: 0.6rem 1rem;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  background: var(--text);
+  background: var(--accent);
   color: #fff;
   font: inherit;
   font-weight: 600;
@@ -80,7 +95,7 @@ body::before { display: none; }
   transition: background 0.15s, transform 0.1s;
 }
 
-.sidebar-new-btn:hover { background: #000; }
+.sidebar-new-btn:hover { background: var(--accent-hover); }
 .sidebar-new-btn svg { opacity: 0.9; }
 
 .sidebar-search {
@@ -462,7 +477,7 @@ body::before { display: none; }
 .filter-tab:hover { background: #f3f4f6; color: var(--text); }
 
 .filter-tab.active {
-  background: var(--text);
+  background: var(--accent);
   color: #fff;
   font-weight: 600;
 }
@@ -660,13 +675,13 @@ body::before { display: none; }
 }
 
 .btn-primary {
-  background: var(--text);
-  border-color: var(--text);
+  background: var(--accent);
+  border-color: var(--accent);
   box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background: #000;
+  background: var(--accent-hover);
   box-shadow: var(--shadow);
 }
 

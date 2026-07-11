@@ -6,7 +6,6 @@ import '../config/theme.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../providers/paginated_products_provider.dart';
-import '../providers/products_provider.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/horizontal_product_card.dart';
 import '../widgets/loading_view.dart';
@@ -277,74 +276,6 @@ class _Pill extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
-
-  @override
-  ConsumerState<SearchScreen> createState() => _SearchScreenState();
-}
-
-class _SearchScreenState extends ConsumerState<SearchScreen> {
-  final _controller = TextEditingController();
-  String _query = '';
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final resultsAsync = _query.isEmpty ? null : ref.watch(searchProductsProvider(_query));
-
-    return Scaffold(
-      backgroundColor: AppColors.canvas,
-      appBar: AppBar(
-        title: TextField(
-          controller: _controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Search produce…',
-            border: InputBorder.none,
-            hintStyle: TextStyle(color: AppColors.textMuted),
-          ),
-          onSubmitted: (v) => setState(() => _query = v.trim()),
-          onChanged: (v) {
-            if (v.trim().length >= 2) setState(() => _query = v.trim());
-          },
-        ),
-      ),
-      body: _query.isEmpty
-          ? const Center(child: Text('Search for fresh produce'))
-          : resultsAsync!.when(
-              loading: () => const LoadingView(),
-              error: (e, _) => Center(child: Text(e.toString())),
-              data: (products) => products.isEmpty
-                  ? const Center(child: Text('No results found'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                      itemCount: products.length,
-                      itemBuilder: (context, index) {
-                        final p = products[index];
-                        return ScrollSlideIn(
-                          index: index,
-                          axis: Axis.horizontal,
-                          child: HorizontalProductCard(
-                            product: p,
-                            onBuy: () {
-                              ref.read(cartProvider.notifier).add(p);
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.title} added')));
-                            },
-                          ),
-                        );
-                      },
-                    ),
-            ),
     );
   }
 }
