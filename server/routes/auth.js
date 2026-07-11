@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyUserCredentials, isAnonKeyConfigured, verifyAnonKey, createUserSession } from "../lib/authCredentials.js";
-import { env, isSmtpConfigured } from "../lib/env.js";
+import { env, getMailTransportLabel, isMailConfigured, isSmtpConfigured } from "../lib/env.js";
 import {
   sendPasswordResetEmail,
   sendWelcomeEmail,
@@ -51,10 +51,10 @@ function isEmailRateLimitError(error) {
 
 router.post("/forgot-password", async (req, res) => {
   try {
-    if (!isSmtpConfigured()) {
+    if (!isMailConfigured()) {
       return res.status(503).json({
         error:
-          "Password reset email is not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM in server/.env.",
+          "Password reset email is not configured. Set BREVO_API_KEY (recommended on Railway) or SMTP_* in server/.env.",
       });
     }
 
@@ -118,7 +118,7 @@ router.post("/forgot-password", async (req, res) => {
       console.error("[auth] forgot-password email failed:", err);
       return res.status(503).json({
         error:
-          "We could not send the reset email right now. The mail server may be unreachable from production — use Brevo or SendGrid for SMTP on Railway, or try again shortly.",
+          "We could not send the reset email right now. On Railway, set BREVO_API_KEY (HTTPS) — outbound SMTP is blocked on Hobby plans. Or try again shortly.",
       });
     }
   } catch (e) {
@@ -131,8 +131,8 @@ router.post("/forgot-password", async (req, res) => {
 
 router.post("/welcome", async (req, res) => {
   try {
-    if (!isSmtpConfigured()) {
-      return res.status(503).json({ error: "Welcome email is not configured (SMTP missing)." });
+    if (!isMailConfigured()) {
+      return res.status(503).json({ error: "Welcome email is not configured (BREVO_API_KEY or SMTP missing)." });
     }
 
     const token = getBearerToken(req);
@@ -188,10 +188,10 @@ router.post("/login/request-otp", async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
-    if (!isSmtpConfigured()) {
+    if (!isMailConfigured()) {
       return res.status(503).json({
         error:
-          "Login email is not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM in server/.env.",
+          "Login email is not configured. Set BREVO_API_KEY (recommended on Railway) or SMTP_* in server/.env.",
       });
     }
 
@@ -273,10 +273,12 @@ router.get("/status", async (req, res) => {
   }
 
   const payload = {
+    mail: isMailConfigured(),
+    mailTransport: getMailTransportLabel(),
     smtp: isSmtpConfigured(),
     shopUrl: env.shopUrl,
     otpLogin: true,
-    otpProvider: "onesource-smtp",
+    otpProvider: env.brevoApiKey ? "brevo" : env.resendApiKey ? "resend" : "smtp",
     anonKeyConfigured: isAnonKeyConfigured(),
     supabaseHost,
   };

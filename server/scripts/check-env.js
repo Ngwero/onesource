@@ -1,6 +1,6 @@
 import dns from "dns/promises";
 import { isAnonKeyConfigured } from "../lib/authCredentials.js";
-import { env, getSupabaseConfigErrors, getSmtpConfigErrors, isSupabaseConfigured, isSmtpConfigured } from "../lib/env.js";
+import { env, getSupabaseConfigErrors, getSmtpConfigErrors, isSupabaseConfigured, isSmtpConfigured, isMailConfigured, getMailTransportLabel } from "../lib/env.js";
 import { verifySmtpConnection } from "../lib/mail.js";
 
 const missing = getSupabaseConfigErrors();
@@ -43,17 +43,26 @@ try {
 
 console.log("\nSupabase env vars look good.");
 
+console.log(`\nMail transport: ${getMailTransportLabel()}`);
+if (env.brevoApiKey) {
+  console.log("  BREVO_API_KEY: set (HTTPS — recommended for Railway)");
+} else if (env.resendApiKey) {
+  console.log("  RESEND_API_KEY: set (HTTPS)");
+}
+
 const smtpMissing = getSmtpConfigErrors();
-if (!isSmtpConfigured()) {
-  console.warn(`\nSMTP: not configured (missing ${smtpMissing.join(", ")}).`);
-  console.warn("Password reset, welcome, and login OTP emails will not send until SMTP is set in server/.env.");
-} else {
+if (!isMailConfigured()) {
+  console.warn(`\nEmail: not configured.`);
+  console.warn("On Railway set BREVO_API_KEY (HTTPS). SMTP is blocked on Hobby plans.");
+  console.warn(`Or set SMTP: ${smtpMissing.join(", ")} for local/dev.`);
+} else if (isSmtpConfigured() && !env.brevoApiKey && !env.resendApiKey) {
   console.log(`\nSMTP: ${env.smtp.host}:${env.smtp.port} (${env.smtp.from})`);
   const smtpCheck = await verifySmtpConnection();
   if (smtpCheck.ok) {
     console.log("SMTP connection: verified");
   } else {
     console.error(`SMTP connection failed: ${smtpCheck.error}`);
+    console.error("Tip: On Railway Hobby, use BREVO_API_KEY instead of cPanel SMTP.");
     process.exit(1);
   }
 }

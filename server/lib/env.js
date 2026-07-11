@@ -44,6 +44,10 @@ export const env = {
     pass: process.env.SMTP_PASS?.trim() ?? "",
     from: process.env.SMTP_FROM?.trim() ?? "",
   },
+  /** Brevo transactional API key (HTTPS — works on Railway Hobby; preferred over SMTP). */
+  brevoApiKey: process.env.BREVO_API_KEY?.trim() ?? "",
+  /** Resend API key (HTTPS alternative). */
+  resendApiKey: process.env.RESEND_API_KEY?.trim() ?? "",
 };
 
 export function isSupabaseConfigured() {
@@ -62,6 +66,18 @@ export function isSmtpConfigured() {
   return Boolean(host && user && pass && from);
 }
 
+/** True when any production-capable mail transport is configured (HTTPS API or SMTP). */
+export function isMailConfigured() {
+  return Boolean(env.brevoApiKey || env.resendApiKey || isSmtpConfigured());
+}
+
+export function getMailTransportLabel() {
+  if (env.brevoApiKey) return "Brevo HTTPS API";
+  if (env.resendApiKey) return "Resend HTTPS API";
+  if (isSmtpConfigured()) return `SMTP ${env.smtp.host}:${env.smtp.port}`;
+  return "not configured";
+}
+
 export function getSupabaseConfigErrors() {
   const missing = [];
   if (!env.supabaseUrl) missing.push("SUPABASE_URL");
@@ -76,6 +92,11 @@ export function getSmtpConfigErrors() {
   if (!env.smtp.pass) missing.push("SMTP_PASS");
   if (!env.smtp.from) missing.push("SMTP_FROM");
   return missing;
+}
+
+export function getMailConfigErrors() {
+  if (isMailConfigured()) return [];
+  return ["BREVO_API_KEY (recommended on Railway)", "or RESEND_API_KEY", "or SMTP_HOST/SMTP_USER/SMTP_PASS/SMTP_FROM"];
 }
 
 export function assertSupabaseConfigured() {
@@ -94,4 +115,11 @@ export function assertSmtpConfigured() {
       `SMTP is not configured. Set ${missing.join(", ")} in server/.env (see server/.env.example).`
     );
   }
+}
+
+export function assertMailConfigured() {
+  if (isMailConfigured()) return;
+  throw new Error(
+    `Email is not configured. Set BREVO_API_KEY (recommended for Railway) or RESEND_API_KEY, or SMTP_* in server/.env (see server/.env.example).`
+  );
 }

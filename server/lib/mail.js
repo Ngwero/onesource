@@ -1,6 +1,12 @@
 import nodemailer from "nodemailer";
-import { assertSmtpConfigured, env, isSmtpConfigured } from "./env.js";
-import { getEmailInlineAttachments } from "./emailAssets.js";
+import {
+  assertMailConfigured,
+  assertSmtpConfigured,
+  env,
+  isMailConfigured,
+  isSmtpConfigured,
+} from "./env.js";
+import { EMAIL_IMAGE_CIDS, getEmailInlineAttachments } from "./emailAssets.js";
 import {
   defaultOtpFootnotes,
   defaultResetFootnotes,
@@ -15,6 +21,7 @@ import {
 let transporter = null;
 
 const SMTP_TIMEOUT_MS = Number(process.env.SMTP_TIMEOUT_MS) || 45_000;
+const HTTP_TIMEOUT_MS = Number(process.env.MAIL_HTTP_TIMEOUT_MS) || 30_000;
 
 function getTransporter() {
   assertSmtpConfigured();
@@ -35,21 +42,102 @@ function getTransporter() {
   return transporter;
 }
 
-function withTimeout(promise, label) {
+function withTimeout(promise, label, ms = SMTP_TIMEOUT_MS) {
   return Promise.race([
     promise,
     new Promise((_, reject) => {
       setTimeout(
-        () => reject(new Error(`${label} timed out after ${SMTP_TIMEOUT_MS / 1000}s`)),
-        SMTP_TIMEOUT_MS
+        () => reject(new Error(`${label} timed out after ${ms / 1000}s`)),
+        ms
       );
     }),
   ]);
 }
 
-async function sendBrandedMail({ to, subject, html, text }) {
+function parseFromAddress(from) {
+  const raw = String(from || "").trim();
+  const match = raw.match(/^(.*)<([^>]+)>$/);
+  if (match) {
+    return {
+      name: match[1].trim().replace(/^["']|["']$/g, "") || "One Source",
+      email: match[2].trim(),
+    };
+  }
+  if (raw.includes("@")) {
+    return { name: "One Source", email: raw };
+  }
+  return { name: "One Source", email: "noreply@one-sourcebrand.com" };
+}
+
+/** Replace cid: images with absolute shop URLs (HTTPS APIs don't use nodemailer CIDs). */
+function htmlForHttpApi(html) {
+  const base = env.shopUrl.replace(/\/$/, "");
+  return html
+    .replaceAll(`cid:${EMAIL_IMAGE_CIDS.logo}`, `${base}/brand/logo-on-dark-stacked.png`)
+    .replaceAll(`cid:${EMAIL_IMAGE_CIDS.hero}`, `${base}/brand/email-hero.jpg`);
+}
+
+async function sendViaBrevo({ to, subject, html, text }) {
+  const from = parseFromAddress(env.smtp.from || "One Source <noreply@one-sourcebrand.com>");
+  const res = await withTimeout(
+    fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "api-key": env.brevoApiKey,
+      },
+      body: JSON.stringify({
+        sender: { name: from.name, email: from.email },
+        to: [{ email: to }],
+        replyTo: { email: from.email, name: from.name },
+        subject,
+        htmlContent: htmlForHttpApi(html),
+        textContent: text,
+      }),
+    }),
+    "Brevo API send",
+    HTTP_TIMEOUT_MS
+  );
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Brevo API ${res.status}: ${body.slice(0, 300) || res.statusText}`);
+  }
+  return res.json().catch(() => ({ ok: true }));
+}
+
+async function sendViaResend({ to, subject, html, text }) {
+  const from = env.smtp.from || "One Source <noreply@one-sourcebrand.com>";
+  const res = await withTimeout(
+    fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        html: htmlForHttpApi(html),
+        text,
+      }),
+    }),
+    "Resend API send",
+    HTTP_TIMEOUT_MS
+  );
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Resend API ${res.status}: ${body.slice(0, 300) || res.statusText}`);
+  }
+  return res.json().catch(() => ({ ok: true }));
+}
+
+async function sendViaSmtp({ to, subject, html, text }) {
   const transport = getTransporter();
-  const info = await withTimeout(
+  return withTimeout(
     transport.sendMail({
       from: env.smtp.from,
       to,
@@ -64,6 +152,25 @@ async function sendBrandedMail({ to, subject, html, text }) {
     }),
     "SMTP send"
   );
+}
+
+async function sendBrandedMail({ to, subject, html, text }) {
+  assertMailConfigured();
+
+  // Prefer HTTPS APIs — Railway Hobby/Trial block outbound SMTP ports.
+  if (env.brevoApiKey) {
+    const info = await sendViaBrevo({ to, subject, html, text });
+    console.info(`[mail] sent via Brevo to ${to}`);
+    return info;
+  }
+  if (env.resendApiKey) {
+    const info = await sendViaResend({ to, subject, html, text });
+    console.info(`[mail] sent via Resend to ${to}`);
+    return info;
+  }
+
+  const info = await sendViaSmtp({ to, subject, html, text });
+  console.info(`[mail] sent via SMTP to ${to}`);
   return info;
 }
 
@@ -168,8 +275,8 @@ function orderTrackUrl(orderId) {
 }
 
 async function sendOrderStatusEmail(order, { heroTitle, heroSubtitle, bodyParagraphs, statusLabel, subject }) {
-  if (!isSmtpConfigured()) {
-    console.warn("[mail] SMTP not configured — skipping order email");
+  if (!isMailConfigured()) {
+    console.warn("[mail] mail not configured — skipping order email");
     return { sent: false, reason: "smtp_not_configured" };
   }
 
@@ -314,4 +421,4 @@ export async function verifySmtpConnection() {
   }
 }
 
-export { isSmtpConfigured };
+export { isMailConfigured, isSmtpConfigured };

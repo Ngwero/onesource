@@ -3,7 +3,7 @@ import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { env, isSupabaseConfigured, isSmtpConfigured, useSupabaseStorage } from "./lib/env.js";
+import { env, isSupabaseConfigured, getMailTransportLabel, isMailConfigured, useSupabaseStorage } from "./lib/env.js";
 import productsRouter from "./routes/products.js";
 import categoriesRouter from "./routes/categories.js";
 import uploadRouter from "./routes/upload.js";
@@ -146,8 +146,8 @@ app.listen(PORT, () => {
       : "Warning: Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in server/.env (npm run check:env)"
   );
   console.log(
-    isSmtpConfigured()
-      ? `SMTP: ${env.smtp.host}:${env.smtp.port}`
-      : "Warning: SMTP not configured — password reset emails will not send (see server/.env.example)"
+    isMailConfigured()
+      ? `Mail: ${getMailTransportLabel()}`
+      : "Warning: email not configured — set BREVO_API_KEY (Railway) or SMTP_* (see server/.env.example)"
   );
 });

@@ -5,7 +5,7 @@ import {
   sendOrderDispatchedEmail,
   sendOrderDeliveredEmail,
   sendOrderPlacedEmail,
-  isSmtpConfigured,
+  isMailConfigured,
 } from "../lib/mail.js";
 
 const router = Router();
@@ -244,21 +244,21 @@ router.patch("/:id", async (req, res) => {
             if (r?.sent) console.log(`[orders] confirmation email sent → ${order.email}`);
           })
           .catch((e) => console.error("[orders] confirmation email failed:", e.message));
-        emailSent = isSmtpConfigured() ? "confirmation_pending" : "smtp_not_configured";
+        emailSent = isMailConfigured() ? "confirmation_pending" : "smtp_not_configured";
       } else if (status === "out_for_delivery") {
         sendOrderDispatchedEmail(order)
           .then((r) => {
             if (r?.sent) console.log(`[orders] dispatch email sent → ${order.email}`);
           })
           .catch((e) => console.error("[orders] dispatch email failed:", e.message));
-        emailSent = isSmtpConfigured() ? "dispatch_pending" : "smtp_not_configured";
+        emailSent = isMailConfigured() ? "dispatch_pending" : "smtp_not_configured";
       } else if (status === "delivered") {
         sendOrderDeliveredEmail(order)
           .then((r) => {
             if (r?.sent) console.log(`[orders] delivered email sent → ${order.email}`);
           })
           .catch((e) => console.error("[orders] delivered email failed:", e.message));
-        emailSent = isSmtpConfigured() ? "delivered_pending" : "smtp_not_configured";
+        emailSent = isMailConfigured() ? "delivered_pending" : "smtp_not_configured";
       }
     }
 
