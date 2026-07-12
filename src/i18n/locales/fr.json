@@ -202,6 +202,7 @@
     "runSqlHint": "Si les commandes ne s'enregistrent pas, exécutez server/supabase/orders.sql dans Supabase.",
     "statusPlaced": "Passée",
     "statusConfirmed": "Confirmée",
+    "statusPacked": "Emballée",
     "statusOutForDelivery": "En livraison",
     "statusDelivered": "Livrée",
     "statusCancelled": "Annulée",
@@ -219,6 +220,10 @@
         "confirmed": {
           "title": "Confirmée",
           "desc": "Vos produits frais sont préparés chez One Source."
+        },
+        "packed": {
+          "title": "Emballée",
+          "desc": "Votre commande est emballée et prête à partir."
         },
         "out_for_delivery": {
           "title": "En livraison",

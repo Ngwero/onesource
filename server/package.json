@@ -48,6 +48,7 @@
     "seed:red-amaranth": "node scripts/seed-red-amaranth.js",
     "seed:malakwang": "node scripts/seed-malakwang.js",
     "seed:suppliers": "node scripts/seed-suppliers.js",
+    "seed:packaging": "node scripts/seed-packaging.js",
     "i18n:build": "npm run i18n:build --prefix .."
   },
   "dependencies": {

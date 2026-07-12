@@ -16,16 +16,18 @@ class OrderProgress extends StatelessWidget {
 
   static const _steps = [
     _Step('placed', 'Order processed', Icons.receipt_long_rounded),
-    _Step('confirmed', 'Shipped out', Icons.local_shipping_outlined),
+    _Step('confirmed', 'Confirmed', Icons.local_shipping_outlined),
+    _Step('packed', 'Packed', Icons.inventory_2_outlined),
     _Step('out_for_delivery', 'Out for delivery', Icons.delivery_dining_rounded),
     _Step('delivered', 'Delivered', Icons.check_circle_outline_rounded),
   ];
 
   int _activeIndex(String normalized) {
     if (normalized.contains('deliver') && !normalized.contains('out_for')) {
-      return 3;
+      return 4;
     }
-    if (normalized.contains('out_for') || normalized.contains('dispatch')) return 2;
+    if (normalized.contains('out_for') || normalized.contains('dispatch')) return 3;
+    if (normalized.contains('pack')) return 2;
     if (normalized.contains('confirm') || normalized.contains('ship')) return 1;
     return 0;
   }

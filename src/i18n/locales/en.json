@@ -224,6 +224,7 @@
     "runSqlHint": "If orders fail to save, run server/supabase/orders.sql in Supabase.",
     "statusPlaced": "Placed",
     "statusConfirmed": "Confirmed",
+    "statusPacked": "Packed",
     "statusOutForDelivery": "Out for delivery",
     "statusDelivered": "Delivered",
     "statusCancelled": "Cancelled",
@@ -241,6 +242,10 @@
         "confirmed": {
           "title": "Confirmed",
           "desc": "Your fresh produce is being prepared at One Source."
+        },
+        "packed": {
+          "title": "Packed",
+          "desc": "Your order is packed and ready for dispatch."
         },
         "out_for_delivery": {
           "title": "Out for delivery",

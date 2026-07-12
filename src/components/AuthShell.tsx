@@ -35,7 +35,7 @@ export function AuthShell({ children, footer, mode = "login" }: Props) {
 
         <div className="auth-shell-main">
           <Link to="/" className="auth-shell-logo auth-shell-logo--mobile">
-            <BrandLogo variant="primary" className="h-10 sm:h-11" />
+            <BrandLogo variant="horizontal" className="h-10 sm:h-11" />
           </Link>
           <div className="auth-shell-card">{children}</div>
           {footer ? <div className="auth-shell-footer">{footer}</div> : null}

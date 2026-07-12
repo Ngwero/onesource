@@ -202,6 +202,7 @@
     "runSqlHint": "Soki ba commande ekomi te, sala server/supabase/orders.sql na Supabase.",
     "statusPlaced": "Epesami",
     "statusConfirmed": "Eondimami",
+    "statusPacked": "Efungolami",
     "statusOutForDelivery": "Ezali kokende",
     "statusDelivered": "Ekotisami",
     "statusCancelled": "Elongolami",
@@ -219,6 +220,10 @@
         "confirmed": {
           "title": "Eondimami",
           "desc": "Biloko na yo ya sika ezali kobongisama na One Source."
+        },
+        "packed": {
+          "title": "Efungolami",
+          "desc": "Commande na yo efungolami mpe ezali ready mpo na kotinda."
         },
         "out_for_delivery": {
           "title": "Ezali kokende",

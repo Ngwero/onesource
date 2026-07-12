@@ -7,6 +7,8 @@ type Options = {
   minItems?: number;
   /** Wider hover zone (whole row section). Defaults to the scroll track. */
   pauseRootRef?: RefObject<HTMLElement | null>;
+  /** How long to keep auto-scroll paused after user interaction. */
+  pauseOnInteractMs?: number;
 };
 
 function isHovered(root: HTMLElement | null) {
@@ -22,6 +24,7 @@ export function useAutoScrollByItems(
     itemSelector,
     minItems = 3,
     pauseRootRef,
+    pauseOnInteractMs,
   }: Options
 ) {
   useEffect(() => {
@@ -31,11 +34,11 @@ export function useAutoScrollByItems(
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
 
+    const interactPauseMs = pauseOnInteractMs ?? intervalMs * 3;
     const hoverRoot = () => pauseRootRef?.current ?? el;
 
     let paused = false;
     let resumeTimer: ReturnType<typeof setTimeout> | null = null;
-    let scrollEndTimer: ReturnType<typeof setTimeout> | null = null;
     let cachedStep = 0;
 
     const measureStep = () => {
@@ -63,6 +66,7 @@ export function useAutoScrollByItems(
 
     const tryResume = () => {
       if (isHovered(hoverRoot())) return;
+      if (el.classList.contains("is-dragging")) return;
       paused = false;
     };
 
@@ -72,28 +76,19 @@ export function useAutoScrollByItems(
       resumeTimer = setTimeout(() => {
         resumeTimer = null;
         tryResume();
-      }, intervalMs * 2);
-    };
-
-    const onUserScroll = () => {
-      pause();
-      if (scrollEndTimer) clearTimeout(scrollEndTimer);
-      scrollEndTimer = setTimeout(() => {
-        scrollEndTimer = null;
-        tryResume();
-      }, 180);
+      }, interactPauseMs);
     };
 
     const scrollNext = () => {
-      if (paused || isHovered(hoverRoot())) return;
+      if (paused || isHovered(hoverRoot()) || el.classList.contains("is-dragging")) return;
       const maxScroll = el.scrollWidth - el.clientWidth;
-      if (maxScroll <= 0) return;
+      if (maxScroll <= 4) return;
 
       const step = cachedStep || el.clientWidth * 0.5;
       if (el.scrollLeft >= maxScroll - 4) {
-        el.scrollLeft = 0;
+        el.scrollTo({ left: 0, behavior: "auto" });
       } else {
-        el.scrollLeft += step;
+        el.scrollBy({ left: step, behavior: "auto" });
       }
     };
 
@@ -102,33 +97,34 @@ export function useAutoScrollByItems(
     const root = hoverRoot();
     root.addEventListener("mouseenter", pause);
     root.addEventListener("mouseleave", tryResume);
-    el.addEventListener("scroll", onUserScroll, { passive: true });
+    el.addEventListener("scroll", pauseBriefly, { passive: true });
     el.addEventListener("touchstart", pauseBriefly, { passive: true });
     el.addEventListener("pointerdown", pauseBriefly);
     el.addEventListener("wheel", pauseBriefly, { passive: true });
     el.addEventListener("focusin", pause);
     el.addEventListener("focusout", tryResume);
 
-    if ("onscrollend" in el) {
-      el.addEventListener("scrollend", tryResume);
-    }
-
     return () => {
       window.clearInterval(timer);
       ro.disconnect();
       if (resumeTimer) clearTimeout(resumeTimer);
-      if (scrollEndTimer) clearTimeout(scrollEndTimer);
       root.removeEventListener("mouseenter", pause);
       root.removeEventListener("mouseleave", tryResume);
-      el.removeEventListener("scroll", onUserScroll);
+      el.removeEventListener("scroll", pauseBriefly);
       el.removeEventListener("touchstart", pauseBriefly);
       el.removeEventListener("pointerdown", pauseBriefly);
       el.removeEventListener("wheel", pauseBriefly);
       el.removeEventListener("focusin", pause);
       el.removeEventListener("focusout", tryResume);
-      if ("onscrollend" in el) {
-        el.removeEventListener("scrollend", tryResume);
-      }
     };
-  }, [trackRef, pauseRootRef, itemCount, itemsPerStep, intervalMs, itemSelector, minItems]);
+  }, [
+    trackRef,
+    pauseRootRef,
+    itemCount,
+    itemsPerStep,
+    intervalMs,
+    itemSelector,
+    minItems,
+    pauseOnInteractMs,
+  ]);
 }

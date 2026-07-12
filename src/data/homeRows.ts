@@ -128,7 +128,7 @@ function dealSavings(p: Product): number {
   return (p.originalPrice - p.price) / p.originalPrice;
 }
 
-export function productsForHomeRow(products: Product[], row: HomeRowConfig, limit = 12): Product[] {
+export function productsForHomeRow(products: Product[], row: HomeRowConfig, limit = 16): Product[] {
   if (row.id === "chillies") {
     const mixed = mixChilliProducts(products, limit);
     if (mixed.length >= 4) return mixed;

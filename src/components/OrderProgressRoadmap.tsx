@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 const DELIVERY_STEPS = [
   "placed",
   "confirmed",
+  "packed",
   "out_for_delivery",
   "delivered",
 ] as const;
@@ -12,6 +13,7 @@ type StepId = (typeof DELIVERY_STEPS)[number];
 const STATUS_LABEL_KEYS: Record<string, string> = {
   placed: "orders.statusPlaced",
   confirmed: "orders.statusConfirmed",
+  packed: "orders.statusPacked",
   out_for_delivery: "orders.statusOutForDelivery",
   delivered: "orders.statusDelivered",
   cancelled: "orders.statusCancelled",

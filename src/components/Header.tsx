@@ -111,8 +111,8 @@ export function Header() {
         {/* Logo · Search (centre) · Actions — one row */}
         <div className="site-header-row flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4 py-3 sm:py-4 w-full">
           <Link to="/" className="site-header-brand flex-shrink-0 min-w-0 order-1">
-            <BrandLogo variant="icon" className="site-header-brand-icon md:hidden" />
-            <BrandLogo responsive className="hidden md:block" />
+            <BrandLogo variant="horizontal" className="site-header-brand-icon md:hidden h-8 max-w-[150px]" />
+            <BrandLogo variant="horizontal" className="hidden md:block h-9 sm:h-10 md:h-11 max-w-[min(220px,48vw)]" />
           </Link>
 
           <form

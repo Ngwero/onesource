@@ -202,6 +202,7 @@
     "runSqlHint": "Niba ibicuruzwa bitabikwa, kora server/supabase/orders.sql muri Supabase.",
     "statusPlaced": "Byatanzwe",
     "statusConfirmed": "Byemejwe",
+    "statusPacked": "Byapakiwe",
     "statusOutForDelivery": "Biri mu nzira yo gutangwa",
     "statusDelivered": "Byatanzwe",
     "statusCancelled": "Byahagaritswe",
@@ -219,6 +220,10 @@
         "confirmed": {
           "title": "Byemejwe",
           "desc": "Ibiribwa byawe bishya birategurwa kuri One Source."
+        },
+        "packed": {
+          "title": "Byapakiwe",
+          "desc": "Igicuruzwa cyawe cyapakiwe kandi cyiteguye koherezwa."
         },
         "out_for_delivery": {
           "title": "Biri mu nzira yo gutangwa",

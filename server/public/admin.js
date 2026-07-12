@@ -3,6 +3,7 @@ const CATEGORIES_API = "/api/categories";
 const HERO_API = "/api/hero/slides";
 const ORDERS_API = "/api/orders";
 const SUPPLIERS_API = "/api/suppliers";
+const PACKAGING_API = "/api/packaging";
 const HEALTH = "/api/health";
 const ADMIN_STATS = "/api/admin/stats";
 /** Dummy catalogue size shown in admin KPIs / badges (not the real SKU count). */
@@ -33,10 +34,13 @@ let products = [];
 let heroSlides = [];
 let orders = [];
 let suppliers = [];
+let packagingMaterials = [];
+let packagingTableReady = true;
 let editingOrderId = null;
 let editingId = null;
 let editingHeroId = null;
 let editingSupplierId = null;
+let editingPackagingId = null;
 let currentView = "dashboard";
 let confirmCallback = null;
 let lastRefresh = null;
@@ -348,6 +352,7 @@ const viewTitles = {
   hero: "Hero carousel",
   orders: "Orders",
   suppliers: "Suppliers",
+  packaging: "Packaging",
   customers: "Customers",
   settings: "Settings",
 };
@@ -357,6 +362,7 @@ const viewBreadcrumbs = {
   analytics: ["Home", "Analytics"],
   products: ["Home", "Catalogue", "Products"],
   inventory: ["Home", "Catalogue", "Inventory"],
+  packaging: ["Home", "Catalogue", "Packaging"],
   catalog: ["Home", "Catalogue", "Categories"],
   categories: ["Home", "Storefront", "Category banners"],
   hero: ["Home", "Storefront", "Hero carousel"],
@@ -405,15 +411,18 @@ function buildPageMeta(view) {
     ? ` · Updated ${lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
     : "";
   const maps = {
-    dashboard: `<strong>${DISPLAY_PRODUCT_COUNT.toLocaleString()}</strong> products · <strong>${orders.length}</strong> orders · <strong>${formatMoney(os.revenue)}</strong> revenue · <strong>${suppliers.length}</strong> suppliers${refreshed}`,
+    dashboard: `<strong>${DISPLAY_PRODUCT_COUNT.toLocaleString()}</strong> products · <strong>${orders.length}</strong> orders · <strong>${formatMoney(os.revenue)}</strong> revenue · <strong>${suppliers.length}</strong> suppliers · <strong>${packagingMaterials.length}</strong> packaging${refreshed}`,
     analytics: `<strong>${formatMoney(os.revenue)}</strong> total revenue · <strong>${os.delivered}</strong> delivered · <strong>${os.placed}</strong> awaiting action`,
     products: `<strong>${stats.live}</strong> live · <strong>${stats.low}</strong> low stock · <strong>${stats.out}</strong> out of stock`,
     inventory: `<strong>${stats.units.toLocaleString()}</strong> units on hand · stock value <strong>${formatMoney(stats.value)}</strong>`,
+    packaging: `<strong>${packagingMaterials.length}</strong> materials · <strong>${packagingMaterials.filter((m) => m.lowStock).length}</strong> low · <strong>${packagingMaterials.filter((m) => m.outOfStock).length}</strong> out`,
     suppliers: `<strong>${suppliers.length}</strong> sellers · <strong>${approved}</strong> approved · <strong>${pending}</strong> pending review`,
     orders: `<strong>${os.total}</strong> orders · <strong>${os.placed}</strong> new · <strong>${formatMoney(os.revenue)}</strong> revenue`,
     customers: `<strong>${getCustomers().length}</strong> customers from order history`,
     catalog: `<strong>${categories.length}</strong> categories in catalogue`,
     settings: `Store admin · API at <code>${location.origin}/api</code>`,
+    hero: `<strong>${heroSlides.filter((s) => s.active).length}</strong> active slides`,
+    categories: `<strong>${categories.length}</strong> category banners`,
   };
   return maps[view] || `${DISPLAY_PRODUCT_COUNT.toLocaleString()} products · ${orders.length} orders${refreshed}`;
 }
@@ -615,6 +624,7 @@ function renderDashBrowse() {
   const items = [
     { view: "products", icon: "📦", cls: "c0", name: "Products", count: `${DISPLAY_PRODUCT_COUNT.toLocaleString()} listings` },
     { view: "orders", icon: "🛒", cls: "c1", name: "Orders", count: `${os.placed} awaiting` },
+    { view: "packaging", icon: "🥡", cls: "c3", name: "Packaging", count: `${packagingMaterials.filter((m) => m.lowStock || m.outOfStock).length} need restock` },
     { view: "suppliers", icon: "🏪", cls: "c2", name: "Suppliers", count: `${pending} pending` },
     { view: "inventory", icon: "📊", cls: "c3", name: "Inventory", count: `${computeStats().low} low stock` },
     { view: "customers", icon: "👥", cls: "c4", name: "Customers", count: `${getCustomers().length} accounts` },
@@ -673,14 +683,36 @@ function updateNavBadges() {
       sb.style.display = "none";
     }
   }
+  const packagingAlert = packagingMaterials.filter((m) => m.lowStock || m.outOfStock).length;
+  const pb = $("navPackagingBadge");
+  if (pb) {
+    if (packagingAlert > 0) {
+      pb.textContent = String(packagingAlert);
+      pb.style.display = "";
+    } else {
+      pb.style.display = "none";
+    }
+  }
 }
 
 const ORDER_STATUS_LABELS = {
   placed: "Placed",
   confirmed: "Confirmed",
+  packed: "Packed",
   out_for_delivery: "Out for delivery",
   delivered: "Delivered",
   cancelled: "Cancelled",
+};
+
+const PACKAGING_TYPE_LABELS = {
+  cooler_bag: "Cooler bag",
+  paper_bag: "Paper bag",
+  crate: "Crate",
+  box: "Box",
+  ice_pack: "Ice pack",
+  wrap: "Wrap",
+  label: "Label",
+  other: "Other",
 };
 
 const SUPPLIER_STATUS_LABELS = {
@@ -712,6 +744,7 @@ function supplierName(id) {
 const addProductBtnDefaultHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add product</span>`;
 const addHeroBtnHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add slide</span>`;
 const addSupplierBtnHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add supplier</span>`;
+const addPackagingBtnHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add packaging</span>`;
 
 function setLoading(on) {
   $("loading").classList.toggle("show", on);
@@ -750,6 +783,7 @@ function orderStatusBadge(status) {
   const map = {
     placed: "badge-placed",
     confirmed: "badge-confirmed",
+    packed: "badge-delivery",
     out_for_delivery: "badge-delivery",
     delivered: "badge-delivered",
     cancelled: "badge-cancelled",
@@ -1194,6 +1228,24 @@ function stopOrderPolling() {
   }
 }
 
+function packagingMaterialOptionsHtml(selectedId = "") {
+  const active = packagingMaterials.filter((m) => m.active !== false);
+  const opts = [
+    '<option value="">— No packaging —</option>',
+    ...active.map((m) => {
+      const stock = m.outOfStock ? " (out)" : m.lowStock ? " (low)" : ` (${m.stockQuantity})`;
+      return `<option value="${escapeHtml(m.id)}"${m.id === selectedId ? " selected" : ""}>${escapeHtml(m.name)}${stock}</option>`;
+    }),
+  ];
+  if (selectedId && !active.some((m) => m.id === selectedId)) {
+    const inactive = packagingMaterials.find((m) => m.id === selectedId);
+    opts.push(
+      `<option value="${escapeHtml(selectedId)}" selected>${escapeHtml(inactive?.name || selectedId)} (inactive)</option>`
+    );
+  }
+  return opts.join("");
+}
+
 function renderOrderDrawer(order) {
   const items = order.order_items || [];
   $("orderDrawerTitle").textContent = `Order #${shortOrderId(order.id)}`;
@@ -1244,6 +1296,22 @@ function renderOrderDrawer(order) {
         <div><dt>Account</dt><dd>${order.user_id ? "Registered user" : "Guest checkout"}</dd></div>
       </dl>
     </div>
+    <div class="form-section">
+      <h3>Packaging</h3>
+      <div class="field">
+        <label class="field-label" for="orderPackagingMaterial">Material used</label>
+        <select id="orderPackagingMaterial">${packagingMaterialOptionsHtml(order.packaging_material_id || "")}</select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="orderPackagingNotes">Packaging notes</label>
+        <textarea id="orderPackagingNotes" rows="2" placeholder="e.g. ice packs ×2">${escapeHtml(order.packaging_notes || "")}</textarea>
+      </div>
+      ${
+        order.packed_at
+          ? `<p style="margin:0.5rem 0 0;font-size:0.8rem;color:var(--muted)">Packed at ${escapeHtml(formatDateTime(order.packed_at))}</p>`
+          : `<p style="margin:0.5rem 0 0;font-size:0.8rem;color:var(--muted)">Set status to <strong>Packed</strong> to deduct 1 unit from the selected material.</p>`
+      }
+    </div>
   `;
   const sel = $("orderStatusSelect");
   sel.innerHTML = Object.entries(ORDER_STATUS_LABELS)
@@ -1268,7 +1336,12 @@ function closeOrderDrawer() {
     errEl.style.display = "none";
     errEl.textContent = "";
   }
-  if (!$("drawer").classList.contains("open") && !$("heroDrawer").classList.contains("open") && !$("supplierDrawer").classList.contains("open")) {
+  if (
+    !$("drawer").classList.contains("open") &&
+    !$("heroDrawer").classList.contains("open") &&
+    !$("supplierDrawer").classList.contains("open") &&
+    !$("packagingDrawer")?.classList.contains("open")
+  ) {
     $("overlay").classList.remove("open");
     document.body.style.overflow = "";
   }
@@ -1739,6 +1812,7 @@ function closeHeroDrawer() {
   if (
     !$("drawer").classList.contains("open") &&
     !$("supplierDrawer").classList.contains("open") &&
+    !$("packagingDrawer")?.classList.contains("open") &&
     !$("orderDrawer").classList.contains("open")
   ) {
     $("overlay").classList.remove("open");
@@ -1883,7 +1957,8 @@ function closeSupplierDrawer() {
   if (
     !$("drawer").classList.contains("open") &&
     !$("heroDrawer").classList.contains("open") &&
-    !$("orderDrawer").classList.contains("open")
+    !$("orderDrawer").classList.contains("open") &&
+    !$("packagingDrawer")?.classList.contains("open")
   ) {
     $("overlay").classList.remove("open");
     document.body.style.overflow = "";
@@ -2243,6 +2318,247 @@ function renderSuppliers() {
           .join("");
 }
 
+async function packagingApi(path, opts = {}) {
+  const res = await fetch(PACKAGING_API + path, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+async function loadPackaging() {
+  try {
+    const data = await packagingApi("");
+    packagingMaterials = data.materials || [];
+    packagingTableReady = true;
+  } catch {
+    packagingMaterials = [];
+    packagingTableReady = false;
+  }
+}
+
+function packagingStockBadge(m) {
+  if (!m.active) return '<span class="badge badge-out">Inactive</span>';
+  if (m.outOfStock) return '<span class="badge badge-out">Out</span>';
+  if (m.lowStock) return '<span class="badge badge-low">Low</span>';
+  return '<span class="badge badge-in">In stock</span>';
+}
+
+function getFilteredPackaging() {
+  const q = ($("searchPackaging")?.value ?? "").toLowerCase();
+  const type = $("filterPackagingType")?.value ?? "";
+  const stock = $("filterPackagingStock")?.value ?? "";
+  return packagingMaterials.filter((m) => {
+    if (type && m.type !== type) return false;
+    if (stock === "low" && !m.lowStock) return false;
+    if (stock === "out" && !m.outOfStock) return false;
+    if (stock === "inactive" && m.active !== false) return false;
+    if (
+      q &&
+      !`${m.name} ${m.sku} ${m.notes} ${m.type} ${PACKAGING_TYPE_LABELS[m.type] || ""}`
+        .toLowerCase()
+        .includes(q)
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function renderPackagingStats() {
+  const el = $("packagingStats");
+  if (!el) return;
+  const active = packagingMaterials.filter((m) => m.active !== false).length;
+  const low = packagingMaterials.filter((m) => m.lowStock).length;
+  const out = packagingMaterials.filter((m) => m.outOfStock).length;
+  const value = packagingMaterials.reduce(
+    (sum, m) => sum + Number(m.stockQuantity || 0) * Number(m.unitCost || 0),
+    0
+  );
+  el.innerHTML = [
+    renderKpiCard({ icon: "🥡", iconClass: "teal", label: "Materials", value: packagingMaterials.length, sub: `${active} active` }),
+    renderKpiCard({ icon: "⚠️", iconClass: "amber", label: "Low stock", value: low, sub: "At or below reorder" }),
+    renderKpiCard({ icon: "📭", iconClass: "purple", label: "Out of stock", value: out, sub: "Need restock" }),
+    renderKpiCard({ icon: "💰", iconClass: "green", label: "Stock value", value: formatMoney(value), sub: "Qty × unit cost" }),
+  ].join("");
+}
+
+function renderPackagingTabs() {
+  const el = $("packagingTabs");
+  if (!el) return;
+  const counts = { "": packagingMaterials.length };
+  Object.keys(PACKAGING_TYPE_LABELS).forEach((t) => {
+    counts[t] = packagingMaterials.filter((m) => m.type === t).length;
+  });
+  const tabs = [{ id: "", label: "All" }, ...Object.entries(PACKAGING_TYPE_LABELS).map(([id, label]) => ({ id, label }))];
+  const current = $("filterPackagingType")?.value ?? "";
+  el.innerHTML = tabs
+    .map(
+      (t) => `
+    <button type="button" class="filter-tab${current === t.id ? " active" : ""}" data-pkg-type="${t.id}">
+      ${t.label} <span class="tab-count">${counts[t.id] ?? 0}</span>
+    </button>`
+    )
+    .join("");
+  el.querySelectorAll("[data-pkg-type]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if ($("filterPackagingType")) $("filterPackagingType").value = btn.dataset.pkgType;
+      renderPackaging();
+    });
+  });
+}
+
+function renderPackagingCardGrid() {
+  const grid = $("packagingCardGrid");
+  if (!grid) return;
+  if (!packagingTableReady) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">Run <code>server/supabase/packaging.sql</code> in Supabase, then <code>cd server && npm run seed:packaging</code>.</div>`;
+    return;
+  }
+  const list = getFilteredPackaging().slice(0, 8);
+  grid.innerHTML =
+    list.length === 0
+      ? `<div class="empty" style="grid-column:1/-1">No packaging materials match your filters</div>`
+      : list
+          .map((m) => {
+            const typeLabel = PACKAGING_TYPE_LABELS[m.type] || m.type;
+            return `
+    <article class="resource-card">
+      <div class="resource-card-head">
+        <div class="resource-card-icon">🥡</div>
+        <div>
+          <h3>${escapeHtml(m.name)}</h3>
+          <span class="resource-tag">${escapeHtml(typeLabel)}</span>
+        </div>
+      </div>
+      <p class="resource-desc">${escapeHtml(m.notes || m.sku || "No notes")}</p>
+      <div class="resource-card-meta">
+        <span>📦 ${m.stockQuantity} ${escapeHtml(m.unit || "each")}</span>
+        <span>🔁 Reorder @ ${m.reorderLevel}</span>
+        <span>💵 ${formatMoney(m.unitCost)}</span>
+      </div>
+      <div class="resource-card-foot">
+        ${packagingStockBadge(m)}
+        <button type="button" class="open-link" onclick="editPackaging('${m.id}')">Manage →</button>
+      </div>
+    </article>`;
+          })
+          .join("");
+}
+
+function renderPackaging() {
+  renderPackagingStats();
+  renderPackagingTabs();
+  renderPackagingCardGrid();
+  const list = getFilteredPackaging();
+  const tbody = $("packagingTable");
+  if (!tbody) return;
+  if (!packagingTableReady) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty">Run <code>server/supabase/packaging.sql</code> in Supabase SQL Editor, then <code>npm run seed:packaging</code>.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML =
+    list.length === 0
+      ? `<tr><td colspan="8"><div class="empty">No packaging materials match your filters</div></td></tr>`
+      : list
+          .map((m) => {
+            const typeLabel = PACKAGING_TYPE_LABELS[m.type] || m.type;
+            return `
+    <tr>
+      <td><strong>${escapeHtml(m.name)}</strong>${m.notes ? `<br><small style="color:var(--muted)">${escapeHtml(m.notes)}</small>` : ""}</td>
+      <td>${escapeHtml(typeLabel)}</td>
+      <td><code>${escapeHtml(m.sku || "—")}</code></td>
+      <td><strong>${m.stockQuantity}</strong> ${escapeHtml(m.unit || "")}</td>
+      <td>${m.reorderLevel}</td>
+      <td>${formatMoney(m.unitCost)}</td>
+      <td>${packagingStockBadge(m)}</td>
+      <td><div class="row-actions">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="adjustPackagingStock('${m.id}', 10)">+10</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="adjustPackagingStock('${m.id}', -1)">−1</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="editPackaging('${m.id}')">Edit</button>
+      </div></td>
+    </tr>`;
+          })
+          .join("");
+}
+
+function openPackagingDrawer(mode = "add") {
+  $("overlay").classList.add("open");
+  $("packagingDrawer").classList.add("open");
+  document.body.style.overflow = "hidden";
+  if (mode === "add") resetPackagingForm();
+}
+
+function closePackagingDrawer() {
+  $("packagingDrawer")?.classList.remove("open");
+  if (
+    !$("drawer").classList.contains("open") &&
+    !$("heroDrawer").classList.contains("open") &&
+    !$("orderDrawer").classList.contains("open") &&
+    !$("supplierDrawer").classList.contains("open")
+  ) {
+    $("overlay").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+}
+
+function resetPackagingForm() {
+  editingPackagingId = null;
+  $("packagingForm")?.reset();
+  $("packagingDrawerTitle").textContent = "Add packaging";
+  $("packagingDrawerSubtitle").textContent = "Bags, crates, coolers & labels for fulfilment";
+  $("packagingId").value = "";
+  $("packagingType").value = "cooler_bag";
+  $("packagingStock").value = 0;
+  $("packagingReorder").value = 10;
+  $("packagingUnitCost").value = 0;
+  $("packagingUnit").value = "each";
+  $("packagingActive").checked = true;
+  $("deletePackagingBtn").style.display = "none";
+  $("packagingSubmitBtn").textContent = "Save material";
+}
+
+window.editPackaging = (id) => {
+  const m = packagingMaterials.find((x) => x.id === id);
+  if (!m) return;
+  editingPackagingId = id;
+  $("packagingDrawerTitle").textContent = "Edit packaging";
+  $("packagingDrawerSubtitle").textContent = `${m.name} · ${m.stockQuantity} in stock`;
+  $("packagingId").value = id;
+  $("packagingName").value = m.name;
+  $("packagingType").value = m.type || "other";
+  $("packagingSku").value = m.sku || "";
+  $("packagingStock").value = m.stockQuantity;
+  $("packagingReorder").value = m.reorderLevel;
+  $("packagingUnitCost").value = m.unitCost;
+  $("packagingUnit").value = m.unit || "each";
+  $("packagingNotes").value = m.notes || "";
+  $("packagingActive").checked = m.active !== false;
+  $("deletePackagingBtn").style.display = "inline-flex";
+  $("packagingSubmitBtn").textContent = "Save changes";
+  openPackagingDrawer("edit");
+};
+
+window.adjustPackagingStock = async (id, delta) => {
+  setLoading(true);
+  try {
+    await packagingApi(`/${encodeURIComponent(id)}/stock`, {
+      method: "PATCH",
+      body: JSON.stringify({ delta: Number(delta) }),
+    });
+    toast(delta > 0 ? "Stock increased" : "Stock decreased");
+    await loadPackaging();
+    renderPackaging();
+    updateNavBadges();
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    setLoading(false);
+  }
+};
+
 function renderCustomers() {
   const q = ($("searchCustomers")?.value ?? "").toLowerCase();
   const list = getCustomers().filter(
@@ -2288,6 +2604,7 @@ function renderSettings() {
       { ok: heroSlides.length > 0, label: "Hero slides", hint: "server/supabase/hero-slides.sql + npm run seed:hero" },
       { ok: orders.length >= 0, label: "Orders table", hint: "server/supabase/orders.sql" },
       { ok: suppliersTableReady, label: "Suppliers table", hint: "server/supabase/suppliers.sql" },
+      { ok: packagingTableReady, label: "Packaging table", hint: "server/supabase/packaging.sql + npm run seed:packaging" },
     ];
     setup.innerHTML = checks
       .map(
@@ -2334,6 +2651,7 @@ function renderAll() {
   renderCategories();
   renderHeroSlides();
   renderSuppliers();
+  renderPackaging();
   renderOrdersTable();
   renderCustomers();
   renderSettings();
@@ -2358,6 +2676,7 @@ function switchView(name) {
   closeDrawer();
   closeHeroDrawer();
   closeSupplierDrawer();
+  closePackagingDrawer();
   closeOrderDrawer();
   document.querySelectorAll(".nav-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.view === name);
@@ -2377,10 +2696,13 @@ function switchView(name) {
         ? addHeroBtnHtml
         : name === "suppliers"
           ? addSupplierBtnHtml
-          : addProductBtnDefaultHtml;
+          : name === "packaging"
+            ? addPackagingBtnHtml
+            : addProductBtnDefaultHtml;
   }
   $("exportCsvBtn").style.display = name === "products" ? "" : "none";
   if (name === "orders") loadOrders();
+  if (name === "packaging") loadPackaging().then(() => renderPackaging());
   if (name === "sidebar") return;
   document.getElementById("sidebar")?.classList.remove("open");
   document.getElementById("sidebarBackdrop")?.classList.remove("show");
@@ -2398,6 +2720,7 @@ function closeDrawer() {
   if (
     !$("heroDrawer").classList.contains("open") &&
     !$("supplierDrawer").classList.contains("open") &&
+    !$("packagingDrawer")?.classList.contains("open") &&
     !$("orderDrawer").classList.contains("open")
   ) {
     $("overlay").classList.remove("open");
@@ -2610,6 +2933,9 @@ $("sidebarNewBtn")?.addEventListener("click", () => {
   if (currentView === "suppliers") {
     resetSupplierForm();
     openSupplierDrawer("add");
+  } else if (currentView === "packaging") {
+    resetPackagingForm();
+    openPackagingDrawer("add");
   } else if (currentView === "hero") {
     resetHeroForm();
     openHeroDrawer("add");
@@ -2632,6 +2958,10 @@ $("globalSearch")?.addEventListener("keydown", (e) => {
       switchView("suppliers");
       $("searchSuppliers").value = q;
       renderSuppliers();
+    } else if (q.includes("packag") || q.includes("cooler") || q.includes("crate")) {
+      switchView("packaging");
+      $("searchPackaging").value = q;
+      renderPackaging();
     } else {
       switchView("products");
       $("searchProducts").value = q;
@@ -2654,6 +2984,9 @@ $("addProductBtn").addEventListener("click", () => {
   } else if (currentView === "suppliers") {
     resetSupplierForm();
     openSupplierDrawer("add");
+  } else if (currentView === "packaging") {
+    resetPackagingForm();
+    openPackagingDrawer("add");
   } else {
     resetForm();
     openDrawer("add");
@@ -2662,10 +2995,12 @@ $("addProductBtn").addEventListener("click", () => {
 $("closeDrawer").addEventListener("click", closeDrawer);
 $("closeHeroDrawer").addEventListener("click", closeHeroDrawer);
 $("closeSupplierDrawer")?.addEventListener("click", closeSupplierDrawer);
+$("closePackagingDrawer")?.addEventListener("click", closePackagingDrawer);
 $("overlay").addEventListener("click", () => {
   closeDrawer();
   closeHeroDrawer();
   closeSupplierDrawer();
+  closePackagingDrawer();
   closeOrderDrawer();
 });
 $("closeOrderDrawer").addEventListener("click", closeOrderDrawer);
@@ -2688,7 +3023,11 @@ async function saveOrderStatus() {
   try {
     const data = await ordersApi(`/${encodeURIComponent(editingOrderId)}`, {
       method: "PATCH",
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({
+        status,
+        packagingMaterialId: $("orderPackagingMaterial")?.value || null,
+        packagingNotes: $("orderPackagingNotes")?.value ?? "",
+      }),
     });
     if (!data.order) throw new Error("No order returned from server");
 
@@ -2702,6 +3041,11 @@ async function saveOrderStatus() {
       toast(msg, true);
     } else if (status === "confirmed" && data.emailSent) {
       toast("Order confirmed — customer notified by email");
+    } else if (status === "packed") {
+      toast("Order packed — packaging stock updated if a material was selected");
+      await loadPackaging().catch(() => {});
+      renderPackaging();
+      updateNavBadges();
     } else if (status === "out_for_delivery" && data.emailSent) {
       toast("Order dispatched — customer notified by email");
     } else if (status === "delivered" && data.emailSent) {
@@ -2734,6 +3078,7 @@ $("refreshBtn").addEventListener("click", async () => {
   try {
     await loadHeroSlides().catch(() => {});
     await loadSuppliers().catch(() => {});
+    await loadPackaging().catch(() => {});
     await loadOrders().catch(() => {});
     await loadProducts(false);
   } finally {
@@ -2756,6 +3101,9 @@ $("ordersPageSize")?.addEventListener("change", () => {
 $("searchCustomers")?.addEventListener("input", renderCustomers);
 $("searchSuppliers")?.addEventListener("input", renderSuppliers);
 $("filterSupplierStatus")?.addEventListener("change", renderSuppliers);
+$("searchPackaging")?.addEventListener("input", renderPackaging);
+$("filterPackagingType")?.addEventListener("change", renderPackaging);
+$("filterPackagingStock")?.addEventListener("change", renderPackaging);
 $("showInactiveHero")?.addEventListener("change", (e) => {
   showInactiveHero = e.target.checked;
   renderHeroSlides();
@@ -3008,6 +3356,69 @@ $("supplierForm")?.addEventListener("submit", async (e) => {
   }
 });
 
+$("resetPackagingFormBtn")?.addEventListener("click", resetPackagingForm);
+$("deletePackagingBtn")?.addEventListener("click", () => {
+  if (!editingPackagingId) return;
+  const m = packagingMaterials.find((x) => x.id === editingPackagingId);
+  confirmDialog(
+    "Delete packaging",
+    `Delete "${m?.name || editingPackagingId}"? This cannot be undone.`,
+    async () => {
+      closeConfirm();
+      setLoading(true);
+      try {
+        await packagingApi(`/${encodeURIComponent(editingPackagingId)}`, { method: "DELETE" });
+        toast("Packaging material deleted");
+        closePackagingDrawer();
+        resetPackagingForm();
+        await loadPackaging();
+        renderPackaging();
+        updateNavBadges();
+      } catch (e) {
+        toast(e.message, true);
+      } finally {
+        setLoading(false);
+      }
+    }
+  );
+});
+$("packagingForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const body = {
+    name: $("packagingName").value.trim(),
+    type: $("packagingType").value,
+    sku: $("packagingSku").value.trim(),
+    stockQuantity: Number($("packagingStock").value),
+    reorderLevel: Number($("packagingReorder").value),
+    unitCost: Number($("packagingUnitCost").value),
+    unit: $("packagingUnit").value.trim() || "each",
+    notes: $("packagingNotes").value.trim(),
+    active: $("packagingActive").checked,
+  };
+  setLoading(true);
+  try {
+    if (editingPackagingId) {
+      await packagingApi(`/${encodeURIComponent(editingPackagingId)}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+      toast("Packaging material updated");
+    } else {
+      await packagingApi("", { method: "POST", body: JSON.stringify(body) });
+      toast("Packaging material created");
+    }
+    closePackagingDrawer();
+    resetPackagingForm();
+    await loadPackaging();
+    renderPackaging();
+    updateNavBadges();
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    setLoading(false);
+  }
+});
+
 $("heroImage").addEventListener("input", updateHeroPreview);
 $("uploadHeroImageBtn").addEventListener("click", async () => {
   const file = $("heroImageFile").files?.[0];
@@ -3065,6 +3476,7 @@ document.addEventListener("keydown", (e) => {
     closeDrawer();
     closeHeroDrawer();
     closeSupplierDrawer();
+    closePackagingDrawer();
     closeOrderDrawer();
     closeConfirm();
   }
@@ -3097,6 +3509,12 @@ document.addEventListener("keydown", (e) => {
       showError(
         (document.getElementById("errorBanner").textContent || "") +
           " Suppliers need server/supabase/suppliers.sql in Supabase SQL Editor."
+      );
+    });
+    await loadPackaging().catch(() => {
+      showError(
+        (document.getElementById("errorBanner").textContent || "") +
+          " Packaging needs server/supabase/packaging.sql in Supabase SQL Editor."
       );
     });
     await loadProducts(false);

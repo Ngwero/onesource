@@ -20,7 +20,7 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div className="sm:col-span-2 md:col-span-1">
             <div className="mb-4">
-              <BrandLogo variant="primary" className="h-11 sm:h-12 max-w-[200px]" />
+              <BrandLogo variant="horizontal" className="h-10 sm:h-11 max-w-[220px]" />
             </div>
             <p className="text-sm text-text-muted leading-relaxed max-w-md">{t("footer.tagline")}</p>
           </div>

@@ -202,6 +202,7 @@
     "runSqlHint": "Ikiwa maagizo hayahifadhiwi, endesha server/supabase/orders.sql katika Supabase.",
     "statusPlaced": "Imewekwa",
     "statusConfirmed": "Imethibitishwa",
+    "statusPacked": "Imepakwa",
     "statusOutForDelivery": "Inawasilishwa",
     "statusDelivered": "Imewasilishwa",
     "statusCancelled": "Imefutwa",
@@ -219,6 +220,10 @@
         "confirmed": {
           "title": "Imethibitishwa",
           "desc": "Mazao yako mapya yanaandaliwa katika One Source."
+        },
+        "packed": {
+          "title": "Imepakwa",
+          "desc": "Agizo lako limepakwa na liko tayari kutumwa."
         },
         "out_for_delivery": {
           "title": "Inawasilishwa",

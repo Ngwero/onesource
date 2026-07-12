@@ -13,6 +13,7 @@ const router = Router();
 const ORDER_STATUSES = [
   "placed",
   "confirmed",
+  "packed",
   "out_for_delivery",
   "delivered",
   "cancelled",
@@ -30,6 +31,9 @@ const ORDER_SELECT = `
   city,
   district,
   notes,
+  packaging_material_id,
+  packaging_notes,
+  packed_at,
   subtotal,
   delivery_fee,
   total,
@@ -205,7 +209,7 @@ router.get("/", async (req, res) => {
 
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body ?? {};
+  const { status, packagingMaterialId, packagingNotes } = req.body ?? {};
 
   if (!status || !ORDER_STATUSES.includes(status)) {
     return res.status(400).json({
@@ -225,16 +229,44 @@ router.patch("/:id", async (req, res) => {
     if (!existing) return res.status(404).json({ error: "Order not found" });
 
     const previousStatus = existing.status;
+    const patch = {
+      status,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (packagingMaterialId !== undefined) {
+      patch.packaging_material_id = packagingMaterialId || null;
+    }
+    if (packagingNotes !== undefined) {
+      patch.packaging_notes = String(packagingNotes || "").trim() || null;
+    }
+    if (status === "packed" && previousStatus !== "packed") {
+      patch.packed_at = new Date().toISOString();
+    }
 
     const { data: order, error } = await db
       .from("orders")
-      .update({ status, updated_at: new Date().toISOString() })
+      .update(patch)
       .eq("id", id)
       .select(ORDER_SELECT)
       .single();
 
     if (error) throw error;
     if (!order) return res.status(404).json({ error: "Order not found" });
+
+    // Deduct one packaging unit when first marked packed
+    if (
+      status === "packed" &&
+      previousStatus !== "packed" &&
+      order.packaging_material_id
+    ) {
+      try {
+        const { adjustPackagingStock } = await import("../lib/packagingService.js");
+        await adjustPackagingStock(db, order.packaging_material_id, -1);
+      } catch (stockErr) {
+        console.warn("[orders] packaging stock adjust skipped:", stockErr.message);
+      }
+    }
 
     let emailSent = null;
     if (previousStatus !== status) {

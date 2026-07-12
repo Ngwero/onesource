@@ -26,13 +26,13 @@ export function BrandLogo({
 }: Props) {
   const { t } = useTranslation();
   const logoAlt = alt ?? t("common.brand");
-  if (responsive && variant === "primary") {
+  if (responsive && (variant === "primary" || variant === "horizontal")) {
     return (
       <img
-        src={BRAND_LOGOS.primary}
+        src={BRAND_LOGOS.horizontal}
         alt={logoAlt}
-        className={`h-8 sm:h-9 md:h-11 lg:h-12 w-auto max-w-[min(200px,52vw)] sm:max-w-[220px] object-contain object-left flex-shrink-0 ${className}`}
-        width={220}
+        className={`h-8 sm:h-9 md:h-11 lg:h-12 w-auto max-w-[min(220px,52vw)] sm:max-w-[240px] object-contain object-left flex-shrink-0 ${className}`}
+        width={240}
         height={48}
       />
     );
