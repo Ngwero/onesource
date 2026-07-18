@@ -67,8 +67,100 @@
     "allProducts": "Tous les produits",
     "britishGrown": "Production locale",
     "seasonalDeals": "Offres saisonnières",
+    "exports": "Exportations",
     "categoriesLabel": "Catégories",
     "mobileLabel": "Navigation mobile"
+  },
+  "exports": {
+    "hero": {
+      "kicker": "Exportations mondiales",
+      "title": "Les produits les plus frais d'Ouganda, livrés au monde entier",
+      "subtitle": "Des petites exploitations aux marchés internationaux en moins de 48 heures. Entièrement certifié, chaîne du froid garantie et fret aérien depuis Entebbe.",
+      "browseCta": "Voir les produits d'export",
+      "contactCta": "Contacter notre équipe export"
+    },
+    "stats": {
+      "markets": "Marchés d'exportation desservis",
+      "volume": "Expédiés chaque année",
+      "coldChain": "Suivi de la chaîne du froid",
+      "farms": "Fermes partenaires"
+    },
+    "search": {
+      "label": "Rechercher par",
+      "keywordPlaceholder": "Mot-clé produit, ex. scotch bonnet",
+      "allCommodities": "Toutes les marchandises"
+    },
+    "quickLinks": {
+      "howItWorks": "Comment ça marche"
+    },
+    "gateway": {
+      "exportTitle": "Marchandises à l'export",
+      "buyerTitle": "Services aux acheteurs",
+      "docs": "Certificats et documentation",
+      "logistics": "Chaîne du froid et fret"
+    },
+    "certifications": "Certifié pour l'export :",
+    "process": {
+      "title": "De la ferme à la porte d'embarquement",
+      "subtitle": "Chaque envoi suit le même parcours en quatre étapes, pour une qualité sans rupture."
+    },
+    "steps": {
+      "source": {
+        "title": "Récolté à la ferme",
+        "desc": "Nous récoltons à la commande auprès de fermes partenaires agréées à travers l'Ouganda, à parfaite maturité."
+      },
+      "quality": {
+        "title": "Trié et inspecté",
+        "desc": "Chaque lot est calibré, contrôlé en laboratoire et certifié phytosanitaire avant l'emballage."
+      },
+      "coldChain": {
+        "title": "Emballé sous froid",
+        "desc": "Les produits sont pré-refroidis et emballés dans des installations à température contrôlée, suivis de bout en bout."
+      },
+      "freight": {
+        "title": "Fret aérien express",
+        "desc": "Des départs quotidiens d'Entebbe livrent votre commande à Londres, Dubaï ou Bruxelles en 48 heures."
+      }
+    },
+    "products": {
+      "title": "Sélection qualité export",
+      "subtitle": "Produits premium cultivés et emballés selon les normes internationales.",
+      "drinks": "Boissons",
+      "more": "Autres produits d'export",
+      "empty": "Les produits d'export sont en cours de réapprovisionnement — revenez bientôt."
+    },
+    "destinations": {
+      "title": "Nos destinations",
+      "subtitle": "Des lignes de fret établies avec une capacité hebdomadaire fiable."
+    },
+    "cta": {
+      "title": "Prêt à importer à la source ?",
+      "body": "Qu'il s'agisse d'une palette ponctuelle ou d'un programme hebdomadaire, notre bureau export gère le calibrage, la documentation et le fret pour vous.",
+      "button": "Demander un devis export"
+    },
+    "confirmation": {
+      "badge": "Commande export",
+      "title": "Confirmez votre commande export",
+      "subtitle": "Vérifiez les produits et indiquez votre destination. Notre bureau export confirmera la disponibilité, le fret et le coût final.",
+      "buyerDetails": "Coordonnées de l'acheteur",
+      "company": "Nom de l'entreprise",
+      "destination": "Destination d'export",
+      "country": "Pays de destination",
+      "deliveryAddress": "Adresse de livraison, marché ou aéroport",
+      "requirements": "Exigences d'emballage, de certification ou de fret",
+      "orderSummary": "Récapitulatif de la commande export",
+      "estimatedTotal": "Estimation des produits",
+      "freightNotice": "Le fret, la documentation et les frais de destination sont confirmés séparément par notre bureau export.",
+      "confirm": "Confirmer la commande export",
+      "submitting": "Confirmation en cours…",
+      "submitFailed": "Impossible de confirmer la commande export. Réessayez.",
+      "addMore": "Ajouter d'autres produits d'export",
+      "emptyTitle": "Votre commande export est vide",
+      "emptyText": "Choisissez des produits d'export avant de confirmer votre commande.",
+      "browse": "Voir les produits d'export",
+      "confirmedTitle": "Commande export reçue",
+      "confirmedSubtitle": "Notre bureau export examinera la disponibilité, la documentation et le fret, puis vous contactera pour confirmation finale."
+    }
   },
   "auth": {
     "signIn": "Se connecter",

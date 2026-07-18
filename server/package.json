@@ -19,7 +19,10 @@
     "seed:audit-keywords": "node scripts/seed-fill-keywords.js -- --audit",
     "seed:chillies": "node scripts/seed-chillies.js",
     "seed:green-chillies": "node scripts/seed-green-chillies.js",
+    "seed:broad-beans": "node scripts/seed-broad-beans.js",
+    "seed:matooke": "node scripts/seed-matooke.js",
     "seed:scotch-bonnet": "node scripts/seed-scotch-bonnet.js",
+    "seed:drinks": "node scripts/seed-drinks.js",
     "seed:habanero": "node scripts/seed-habanero.js",
     "seed:peri-peri": "node scripts/seed-peri-peri.js",
     "seed:yams": "node scripts/seed-yams.js",
@@ -49,6 +52,7 @@
     "seed:malakwang": "node scripts/seed-malakwang.js",
     "seed:suppliers": "node scripts/seed-suppliers.js",
     "seed:packaging": "node scripts/seed-packaging.js",
+    "repair:images": "node scripts/repair-broken-images.js",
     "i18n:build": "npm run i18n:build --prefix .."
   },
   "dependencies": {

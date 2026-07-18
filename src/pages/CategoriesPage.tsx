@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { useProducts } from "../context/ProductsContext";
@@ -7,15 +7,25 @@ import { AGRI_CATEGORIES, getCategoryDisplayName } from "../data/categories";
 import { CategoriesAisleCarousel } from "../components/categories/CategoriesAisleCarousel";
 import { useCart } from "../context/CartContext";
 import { useCategoryName } from "../i18n/useLocalizedProduct";
+import { isExportOnlyCart } from "../utils/exportOrder";
 
 const FEATURED_AISLE = "featured";
 const PRODUCTS_PER_ROW = 14;
 
 export function CategoriesPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { categories, getProductsByCategory } = useProducts();
-  const { itemCount, openBasket } = useCart();
+  const { itemCount, openBasket, items } = useCart();
+
+  const openCartOrExport = () => {
+    if (isExportOnlyCart(items)) {
+      navigate("/exports/confirmation");
+      return;
+    }
+    openBasket();
+  };
 
   const list = categories.length
     ? categories
@@ -194,7 +204,7 @@ export function CategoriesPage() {
           <button
             type="button"
             className="categories-fresh-mobile-cart-btn"
-            onClick={() => openBasket()}
+            onClick={() => openCartOrExport()}
           >
             {t("categories.fresh.goToBasket")}
           </button>

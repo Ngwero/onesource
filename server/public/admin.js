@@ -793,6 +793,13 @@ function orderStatusBadge(status) {
   return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
 }
 
+function orderTypeBadge(order) {
+  const isExport = order.order_type === "export";
+  return `<span class="badge ${isExport ? "badge-confirmed" : "badge-delivery"}">${
+    isExport ? "✈ Export" : "Shop"
+  }</span>`;
+}
+
 function formatDateTime(iso) {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("en-GB", {
@@ -982,6 +989,7 @@ function productRow(p, opts = {}) {
           <button type="button" class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">Edit</button>
           ${!compact ? `<a href="${shopLink}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">View</a>` : ""}
           ${opts.inventory ? "" : `<button type="button" class="btn btn-ghost btn-sm" onclick="duplicateProduct('${p.id}')">Duplicate</button>`}
+          ${opts.inventory ? "" : `<button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">Delete</button>`}
         </div>
       </td>
     </tr>`;
@@ -1034,8 +1042,10 @@ function renderOrderStatsHtml() {
 function getFilteredOrders() {
   const q = ($("searchOrders")?.value ?? "").toLowerCase();
   const status = $("filterOrderStatus")?.value ?? "";
+  const type = $("filterOrderType")?.value ?? "";
   return orders.filter((o) => {
     if (status && o.status !== status) return false;
+    if (type && (o.order_type || "retail") !== type) return false;
     if (
       q &&
       !`${o.full_name} ${o.email} ${o.id} ${o.city} ${o.phone || ""} ${o.district || ""}`
@@ -1063,7 +1073,7 @@ function renderOrdersTable() {
   ordersPage = page;
   $("ordersTable").innerHTML =
     items.length === 0
-      ? `<tr><td colspan="8" class="empty">${
+      ? `<tr><td colspan="9" class="empty">${
           orders.length === 0
             ? "No orders yet — they appear here when customers checkout on the shop."
             : "No orders match your filters."
@@ -1077,6 +1087,7 @@ function renderOrdersTable() {
             return `
           <tr>
             <td><strong>#${escapeHtml(shortOrderId(o.id))}</strong><br><small style="color:var(--muted)">${escapeHtml(o.id)}</small></td>
+            <td>${orderTypeBadge(o)}</td>
             <td>${escapeHtml(o.full_name)}<br><small>${escapeHtml(o.email)}</small></td>
             <td>${escapeHtml(o.city)}${o.district ? `<br><small>${escapeHtml(o.district)}</small>` : ""}</td>
             <td>${itemCount} ${itemCount === 1 ? "item" : "items"}</td>
@@ -1248,16 +1259,22 @@ function packagingMaterialOptionsHtml(selectedId = "") {
 
 function renderOrderDrawer(order) {
   const items = order.order_items || [];
-  $("orderDrawerTitle").textContent = `Order #${shortOrderId(order.id)}`;
-  $("orderDrawerSubtitle").textContent = formatDateTime(order.created_at);
+  const isExport = order.order_type === "export";
+  $("orderDrawerTitle").textContent = `${
+    isExport ? "Export order" : "Order"
+  } #${shortOrderId(order.id)}`;
+  $("orderDrawerSubtitle").textContent = `${
+    isExport ? "✈ International export · " : ""
+  }${formatDateTime(order.created_at)}`;
   $("orderDrawerBody").innerHTML = `
     <div class="form-section">
       <h3>Customer</h3>
       <dl class="order-detail-grid">
+        <div><dt>Order type</dt><dd>${orderTypeBadge(order)}</dd></div>
         <div><dt>Name</dt><dd>${escapeHtml(order.full_name)}</dd></div>
         <div><dt>Email</dt><dd>${escapeHtml(order.email)}</dd></div>
         <div><dt>Phone</dt><dd>${escapeHtml(order.phone || "—")}</dd></div>
-        <div class="full"><dt>Delivery address</dt><dd>
+        <div class="full"><dt>${isExport ? "Export destination" : "Delivery address"}</dt><dd>
           ${escapeHtml(order.address_line1)}${order.address_line2 ? "<br>" + escapeHtml(order.address_line2) : ""}<br>
           ${escapeHtml(order.city)}${order.district ? ", " + escapeHtml(order.district) : ""}
         </dd></div>
@@ -1752,6 +1769,7 @@ window.clearCategoryBanner = async (id) => {
 };
 
 function heroSlideCardHtml(s) {
+  const placement = s.id.startsWith("export-") ? "Exports" : "Homepage";
   return `
         <article class="banner-card">
           <div class="banner-card-preview">
@@ -1759,7 +1777,7 @@ function heroSlideCardHtml(s) {
           </div>
           <div class="banner-card-body">
             <h3>${escapeHtml(s.title)}</h3>
-            <p class="meta">Order ${s.sortOrder ?? 0} · <code>${escapeHtml(s.id)}</code>${s.active === false ? " · <span class=badge badge-out>Inactive</span>" : ""}</p>
+            <p class="meta"><span class="badge badge-prime">${placement}</span> · Order ${s.sortOrder ?? 0} · <code>${escapeHtml(s.id)}</code>${s.active === false ? " · <span class=badge badge-out>Inactive</span>" : ""}</p>
             <p style="font-size:0.8rem;color:var(--muted);margin:0.35rem 0 0">${escapeHtml(s.badge || "")}</p>
             <p style="font-size:0.8rem;margin:0.25rem 0 0.75rem;line-height:1.4">${escapeHtml((s.subtitle || "").slice(0, 80))}${(s.subtitle || "").length > 80 ? "…" : ""}</p>
             <div class="banner-card-actions">
@@ -1774,7 +1792,10 @@ function renderHeroSlides() {
   const sorted = [...heroSlides].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   const active = sorted.filter((s) => s.active !== false);
   const inactive = sorted.filter((s) => s.active === false);
-  $("heroSlideGrid").innerHTML = active.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active slides</div>';
+  const homeActive = active.filter((s) => !s.id.startsWith("export-"));
+  const exportActive = active.filter((s) => s.id.startsWith("export-"));
+  $("heroSlideGrid").innerHTML = homeActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active homepage slides</div>';
+  $("exportHeroSlideGrid").innerHTML = exportActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active export slides</div>';
   const inSec = $("heroInactiveSection");
   const inGrid = $("heroInactiveGrid");
   if (showInactiveHero && inactive.length) {
@@ -1827,7 +1848,9 @@ function resetHeroForm() {
   $("heroDrawerSubtitle").textContent = "Shown on the homepage carousel";
   $("heroEditId").value = "";
   $("heroId").disabled = false;
-  $("heroSortOrder").value = heroSlides.filter((s) => s.active !== false).length;
+  $("heroPlacement").disabled = false;
+  $("heroPlacement").value = "home";
+  $("heroSortOrder").value = heroSlides.filter((s) => s.active !== false && !s.id.startsWith("export-")).length;
   $("heroActive").checked = true;
   $("heroCta").value = "Shop now";
   $("heroCtaHref").value = "/categories";
@@ -1854,6 +1877,8 @@ window.editHeroSlide = (id) => {
   $("heroDrawerTitle").textContent = "Edit hero slide";
   $("heroDrawerSubtitle").textContent = `Slide ${id}`;
   $("heroEditId").value = id;
+  $("heroPlacement").value = id.startsWith("export-") ? "exports" : "home";
+  $("heroPlacement").disabled = true;
   $("heroId").value = id;
   $("heroId").disabled = true;
   $("heroSortOrder").value = s.sortOrder ?? 0;
@@ -1874,9 +1899,10 @@ window.editHeroSlide = (id) => {
 
 window.deleteHeroSlide = (id) => {
   const s = heroSlides.find((x) => x.id === id);
+  const placement = id.startsWith("export-") ? "exports" : "homepage";
   confirmDialog(
     "Remove hero slide",
-    `Remove "${s?.title || id}" from the homepage carousel?`,
+    `Remove "${s?.title || id}" from the ${placement} carousel?`,
     async () => {
       closeConfirm();
       setLoading(true);
@@ -2760,6 +2786,47 @@ window.adjustStock = async (id, delta) => {
   await quickStock(id, next);
 };
 
+function confirmProductDeletion(ids, { closeEditor = false } = {}) {
+  const validIds = [...new Set(ids)].filter((id) => products.some((p) => p.id === id));
+  if (!validIds.length) return;
+  const count = validIds.length;
+  const first = products.find((p) => p.id === validIds[0]);
+  const title = count === 1 ? "Delete product" : `Delete ${count} products`;
+  const message =
+    count === 1
+      ? `Permanently remove “${first?.title || validIds[0]}” from the catalogue and shop?`
+      : `Permanently remove ${count} selected products from the catalogue and shop?`;
+
+  confirmDialog(title, message, async () => {
+    closeConfirm();
+    setLoading(true);
+    let deleted = 0;
+    try {
+      for (const id of validIds) {
+        await api(`/${encodeURIComponent(id)}`, { method: "DELETE" });
+        selectedProductIds.delete(id);
+        deleted++;
+      }
+      if (closeEditor) {
+        closeDrawer();
+        resetForm();
+      }
+      await loadProducts(false);
+      toast(deleted === 1 ? "Product deleted" : `${deleted} products deleted`);
+    } catch (e) {
+      await loadProducts(false);
+      const prefix = deleted ? `${deleted} deleted before an error. ` : "";
+      toast(prefix + e.message, true);
+    } finally {
+      setLoading(false);
+    }
+  });
+}
+
+window.deleteProduct = (id) => {
+  confirmProductDeletion([id]);
+};
+
 window.editProduct = (id) => {
   const p = products.find((x) => x.id === id);
   if (!p) return;
@@ -3094,6 +3161,10 @@ $("filterOrderStatus")?.addEventListener("change", () => {
   ordersPage = 1;
   renderOrdersTable();
 });
+$("filterOrderType")?.addEventListener("change", () => {
+  ordersPage = 1;
+  renderOrdersTable();
+});
 $("ordersPageSize")?.addEventListener("change", () => {
   ordersPage = 1;
   renderOrdersTable();
@@ -3141,6 +3212,9 @@ $("bulkSetStockBtn")?.addEventListener("click", async () => {
   } finally {
     setLoading(false);
   }
+});
+$("bulkDeleteBtn")?.addEventListener("click", () => {
+  confirmProductDeletion([...selectedProductIds]);
 });
 $("bulkClearBtn")?.addEventListener("click", () => {
   selectedProductIds.clear();
@@ -3219,22 +3293,7 @@ $("resetFormBtn").addEventListener("click", resetForm);
 
 $("deleteBtn").addEventListener("click", () => {
   if (!editingId) return;
-  confirmDialog(
-    "Delete product",
-    "This permanently removes the product from the catalogue and shop.",
-    async () => {
-      closeConfirm();
-      try {
-        await api(`/${editingId}`, { method: "DELETE" });
-        toast("Product deleted");
-        closeDrawer();
-        resetForm();
-        await loadProducts();
-      } catch (e) {
-        toast(e.message, true);
-      }
-    }
-  );
+  confirmProductDeletion([editingId], { closeEditor: true });
 });
 
 $("confirmCancel").addEventListener("click", closeConfirm);
@@ -3430,6 +3489,19 @@ $("uploadHeroImageBtn").addEventListener("click", async () => {
   $("heroImageFile").value = "";
 });
 $("resetHeroFormBtn").addEventListener("click", resetHeroForm);
+$("heroPlacement").addEventListener("change", () => {
+  const isExport = $("heroPlacement").value === "exports";
+  $("heroDrawerSubtitle").textContent = isExport
+    ? "Shown on the exports page carousel"
+    : "Shown on the homepage carousel";
+  $("heroSortOrder").value = heroSlides.filter(
+    (s) => s.active !== false && s.id.startsWith("export-") === isExport
+  ).length;
+  if (isExport) {
+    $("heroCta").value = "Browse export produce";
+    $("heroCtaHref").value = "/category/export-fresh-produce";
+  }
+});
 
 $("deleteHeroBtn").addEventListener("click", () => {
   if (!editingHeroId) return;
@@ -3438,8 +3510,13 @@ $("deleteHeroBtn").addEventListener("click", () => {
 
 $("heroForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+  const placement = $("heroPlacement").value;
+  let slideId = $("heroId").value.trim();
+  if (!editingHeroId && placement === "exports" && !slideId.startsWith("export-")) {
+    slideId = `export-${slideId || `hero-${Date.now()}`}`;
+  }
   const body = {
-    id: $("heroId").value.trim() || undefined,
+    id: slideId || undefined,
     sortOrder: Number($("heroSortOrder").value),
     image: $("heroImage").value.trim(),
     badge: $("heroBadge").value.trim(),

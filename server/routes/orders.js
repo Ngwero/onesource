@@ -9,6 +9,20 @@ import {
 } from "../lib/mail.js";
 
 const router = Router();
+const EXPORT_ORDER_MARKER = "[ORDER_TYPE:EXPORT]";
+
+function decorateOrder(order) {
+  if (!order) return order;
+  const notes = order.notes || "";
+  const isExport = notes.startsWith(EXPORT_ORDER_MARKER);
+  return {
+    ...order,
+    order_type: isExport ? "export" : "retail",
+    notes: isExport
+      ? notes.slice(EXPORT_ORDER_MARKER.length).replace(/^\s*\n?/, "") || null
+      : order.notes,
+  };
+}
 
 const ORDER_STATUSES = [
   "placed",
@@ -62,6 +76,7 @@ function validateOrderBody(body) {
     city,
     district,
     notes,
+    orderType,
     subtotal,
     deliveryFee,
     total,
@@ -73,6 +88,9 @@ function validateOrderBody(body) {
   }
   if (!Array.isArray(items) || items.length === 0) {
     return { error: "Order must include at least one item" };
+  }
+  if (orderType && !["retail", "export"].includes(orderType)) {
+    return { error: "Invalid order type" };
   }
 
   const sub = Number(subtotal);
@@ -117,7 +135,10 @@ function validateOrderBody(body) {
       address_line2: addressLine2?.trim() || null,
       city: city.trim(),
       district: district?.trim() || "Kampala",
-      notes: notes?.trim() || null,
+      notes:
+        orderType === "export"
+          ? `${EXPORT_ORDER_MARKER}${notes?.trim() ? `\n${notes.trim()}` : ""}`
+          : notes?.trim() || null,
       subtotal: sub,
       delivery_fee: del,
       total: tot,
@@ -161,14 +182,16 @@ router.post("/", async (req, res) => {
       .single();
 
     if (!fetchErr && fullOrder) {
-      sendOrderPlacedEmail(fullOrder)
+      sendOrderPlacedEmail(decorateOrder(fullOrder))
         .then((r) => {
           if (r?.sent) console.log(`[orders] placed email sent → ${fullOrder.email}`);
         })
         .catch((e) => console.error("[orders] placed email failed:", e.message));
     }
 
-    res.status(201).json({ order: { ...order, ...parsed.order } });
+    res
+      .status(201)
+      .json({ order: decorateOrder({ ...order, ...parsed.order }) });
   } catch (e) {
     console.error("[orders] POST", e.message);
     res.status(500).json({ error: e.message || "Failed to place order" });
@@ -200,7 +223,7 @@ router.get("/", async (req, res) => {
     });
 
     if (error) throw error;
-    res.json({ orders: orders ?? [] });
+    res.json({ orders: (orders ?? []).map(decorateOrder) });
   } catch (e) {
     console.error("[orders] GET", e.message);
     res.status(500).json({ error: e.message || "Failed to load orders" });
@@ -271,21 +294,21 @@ router.patch("/:id", async (req, res) => {
     let emailSent = null;
     if (previousStatus !== status) {
       if (status === "confirmed") {
-        sendOrderConfirmedEmail(order)
+        sendOrderConfirmedEmail(decorateOrder(order))
           .then((r) => {
             if (r?.sent) console.log(`[orders] confirmation email sent → ${order.email}`);
           })
           .catch((e) => console.error("[orders] confirmation email failed:", e.message));
         emailSent = isMailConfigured() ? "confirmation_pending" : "smtp_not_configured";
       } else if (status === "out_for_delivery") {
-        sendOrderDispatchedEmail(order)
+        sendOrderDispatchedEmail(decorateOrder(order))
           .then((r) => {
             if (r?.sent) console.log(`[orders] dispatch email sent → ${order.email}`);
           })
           .catch((e) => console.error("[orders] dispatch email failed:", e.message));
         emailSent = isMailConfigured() ? "dispatch_pending" : "smtp_not_configured";
       } else if (status === "delivered") {
-        sendOrderDeliveredEmail(order)
+        sendOrderDeliveredEmail(decorateOrder(order))
           .then((r) => {
             if (r?.sent) console.log(`[orders] delivered email sent → ${order.email}`);
           })
@@ -294,7 +317,7 @@ router.patch("/:id", async (req, res) => {
       }
     }
 
-    res.json({ order, emailSent });
+    res.json({ order: decorateOrder(order), emailSent });
   } catch (e) {
     console.error("[orders] PATCH", e.message);
     res.status(500).json({ error: e.message || "Failed to update order" });
@@ -314,7 +337,7 @@ router.get("/:id", async (req, res) => {
     const { data: order, error } = await query.maybeSingle();
     if (error) throw error;
     if (!order) return res.status(404).json({ error: "Order not found" });
-    res.json({ order });
+    res.json({ order: decorateOrder(order) });
   } catch (e) {
     res.status(500).json({ error: e.message || "Failed to load order" });
   }

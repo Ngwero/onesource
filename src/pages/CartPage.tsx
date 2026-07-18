@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
@@ -8,6 +8,7 @@ import { ProductImage } from "../components/ProductImage";
 import { FREE_DELIVERY_THRESHOLD_GBP } from "../currency/currencies";
 import { calcOrderTotal } from "../utils/checkout";
 import type { Product } from "../types/product";
+import { isExportOnlyCart } from "../utils/exportOrder";
 
 function CartLineItem({
   product,
@@ -81,6 +82,10 @@ export function CartPage() {
   const { t } = useTranslation();
   const { formatPrice } = useCurrency();
   const { items, removeFromCart, updateQuantity, subtotal, itemCount } = useCart();
+
+  if (isExportOnlyCart(items)) {
+    return <Navigate to="/exports/confirmation" replace />;
+  }
 
   const { delivery, total } = calcOrderTotal(subtotal);
   const untilFree = Math.max(0, FREE_DELIVERY_THRESHOLD_GBP - subtotal);

@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
@@ -8,6 +8,7 @@ import { BrandLogo } from "./BrandLogo";
 import { ProductImage } from "./ProductImage";
 import { FREE_DELIVERY_THRESHOLD_GBP } from "../currency/currencies";
 import { calcOrderTotal } from "../utils/checkout";
+import { isExportOnlyCart } from "../utils/exportOrder";
 import type { Product } from "../types/product";
 
 function BasketPanelLine({
@@ -95,6 +96,7 @@ function BasketPanelLine({
 export function BasketSlidePanel() {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const {
     items,
     itemCount,
@@ -112,8 +114,19 @@ export function BasketSlidePanel() {
     100,
     FREE_DELIVERY_THRESHOLD_GBP > 0 ? (subtotal / FREE_DELIVERY_THRESHOLD_GBP) * 100 : 0
   );
+  const exportOnly = isExportOnlyCart(items);
+  const basketHref = exportOnly ? "/exports/confirmation" : "/cart";
 
   const handleClose = useCallback(() => closeBasket(), [closeBasket]);
+
+  useEffect(() => {
+    if (!basketOpen) return;
+    if (!exportOnly) return;
+    handleClose();
+    if (location.pathname !== "/exports/confirmation") {
+      navigate("/exports/confirmation");
+    }
+  }, [basketOpen, exportOnly, handleClose, location.pathname, navigate]);
 
   useEffect(() => {
     if (!basketOpen) return;
@@ -133,12 +146,16 @@ export function BasketSlidePanel() {
   }, [basketOpen, handleClose]);
 
   useEffect(() => {
-    if (location.pathname === "/cart" || location.pathname.startsWith("/checkout")) {
+    if (
+      location.pathname === "/cart" ||
+      location.pathname.startsWith("/checkout") ||
+      location.pathname.startsWith("/exports/confirmation")
+    ) {
       handleClose();
     }
   }, [location.pathname, handleClose]);
 
-  if (!basketOpen) return null;
+  if (!basketOpen || exportOnly) return null;
 
   return (
     <div className="basket-panel-root" role="presentation">
@@ -254,14 +271,16 @@ export function BasketSlidePanel() {
             </div>
           )}
           <Link
-            to="/cart"
+            to={basketHref}
             className={`basket-panel-checkout${itemCount === 0 ? " is-disabled" : ""}`}
             onClick={(e) => {
               if (itemCount === 0) e.preventDefault();
               else handleClose();
             }}
           >
-            {t("basketPanel.goToBasket")}
+            {exportOnly
+              ? t("exports.confirmation.confirm")
+              : t("basketPanel.goToBasket")}
           </Link>
           <button type="button" className="basket-panel-continue" onClick={handleClose}>
             {t("basketPanel.continueShopping")}

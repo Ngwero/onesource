@@ -1,10 +1,13 @@
 import { requireSupabase } from "../lib/supabase.js";
-import { DEFAULT_HERO_SLIDES } from "../data/defaultHeroSlides.js";
+import {
+  DEFAULT_HERO_SLIDES,
+  DEFAULT_EXPORT_HERO_SLIDES,
+} from "../data/defaultHeroSlides.js";
 
 async function main() {
   const db = requireSupabase();
 
-  const rows = DEFAULT_HERO_SLIDES.map((s) => ({
+  const rows = [...DEFAULT_HERO_SLIDES, ...DEFAULT_EXPORT_HERO_SLIDES].map((s) => ({
     id: s.id,
     sort_order: s.sortOrder,
     image: s.image,
@@ -25,7 +28,9 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Seeded ${rows.length} hero slides. Edit in Admin → Homepage hero.`);
+  console.log(
+    `Seeded ${DEFAULT_HERO_SLIDES.length} homepage and ${DEFAULT_EXPORT_HERO_SLIDES.length} export hero slides.`
+  );
 }
 
 main();

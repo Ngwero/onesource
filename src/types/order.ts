@@ -10,6 +10,7 @@ export type OrderItem = {
 
 export type Order = {
   id: string;
+  order_type?: "retail" | "export";
   status: string;
   email: string;
   full_name: string;
@@ -28,6 +29,7 @@ export type Order = {
 };
 
 export type CreateOrderPayload = {
+  orderType?: "retail" | "export";
   userId?: string;
   email: string;
   fullName: string;

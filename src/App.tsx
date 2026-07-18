@@ -25,6 +25,8 @@ import { ListsPage } from "./pages/ListsPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { CheckoutConfirmationPage } from "./pages/CheckoutConfirmationPage";
+import { ExportsPage } from "./pages/ExportsPage";
+import { ExportOrderConfirmationPage } from "./pages/ExportOrderConfirmationPage";
 
 export default function App() {
   return (
@@ -46,6 +48,11 @@ export default function App() {
                     element={<CheckoutConfirmationPage />}
                   />
                   <Route path="categories" element={<CategoriesPage />} />
+                  <Route path="exports" element={<ExportsPage />} />
+                  <Route
+                    path="exports/confirmation"
+                    element={<ExportOrderConfirmationPage />}
+                  />
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="category/:categoryId" element={<CategoryPage />} />
                   <Route path="search" element={<SearchPage />} />

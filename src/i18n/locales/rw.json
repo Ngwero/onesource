@@ -67,8 +67,100 @@
     "allProducts": "Ibicuruzwa byose",
     "britishGrown": "Byakorwa mu gihugu",
     "seasonalDeals": "Ibiciro by'igihe",
+    "exports": "Ibyoherezwa hanze",
     "categoriesLabel": "Ibyiciro",
     "mobileLabel": "Kugenda kuri telefoni"
+  },
+  "exports": {
+    "hero": {
+      "kicker": "Ubucuruzi mpuzamahanga",
+      "title": "Imbuto n'imboga bishya bya Uganda, bigezwa ku isi yose",
+      "subtitle": "Kuva mu mirima mito kugera ku masoko mpuzamahanga mu masaha atarenze 48. Byemejwe byuzuye, birinzwe ubukonje kandi byoherezwa n'indege biva Entebbe.",
+      "browseCta": "Reba ibicuruzwa byoherezwa hanze",
+      "contactCta": "Vugana n'itsinda ryacu ry'ubucuruzi"
+    },
+    "stats": {
+      "markets": "Amasoko yo hanze afashwa",
+      "volume": "Byoherezwa buri mwaka",
+      "coldChain": "Gukurikirana ubukonje",
+      "farms": "Imirima dufatanya"
+    },
+    "search": {
+      "label": "Shakisha ukoresheje",
+      "keywordPlaceholder": "Ijambo ry'igicuruzwa, urugero: scotch bonnet",
+      "allCommodities": "Ibicuruzwa byose"
+    },
+    "quickLinks": {
+      "howItWorks": "Uko bikorwa"
+    },
+    "gateway": {
+      "exportTitle": "Ibicuruzwa byoherezwa hanze",
+      "buyerTitle": "Serivisi z'abaguzi",
+      "docs": "Impamyabushobozi n'inyandiko",
+      "logistics": "Ubukonje n'ubwikorezi"
+    },
+    "certifications": "Byemewe koherezwa hanze:",
+    "process": {
+      "title": "Kuva mu murima kugera ku kibuga cy'indege",
+      "subtitle": "Buri cyoherezwa gikurikira inzira imwe y'intambwe enye, kugira ngo ubuziranenge butava mu ruhererekane."
+    },
+    "steps": {
+      "source": {
+        "title": "Bisarurwa mu murima",
+        "desc": "Dusarura ku itegeko mu mirima dufatanya yagenzuwe hirya no hino muri Uganda, dusarura igihe byeze neza."
+      },
+      "quality": {
+        "title": "Bishyirwa mu byiciro bikagenzurwa",
+        "desc": "Buri tsinda rishyirwa mu byiciro, rikagenzurwa muri laboratwari kandi rigahabwa impamyabushobozi z'ubuzima bw'ibimera mbere yo gupakirwa."
+      },
+      "coldChain": {
+        "title": "Bipakirwa mu bukonje",
+        "desc": "Ibicuruzwa bibanza gukonjeshwa bikapakirwa ahantu hagenzurwa ubushyuhe, bikurikiranwa kuva mu ntangiriro kugera ku iherezo."
+      },
+      "freight": {
+        "title": "Byoherezwa n'indege bikiri bishya",
+        "desc": "Ingendo za buri munsi ziva Entebbe zigeza ibyo watumije i London, Dubai cyangwa Brussels mu masaha 48."
+      }
+    },
+    "products": {
+      "title": "Ibicuruzwa byo mu rwego rwo hanze",
+      "subtitle": "Ibicuruzwa by'umwimerere bihingwa kandi bipakirwa ku rugero mpuzamahanga.",
+      "drinks": "Ibinyobwa",
+      "more": "Ibindi bicuruzwa byoherezwa hanze",
+      "empty": "Ibicuruzwa byoherezwa hanze biri kongera kuboneka — garuka vuba."
+    },
+    "destinations": {
+      "title": "Aho twohereza",
+      "subtitle": "Inzira z'ubwikorezi zimaze igihe zifite ubushobozi bwizewe bwa buri cyumweru."
+    },
+    "cta": {
+      "title": "Witeguye gutumiza uhereye ku isoko?",
+      "body": "Waba ukeneye paleti imwe cyangwa gahunda ya buri cyumweru, ibiro byacu by'ubucuruzi bizagukorera ishyirwa mu byiciro, inyandiko n'ubwikorezi.",
+      "button": "Saba igiciro cyo kohereza"
+    },
+    "confirmation": {
+      "badge": "Icyiciro cyoherezwa hanze",
+      "title": "Emeza itegeko ryawe ryo kohereza",
+      "subtitle": "Suzuma ibicuruzwa uhane amakuru y'aho bigiye. Ibiro byacu by'ubucuruzi bizemeza kuboneka, ubwikorezi n'igiciro cya nyuma.",
+      "buyerDetails": "Amakuru y'umuguzi",
+      "company": "Izina ry'ikigo",
+      "destination": "Aho bigiye",
+      "country": "Igihugu cyo kugezaho",
+      "deliveryAddress": "Aderesi yo gutanga, isoko cyangwa ikibuga cy'indege",
+      "requirements": "Ibisabwa ku gupakira, impamyabushobozi cyangwa ubwikorezi",
+      "orderSummary": "Incamake y'itegeko ryo kohereza",
+      "estimatedTotal": "Igiciro cyateganyijwe ku bicuruzwa",
+      "freightNotice": "Ubwikorezi, inyandiko n'amafaranga y'aho bigiye byemezwa ku giti cyabo n'ibiro byacu by'ubucuruzi.",
+      "confirm": "Emeza itegeko ryo kohereza",
+      "submitting": "Birimo kwemeza…",
+      "submitFailed": "Byanze kwemeza itegeko ryo kohereza. Ongera ugerageze.",
+      "addMore": "Ongeraho ibindi bicuruzwa byoherezwa",
+      "emptyTitle": "Itegeko ryawe ryo kohereza nta kintu kirimo",
+      "emptyText": "Hitamo ibicuruzwa byoherezwa mbere yo kwemeza itegeko.",
+      "browse": "Reba ibicuruzwa byoherezwa hanze",
+      "confirmedTitle": "Itegeko ryo kohereza ryakiriwe",
+      "confirmedSubtitle": "Ibiro byacu by'ubucuruzi bizasuzuma kuboneka, inyandiko n'ubwikorezi, hanyuma bakaganira nawe ku kwemeza kwa nyuma."
+    }
   },
   "auth": {
     "signIn": "Injira",

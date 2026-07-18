@@ -1,19 +1,17 @@
-import { CHILLIES_CATEGORY_ID } from "./chilliesCatalog.js";
-
 export const GREEN_CHILLIES_SEARCH = "green chilli";
 
-/** Ten distinct green chilli SKUs (search matches "green chilli" / "green chillies"). */
+/** Ten export-grade Green Chilli SKUs. */
 export const GREEN_CHILLIES_PRODUCTS = [
-  { id: "green-chilli-01", name: "Green Chillies – Fresh Local", unit: "per kg" },
-  { id: "green-chilli-02", name: "Green Chillies – Premium Grade", unit: "per kg" },
-  { id: "green-chilli-03", name: "Green Chillies – Organic", unit: "per kg" },
-  { id: "green-chilli-04", name: "Green Chillies – Long Type", unit: "per kg" },
-  { id: "green-chilli-05", name: "Green Chillies – Small Hot", unit: "per kg" },
-  { id: "green-chilli-06", name: "Green Chillies – Mild", unit: "per kg" },
-  { id: "green-chilli-07", name: "Green Chillies – Farm Pick", unit: "per bunch" },
-  { id: "green-chilli-08", name: "Green Chillies – Bulk Box", unit: "per carton" },
-  { id: "green-chilli-09", name: "Green Chillies – Export Grade", unit: "per kg" },
-  { id: "green-chilli-10", name: "Green Chillies – Wholesale", unit: "per kg" },
+  { id: "green-chilli-01", name: "Green Chilli – Fresh Export", unit: "per kg" },
+  { id: "green-chilli-02", name: "Green Chilli – Premium Grade", unit: "per kg" },
+  { id: "green-chilli-03", name: "Green Chilli – Organic", unit: "per kg" },
+  { id: "green-chilli-04", name: "Green Chilli – Long Type", unit: "per kg" },
+  { id: "green-chilli-05", name: "Green Chilli – Small Hot", unit: "per kg" },
+  { id: "green-chilli-06", name: "Green Chilli – Mild", unit: "per kg" },
+  { id: "green-chilli-07", name: "Green Chilli – Retail Punnet", unit: "per punnet" },
+  { id: "green-chilli-08", name: "Green Chilli – 4kg Export Box", unit: "per box" },
+  { id: "green-chilli-09", name: "Green Chilli – Airfreight Ready", unit: "per carton" },
+  { id: "green-chilli-10", name: "Green Chilli – Wholesale Carton", unit: "per carton" },
 ];
 
-export { CHILLIES_CATEGORY_ID };
+export const EXPORT_CATEGORY_ID = "export-fresh-produce";

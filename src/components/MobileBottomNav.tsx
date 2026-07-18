@@ -1,8 +1,9 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { isExportOnlyCart } from "../utils/exportOrder";
 
 type NavItem = {
   key: string;
@@ -31,11 +32,20 @@ function NavIcon({ d, active }: { d: string; active: boolean }) {
 export function MobileBottomNav() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const { itemCount, openBasket } = useCart();
+  const { itemCount, openBasket, items: cartItems } = useCart();
 
   const accountTo = user ? "/account" : "/login";
   const accountState = user ? undefined : { from: "/account" };
+
+  const openCartOrExport = () => {
+    if (isExportOnlyCart(cartItems)) {
+      navigate("/exports/confirmation");
+      return;
+    }
+    openBasket();
+  };
 
   const items: NavItem[] = [
     {
@@ -78,7 +88,7 @@ export function MobileBottomNav() {
       key: "basket",
       label: t("header.basket"),
       match: () => false,
-      onClick: () => openBasket(),
+      onClick: () => openCartOrExport(),
       icon: (active) => (
         <span className="relative">
           <NavIcon

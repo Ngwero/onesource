@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import type { Product } from "../types/product";
@@ -8,6 +8,7 @@ import { ProductImage } from "./ProductImage";
 import { useCart } from "../context/CartContext";
 import { useLocalizedProduct } from "../i18n/useLocalizedProduct";
 import { SaveProductButton } from "./SaveProductButton";
+import { isExportProduct } from "../utils/exportOrder";
 import {
   formatCardUnitPrice,
   getBestSellerBadge,
@@ -15,13 +16,22 @@ import {
   getCardDeliveryDate,
 } from "../utils/productDetails";
 
-type Props = { product: Product };
+type Props = {
+  product: Product;
+  /** i18n key for the action button label (defaults to "Add to basket"). */
+  actionLabelKey?: string;
+};
 
-export function ProductCard({ product }: Props) {
+export function ProductCard({ product, actionLabelKey }: Props) {
   const { t } = useTranslation();
   const { formatPrice } = useCurrency();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const localized = useLocalizedProduct(product);
+  const exportProduct = isExportProduct(product);
+  const resolvedActionLabel =
+    actionLabelKey ??
+    (exportProduct ? "checkout.placeOrder" : "common.addToBasket");
 
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
@@ -102,10 +112,13 @@ export function ProductCard({ product }: Props) {
         <button
           type="button"
           disabled={!product.inStock}
-          onClick={() => addToCart(product)}
+          onClick={() => {
+            addToCart(product, 1, { openBasket: !exportProduct });
+            if (exportProduct) navigate("/exports/confirmation");
+          }}
           className="product-card-basket-btn"
         >
-          {t("common.addToBasket")}
+          {t(resolvedActionLabel)}
         </button>
       </div>
     </article>

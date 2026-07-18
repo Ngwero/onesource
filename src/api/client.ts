@@ -13,12 +13,28 @@ export async function fetchProducts(params?: {
   const search = new URLSearchParams();
   if (params?.category) search.set("category", params.category);
   if (params?.q) search.set("q", params.q);
+  search.set("pageSize", "1000");
 
-  const qs = search.toString();
-  const res = await fetch(`${API_BASE}/products${qs ? `?${qs}` : ""}`);
-  if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
-  const data = await res.json();
-  return data.products as Product[];
+  const products: Product[] = [];
+  let page = 0;
+  let total = Infinity;
+
+  while (products.length < total) {
+    search.set("page", String(page));
+    const qs = search.toString();
+    const res = await fetch(`${API_BASE}/products?${qs}`);
+    if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
+    const data = await res.json();
+    const batch = (data.products as Product[]) ?? [];
+    products.push(...batch);
+    total = typeof data.total === "number" ? data.total : products.length;
+    if (batch.length === 0) break;
+    page += 1;
+    // Safety: avoid infinite loops if the API ignores pagination
+    if (page > 50) break;
+  }
+
+  return products;
 }
 
 export async function fetchProductById(id: string): Promise<Product | undefined> {
@@ -53,8 +69,10 @@ export async function updateCategoryImage(
   return data.category as Category;
 }
 
-export async function fetchHeroSlides(): Promise<HeroSlide[]> {
-  const res = await fetch(`${API_BASE}/hero/slides`);
+export async function fetchHeroSlides(
+  placement: "home" | "exports" = "home"
+): Promise<HeroSlide[]> {
+  const res = await fetch(`${API_BASE}/hero/slides?placement=${placement}`);
   if (!res.ok) throw new Error(i18n.t("errors.loadHeroSlides"));
   const data = await res.json();
   return (data.slides as HeroSlide[]) ?? [];

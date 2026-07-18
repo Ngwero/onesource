@@ -9,6 +9,7 @@ import { CurrencySwitcher } from "./CurrencySwitcher";
 import { useCategoryName } from "../i18n/useLocalizedProduct";
 import { BrandLogo } from "./BrandLogo";
 import { AccountMenu } from "./AccountMenu";
+import { isExportOnlyCart } from "../utils/exportOrder";
 
 function NavCategoryLink({ id, icon }: { id: string; icon: string }) {
   const location = useLocation();
@@ -36,13 +37,21 @@ export function Header() {
   );
   const [search, setSearch] = useState("");
   const { user } = useAuth();
-  const { itemCount, openBasket, basketOpen } = useCart();
+  const { itemCount, openBasket, basketOpen, items } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const headerRef = useRef<HTMLElement>(null);
   const [spacerHeight, setSpacerHeight] = useState(120);
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  const openCartOrExport = () => {
+    if (isExportOnlyCart(items)) {
+      navigate("/exports/confirmation");
+      return;
+    }
+    openBasket();
+  };
 
   useEffect(() => {
     const el = headerRef.current;
@@ -187,7 +196,7 @@ export function Header() {
               type="button"
               className={`header-basket-btn header-basket-btn--desktop${basketOpen ? " is-active" : ""}`}
               aria-label={t("header.basket")}
-              onClick={() => openBasket()}
+              onClick={() => openCartOrExport()}
             >
               <span className="header-basket-icon" aria-hidden>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -243,6 +252,16 @@ export function Header() {
             }`}
           >
             {t("nav.britishGrown")}
+          </Link>
+          <Link
+            to="/exports"
+            className={`flex-shrink-0 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+              location.pathname === "/exports"
+                ? "bg-accent text-white shadow-sm"
+                : "bg-muted text-text-muted hover:bg-accent-light hover:text-accent"
+            }`}
+          >
+            ✈️ {t("nav.exports")}
           </Link>
           <Link
             to="/products?sale=1"

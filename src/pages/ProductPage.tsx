@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { Product } from "../types/product";
 import { useProducts } from "../context/ProductsContext";
@@ -26,6 +26,7 @@ import {
   buildBreadcrumbTrail,
   buildProductPageContent,
 } from "../utils/productDetails";
+import { isExportProduct } from "../utils/exportOrder";
 import { resolveImageUrl } from "../utils/imageUrl";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -61,6 +62,7 @@ export function ProductPage() {
   const product = id ? getProductById(id) : undefined;
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [onList, setOnList] = useState(false);
   const [showAllSpecs, setShowAllSpecs] = useState(false);
@@ -100,6 +102,7 @@ export function ProductPage() {
   const localized = useLocalizedProduct(product ?? EMPTY_PRODUCT);
   const categoryName = useCategoryName(product?.category ?? "");
   const categoryId = product ? normalizeCategoryId(product.category) : "";
+  const isExport = product ? isExportProduct(product) : false;
   const pageContent = useMemo(
     () =>
       product ? buildProductPageContent(product, categoryName, formatPrice, t) : null,
@@ -131,10 +134,13 @@ export function ProductPage() {
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : 0;
-  const resolvedImage = resolveImageUrl(product.image);
+  const resolvedImage = resolveImageUrl(product.image, { width: 1200, quality: 78 });
   const unitShort = localized.localizedUnit.replace(/^per\s+/i, "");
 
-  const handleAdd = () => addToCart(product, quantity);
+  const handleAdd = () => {
+    addToCart(product, quantity, { openBasket: !isExport });
+    if (isExport) navigate("/exports/confirmation");
+  };
   const handleToggleList = () => {
     setOnList(toggleSavedListItem(user?.id, product.id));
   };
@@ -279,6 +285,7 @@ export function ProductPage() {
               onList={onList}
               formatPrice={formatPrice}
               freeDeliveryThreshold={freeDeliveryThreshold}
+              actionLabelKey={isExport ? "checkout.placeOrder" : undefined}
             />
           </aside>
         </div>
@@ -310,6 +317,7 @@ export function ProductPage() {
         priceLabel={formatPrice(product.price)}
         inStock={product.inStock}
         onAdd={handleAdd}
+        actionLabelKey={isExport ? "checkout.placeOrder" : undefined}
       />
     </div>
   );

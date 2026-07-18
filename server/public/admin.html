@@ -376,6 +376,7 @@
               <span id="bulkCount">0 selected</span>
               <input type="number" id="bulkStockValue" min="0" value="50" style="width:72px;padding:0.35rem 0.5rem;border:1px solid var(--border);border-radius:6px" />
               <button type="button" class="btn btn-secondary btn-sm" id="bulkSetStockBtn">Set stock</button>
+              <button type="button" class="btn btn-danger btn-sm" id="bulkDeleteBtn">Delete selected</button>
               <button type="button" class="btn btn-ghost btn-sm" id="bulkClearBtn">Clear selection</button>
             </div>
             <div class="table-wrap">
@@ -539,6 +540,15 @@
               <div class="banner-editor-grid" id="heroInactiveGrid"></div>
             </div>
           </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Exports hero carousel</h2>
+                <p class="panel-desc">The first three active export slides appear on <code>/exports</code>. Use the Add slide button and select Exports.</p>
+              </div>
+            </div>
+            <div class="banner-editor-grid" id="exportHeroSlideGrid"></div>
+          </div>
         </section>
 
         <section class="view" id="view-suppliers">
@@ -599,6 +609,11 @@
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
+                <select class="filter-select" id="filterOrderType">
+                  <option value="">All order types</option>
+                  <option value="export">Export orders</option>
+                  <option value="retail">Shop orders</option>
+                </select>
                 <select class="filter-select" id="ordersPageSize">
                   <option value="25">25 / page</option>
                   <option value="50" selected>50 / page</option>
@@ -608,7 +623,7 @@
             <div class="table-wrap">
               <table class="data-table">
                 <thead>
-                  <tr><th>Order</th><th>Customer</th><th>Location</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr>
+                  <tr><th>Order</th><th>Type</th><th>Customer</th><th>Location</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr>
                 </thead>
                 <tbody id="ordersTable"></tbody>
               </table>
@@ -780,6 +795,13 @@
     <form id="heroForm" class="drawer-body">
       <input type="hidden" id="heroEditId" />
       <div class="form-section">
+        <div class="field">
+          <label class="field-label" for="heroPlacement">Carousel</label>
+          <select id="heroPlacement">
+            <option value="home">Homepage</option>
+            <option value="exports">Exports page</option>
+          </select>
+        </div>
         <div class="field-row">
           <div class="field"><label class="field-label" for="heroId">Slide ID</label><input type="text" id="heroId" /></div>
           <div class="field"><label class="field-label" for="heroSortOrder">Sort</label><input type="number" id="heroSortOrder" min="0" value="0" /></div>

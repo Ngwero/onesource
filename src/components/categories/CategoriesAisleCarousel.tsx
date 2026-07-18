@@ -11,6 +11,8 @@ type Props = {
   seeMoreHref: string;
   seeMoreLabel?: string;
   products: Product[];
+  /** i18n key for the card action button label (defaults to "Add to basket"). */
+  actionLabelKey?: string;
 };
 
 export function CategoriesAisleCarousel({
@@ -19,6 +21,7 @@ export function CategoriesAisleCarousel({
   seeMoreHref,
   seeMoreLabel,
   products,
+  actionLabelKey,
 }: Props) {
   const { t } = useTranslation();
   const hoverRef = useRef<HTMLElement>(null);
@@ -107,9 +110,13 @@ export function CategoriesAisleCarousel({
         </button>
 
         <div ref={trackRef} className="fresh-aisle-carousel-track" role="list">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div key={product.id} className="fresh-aisle-carousel-item" role="listitem">
-              <FreshAisleProductCard product={product} />
+              <FreshAisleProductCard
+                product={product}
+                actionLabelKey={actionLabelKey}
+                priority={index < 4}
+              />
             </div>
           ))}
         </div>

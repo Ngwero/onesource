@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { Product } from "../../types/product";
 import { useCurrency } from "../../context/CurrencyContext";
@@ -7,14 +7,30 @@ import { StarRating } from "../StarRating";
 import { ProductImage } from "../ProductImage";
 import { useLocalizedProduct } from "../../i18n/useLocalizedProduct";
 import { formatCardUnitPrice } from "../../utils/productDetails";
+import { isExportProduct } from "../../utils/exportOrder";
 
-type Props = { product: Product };
+type Props = {
+  product: Product;
+  /** i18n key for the action button label (defaults to "Add to basket"). */
+  actionLabelKey?: string;
+  /** Eager-load image for above-the-fold aisle items. */
+  priority?: boolean;
+};
 
-export function FreshAisleProductCard({ product }: Props) {
+export function FreshAisleProductCard({
+  product,
+  actionLabelKey,
+  priority = false,
+}: Props) {
   const { t } = useTranslation();
   const { formatPrice } = useCurrency();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const localized = useLocalizedProduct(product);
+  const exportProduct = isExportProduct(product);
+  const resolvedActionLabel =
+    actionLabelKey ??
+    (exportProduct ? "checkout.placeOrder" : "common.addToBasket");
 
   const discount =
     product.originalPrice && product.originalPrice > product.price
@@ -30,6 +46,7 @@ export function FreshAisleProductCard({ product }: Props) {
           alt={localized.localizedTitle}
           size="card"
           className="fresh-aisle-card-image"
+          priority={priority}
         />
       </Link>
 
@@ -66,9 +83,12 @@ export function FreshAisleProductCard({ product }: Props) {
         type="button"
         className="fresh-aisle-card-add"
         disabled={!product.inStock}
-        onClick={() => addToCart(product)}
+        onClick={() => {
+          addToCart(product, 1, { openBasket: !exportProduct });
+          if (exportProduct) navigate("/exports/confirmation");
+        }}
       >
-        {t("common.addToBasket")}
+        {t(resolvedActionLabel)}
       </button>
     </article>
   );

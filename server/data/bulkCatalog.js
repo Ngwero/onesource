@@ -203,7 +203,6 @@ export const BULK_CATALOG = [
   {
     id: "export-fresh-produce",
     items: [
-      { name: "Export Grade Avocado", unit: "per carton", photoIds: ["1523049673859-f9adffb090af"] },
       { name: "Fine Beans – Export", unit: "per kg", photoIds: ["1576045052643-4cf29aa0b2c0"] },
     ],
   },

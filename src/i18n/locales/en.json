@@ -67,8 +67,114 @@
     "allProducts": "All products",
     "britishGrown": "Locally grown",
     "seasonalDeals": "Seasonal Deals",
+    "exports": "Exports",
     "categoriesLabel": "Categories",
     "mobileLabel": "Mobile navigation"
+  },
+  "exports": {
+    "hero": {
+      "kicker": "Global exports",
+      "title": "Uganda's freshest produce, delivered to the world",
+      "subtitle": "From smallholder farms to international markets in under 48 hours. Fully certified, cold-chain protected and air-freighted from Entebbe.",
+      "browseCta": "Browse export produce",
+      "contactCta": "Talk to our export team"
+    },
+    "stats": {
+      "markets": "Export markets served",
+      "volume": "Shipped every year",
+      "coldChain": "Cold-chain monitoring",
+      "farms": "Partner farms"
+    },
+    "search": {
+      "label": "Search by",
+      "keywordPlaceholder": "Product keyword, e.g. scotch bonnet",
+      "allCommodities": "All commodities"
+    },
+    "quickLinks": {
+      "howItWorks": "How it works"
+    },
+    "gateway": {
+      "exportTitle": "Export commodities",
+      "buyerTitle": "Buyer services",
+      "docs": "Certificates & documentation",
+      "logistics": "Cold chain & freight"
+    },
+    "certifications": "Certified for export:",
+    "process": {
+      "title": "From farm gate to departure gate",
+      "subtitle": "Every consignment follows the same four-step journey, so quality never leaves the chain."
+    },
+    "steps": {
+      "source": {
+        "title": "Sourced at the farm",
+        "desc": "We harvest to order from vetted partner farms across Uganda, picking at peak ripeness."
+      },
+      "quality": {
+        "title": "Graded & inspected",
+        "desc": "Each lot is graded, lab-checked and issued phytosanitary certificates before packing."
+      },
+      "coldChain": {
+        "title": "Cold-chain packed",
+        "desc": "Produce is pre-cooled and packed in temperature-controlled facilities, tracked end to end."
+      },
+      "freight": {
+        "title": "Air-freighted fresh",
+        "desc": "Daily uplift out of Entebbe puts your order in London, Dubai or Brussels within 48 hours."
+      }
+    },
+    "products": {
+      "title": "Export-grade selection",
+      "subtitle": "Premium produce grown and packed to international standards.",
+      "drinks": "Drinks",
+      "more": "More export produce",
+      "empty": "Export listings are being restocked — check back shortly."
+    },
+    "destinations": {
+      "title": "Where we ship",
+      "subtitle": "Established freight lanes with reliable weekly capacity."
+    },
+    "cta": {
+      "title": "Ready to import from the source?",
+      "body": "Whether you need a one-off pallet or a weekly programme, our export desk will handle grading, documentation and freight for you.",
+      "button": "Request an export quote"
+    },
+    "confirmation": {
+      "badge": "Export order",
+      "title": "Confirm your export order",
+      "subtitle": "Review the produce and provide your destination details. Our export desk will confirm availability, freight and final landed cost.",
+      "stepsLabel": "Order steps",
+      "stepSelect": "Select",
+      "stepDetails": "Details",
+      "stepConfirm": "Confirm",
+      "buyerDetails": "Buyer details",
+      "buyerHint": "How our export desk should contact you.",
+      "company": "Company name",
+      "destination": "Export destination",
+      "destinationHint": "Where the consignment should land.",
+      "country": "Destination country",
+      "deliveryAddress": "Delivery address, market or airport",
+      "requirements": "Packaging, certification or freight requirements",
+      "namePlaceholder": "Buyer or contact name",
+      "companyPlaceholder": "Trading company (optional)",
+      "emailPlaceholder": "buyer@company.com",
+      "phonePlaceholder": "+256 or international number",
+      "countryPlaceholder": "e.g. United Kingdom",
+      "cityPlaceholder": "City or port of entry",
+      "addressPlaceholder": "Warehouse, market, or airport cargo terminal",
+      "requirementsPlaceholder": "e.g. GlobalGAP, phytosanitary cert, cold-chain, pallet size",
+      "orderSummary": "Export order summary",
+      "estimatedTotal": "Produce estimate",
+      "freightNotice": "Freight, documentation and destination charges are confirmed separately by our export desk.",
+      "confirm": "Confirm export order",
+      "submitting": "Confirming order…",
+      "submitFailed": "Could not confirm the export order. Please try again.",
+      "addMore": "Add more export produce",
+      "emptyTitle": "Your export order is empty",
+      "emptyText": "Choose export-grade produce before confirming your order.",
+      "browse": "Browse export produce",
+      "confirmedTitle": "Export order received",
+      "confirmedSubtitle": "Our export desk will review availability, documentation and freight, then contact you with final confirmation."
+    }
   },
   "auth": {
     "signIn": "Sign in",

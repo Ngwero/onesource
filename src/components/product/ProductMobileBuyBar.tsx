@@ -6,9 +6,16 @@ type Props = {
   inStock: boolean;
   onAdd: () => void;
   productId: string;
+  actionLabelKey?: string;
 };
 
-export function ProductMobileBuyBar({ priceLabel, inStock, onAdd, productId }: Props) {
+export function ProductMobileBuyBar({
+  priceLabel,
+  inStock,
+  onAdd,
+  productId,
+  actionLabelKey = "common.addToBasket",
+}: Props) {
   const { t } = useTranslation();
 
   return (
@@ -22,7 +29,7 @@ export function ProductMobileBuyBar({ priceLabel, inStock, onAdd, productId }: P
           onClick={onAdd}
           className="pdp-mobile-bar-cart pdp-btn-cart"
         >
-          {t("common.addToBasket")}
+          {t(actionLabelKey)}
         </button>
       </div>
     </div>

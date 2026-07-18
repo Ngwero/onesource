@@ -67,8 +67,100 @@
     "allProducts": "Bidhaa zote",
     "britishGrown": "Kilimo cha ndani",
     "seasonalDeals": "Ofa za msimu",
+    "exports": "Usafirishaji nje",
     "categoriesLabel": "Kategoria",
     "mobileLabel": "Urambazaji wa simu"
+  },
+  "exports": {
+    "hero": {
+      "kicker": "Usafirishaji wa kimataifa",
+      "title": "Mazao mapya kabisa ya Uganda, yakifikishwa duniani kote",
+      "subtitle": "Kutoka mashamba madogo hadi masoko ya kimataifa ndani ya saa 48. Yamethibitishwa kikamilifu, yakilindwa kwa mnyororo baridi na kusafirishwa kwa ndege kutoka Entebbe.",
+      "browseCta": "Vinjari mazao ya kuuza nje",
+      "contactCta": "Wasiliana na timu yetu ya usafirishaji"
+    },
+    "stats": {
+      "markets": "Masoko ya nje yanayohudumiwa",
+      "volume": "Husafirishwa kila mwaka",
+      "coldChain": "Ufuatiliaji wa mnyororo baridi",
+      "farms": "Mashamba washirika"
+    },
+    "search": {
+      "label": "Tafuta kwa",
+      "keywordPlaceholder": "Neno la bidhaa, mf. scotch bonnet",
+      "allCommodities": "Bidhaa zote"
+    },
+    "quickLinks": {
+      "howItWorks": "Jinsi inavyofanya kazi"
+    },
+    "gateway": {
+      "exportTitle": "Bidhaa za kuuza nje",
+      "buyerTitle": "Huduma kwa wanunuzi",
+      "docs": "Vyeti na nyaraka",
+      "logistics": "Mnyororo baridi na usafirishaji"
+    },
+    "certifications": "Imethibitishwa kwa usafirishaji:",
+    "process": {
+      "title": "Kutoka shambani hadi lango la kuondokea",
+      "subtitle": "Kila shehena hufuata safari ile ile ya hatua nne, ili ubora usiondoke kwenye mnyororo."
+    },
+    "steps": {
+      "source": {
+        "title": "Yanapatikana shambani",
+        "desc": "Tunavuna kwa oda kutoka mashamba washirika yaliyokaguliwa kote Uganda, tukichuma yakiwa yameiva vizuri."
+      },
+      "quality": {
+        "title": "Yamepangwa na kukaguliwa",
+        "desc": "Kila kundi hupangwa daraja, kukaguliwa maabara na kupewa vyeti vya afya ya mimea kabla ya kufungashwa."
+      },
+      "coldChain": {
+        "title": "Yamefungashwa kwa baridi",
+        "desc": "Mazao hupozwa mapema na kufungashwa katika vituo vya joto linalodhibitiwa, yakifuatiliwa mwanzo hadi mwisho."
+      },
+      "freight": {
+        "title": "Husafirishwa kwa ndege yakiwa mapya",
+        "desc": "Safari za kila siku kutoka Entebbe hufikisha oda yako London, Dubai au Brussels ndani ya saa 48."
+      }
+    },
+    "products": {
+      "title": "Chaguo la daraja la kuuza nje",
+      "subtitle": "Mazao bora yaliyolimwa na kufungashwa kwa viwango vya kimataifa.",
+      "drinks": "Vinywaji",
+      "more": "Mazao mengine ya kuuza nje",
+      "empty": "Bidhaa za kuuza nje zinajazwa tena — rudi hivi karibuni."
+    },
+    "destinations": {
+      "title": "Tunakosafirisha",
+      "subtitle": "Njia za usafirishaji zilizoimarika na uwezo wa kila wiki wa kuaminika."
+    },
+    "cta": {
+      "title": "Uko tayari kuagiza moja kwa moja kutoka chanzo?",
+      "body": "Iwe unahitaji paleti moja au mpango wa kila wiki, dawati letu la usafirishaji litashughulikia upangaji daraja, nyaraka na usafirishaji kwa niaba yako.",
+      "button": "Omba nukuu ya usafirishaji"
+    },
+    "confirmation": {
+      "badge": "Oda ya usafirishaji",
+      "title": "Thibitisha oda yako ya usafirishaji",
+      "subtitle": "Kagua mazao na toa maelezo ya marudio. Dawati letu la usafirishaji litathibitisha upatikanaji, usafirishaji na gharama ya mwisho.",
+      "buyerDetails": "Maelezo ya mnunuzi",
+      "company": "Jina la kampuni",
+      "destination": "Mahali pa kuwasilisha",
+      "country": "Nchi lengwa",
+      "deliveryAddress": "Anwani ya uwasilishaji, soko au uwanja wa ndege",
+      "requirements": "Mahitaji ya ufungashaji, vyeti au usafirishaji",
+      "orderSummary": "Muhtasari wa oda ya usafirishaji",
+      "estimatedTotal": "Makadirio ya mazao",
+      "freightNotice": "Gharama za usafirishaji, nyaraka na marudio huthibitishwa kando na dawati letu la usafirishaji.",
+      "confirm": "Thibitisha oda ya usafirishaji",
+      "submitting": "Inathibitisha oda…",
+      "submitFailed": "Imeshindwa kuthibitisha oda ya usafirishaji. Jaribu tena.",
+      "addMore": "Ongeza mazao zaidi ya usafirishaji",
+      "emptyTitle": "Oda yako ya usafirishaji ni tupu",
+      "emptyText": "Chagua mazao ya daraja la kuuza nje kabla ya kuthibitisha oda.",
+      "browse": "Vinjari mazao ya kuuza nje",
+      "confirmedTitle": "Oda ya usafirishaji imepokelewa",
+      "confirmedSubtitle": "Dawati letu la usafirishaji litakagua upatikanaji, nyaraka na usafirishaji, kisha litawasiliana nawe kwa uthibitisho wa mwisho."
+    }
   },
   "auth": {
     "signIn": "Ingia",

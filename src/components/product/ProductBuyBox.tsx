@@ -16,6 +16,7 @@ type Props = {
   formatPrice: (n: number) => string;
   freeDeliveryThreshold: number;
   variant?: "sidebar" | "compact";
+  actionLabelKey?: string;
 };
 
 export function ProductBuyBox({
@@ -30,6 +31,7 @@ export function ProductBuyBox({
   formatPrice,
   freeDeliveryThreshold,
   variant = "sidebar",
+  actionLabelKey = "common.addToBasket",
 }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -92,7 +94,7 @@ export function ProductBuyBox({
 
       <div className="pdp-buy-actions">
         <button type="button" disabled={!product.inStock} onClick={onAdd} className="pdp-btn-cart">
-          {t("common.addToBasket")}
+          {t(actionLabelKey)}
         </button>
         {!compact && (
           <button

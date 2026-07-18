@@ -1,4 +1,4 @@
-import { resolveImageUrl } from "../utils/imageUrl";
+import { IMAGE_WIDTH, resolveImageUrl } from "../utils/imageUrl";
 
 type Variant = "tile" | "card";
 
@@ -15,7 +15,8 @@ const wrapperClass: Record<Variant, string> = {
 
 /** Scales image to fit its box on any screen size (object-contain via max dimensions). */
 export function CategoryImage({ src, alt = "", variant = "tile" }: Props) {
-  const imageSrc = resolveImageUrl(src);
+  const width = variant === "tile" ? IMAGE_WIDTH.category : IMAGE_WIDTH.card2x;
+  const imageSrc = resolveImageUrl(src, { width });
   if (!imageSrc) return null;
 
   return (

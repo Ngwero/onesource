@@ -74,7 +74,8 @@ export function CategoryPage() {
         image: category && "image" in category ? category.image : undefined,
       },
       preview?.image
-    )
+    ),
+    { width: 1200, quality: 72 }
   );
   return (
     <div className="w-full pb-8 sm:pb-16">

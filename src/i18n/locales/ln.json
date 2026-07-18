@@ -67,8 +67,100 @@
     "allProducts": "Biloko nyonso",
     "britishGrown": "Ya mboka",
     "seasonalDeals": "Ba offre ya saison",
+    "exports": "Kotinda na libanda",
     "categoriesLabel": "Ba catégorie",
     "mobileLabel": "Navigation ya téléphone"
+  },
+  "exports": {
+    "hero": {
+      "kicker": "Kotinda na mokili mobimba",
+      "title": "Biloko ya bilanga ya sika ya Uganda, etindami na mokili mobimba",
+      "subtitle": "Kobanda na ba ferme ya mike tii na ba marché ya mokili na kati ya ngonga 48. Endimami mobimba, ebatelami na malili mpe etindami na mpepo kobanda Entebbe.",
+      "browseCta": "Tala biloko ya kotinda na libanda",
+      "contactCta": "Solola na équipe na biso ya export"
+    },
+    "stats": {
+      "markets": "Ba marché ya libanda",
+      "volume": "Etindamaka mbula na mbula",
+      "coldChain": "Bokengeli ya malili",
+      "farms": "Ba ferme ya boyokani"
+    },
+    "search": {
+      "label": "Luka na",
+      "keywordPlaceholder": "Liloba ya eloko, ndakisa: scotch bonnet",
+      "allCommodities": "Biloko nyonso"
+    },
+    "quickLinks": {
+      "howItWorks": "Ndenge esalaka"
+    },
+    "gateway": {
+      "exportTitle": "Biloko ya kotinda na libanda",
+      "buyerTitle": "Ba service ya basombi",
+      "docs": "Mikanda mpe ba certificat",
+      "logistics": "Malili mpe kotinda"
+    },
+    "certifications": "Endimami mpo na export:",
+    "process": {
+      "title": "Kobanda na ferme tii na porte ya mpepo",
+      "subtitle": "Litindi nyonso elandaka nzela moko ya matambe minei, mpo bolamu etikala se malamu."
+    },
+    "steps": {
+      "source": {
+        "title": "Ezwami na ferme",
+        "desc": "Tobukaka na commande na ba ferme ya boyokani oyo etalami malamu na Uganda mobimba, tobukaka ntango ekomeli malamu."
+      },
+      "quality": {
+        "title": "Eponami mpe etalami",
+        "desc": "Eteni nyonso eponami, etalami na laboratoire mpe ezwaka mikanda ya bokolongono ya milona liboso ya kokanga."
+      },
+      "coldChain": {
+        "title": "Ekangami na malili",
+        "desc": "Biloko ekitisami malili liboso mpe ekangami na bisika ya température ekengelami, elandami banda ebandeli tii na suka."
+      },
+      "freight": {
+        "title": "Etindami na mpepo ya sika",
+        "desc": "Ba mpepo ya mokolo na mokolo kobanda Entebbe ekomisaka commande na yo na London, Dubai to Brussels na ngonga 48."
+      }
+    },
+    "products": {
+      "title": "Biloko ya niveau ya export",
+      "subtitle": "Biloko ya kitoko elonami mpe ekangami na mibeko ya mokili mobimba.",
+      "drinks": "Masanga",
+      "more": "Biloko mosusu ya export",
+      "empty": "Biloko ya export ezali kozonga — zonga kala mingi te."
+    },
+    "destinations": {
+      "title": "Esika totindaka",
+      "subtitle": "Ba nzela ya kotinda oyo elendisami na makoki ya poso na poso."
+    },
+    "cta": {
+      "title": "Ozali prêt mpo na kosomba uta na source?",
+      "body": "Soki olingi palette moko to programme ya poso na poso, biro na biso ya export ekosala mpo na yo boponi, mikanda mpe kotinda.",
+      "button": "Sɛnga devis ya export"
+    },
+    "confirmation": {
+      "badge": "Commande ya export",
+      "title": "Kondima commande na yo ya export",
+      "subtitle": "Tala biloko mpe pesa ba détails ya esika ekei. Biro na biso ya export ekondima kozwama, kotinda mpe mbongo ya suka.",
+      "buyerDetails": "Ba détails ya mosombi",
+      "company": "Nkombo ya société",
+      "destination": "Esika ya export",
+      "country": "Ekolo ya destination",
+      "deliveryAddress": "Adresse ya kokotisa, marché to aéroport",
+      "requirements": "Ba exigences ya kokanga, ba certificat to kotinda",
+      "orderSummary": "Résumé ya commande ya export",
+      "estimatedTotal": "Estimation ya biloko",
+      "freightNotice": "Kotinda, mikanda mpe ba frais ya destination ekondimami se na biro na biso ya export.",
+      "confirm": "Kondima commande ya export",
+      "submitting": "Ezali kokondima…",
+      "submitFailed": "Ekotí te kondima commande ya export. Leka lisusu.",
+      "addMore": "Bakisa biloko mosusu ya export",
+      "emptyTitle": "Commande na yo ya export ezali mpamba",
+      "emptyText": "Pona biloko ya export liboso ya kokondima commande.",
+      "browse": "Tala biloko ya kotinda na libanda",
+      "confirmedTitle": "Commande ya export ezwami",
+      "confirmedSubtitle": "Biro na biso ya export ekotala kozwama, mikanda mpe kotinda, sima ekosolola na yo mpo na kondima ya suka."
+    }
   },
   "auth": {
     "signIn": "Kokota",

@@ -14,10 +14,16 @@ export function CheckoutConfirmationPage() {
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
   const location = useLocation();
-  const paymentMethod = (location.state as { paymentMethod?: string } | null)?.paymentMethod;
+  const confirmationState = location.state as {
+    paymentMethod?: string;
+    orderType?: "retail" | "export";
+  } | null;
+  const paymentMethod = confirmationState?.paymentMethod;
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const isExportOrder =
+    confirmationState?.orderType === "export" || order?.order_type === "export";
 
   useEffect(() => {
     if (!id) return;
@@ -42,9 +48,15 @@ export function CheckoutConfirmationPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-text">{t("checkout.confirmedTitle")}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-text">
+          {isExportOrder
+            ? t("exports.confirmation.confirmedTitle")
+            : t("checkout.confirmedTitle")}
+        </h1>
         <p className="text-text-muted mt-3 text-sm sm:text-base leading-relaxed">
-          {t("checkout.confirmedSubtitle")}
+          {isExportOrder
+            ? t("exports.confirmation.confirmedSubtitle")
+            : t("checkout.confirmedSubtitle")}
         </p>
 
         {order && (
@@ -93,8 +105,13 @@ export function CheckoutConfirmationPage() {
               {t("auth.signIn")}
             </Link>
           )}
-          <Link to="/" className="btn-secondary min-h-[48px] justify-center">
-            {t("common.backToShop")}
+          <Link
+            to={isExportOrder ? "/exports" : "/"}
+            className="btn-secondary min-h-[48px] justify-center"
+          >
+            {isExportOrder
+              ? t("exports.confirmation.browse")
+              : t("common.backToShop")}
           </Link>
         </div>
       </div>

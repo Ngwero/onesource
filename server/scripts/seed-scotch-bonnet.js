@@ -1,5 +1,5 @@
 /**
- * Seed 10 Scotch bonnet products in Chillies and Peppers category.
+ * Seed 20 export-grade Hot Pepper Scotch bonnet products.
  *
  *   cd server && npm run seed:scotch-bonnet
  */
@@ -8,7 +8,7 @@ import { seedRowFromJson } from "../db.js";
 import { ensureProductPlaceholder } from "../lib/placeholderImage.js";
 import {
   SCOTCH_BONNET_PRODUCTS,
-  CHILLIES_CATEGORY_ID,
+  EXPORT_CATEGORY_ID,
 } from "../data/scotchBonnetCatalog.js";
 
 function randomPrice(base = 4500) {
@@ -34,13 +34,13 @@ async function main() {
         rating: Number((4.3 + Math.random() * 0.7).toFixed(1)),
         reviewCount: Math.floor(60 + Math.random() * 700),
         image,
-        category: CHILLIES_CATEGORY_ID,
+        category: EXPORT_CATEGORY_ID,
         unit: item.unit,
         prime: Math.random() > 0.35,
-        description: `Hot Scotch bonnet peppers. ${item.name}. Perfect for jerk seasoning, pepper sauce, and Caribbean dishes. Upload your photo in admin to replace the placeholder.`,
+        description: `${item.name}. Fresh Ugandan Scotch bonnet hot peppers, carefully graded and cold-chain packed for international export. Ideal for retail, foodservice, pepper sauce, marinades, and Caribbean dishes.`,
         inStock: true,
         stockQuantity: 30 + Math.floor(Math.random() * 90),
-        delivery: "FREE same-day delivery on orders over USh 100,000",
+        delivery: "Export documentation and airfreight support available",
       })
     );
   }
@@ -51,7 +51,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Seeded ${rows.length} Scotch bonnet products (${CHILLIES_CATEGORY_ID}).`);
+  console.log(`Seeded ${rows.length} Hot Pepper Scotch bonnet products (${EXPORT_CATEGORY_ID}).`);
   console.log("Search: scotch bonnet");
   for (const item of SCOTCH_BONNET_PRODUCTS) {
     console.log(`  • ${item.id} — ${item.name}`);

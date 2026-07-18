@@ -65,7 +65,7 @@ export function CategoryTile({ category, products, variant = "tile" }: Props) {
               <div key={p.id} className="category-tile-thumb">
                 {p.image ? (
                   <img
-                    src={resolveImageUrl(p.image)}
+                    src={resolveImageUrl(p.image, { width: 160 })}
                     alt=""
                     loading="lazy"
                     decoding="async"

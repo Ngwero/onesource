@@ -53,3 +53,46 @@ export const DEFAULT_HERO_SLIDES = [
     active: true,
   },
 ];
+
+/** Default exports-page hero carousel. The `export-` ID prefix identifies its placement. */
+export const DEFAULT_EXPORT_HERO_SLIDES = [
+  {
+    id: "export-hero-1",
+    sortOrder: 0,
+    image:
+      "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?w=1920&q=75&auto=format&fit=crop",
+    badge: "Global exports",
+    title: "Uganda's freshest produce, delivered to the world",
+    subtitle:
+      "Certified produce, cold-chain protected and air-freighted from Entebbe to international markets.",
+    cta: "Browse export produce",
+    ctaHref: "/category/export-fresh-produce",
+    active: true,
+  },
+  {
+    id: "export-hero-2",
+    sortOrder: 1,
+    image:
+      "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1920&q=75&auto=format&fit=crop",
+    badge: "Export-grade quality",
+    title: "Packed for international markets",
+    subtitle:
+      "Carefully graded, documented and packed to protect freshness throughout the journey.",
+    cta: "Place an order",
+    ctaHref: "/category/export-fresh-produce",
+    active: true,
+  },
+  {
+    id: "export-hero-3",
+    sortOrder: 2,
+    image:
+      "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1920&q=75&auto=format&fit=crop",
+    badge: "Reliable air freight",
+    title: "From Uganda to your market",
+    subtitle:
+      "Established export lanes connect our partner farms with buyers across Africa, Europe and the Gulf.",
+    cta: "Talk to our export team",
+    ctaHref: "#export-contact",
+    active: true,
+  },
+];

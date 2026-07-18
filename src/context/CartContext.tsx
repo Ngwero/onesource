@@ -19,7 +19,11 @@ export type LastAddedToBasket = {
 
 type CartContextType = {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (
+    product: Product,
+    quantity?: number,
+    options?: { openBasket?: boolean }
+  ) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -49,7 +53,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return Math.max(0, Math.min(cap, cap - current));
   };
 
-  const addToCart = useCallback((product: Product, quantity = 1) => {
+  const addToCart = useCallback((
+    product: Product,
+    quantity = 1,
+    options: { openBasket?: boolean } = {}
+  ) => {
     if (!product.inStock) return;
     setItems((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
@@ -57,7 +65,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const add = Math.min(quantity, maxForProduct(product, current));
       if (add < 1) return prev;
       setLastAdded({ product, quantityAdded: add });
-      setBasketOpen(true);
+      if (options.openBasket !== false) setBasketOpen(true);
       if (existing) {
         return prev.map((i) =>
           i.product.id === product.id

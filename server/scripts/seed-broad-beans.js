@@ -1,45 +1,44 @@
 /**
- * Seed 10 export-grade Green Chilli products.
+ * Seed 10 export-grade Broad Bean products.
  *
- *   cd server && npm run seed:green-chillies
+ *   cd server && npm run seed:broad-beans
  */
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
 import { ensureProductPlaceholder } from "../lib/placeholderImage.js";
 import {
-  GREEN_CHILLIES_PRODUCTS,
+  BROAD_BEANS_PRODUCTS,
   EXPORT_CATEGORY_ID,
-} from "../data/greenChilliesCatalog.js";
+} from "../data/broadBeansCatalog.js";
 
-function randomPrice(base = 3000) {
-  return Math.round((base + Math.floor(Math.random() * 8000)) / 100) * 100;
+function randomPrice(base = 4500) {
+  return Math.round((base + Math.floor(Math.random() * 9000)) / 100) * 100;
 }
 
 async function main() {
   const db = requireSupabase();
   const rows = [];
 
-  for (let i = 0; i < GREEN_CHILLIES_PRODUCTS.length; i++) {
-    const item = GREEN_CHILLIES_PRODUCTS[i];
+  for (let i = 0; i < BROAD_BEANS_PRODUCTS.length; i++) {
+    const item = BROAD_BEANS_PRODUCTS[i];
     const image = await ensureProductPlaceholder(item.id, item.name);
-    const price = randomPrice(2500 + i * 400);
-    const title = `${item.name} – One Source`;
+    const price = randomPrice(4000 + i * 450);
 
     rows.push(
       seedRowFromJson({
         id: item.id,
-        title,
+        title: `${item.name} – One Source`,
         price,
         originalPrice: i % 3 === 0 ? Math.round(price * 1.12) : undefined,
         rating: Number((4.2 + Math.random() * 0.75).toFixed(1)),
-        reviewCount: Math.floor(50 + Math.random() * 600),
+        reviewCount: Math.floor(45 + Math.random() * 580),
         image,
         category: EXPORT_CATEGORY_ID,
         unit: item.unit,
         prime: Math.random() > 0.4,
-        description: `${item.name}. Fresh Ugandan green chillies, carefully graded and cold-chain packed for international export. Ideal for retail, foodservice, curries, stews, and sauces.`,
+        description: `${item.name}. Fresh Ugandan broad beans, carefully harvested, graded and cold-chain packed for international export. Ideal for retail, foodservice and wholesale buyers.`,
         inStock: true,
-        stockQuantity: 40 + Math.floor(Math.random() * 100),
+        stockQuantity: 35 + Math.floor(Math.random() * 100),
         delivery: "Export documentation and airfreight support available",
       })
     );
@@ -51,14 +50,13 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Seeded ${rows.length} Green Chilli products (${EXPORT_CATEGORY_ID}).`);
-  console.log("Search: green chilli / green chillies");
-  for (const item of GREEN_CHILLIES_PRODUCTS) {
+  console.log(`Seeded ${rows.length} Broad Bean products (${EXPORT_CATEGORY_ID}).`);
+  for (const item of BROAD_BEANS_PRODUCTS) {
     console.log(`  • ${item.id} — ${item.name}`);
   }
 }
 
-main().catch((e) => {
-  console.error(e);
+main().catch((error) => {
+  console.error(error);
   process.exit(1);
 });

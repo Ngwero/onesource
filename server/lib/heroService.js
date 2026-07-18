@@ -1,5 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
-import { DEFAULT_HERO_SLIDES } from "../data/defaultHeroSlides.js";
+import {
+  DEFAULT_HERO_SLIDES,
+  DEFAULT_EXPORT_HERO_SLIDES,
+} from "../data/defaultHeroSlides.js";
 import { isSupabaseConnectionError } from "./supabaseErrors.js";
 
 function isMissingTable(error) {
@@ -15,6 +18,11 @@ function isMissingTable(error) {
 
 export const HERO_TABLE_SETUP_HINT =
   "Run server/supabase/hero-slides.sql in Supabase SQL Editor, then: cd server && npm run seed:hero";
+
+const ALL_DEFAULT_HERO_SLIDES = [
+  ...DEFAULT_HERO_SLIDES,
+  ...DEFAULT_EXPORT_HERO_SLIDES,
+];
 
 function rowToSlide(row) {
   return {
@@ -43,8 +51,8 @@ export async function listHeroSlides(db, { admin = false } = {}) {
   if (error) {
     if (isMissingTable(error) || isSupabaseConnectionError(error)) {
       return admin
-        ? DEFAULT_HERO_SLIDES
-        : DEFAULT_HERO_SLIDES.filter((s) => s.active);
+        ? ALL_DEFAULT_HERO_SLIDES
+        : ALL_DEFAULT_HERO_SLIDES.filter((s) => s.active);
     }
     throw error;
   }
@@ -52,8 +60,8 @@ export async function listHeroSlides(db, { admin = false } = {}) {
   const slides = (rows ?? []).map(rowToSlide);
   if (slides.length === 0) {
     return admin
-      ? DEFAULT_HERO_SLIDES
-      : DEFAULT_HERO_SLIDES.filter((s) => s.active);
+      ? ALL_DEFAULT_HERO_SLIDES
+      : ALL_DEFAULT_HERO_SLIDES.filter((s) => s.active);
   }
 
   if (admin) return slides;
@@ -138,5 +146,5 @@ export async function deleteHeroSlide(db, id) {
     throw error;
   }
   if (!data) throw new Error("Hero slide not found");
-  return { message: "Hero slide removed from homepage" };
+  return { message: "Hero slide removed" };
 }
