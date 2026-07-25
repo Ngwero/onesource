@@ -115,15 +115,47 @@ function requestOrigin(req) {
   return `${proto}://${host}`;
 }
 
+/** Bump when share preview copy/image changes so WhatsApp re-scrapes. */
+const OG_SHARE_VERSION = "20260725b";
+
+function ogMetaForPath(pathname) {
+  const path = String(pathname || "/").split("?")[0];
+  if (path === "/kitchen" || path.startsWith("/kitchen/")) {
+    return {
+      title: "One Source Kitchen Ware — Everything on One Place",
+      description:
+        "Cookware, cabinets, and kitchen essentials — shop One Source, everything on one place.",
+    };
+  }
+  return {
+    title: "One Source — Everything on One Place",
+    description:
+      "Shop fresh foods, kitchen ware, and everyday essentials — all in one place.",
+  };
+}
+
 function sendShopIndex(req, res) {
-  const origin = requestOrigin(req) || "https://one-sourcebrand.com";
+  const origin = requestOrigin(req) || "https://www.onesourco.com";
+  const pathname = req.path || "/";
+  const { title, description } = ogMetaForPath(pathname);
+  const pageUrl = `${origin}${pathname === "/" ? "/" : pathname}`;
+  // Version query forces scrapers (WhatsApp) to drop the old cached preview image.
+  const imageUrl = `${origin}/brand/logo-on-dark-stacked.png?v=${OG_SHARE_VERSION}`;
+
   fs.promises
     .readFile(shopIndex, "utf8")
     .then((html) => {
-      res
-        .type("html")
-        .set("Cache-Control", "no-cache")
-        .send(html.replaceAll("__OG_ORIGIN__", origin));
+      const out = html
+        .replaceAll("__OG_TITLE__", title)
+        .replaceAll("__OG_DESCRIPTION__", description)
+        .replaceAll("__OG_URL__", pageUrl)
+        .replaceAll("__OG_IMAGE__", imageUrl)
+        .replaceAll("__OG_ORIGIN__", origin)
+        .replace(
+          /<title>[^<]*<\/title>/,
+          `<title>${title.replace(/</g, "")}</title>`
+        );
+      res.type("html").set("Cache-Control", "no-cache").send(out);
     })
     .catch(() => {
       res.sendFile(shopIndex);
