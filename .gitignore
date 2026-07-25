@@ -15,6 +15,7 @@ server/data/*.db
 server/data/*.db-shm
 server/data/*.db-wal
 server/uploads
+server/data/kitchen-collage.local.json
 dist-ssr
 server/public/email-previews/
 *.local

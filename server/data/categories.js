@@ -23,12 +23,7 @@ export const AGRI_CATEGORIES = [
   { id: "fish-and-aquaculture", name: "Fish and Aquaculture", icon: "🐟", group: "livestock" },
   { id: "dairy-products", name: "Dairy Products", icon: "🥛", group: "livestock" },
   { id: "export-fresh-produce", name: "Export Fresh Produce", icon: "✈️", group: "specialty" },
-  {
-    id: "kitchen-furniture",
-    name: "Kitchen Furniture",
-    icon: "🪑",
-    group: "home",
-  },
+  { id: "kitchen-ware", name: "Kitchen Ware", icon: "🍳", group: "specialty" },
 ];
 
 export const REMOVED_CATEGORY_SLUGS = new Set([
@@ -51,6 +46,7 @@ export const LEGACY_CATEGORY_MAP = {
   "salad-herbs": "fresh-vegetables",
   "root-veg": "roots-and-tubers",
   "root-crops-and-tubers": "roots-and-tubers",
+  "kitchen-furniture": "kitchen-ware",
 };
 
 export const UNCATEGORIZED_CATEGORY_ID = "uncategorized";

@@ -80,6 +80,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
           Hero carousel
         </button>
+        <button type="button" class="nav-btn" data-view="kitchen-collage">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="12" y="3" width="9" height="8" rx="1"/><rect x="12" y="13" width="9" height="8" rx="1"/></svg>
+          Kitchen collage
+        </button>
         <div class="nav-label">Marketplace</div>
         <button type="button" class="nav-btn" data-view="suppliers">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -548,6 +552,47 @@
               </div>
             </div>
             <div class="banner-editor-grid" id="exportHeroSlideGrid"></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-kitchen-collage">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Kitchen Ware inspiration collage</h2>
+                <p class="panel-desc">
+                  IKEA-style hero on <code>/kitchen</code>: large left, middle pair,
+                  and the <strong>right column as a 2×2</strong> (7 slots).
+                </p>
+              </div>
+              <a class="btn btn-secondary btn-sm" href="http://localhost:5174/kitchen" target="_blank" rel="noopener">
+                Preview kitchen
+              </a>
+            </div>
+
+            <form id="kitchenCollageForm" class="form-grid kitchen-collage-form" style="gap:1.25rem">
+              <label class="field">
+                <span>Section title <em>(optional)</em></span>
+                <input type="text" id="kitchenCollageTitle" placeholder="Cooking and eating" />
+              </label>
+              <label class="field" style="grid-column:1/-1">
+                <span>Intro text <em>(optional)</em></span>
+                <textarea id="kitchenCollageBody" rows="2" placeholder="Optional — leave blank to hide on the shop"></textarea>
+              </label>
+
+              <div class="kitchen-collage-admin-grid" id="kitchenCollageSlots"></div>
+
+              <label class="checkbox-field">
+                <input type="checkbox" id="kitchenCollageActive" checked />
+                Show collage on kitchen home
+              </label>
+
+              <div class="kitchen-collage-form-actions form-actions" style="grid-column:1/-1">
+                <button type="submit" class="btn btn-primary" id="kitchenCollageSaveBtn">Save collage</button>
+                <button type="button" class="btn btn-secondary" id="kitchenCollageResetBtn">Reset to defaults</button>
+              </div>
+            </form>
+            <p class="panel-desc" id="kitchenCollageHint" style="margin-top:1rem"></p>
           </div>
         </section>
 

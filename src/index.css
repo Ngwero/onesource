@@ -188,6 +188,196 @@ body {
       0 0 0 1px rgba(46, 94, 74, 0.04);
   }
 
+  .site-header--kitchen {
+    background: linear-gradient(
+      180deg,
+      rgba(237, 243, 224, 0.98) 0%,
+      rgba(255, 255, 255, 0.96) 72%
+    );
+  }
+
+  .site-header--kitchen.site-header--scrolled {
+    background: rgba(247, 250, 242, 0.98);
+  }
+
+  .site-header--fresh {
+    background: rgba(255, 255, 255, 0.88);
+  }
+
+  /* Fresh | Kitchen shop switcher */
+  .site-shop-switcher {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 0.85rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.15rem;
+  }
+
+  .site-shop-switcher-label {
+    margin: 0;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted, #6b7280);
+  }
+
+  .site-shop-switcher-track {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+    width: min(100%, 34rem);
+    padding: 0.25rem;
+    border-radius: 0.9rem;
+    background: rgba(15, 23, 42, 0.05);
+    border: 1px solid var(--color-border, #e5e7eb);
+  }
+
+  .site-shop-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    padding: 0.45rem 0.65rem;
+    border-radius: 0.7rem;
+    text-decoration: none;
+    color: var(--color-text-muted, #6b7280);
+    transition:
+      background 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .site-shop-switch:hover {
+    color: var(--color-text, #111);
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  .site-shop-switch.is-active {
+    background: #fff;
+    color: var(--color-text, #111);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+  }
+
+  .site-header--kitchen .site-shop-switch.is-active {
+    background: #2e5e4a;
+    color: #fff;
+    box-shadow: 0 4px 14px -6px rgba(46, 94, 74, 0.55);
+  }
+
+  .site-header--fresh .site-shop-switch.is-active {
+    background: var(--color-accent, #2e5e4a);
+    color: #fff;
+  }
+
+  .site-shop-switch-icon {
+    font-size: 1.05rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .site-shop-switch-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.15;
+  }
+
+  .site-shop-switch-copy strong {
+    font-size: 0.8125rem;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .site-shop-switch-copy span {
+    font-size: 0.625rem;
+    opacity: 0.82;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 479px) {
+    .site-shop-switch-copy span {
+      display: none;
+    }
+  }
+
+  .site-header-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    text-decoration: none;
+  }
+
+  .site-header-shop-badge {
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent, #2e5e4a);
+    line-height: 1;
+  }
+
+  .site-header--kitchen .site-header-shop-badge {
+    color: #2e5e4a;
+  }
+
+  .site-header-nav-scope {
+    flex-shrink: 0;
+    padding: 0.35rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--color-accent, #2e5e4a);
+  }
+
+  .site-header--kitchen .site-header-nav-scope {
+    background: #244a3b;
+  }
+
+  .site-header-chip {
+    flex-shrink: 0;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--color-text-muted, #6b7280);
+    background: var(--color-muted, #f3f4f6);
+    transition: all 0.15s ease;
+  }
+
+  @media (min-width: 640px) {
+    .site-header-chip {
+      font-size: 0.875rem;
+      padding: 0.5rem 1rem;
+    }
+  }
+
+  .site-header-chip:hover {
+    background: var(--color-accent-light, #edf3e0);
+    color: var(--color-accent, #2e5e4a);
+  }
+
+  .site-header-chip.is-active {
+    background: var(--color-accent, #2e5e4a);
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  }
+
+  .site-header--kitchen .site-header-chip.is-active {
+    background: #2e5e4a;
+  }
+
   .site-header-progress {
     position: absolute;
     top: 0;
@@ -5583,3 +5773,2349 @@ body {
     white-space: nowrap;
   }
 }
+
+/* —— Kitchen Ware page (dedicated shop destination) —— */
+.kitchen-page {
+  --kitchen-ink: #111827;
+  --kitchen-green: #2e5e4a;
+  --kitchen-green-deep: #244a3b;
+  --kitchen-green-soft: #edf3e0;
+  --kitchen-green-mid: #d7e6c8;
+  --kitchen-panel: #f4f8ee;
+  --kitchen-mist: #f7faf3;
+  --kitchen-font: "Plus Jakarta Sans", "Gabarito", system-ui, sans-serif;
+  font-family: var(--kitchen-font);
+  background: linear-gradient(180deg, #f7faf3 0%, #f3f7ed 45%, #eef4e8 100%);
+  color: var(--kitchen-ink);
+}
+
+.kitchen-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(120deg, rgba(36, 74, 59, 0.92) 0%, rgba(46, 94, 74, 0.78) 48%, rgba(46, 94, 74, 0.45) 100%),
+    radial-gradient(ellipse 55% 70% at 88% 18%, rgba(237, 243, 224, 0.35), transparent 55%),
+    linear-gradient(160deg, #1a3d30 0%, #2e5e4a 52%, #5a8f6e 100%);
+}
+
+.kitchen-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 48px,
+      rgba(255, 255, 255, 0.03) 48px,
+      rgba(255, 255, 255, 0.03) 49px
+    );
+  pointer-events: none;
+  animation: kitchen-grain 18s linear infinite;
+}
+
+.kitchen-hero::after {
+  content: "";
+  position: absolute;
+  right: -8%;
+  bottom: -18%;
+  width: min(58vw, 520px);
+  height: min(58vw, 520px);
+  border-radius: 40% 60% 55% 45%;
+  background:
+    radial-gradient(circle at 40% 40%, rgba(237, 243, 224, 0.28), transparent 62%),
+    linear-gradient(145deg, rgba(215, 230, 200, 0.35), rgba(46, 94, 74, 0.15));
+  filter: blur(2px);
+  pointer-events: none;
+  animation: kitchen-orb 9s ease-in-out infinite alternate;
+}
+
+@keyframes kitchen-grain {
+  from { transform: translateX(0); }
+  to { transform: translateX(-48px); }
+}
+
+@keyframes kitchen-orb {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-18px, -22px, 0) scale(1.06); }
+}
+
+.kitchen-hero-brand {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #edf3e0;
+}
+
+.kitchen-hero-title {
+  margin-top: 0.7rem;
+  max-width: 14ch;
+  font-size: clamp(2.1rem, 5.5vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  color: #fff;
+}
+
+.kitchen-hero-lede {
+  margin-top: 0.95rem;
+  max-width: 34rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.kitchen-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.65rem;
+  margin-top: 1.15rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #edf3e0;
+}
+
+.kitchen-btn-primary,
+.kitchen-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.55rem;
+  padding: 0.7rem 1.15rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.kitchen-btn-primary {
+  background: #edf3e0;
+  color: #1a3d30;
+}
+
+.kitchen-btn-primary:hover {
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.kitchen-btn-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: #fff;
+}
+
+.kitchen-cta .kitchen-btn-ghost {
+  border-color: rgba(46, 94, 74, 0.28);
+  color: var(--kitchen-green-deep);
+}
+
+.kitchen-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.kitchen-subnav {
+  position: sticky;
+  top: var(--site-header-height, 7rem);
+  z-index: 30;
+  border-bottom: 1px solid rgba(46, 94, 74, 0.12);
+  background: rgba(46, 94, 74, 0.96);
+  backdrop-filter: blur(10px);
+}
+
+.kitchen-subnav-inner {
+  display: flex;
+  gap: 0.4rem;
+  max-width: var(--page-max, 80rem);
+  margin-inline: auto;
+  padding: 0.55rem 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.kitchen-subnav-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.kitchen-subnav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.45rem 0.8rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.kitchen-subnav-link:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.kitchen-subnav-link--accent {
+  background: #edf3e0;
+  border-color: transparent;
+  color: #1a3d30;
+}
+
+.kitchen-subnav-link--accent:hover {
+  background: #fff;
+}
+
+.kitchen-subnav-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.kitchen-subnav-label {
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) {
+  .kitchen-subnav-label {
+    max-width: none;
+  }
+}
+
+.kitchen-subnav-count {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 0.1rem 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.kitchen-subnav-link--accent .kitchen-subnav-count {
+  background: rgba(26, 61, 48, 0.12);
+}
+
+.kitchen-section-kicker {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--kitchen-green);
+}
+
+.kitchen-section-title {
+  margin-top: 0.2rem;
+  font-size: clamp(1.55rem, 3vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #111;
+}
+
+.kitchen-section-hint {
+  margin-top: 0.4rem;
+  max-width: 40rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #5c5c58;
+}
+
+.kitchen-section-head--row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.kitchen-text-link {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--kitchen-green);
+  text-decoration: none;
+}
+
+.kitchen-text-link:hover {
+  text-decoration: underline;
+}
+
+/* Clean IKEA-style category grid */
+.kitchen-zones {
+  background: #fff;
+  border: 1px solid rgba(46, 94, 74, 0.08);
+  border-radius: 0.35rem;
+  padding: 1.35rem 1rem 1.6rem;
+}
+
+@media (min-width: 640px) {
+  .kitchen-zones {
+    padding: 1.75rem 1.5rem 2rem;
+  }
+}
+
+.kitchen-category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.35rem 0.9rem;
+}
+
+@media (min-width: 640px) {
+  .kitchen-category-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.6rem 1.1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kitchen-category-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1.75rem 1.15rem;
+  }
+}
+
+.kitchen-category-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  animation: kitchen-card-in 0.5s ease both;
+}
+
+@keyframes kitchen-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kitchen-category-card:hover .kitchen-category-media {
+  outline: 2px solid var(--kitchen-green);
+  outline-offset: 2px;
+}
+
+.kitchen-category-card:hover .kitchen-category-label {
+  color: var(--kitchen-green);
+}
+
+.kitchen-category-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 0;
+  background: var(--kitchen-green-soft);
+  transition: outline-color 0.15s ease;
+}
+
+.kitchen-category-image {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  padding: 0.65rem !important;
+  background: var(--kitchen-green-soft) !important;
+}
+
+.kitchen-category-image img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+}
+
+.kitchen-category-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 2rem;
+  background: var(--kitchen-green-soft);
+}
+
+.kitchen-category-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #111;
+  text-align: left;
+}
+
+.kitchen-aisle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+/* —— IKEA-style kitchen item listings —— */
+.kitchen-ikea-aisle {
+  background: #fff;
+  border: 1px solid rgba(31, 36, 32, 0.08);
+  border-radius: 0.35rem;
+  padding: 1rem 0.85rem 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .kitchen-ikea-aisle {
+    padding: 1.25rem 1.35rem 1.75rem;
+  }
+}
+
+.kitchen-ikea-aisle-head {
+  border-bottom: 1px solid #e5e5e5;
+  margin-bottom: 0.85rem;
+}
+
+.kitchen-ikea-aisle-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.25rem;
+}
+
+.kitchen-ikea-aisle-title {
+  margin: 0;
+  padding-bottom: 0.65rem;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111;
+}
+
+.kitchen-ikea-aisle-tab {
+  padding: 0.55rem 0 0.65rem;
+  border-bottom: 3px solid var(--kitchen-green, #2e5e4a);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.kitchen-ikea-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.1rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #eee;
+}
+
+.kitchen-ikea-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.kitchen-ikea-sort select {
+  border: 1px solid #ccc;
+  border-radius: 0.2rem;
+  background: #fff;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  color: #111;
+  min-height: 2.25rem;
+}
+
+.kitchen-ikea-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+}
+
+.kitchen-ikea-check input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #111;
+}
+
+.kitchen-ikea-reset {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--kitchen-green, #2e5e4a);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.kitchen-ikea-toolbar-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #666;
+}
+
+.kitchen-ikea-empty {
+  padding: 2rem 0.5rem;
+  text-align: center;
+  color: #666;
+}
+
+.kitchen-ikea-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.35rem 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .kitchen-ikea-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.75rem 1.15rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kitchen-ikea-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2rem 1.35rem;
+  }
+}
+
+/* IKEA-style kitchen product cards + horizontal rows */
+.kitchen-ikea-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+
+.kitchen-ikea-card-media {
+  display: block;
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #fff;
+  overflow: hidden;
+  width: 100%;
+}
+
+.kitchen-ikea-card-image {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  padding: 0.5rem !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  background: #fff !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.kitchen-ikea-card-image img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center;
+}
+
+.kitchen-ikea-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.65rem;
+  flex: 1;
+}
+
+.kitchen-ikea-card-new {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kitchen-green, #2e5e4a);
+  line-height: 1.2;
+}
+
+.kitchen-ikea-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.kitchen-ikea-card-series-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.kitchen-ikea-card-series {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #111;
+  line-height: 1.3;
+}
+
+.kitchen-ikea-card-bag {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: #6b6b6b;
+}
+
+.kitchen-ikea-card-bag svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.kitchen-ikea-card-facts {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: #5c5c58;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.kitchen-ikea-card-pricing {
+  margin-top: 0.2rem;
+}
+
+.kitchen-ikea-card-was {
+  display: block;
+  font-size: 0.75rem;
+  color: #484848;
+  text-decoration: line-through;
+}
+
+.kitchen-ikea-card-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.4rem;
+  margin-top: 0.1rem;
+}
+
+.kitchen-ikea-card-price {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #111;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.kitchen-ikea-card-price-row:has(.kitchen-ikea-card-off) .kitchen-ikea-card-price {
+  color: var(--color-deal, #c9920f);
+}
+
+.kitchen-ikea-card-unit {
+  display: inline;
+  margin-top: 0;
+  font-size: 0.8125rem;
+  color: #111;
+  font-weight: 500;
+}
+
+.kitchen-ikea-card-off {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-deal, #c9920f);
+}
+
+.kitchen-ikea-card-options {
+  display: inline-block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: #484848;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.kitchen-ikea-card-options:hover {
+  color: #111;
+}
+
+.kitchen-ikea-card-options--spacer {
+  visibility: hidden;
+  text-decoration: none;
+  pointer-events: none;
+}
+
+.kitchen-ikea-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: auto;
+  padding-top: 0.65rem;
+}
+
+.kitchen-ikea-icon-btn {
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 0.85rem;
+  border: 1px solid #d7d7d4;
+  background: #fff;
+  color: #1c1c1c;
+  display: inline-grid;
+  place-items: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease,
+    transform 0.18s ease, box-shadow 0.18s ease;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+.kitchen-ikea-icon-btn svg {
+  display: block;
+}
+
+.kitchen-ikea-icon-btn:hover {
+  background: #f7faf3;
+  border-color: var(--kitchen-green, #2e5e4a);
+  color: var(--kitchen-green, #2e5e4a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(46, 94, 74, 0.12);
+}
+
+.kitchen-ikea-icon-btn--cart {
+  background: var(--kitchen-green, #2e5e4a);
+  border-color: var(--kitchen-green, #2e5e4a);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(46, 94, 74, 0.22);
+}
+
+.kitchen-ikea-icon-btn--cart:hover:not(:disabled) {
+  background: var(--kitchen-green-deep, #244a3b);
+  border-color: var(--kitchen-green-deep, #244a3b);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(46, 94, 74, 0.28);
+}
+
+.kitchen-ikea-icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.kitchen-ikea-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+@media (min-width: 640px) {
+  .kitchen-ikea-rows {
+    gap: 2.25rem;
+  }
+}
+
+.kitchen-ikea-row {
+  min-width: 0;
+}
+
+.kitchen-ikea-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.kitchen-ikea-row-title {
+  margin: 0;
+  font-size: clamp(1.05rem, 3.5vw, 1.4rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  color: #111;
+}
+
+.kitchen-ikea-row-more {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--kitchen-green, #2e5e4a);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .kitchen-ikea-row-more {
+    font-size: 0.8125rem;
+  }
+}
+
+.kitchen-ikea-row-more:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kitchen-ikea-row-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.1rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #ebebe8;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.kitchen-ikea-row-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.kitchen-ikea-row-tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0.5rem 0.7rem 0.55rem;
+  margin-bottom: -1px;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #6b6b6b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .kitchen-ikea-row-tab {
+    font-size: 0.875rem;
+    padding: 0.55rem 0.85rem 0.65rem;
+  }
+}
+
+.kitchen-ikea-row-tab.is-active {
+  font-weight: 600;
+  color: #111;
+  border-bottom-color: var(--kitchen-green, #2e5e4a);
+}
+
+.kitchen-ikea-row-tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.kitchen-ikea-row-body {
+  position: relative;
+  margin: 0 -0.15rem;
+}
+
+.kitchen-ikea-row-track {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 0.15rem 0.15rem 0.65rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.kitchen-ikea-row-track::-webkit-scrollbar {
+  display: none;
+}
+
+.kitchen-ikea-row-item {
+  flex: 0 0 auto;
+  width: min(46vw, 10.5rem);
+  scroll-snap-align: start;
+}
+
+@media (min-width: 480px) {
+  .kitchen-ikea-row-item {
+    width: min(40vw, 11.5rem);
+  }
+}
+
+@media (min-width: 640px) {
+  .kitchen-ikea-row-item {
+    width: 12.5rem;
+  }
+
+  .kitchen-ikea-row-track {
+    gap: 1.15rem;
+  }
+
+  .kitchen-ikea-row-body {
+    margin: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kitchen-ikea-row-item {
+    width: 13.25rem;
+  }
+
+  .kitchen-ikea-row-track {
+    gap: 1.5rem;
+  }
+}
+
+.kitchen-ikea-row-arrow {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .kitchen-ikea-row-arrow {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: 28%;
+    z-index: 2;
+    width: 2.65rem;
+    height: 2.65rem;
+    border-radius: 0.85rem;
+    border: 1px solid #e2e2de;
+    background: #fff;
+    color: #1c1c1c;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .kitchen-ikea-row-arrow:hover:not(:disabled) {
+    border-color: var(--kitchen-green, #2e5e4a);
+    color: var(--kitchen-green, #2e5e4a);
+    box-shadow: 0 4px 14px rgba(46, 94, 74, 0.12);
+  }
+
+  .kitchen-ikea-row-arrow svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .kitchen-ikea-row-arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .kitchen-ikea-row-arrow--prev {
+    left: 0.25rem;
+  }
+
+  .kitchen-ikea-row-arrow--next {
+    right: 0.25rem;
+  }
+}
+
+.kitchen-ikea-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.kitchen-ikea-more {
+  border: 1px solid var(--kitchen-green, #2e5e4a);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kitchen-green, #2e5e4a);
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.7rem 1.35rem;
+  cursor: pointer;
+}
+
+.kitchen-ikea-more:hover {
+  background: var(--kitchen-green, #2e5e4a);
+  color: #fff;
+}
+
+.kitchen-empty {
+  margin-inline: auto;
+  max-width: 28rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid rgba(31, 36, 32, 0.08);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #5c5c58;
+}
+
+.kitchen-cta {
+  border-radius: 1.15rem;
+  background:
+    linear-gradient(135deg, rgba(237, 243, 224, 0.95), rgba(215, 230, 200, 0.45)),
+    #fff;
+  border: 1px solid rgba(46, 94, 74, 0.14);
+  padding: 1.5rem 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .kitchen-cta {
+    padding: 2rem 2rem;
+  }
+}
+
+.kitchen-cta h2 {
+  margin-top: 0.35rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.kitchen-cta p {
+  margin-top: 0.45rem;
+  max-width: 40rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #5c5c58;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kitchen-hero::before,
+  .kitchen-hero::after,
+  .kitchen-category-card {
+    animation: none !important;
+  }
+}
+
+.kitchen-ikea-icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* —— Kitchen Ware home (IKEA room shop layout) —— */
+.kitchen-home {
+  --kitchen-green: #2e5e4a;
+  --kitchen-green-deep: #244a3b;
+  --kitchen-green-soft: #edf3e0;
+  --kitchen-green-mid: #d7e6c8;
+  background: #fff;
+  color: #111;
+}
+
+.kitchen-home-shell {
+  padding-top: 0.75rem;
+  padding-bottom: 2rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  width: 85%;
+  max-width: 85%;
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .kitchen-home-shell {
+    padding-left: max(1.25rem, env(safe-area-inset-left));
+    padding-right: max(1.25rem, env(safe-area-inset-right));
+  }
+}
+
+@media (min-width: 1024px) {
+  .kitchen-home-shell {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+}
+
+.kitchen-home-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.kitchen-home-tabs {
+  display: flex;
+  gap: 1.35rem;
+}
+
+.kitchen-home-tab {
+  border: 0;
+  background: none;
+  padding: 0.85rem 0 0.7rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  text-decoration: none;
+}
+
+.kitchen-home-tab.is-active {
+  color: #111;
+  border-bottom-color: var(--kitchen-green);
+}
+
+.kitchen-home-fresh {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--kitchen-green);
+  text-decoration: none;
+  padding-bottom: 0.85rem;
+}
+
+.kitchen-home-fresh:hover {
+  text-decoration: underline;
+}
+
+.kitchen-home-categories {
+  margin-top: 1.25rem;
+}
+
+.kitchen-home-cat-scroll {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  margin-inline: calc(-1 * max(1rem, env(safe-area-inset-left)));
+  padding-inline: max(1rem, env(safe-area-inset-left));
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+@media (min-width: 640px) {
+  .kitchen-home-cat-scroll {
+    margin-inline: calc(-1 * max(1.25rem, env(safe-area-inset-left)));
+    padding-inline: max(1.25rem, env(safe-area-inset-left));
+  }
+}
+
+@media (min-width: 1024px) {
+  .kitchen-home-cat-scroll {
+    margin-inline: calc(-1 * max(1.5rem, env(safe-area-inset-left)));
+    padding-inline: max(1.5rem, env(safe-area-inset-left));
+  }
+}
+
+.kitchen-home-cat {
+  flex: 0 0 auto;
+  width: min(42vw, 9.5rem);
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+  color: inherit;
+}
+
+@media (min-width: 640px) {
+  .kitchen-home-cat {
+    width: 10.5rem;
+  }
+}
+
+.kitchen-home-cat-media {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--kitchen-green-soft);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s ease;
+}
+
+.kitchen-home-cat.is-active .kitchen-home-cat-media,
+.kitchen-home-cat:hover .kitchen-home-cat-media {
+  outline-color: var(--kitchen-green);
+}
+
+.kitchen-home-cat-media--all {
+  display: grid;
+  place-items: center;
+  font-size: 1.75rem;
+}
+
+.kitchen-home-cat-image {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  padding: 0.45rem !important;
+  background: var(--kitchen-green-soft) !important;
+}
+
+.kitchen-home-cat-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.kitchen-home-cat-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.5rem;
+}
+
+.kitchen-home-cat strong {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #111;
+}
+
+.kitchen-home-cat.is-active strong {
+  color: var(--kitchen-green);
+}
+
+.kitchen-home-catalogs-intro {
+  margin-top: 1.5rem;
+  max-width: 40rem;
+}
+
+.kitchen-home-catalogs-intro h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.kitchen-home-catalogs-intro p {
+  margin: 0.55rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #5c5c58;
+}
+
+.kitchen-home-feed {
+  margin-top: 1.75rem;
+}
+
+.kitchen-home-feed-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  border-bottom: 1px solid #e8e8e8;
+  margin-bottom: 1.25rem;
+}
+
+.kitchen-home-feed-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.35rem;
+}
+
+.kitchen-home-feed-tab {
+  border: 0;
+  background: none;
+  padding: 0.7rem 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+}
+
+.kitchen-home-feed-tab.is-active {
+  color: #111;
+  border-bottom-color: var(--kitchen-green);
+}
+
+.kitchen-home-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--kitchen-green-soft);
+  color: var(--kitchen-green-deep);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.55rem 0.35rem 0.75rem;
+}
+
+.kitchen-home-filter-chip button {
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.15rem;
+}
+
+.kitchen-home-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .kitchen-home-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.75rem 1.15rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kitchen-home-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2rem 1.35rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .kitchen-home-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1680px) {
+  .kitchen-home-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.kitchen-home-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.75rem;
+}
+
+.kitchen-home-more,
+.kitchen-home-reset {
+  border: 1px solid var(--kitchen-green);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kitchen-green);
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.7rem 1.35rem;
+  cursor: pointer;
+}
+
+.kitchen-home-more:hover,
+.kitchen-home-reset:hover {
+  background: var(--kitchen-green);
+  color: #fff;
+}
+
+.kitchen-home-empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: #666;
+}
+
+.kitchen-home-welcome {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
+  max-width: 46rem;
+}
+
+.kitchen-home-welcome h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.5vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #111;
+}
+
+.kitchen-home-welcome p {
+  margin: 0.85rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #5c5c58;
+}
+
+/* —— Kitchen IKEA-style product details page —— */
+.kitchen-pdp {
+  background: #fff;
+  color: #111;
+  padding-bottom: 4rem;
+}
+
+.kitchen-pdp-shell {
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+  max-width: 1200px;
+}
+
+.kitchen-pdp-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.45rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.kitchen-pdp-crumbs a {
+  color: var(--kitchen-green, #2e5e4a);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.kitchen-pdp-crumbs a:hover {
+  text-decoration: underline;
+}
+
+.kitchen-pdp-crumb-current {
+  color: #111;
+  font-weight: 600;
+}
+
+.kitchen-pdp-main {
+  display: grid;
+  gap: 1.5rem 2rem;
+}
+
+@media (min-width: 900px) {
+  .kitchen-pdp-main {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+    align-items: start;
+    gap: 2rem 3rem;
+  }
+}
+
+.kitchen-pdp-gallery {
+  position: relative;
+  background: #f7faf3;
+  border: 1px solid rgba(46, 94, 74, 0.08);
+}
+
+.kitchen-pdp-gallery-frame {
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+.kitchen-pdp-gallery-image {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.kitchen-pdp-gallery-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.kitchen-pdp-gallery-badge {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  background: #cc0008;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.3rem 0.45rem;
+}
+
+.kitchen-pdp-series {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  line-height: 1.15;
+  color: #111;
+}
+
+.kitchen-pdp-title {
+  margin: 0.35rem 0 0;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #484848;
+}
+
+.kitchen-pdp-price-block {
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.kitchen-pdp-was {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #484848;
+}
+
+.kitchen-pdp-offer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.kitchen-pdp-price {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #cc0008;
+  line-height: 1;
+}
+
+.kitchen-pdp-off {
+  background: #cc0008;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.4rem;
+}
+
+.kitchen-pdp-article {
+  margin: 0.85rem 0 0;
+  font-size: 0.8125rem;
+  color: #666;
+}
+
+.kitchen-pdp-article strong {
+  color: #111;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.kitchen-pdp-stock {
+  margin: 0.55rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.kitchen-pdp-stock.is-in {
+  color: var(--kitchen-green, #2e5e4a);
+}
+
+.kitchen-pdp-stock.is-out {
+  color: #cc0008;
+}
+
+.kitchen-pdp-buy {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 1.15rem;
+}
+
+.kitchen-pdp-qty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.kitchen-pdp-qty-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #666;
+}
+
+.kitchen-pdp-qty select {
+  min-width: 4rem;
+  min-height: 3.15rem;
+  border: 1px solid #ccc;
+  border-radius: 0.2rem;
+  background: #fff;
+  padding: 0.5rem 0.55rem;
+  font: inherit;
+  font-weight: 700;
+}
+
+.kitchen-pdp-add {
+  flex: 1;
+  min-height: 3.15rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--kitchen-green, #2e5e4a);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.kitchen-pdp-add:hover:not(:disabled) {
+  background: var(--kitchen-green-deep, #244a3b);
+}
+
+.kitchen-pdp-add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.kitchen-pdp-promises {
+  margin: 1.15rem 0 0;
+  padding: 0.85rem 0 0;
+  border-top: 1px solid #eee;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  color: #484848;
+}
+
+.kitchen-pdp-promises li {
+  padding-left: 1.15rem;
+  position: relative;
+}
+
+.kitchen-pdp-promises li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--kitchen-green, #2e5e4a);
+  font-weight: 800;
+}
+
+.kitchen-pdp-blurb {
+  margin: 1.1rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #333;
+}
+
+.kitchen-pdp-back {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--kitchen-green, #2e5e4a);
+  text-decoration: none;
+}
+
+.kitchen-pdp-back:hover {
+  text-decoration: underline;
+}
+
+.kitchen-pdp-combine {
+  margin-top: 2.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.kitchen-pdp-combine-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1.15rem;
+}
+
+.kitchen-pdp-combine-head h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.kitchen-pdp-combine-head a {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--kitchen-green, #2e5e4a);
+  text-decoration: none;
+}
+
+.kitchen-pdp-combine-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .kitchen-pdp-combine-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .kitchen-pdp-combine-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.kitchen-pdp-details {
+  margin-top: 2.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.25rem;
+}
+
+.kitchen-pdp-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #666;
+}
+
+.kitchen-pdp-tabs span:first-child {
+  color: #111;
+  border-bottom: 2px solid var(--kitchen-green, #2e5e4a);
+  padding-bottom: 0.25rem;
+}
+
+.kitchen-pdp-acc {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.kitchen-pdp-acc-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border: 0;
+  background: none;
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: left;
+  color: #111;
+  cursor: pointer;
+}
+
+.kitchen-pdp-acc-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #666;
+}
+
+.kitchen-pdp-acc-panel {
+  padding: 0 0 1.15rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #333;
+}
+
+.kitchen-pdp-feature-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.kitchen-pdp-specs {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.kitchen-pdp-specs > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) 1fr;
+  gap: 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.kitchen-pdp-specs dt {
+  font-weight: 700;
+  color: #666;
+}
+
+.kitchen-pdp-specs dd {
+  margin: 0;
+  color: #111;
+}
+
+/* —— Kitchen multi-page shop —— */
+.kitchen-home-intro {
+  margin: 1.25rem 0 0.5rem;
+  max-width: 42rem;
+}
+
+.kitchen-home-intro h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111;
+}
+
+.kitchen-home-intro p {
+  margin: 0 0 1rem;
+  color: #444;
+  line-height: 1.55;
+  font-size: 0.975rem;
+}
+
+.kitchen-home-see-all {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--kitchen-green, #2e5e4a);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.kitchen-home-see-all:hover {
+  text-decoration: underline;
+}
+
+.kitchen-sub-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  margin: 0.35rem 0 1rem;
+  font-size: 0.8125rem;
+  color: #666;
+}
+
+.kitchen-sub-crumb a {
+  color: var(--kitchen-green, #2e5e4a);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.kitchen-sub-crumb a:hover {
+  text-decoration: underline;
+}
+
+.kitchen-sub-hero {
+  margin-bottom: 1.5rem;
+  max-width: 40rem;
+}
+
+.kitchen-sub-hero h1 {
+  margin: 0 0 0.45rem;
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.kitchen-sub-hero p {
+  margin: 0 0 1rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.kitchen-sub-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.kitchen-sub-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid #cfd8c8;
+  background: #fff;
+  color: #1f3d30;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.kitchen-sub-btn:hover {
+  border-color: var(--kitchen-green, #2e5e4a);
+  background: var(--kitchen-green-soft, #edf3e0);
+}
+
+.kitchen-sub-btn--primary {
+  background: var(--kitchen-green, #2e5e4a);
+  border-color: var(--kitchen-green, #2e5e4a);
+  color: #fff;
+}
+
+.kitchen-sub-btn--primary:hover {
+  background: var(--kitchen-green-deep, #244a3b);
+  border-color: var(--kitchen-green-deep, #244a3b);
+  color: #fff;
+}
+
+.kitchen-aisle-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.kitchen-aisle-hero-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 1rem;
+  display: grid;
+  place-items: center;
+  background: var(--kitchen-green-soft, #edf3e0);
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.kitchen-aisle-kicker {
+  margin: 0 0 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7a68;
+}
+
+.kitchen-aisle-hero h1 {
+  margin: 0 0 0.25rem;
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  font-weight: 800;
+}
+
+.kitchen-aisle-hero p {
+  margin: 0;
+  color: #555;
+}
+
+.kitchen-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .kitchen-cat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kitchen-cat-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.kitchen-cat-tile {
+  display: flex;
+  flex-direction: column;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #f7f8f4;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #e6ebe0;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.kitchen-cat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -12px rgba(36, 74, 59, 0.35);
+}
+
+.kitchen-cat-tile-media {
+  aspect-ratio: 4 / 3;
+  background: #eef2e8;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.kitchen-cat-tile-image {
+  width: 100%;
+  height: 100%;
+}
+
+.kitchen-cat-tile-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kitchen-cat-tile-fallback {
+  font-size: 2rem;
+}
+
+.kitchen-cat-tile-body {
+  padding: 0.85rem 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kitchen-cat-tile-body strong {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #111;
+}
+
+.kitchen-cat-tile-body span {
+  font-size: 0.8125rem;
+  color: #666;
+}
+
+
+/* IKEA-style kitchen inspiration collage hero */
+.kitchen-collage {
+  margin: 0 0 1rem;
+  background: transparent;
+}
+
+.kitchen-collage-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.95fr 0.55fr 0.55fr;
+  grid-template-rows: 1fr 1.1fr;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 18rem;
+  height: min(42vw, 24rem);
+  background: transparent;
+}
+
+@media (min-width: 900px) {
+  .kitchen-collage-grid {
+    gap: 0.55rem;
+    min-height: 26rem;
+    height: 26rem;
+  }
+}
+
+.kitchen-collage-slot {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background: #f0f2eb;
+  min-width: 0;
+  min-height: 0;
+  text-decoration: none;
+}
+
+.kitchen-collage-slot--hero {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.kitchen-collage-slot--a {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.kitchen-collage-slot--b {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.kitchen-collage-slot--r1 {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.kitchen-collage-slot--r2 {
+  grid-column: 4;
+  grid-row: 1;
+}
+
+.kitchen-collage-slot--r3 {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.kitchen-collage-slot--r4 {
+  grid-column: 4;
+  grid-row: 2;
+}
+
+/* Absolute fill so images never collapse to 0 height on mobile */
+.kitchen-collage-image {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  aspect-ratio: auto !important;
+  min-height: 0 !important;
+  background: #f0f2eb !important;
+}
+
+.kitchen-collage-image img,
+.kitchen-collage-photo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border: 0;
+  transition: transform 0.45s ease;
+}
+
+.kitchen-collage-slot:hover .kitchen-collage-image img,
+.kitchen-collage-slot:hover .kitchen-collage-photo {
+  transform: scale(1.03);
+}
+
+.kitchen-collage-slot--video {
+  pointer-events: none;
+  background: #f0f2eb;
+}
+
+.kitchen-collage-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%) scale(2.6);
+  transform-origin: center center;
+}
+
+/* Tablet: mid + right as one 2×3 beside a shorter hero */
+@media (max-width: 899px) {
+  .kitchen-collage-grid {
+    grid-template-columns: 1.1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 11;
+    max-height: 22rem;
+  }
+
+  .kitchen-collage-slot--hero {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+  }
+
+  .kitchen-collage-slot--a {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .kitchen-collage-slot--b {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .kitchen-collage-slot--r1 {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .kitchen-collage-slot--r2 {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .kitchen-collage-slot--r3 {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .kitchen-collage-slot--r4 {
+    grid-column: 3;
+    grid-row: 3;
+  }
+
+  .kitchen-collage-video {
+    transform: translate(-50%, -50%) scale(2.2);
+  }
+}
+
+/* Phone: stacked hero + 2-col image grid with real heights */
+@media (max-width: 639px) {
+  .kitchen-collage {
+    margin: 0 0 0.85rem;
+  }
+
+  .kitchen-collage-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 0.35rem;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  .kitchen-collage-slot--hero {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+    aspect-ratio: 16 / 10;
+    min-height: 11rem;
+    max-height: none;
+  }
+
+  .kitchen-collage-slot--a,
+  .kitchen-collage-slot--b,
+  .kitchen-collage-slot--r1,
+  .kitchen-collage-slot--r2,
+  .kitchen-collage-slot--r3,
+  .kitchen-collage-slot--r4 {
+    aspect-ratio: 1 / 1;
+    min-height: 0;
+  }
+
+  .kitchen-collage-slot--a {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .kitchen-collage-slot--b {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .kitchen-collage-slot--r1 {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .kitchen-collage-slot--r2 {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .kitchen-collage-slot--r3 {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
+  .kitchen-collage-slot--r4 {
+    grid-column: 2;
+    grid-row: 4;
+  }
+
+  .kitchen-collage-video {
+    transform: translate(-50%, -50%) scale(1.85);
+  }
+}
+
+/* Kitchen home uses the same Fresh aisle-row layout */
+.kitchen-fresh-layout.categories-fresh-page {
+  --kitchen-font: "Plus Jakarta Sans", "Gabarito", system-ui, sans-serif;
+  font-family: var(--kitchen-font);
+  background: linear-gradient(180deg, #f4f7ef 0%, #fff 18rem);
+}
+
+.kitchen-fresh-layout,
+.kitchen-fresh-layout button,
+.kitchen-fresh-layout input,
+.kitchen-fresh-layout select,
+.kitchen-home,
+.kitchen-home button,
+.kitchen-home input,
+.kitchen-home select,
+.kitchen-page {
+  --kitchen-font: "Plus Jakarta Sans", "Gabarito", system-ui, sans-serif;
+  font-family: var(--kitchen-font);
+}
+
+.kitchen-fresh-layout .categories-fresh-title-icon {
+  filter: none;
+}
+
+.kitchen-fresh-layout .categories-fresh-container {
+  padding-inline: 0.85rem;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+@media (min-width: 640px) {
+  .kitchen-fresh-layout .categories-fresh-container {
+    padding-inline: 1.25rem;
+  }
+}
+
+.kitchen-ikea-card-price {
+  font-size: clamp(1.05rem, 4vw, 1.3rem);
+}
+
+.kitchen-ikea-card-series {
+  font-size: clamp(0.72rem, 2.8vw, 0.8125rem);
+}
+
+.kitchen-ikea-card-facts {
+  font-size: clamp(0.72rem, 2.6vw, 0.8125rem);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+
+.kitchen-home-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 1.35rem;
+}
+
+.kitchen-home-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #dde3d6;
+  background: #fff;
+  color: #1c1c1c;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.kitchen-home-cat:hover {
+  border-color: var(--kitchen-green, #2e5e4a);
+  background: var(--kitchen-green-soft, #edf3e0);
+  color: var(--kitchen-green-deep, #244a3b);
+}
+
+.kitchen-home-cat-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.kitchen-home-cat-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kitchen-home-cat-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #6b6b6b;
+  background: #f3f5ef;
+  border-radius: 999px;
+  padding: 0.1rem 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.kitchen-home-cat:hover .kitchen-home-cat-count {
+  background: #fff;
+  color: var(--kitchen-green, #2e5e4a);
+}
+
+#kitchen-row-cabinets,
+[id^="kitchen-row-"] {
+  scroll-margin-top: 6.5rem;
+}
+
+

@@ -35,6 +35,11 @@ import {
   isInSavedList,
   toggleSavedListItem,
 } from "../utils/userStorage";
+import {
+  aisleIdFromProductId,
+  aisleTitleFromProductId,
+} from "../data/kitchenWare";
+import { kitchenAislePath, isKitchenProduct } from "../utils/kitchenMode";
 
 /** 7 columns on large screens × 4 rows (2 extra rows vs original 2-row layout). */
 const PDP_RECOMMENDATION_COUNT = 28;
@@ -108,13 +113,34 @@ export function ProductPage() {
       product ? buildProductPageContent(product, categoryName, formatPrice, t) : null,
     [product, categoryName, formatPrice, t, i18n.language]
   );
-  const breadcrumbs = useMemo(
-    () =>
-      product
-        ? buildBreadcrumbTrail(categoryName, categoryId, localized.localizedTitle, t)
-        : [],
-    [product, categoryName, categoryId, localized.localizedTitle, t, i18n.language]
-  );
+  const breadcrumbs = useMemo(() => {
+    if (!product) return [];
+    if (isKitchenProduct(product)) {
+      const aisleId = aisleIdFromProductId(product.id);
+      const aisleTitle = aisleTitleFromProductId(product.id);
+      const crumbs: { label: string; href?: string }[] = [
+        { label: t("kitchen.home.tabCategories"), href: "/kitchen/categories" },
+      ];
+      if (aisleId) {
+        crumbs.push({ label: aisleTitle, href: kitchenAislePath(aisleId) });
+      }
+      crumbs.push({ label: localized.localizedTitle });
+      return crumbs;
+    }
+    return buildBreadcrumbTrail(
+      categoryName,
+      categoryId,
+      localized.localizedTitle,
+      t
+    );
+  }, [
+    product,
+    categoryName,
+    categoryId,
+    localized.localizedTitle,
+    t,
+    i18n.language,
+  ]);
 
   if (!product || !pageContent) {
     return (
@@ -174,7 +200,9 @@ export function ProductPage() {
     <div className="pdp-page w-full">
       <PageContainer className="py-3 sm:py-5 max-w-[1500px]">
         <nav className="pdp-breadcrumbs" aria-label={t("common.breadcrumb")}>
-          <Link to="/">{t("common.home")}</Link>
+          <Link to={isKitchenProduct(product) ? "/kitchen" : "/"}>
+            {isKitchenProduct(product) ? t("kitchen.brand") : t("common.home")}
+          </Link>
           {breadcrumbs.map((crumb, i) => (
             <span key={i} className="pdp-breadcrumb-sep">
               <span aria-hidden> › </span>

@@ -350,6 +350,7 @@ const viewTitles = {
   catalog: "Categories",
   categories: "Category banners",
   hero: "Hero carousel",
+  "kitchen-collage": "Kitchen collage",
   orders: "Orders",
   suppliers: "Suppliers",
   packaging: "Packaging",
@@ -366,6 +367,7 @@ const viewBreadcrumbs = {
   catalog: ["Home", "Catalogue", "Categories"],
   categories: ["Home", "Storefront", "Category banners"],
   hero: ["Home", "Storefront", "Hero carousel"],
+  "kitchen-collage": ["Home", "Storefront", "Kitchen collage"],
   suppliers: ["Home", "Marketplace", "Suppliers"],
   orders: ["Home", "Sales", "Orders"],
   customers: ["Home", "Sales", "Customers"],
@@ -1821,6 +1823,202 @@ async function loadHeroSlides() {
   heroSlides = data.slides || [];
 }
 
+const KITCHEN_API = "/api/kitchen";
+const KITCHEN_SLOT_LABELS = [
+  "1 · Large left (image or YouTube)",
+  "2 · Middle · top",
+  "3 · Middle · bottom",
+  "4 · Right 2×2 · top left",
+  "5 · Right 2×2 · top right",
+  "6 · Right 2×2 · bottom left",
+  "7 · Right 2×2 · bottom right",
+];
+const KITCHEN_SLOT_COUNT = 7;
+
+let kitchenCollage = null;
+
+async function kitchenApi(path = "/collage", opts = {}) {
+  const res = await fetch(KITCHEN_API + path, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data.hint ? `${data.error} — ${data.hint}` : data.error || res.statusText;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function youtubeIdFromUrl(url) {
+  try {
+    const u = new URL(String(url || "").trim());
+    const host = u.hostname.replace(/^www\./, "");
+    if (host === "youtu.be") return u.pathname.split("/").filter(Boolean)[0] || "";
+    if (host.includes("youtube.com")) {
+      if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2] || "";
+      if (u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2] || "";
+      return u.searchParams.get("v") || "";
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+function kitchenCollageSlotHtml(index, img = {}) {
+  const n = index + 1;
+  const isHero = index === 0;
+  const yt = youtubeIdFromUrl(img.url || "");
+  const preview = yt
+    ? `<img src="https://img.youtube.com/vi/${escapeHtml(yt)}/hqdefault.jpg" alt="" />`
+    : img.url
+      ? `<img src="${escapeHtml(img.url)}" alt="" />`
+      : `<div class="placeholder">No media</div>`;
+  return `
+    <div class="kitchen-collage-admin-slot panel" style="padding:1rem;margin:0">
+      <strong style="display:block;margin-bottom:0.65rem">${KITCHEN_SLOT_LABELS[index]}</strong>
+      <div class="banner-preview" id="kitchenCollagePreview${n}" style="aspect-ratio:4/3;margin-bottom:0.65rem">
+        ${preview}
+      </div>
+      <label class="field">
+        <span>${isHero ? "Image or YouTube URL" : "Image URL"}</span>
+        <input type="text" id="kitchenCollageUrl${n}" value="${escapeHtml(img.url || "")}" required placeholder="${
+          isHero ? "https://www.youtube.com/shorts/…" : "https://…"
+        }" />
+      </label>
+      ${
+        isHero
+          ? `<p class="panel-desc" style="margin:0 0 0.65rem">Paste a YouTube Shorts or watch link for the large left panel (autoplays muted).</p>`
+          : ""
+      }
+      <div class="field-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.65rem">
+        <input type="file" id="kitchenCollageFile${n}" accept="image/*" />
+        <button type="button" class="btn btn-secondary btn-sm" data-kitchen-upload="${n}">Upload</button>
+      </div>
+      <label class="field">
+        <span>Alt text</span>
+        <input type="text" id="kitchenCollageAlt${n}" value="${escapeHtml(img.alt || "")}" placeholder="Describe the photo or video" />
+      </label>
+      <label class="field" style="margin-bottom:0">
+        <span>Link (optional${isHero ? "; ignored for video" : ""})</span>
+        <input type="text" id="kitchenCollageHref${n}" value="${escapeHtml(img.href || "")}" placeholder="/kitchen/aisle/cookware" />
+      </label>
+    </div>
+  `;
+}
+
+function updateKitchenCollagePreview(n) {
+  const url = $(`kitchenCollageUrl${n}`)?.value?.trim() || "";
+  const box = $(`kitchenCollagePreview${n}`);
+  if (!box) return;
+  const yt = youtubeIdFromUrl(url);
+  if (yt) {
+    box.innerHTML = `<img src="https://img.youtube.com/vi/${escapeHtml(yt)}/hqdefault.jpg" alt="" />`;
+    return;
+  }
+  box.innerHTML = url
+    ? `<img src="${escapeHtml(url)}" alt="" />`
+    : `<div class="placeholder">No media</div>`;
+}
+
+function renderKitchenCollageForm(collage) {
+  kitchenCollage = collage;
+  if (!$("kitchenCollageForm")) return;
+  $("kitchenCollageTitle").value = collage.introTitle || "";
+  $("kitchenCollageBody").value = collage.introBody || "";
+  $("kitchenCollageActive").checked = collage.active !== false;
+  const images = collage.images || [];
+  $("kitchenCollageSlots").innerHTML = Array.from({ length: KITCHEN_SLOT_COUNT }, (_, i) => i)
+    .map((i) => kitchenCollageSlotHtml(i, images[i] || {}))
+    .join("");
+  $("kitchenCollageSlots").querySelectorAll("[data-kitchen-upload]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const n = btn.getAttribute("data-kitchen-upload");
+      const file = $(`kitchenCollageFile${n}`)?.files?.[0];
+      await uploadImageFile(file, {
+        folder: "kitchen",
+        urlInputId: `kitchenCollageUrl${n}`,
+        previewFn: () => updateKitchenCollagePreview(n),
+      });
+      if ($(`kitchenCollageFile${n}`)) $(`kitchenCollageFile${n}`).value = "";
+    });
+  });
+  for (let n = 1; n <= KITCHEN_SLOT_COUNT; n += 1) {
+    $(`kitchenCollageUrl${n}`)?.addEventListener("input", () => updateKitchenCollagePreview(n));
+  }
+  const hint = $("kitchenCollageHint");
+  if (hint) {
+    const source = collage.source;
+    const saved = collage.updatedAt
+      ? `Last saved: ${new Date(collage.updatedAt).toLocaleString()}`
+      : "Not saved yet";
+    if (source === "local") {
+      hint.textContent = `${saved} · Stored locally (kitchen_collage table not in Supabase yet). Shop still shows your images.`;
+    } else if (source === "defaults") {
+      hint.textContent =
+        "Showing defaults. Upload images and click Save collage — they will persist locally until you create the Supabase table.";
+    } else if (collage.updatedAt) {
+      hint.textContent = saved;
+    } else {
+      hint.textContent =
+        "Showing defaults until you save (or until kitchen_collage table is created).";
+    }
+  }
+}
+
+async function loadKitchenCollage() {
+  const data = await kitchenApi("/collage?admin=true");
+  renderKitchenCollageForm(data.collage || { images: [] });
+}
+
+function readKitchenCollageForm() {
+  return {
+    introTitle: $("kitchenCollageTitle").value.trim(),
+    introBody: $("kitchenCollageBody").value.trim(),
+    active: $("kitchenCollageActive").checked,
+    images: Array.from({ length: KITCHEN_SLOT_COUNT }, (_, i) => i + 1).map((n) => ({
+      url: $(`kitchenCollageUrl${n}`).value.trim(),
+      alt: $(`kitchenCollageAlt${n}`).value.trim(),
+      href: $(`kitchenCollageHref${n}`).value.trim(),
+    })),
+  };
+}
+
+async function saveKitchenCollage() {
+  const body = readKitchenCollageForm();
+  setLoading(true);
+  try {
+    const data = await kitchenApi("/collage", {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+    renderKitchenCollageForm(data.collage);
+    const localNote =
+      data.collage?.source === "local"
+        ? " (saved locally — refresh /kitchen)"
+        : " — refresh /kitchen";
+    toast(`Kitchen collage saved${localNote}`);
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function resetKitchenCollageDefaults() {
+  setLoading(true);
+  try {
+    const data = await kitchenApi("/collage/reset", { method: "POST", body: "{}" });
+    renderKitchenCollageForm(data.collage);
+    toast("Kitchen collage reset to defaults");
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    setLoading(false);
+  }
+}
+
 function openHeroDrawer(mode = "add") {
   $("overlay").classList.add("open");
   $("heroDrawer").classList.add("open");
@@ -2712,7 +2910,7 @@ function switchView(name) {
   });
   $("pageTitle").textContent = viewTitles[name] || name;
   updatePageHeader();
-  const hideAdd = ["orders", "customers", "analytics", "settings", "catalog"].includes(name);
+  const hideAdd = ["orders", "customers", "analytics", "settings", "catalog", "kitchen-collage"].includes(name);
   $("addProductBtn").style.display = hideAdd ? "none" : "";
   const addBtn = $("addProductBtn");
   if (addBtn) {
@@ -2729,6 +2927,9 @@ function switchView(name) {
   $("exportCsvBtn").style.display = name === "products" ? "" : "none";
   if (name === "orders") loadOrders();
   if (name === "packaging") loadPackaging().then(() => renderPackaging());
+  if (name === "kitchen-collage") {
+    loadKitchenCollage().catch((err) => toast(err.message, true));
+  }
   if (name === "sidebar") return;
   document.getElementById("sidebar")?.classList.remove("open");
   document.getElementById("sidebarBackdrop")?.classList.remove("show");
@@ -3144,6 +3345,7 @@ $("refreshBtn").addEventListener("click", async () => {
   setLoading(true);
   try {
     await loadHeroSlides().catch(() => {});
+    await loadKitchenCollage().catch(() => {});
     await loadSuppliers().catch(() => {});
     await loadPackaging().catch(() => {});
     await loadOrders().catch(() => {});
@@ -3546,6 +3748,21 @@ $("heroForm").addEventListener("submit", async (e) => {
   } finally {
     setLoading(false);
   }
+});
+
+$("kitchenCollageForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  await saveKitchenCollage();
+});
+$("kitchenCollageResetBtn")?.addEventListener("click", () => {
+  confirmDialog(
+    "Reset kitchen collage",
+    "Replace current collage text and images with the default inspiration set?",
+    async () => {
+      closeConfirm();
+      await resetKitchenCollageDefaults();
+    }
+  );
 });
 
 document.addEventListener("keydown", (e) => {

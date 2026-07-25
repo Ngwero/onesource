@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { isExportOnlyCart } from "../utils/exportOrder";
+import { isKitchenPath } from "../utils/kitchenMode";
 
 type NavItem = {
   key: string;
@@ -35,6 +36,7 @@ export function MobileBottomNav() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { itemCount, openBasket, items: cartItems } = useCart();
+  const kitchenMode = isKitchenPath(pathname);
 
   const accountTo = user ? "/account" : "/login";
   const accountState = user ? undefined : { from: "/account" };
@@ -50,9 +52,9 @@ export function MobileBottomNav() {
   const items: NavItem[] = [
     {
       key: "home",
-      label: t("common.home"),
-      to: "/",
-      match: (p) => p === "/",
+      label: kitchenMode ? t("nav.kitchen") : t("common.home"),
+      to: kitchenMode ? "/kitchen" : "/",
+      match: (p) => (kitchenMode ? p === "/kitchen" : p === "/"),
       icon: (active) => (
         <NavIcon
           active={active}
@@ -63,8 +65,11 @@ export function MobileBottomNav() {
     {
       key: "categories",
       label: t("nav.categoriesLabel"),
-      to: "/categories",
-      match: (p) => p.startsWith("/categories") || p.startsWith("/category/"),
+      to: kitchenMode ? "/kitchen/categories" : "/categories",
+      match: (p) =>
+        kitchenMode
+          ? p.startsWith("/kitchen/categories") || p.startsWith("/kitchen/aisle/")
+          : p.startsWith("/categories") || p.startsWith("/category/"),
       icon: (active) => (
         <NavIcon
           active={active}
@@ -75,8 +80,9 @@ export function MobileBottomNav() {
     {
       key: "search",
       label: t("common.search"),
-      to: "/search",
-      match: (p) => p.startsWith("/search"),
+      to: kitchenMode ? "/kitchen/search" : "/search",
+      match: (p) =>
+        kitchenMode ? p.startsWith("/kitchen/search") : p.startsWith("/search"),
       icon: (active) => (
         <NavIcon
           active={active}

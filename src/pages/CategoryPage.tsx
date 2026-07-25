@@ -31,6 +31,10 @@ export function CategoryPage() {
   const categoryName = useCategoryName(displayCategoryId);
 
   useEffect(() => {
+    if (normalizedId === "kitchen-ware" || rawId === "kitchen-ware") {
+      navigate("/kitchen", { replace: true });
+      return;
+    }
     if (
       rawId &&
       normalizedId &&

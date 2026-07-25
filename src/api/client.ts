@@ -2,6 +2,7 @@ import i18n from "../i18n";
 import type { Product } from "../types/product";
 import type { Category } from "../types/product";
 import type { HeroSlide } from "../types/hero";
+import type { KitchenCollage } from "../types/kitchenCollage";
 import type { CreateOrderPayload, Order } from "../types/order";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
@@ -76,6 +77,13 @@ export async function fetchHeroSlides(
   if (!res.ok) throw new Error(i18n.t("errors.loadHeroSlides"));
   const data = await res.json();
   return (data.slides as HeroSlide[]) ?? [];
+}
+
+export async function fetchKitchenCollage(): Promise<KitchenCollage> {
+  const res = await fetch(`${API_BASE}/kitchen/collage`);
+  if (!res.ok) throw new Error(i18n.t("errors.loadKitchenCollage"));
+  const data = await res.json();
+  return data.collage as KitchenCollage;
 }
 
 export async function createOrder(payload: CreateOrderPayload): Promise<Order> {

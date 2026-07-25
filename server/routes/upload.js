@@ -31,7 +31,7 @@ router.post("/image", (req, res, next) => {
       return res.status(400).json({ error: "No image file provided (field name: image)" });
     }
 
-    const folder = ["categories", "hero", "products", "suppliers"].includes(req.body?.folder)
+    const folder = ["categories", "hero", "products", "suppliers", "kitchen"].includes(req.body?.folder)
       ? req.body.folder
       : "products";
 

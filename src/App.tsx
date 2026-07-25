@@ -27,6 +27,12 @@ import { CheckoutPage } from "./pages/CheckoutPage";
 import { CheckoutConfirmationPage } from "./pages/CheckoutConfirmationPage";
 import { ExportsPage } from "./pages/ExportsPage";
 import { ExportOrderConfirmationPage } from "./pages/ExportOrderConfirmationPage";
+import { KitchenShopPage } from "./pages/KitchenShopPage";
+import { KitchenAislePage } from "./pages/KitchenAislePage";
+import { KitchenCategoriesPage } from "./pages/KitchenCategoriesPage";
+import { KitchenProductsPage } from "./pages/KitchenProductsPage";
+import { KitchenSearchPage } from "./pages/KitchenSearchPage";
+
 
 export default function App() {
   return (
@@ -53,6 +59,20 @@ export default function App() {
                     path="exports/confirmation"
                     element={<ExportOrderConfirmationPage />}
                   />
+                  <Route path="kitchen" element={<KitchenShopPage />} />
+                  <Route
+                    path="kitchen/categories"
+                    element={<KitchenCategoriesPage />}
+                  />
+                  <Route
+                    path="kitchen/aisle/:aisleId"
+                    element={<KitchenAislePage />}
+                  />
+                  <Route
+                    path="kitchen/products"
+                    element={<KitchenProductsPage />}
+                  />
+                  <Route path="kitchen/search" element={<KitchenSearchPage />} />
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="category/:categoryId" element={<CategoryPage />} />
                   <Route path="search" element={<SearchPage />} />
