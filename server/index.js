@@ -116,7 +116,7 @@ function requestOrigin(req) {
 }
 
 /** Bump when share preview copy/image changes so WhatsApp re-scrapes. */
-const OG_SHARE_VERSION = "20260725b";
+const OG_SHARE_VERSION = "20260725c";
 
 function ogMetaForPath(pathname) {
   const path = String(pathname || "/").split("?")[0];
@@ -140,7 +140,7 @@ function sendShopIndex(req, res) {
   const { title, description } = ogMetaForPath(pathname);
   const pageUrl = `${origin}${pathname === "/" ? "/" : pathname}`;
   // Version query forces scrapers (WhatsApp) to drop the old cached preview image.
-  const imageUrl = `${origin}/brand/logo-on-dark-stacked.png?v=${OG_SHARE_VERSION}`;
+  const imageUrl = `${origin}/brand/og-share.png?v=${OG_SHARE_VERSION}`;
 
   fs.promises
     .readFile(shopIndex, "utf8")
