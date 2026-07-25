@@ -2,9 +2,10 @@
 # https://docs.railway.com/guides/config-as-code
 
 [build]
-# Root deps + Vite shop build, then server deps.
-# VITE_* variables must be set in Railway (needed at build time).
-buildCommand = "npm ci && npm ci --prefix server && npm run build"
+# Use npm install (not ci): Railway caches can lock node_modules/.vite and
+# make `npm ci`'s rmdir fail with EBUSY.
+# Keep Vite's cache off the mounted node_modules tree.
+buildCommand = "npm install && npm install --prefix server && VITE_CACHE_DIR=/tmp/vite-cache npm run build"
 
 [deploy]
 # Shop is already in dist/; only start the API (serves dist + /api + /admin).
