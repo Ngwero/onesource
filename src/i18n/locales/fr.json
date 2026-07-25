@@ -1820,9 +1820,10 @@
     "updateCategoryImage": "Échec de la mise à jour de l'image de catégorie"
   },
   "shop": {
-    "loading": "Chargement des produits frais…",
+    "loading": "Chargement de votre boutique…",
     "unavailable": "Boutique indisponible",
-    "setupHint": "Configurez Supabase dans server/.env, puis lancez cd server && npm run dev"
+    "setupHint": "Configurez Supabase dans server/.env, puis lancez cd server && npm run dev",
+    "slogan": "Everything on One Place"
   },
   "productDetails": {
     "labels": {

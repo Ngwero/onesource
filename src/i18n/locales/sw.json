@@ -1820,9 +1820,10 @@
     "updateCategoryImage": "Failed to update category image"
   },
   "shop": {
-    "loading": "Inapakia mazao mapya…",
+    "loading": "Inapakia duka lako…",
     "unavailable": "Duka halipatikani",
-    "setupHint": "Sanidi Supabase katika server/.env, kisha endesha cd server && npm run dev"
+    "setupHint": "Sanidi Supabase katika server/.env, kisha endesha cd server && npm run dev",
+    "slogan": "Everything on One Place"
   },
   "productDetails": {
     "labels": {

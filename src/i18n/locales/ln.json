@@ -1820,9 +1820,10 @@
     "updateCategoryImage": "Failed to update category image"
   },
   "shop": {
-    "loading": "Ezali kotonga biloko ya sika…",
+    "loading": "Ezali kotonga boutique na yo…",
     "unavailable": "Boutique ezali te",
-    "setupHint": "Bongisa Supabase na server/.env, sima sala cd server && npm run dev"
+    "setupHint": "Bongisa Supabase na server/.env, sima sala cd server && npm run dev",
+    "slogan": "Everything on One Place"
   },
   "productDetails": {
     "labels": {

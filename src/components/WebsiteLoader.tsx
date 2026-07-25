@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { BRAND_LOGOS } from "../brand/logos";
 import { useProducts } from "../context/ProductsContext";
 
-const MIN_VISIBLE_MS = 750;
-const EXIT_MS = 450;
+const MIN_VISIBLE_MS = 850;
+const EXIT_MS = 400;
 
 type Phase = "loading" | "exiting" | "done";
 
@@ -69,9 +69,10 @@ export function WebsiteLoader({ children }: Props) {
             src={BRAND_LOGOS.onDarkStacked}
             alt={t("common.brand")}
             className="site-loader-logo"
-            width={200}
-            height={80}
+            width={96}
+            height={96}
           />
+          <p className="site-loader-slogan">{t("shop.slogan")}</p>
           <div className="site-loader-bar" aria-hidden>
             <span className="site-loader-bar-fill" />
           </div>

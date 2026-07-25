@@ -1820,9 +1820,10 @@
     "updateCategoryImage": "Failed to update category image"
   },
   "shop": {
-    "loading": "Birapakura ibiribwa bishya…",
+    "loading": "Birapakura iduka ryawe…",
     "unavailable": "Iduka ntiryaboneka",
-    "setupHint": "Shyiraho Supabase muri server/.env, hanyuma ukore cd server && npm run dev"
+    "setupHint": "Shyiraho Supabase muri server/.env, hanyuma ukore cd server && npm run dev",
+    "slogan": "Everything on One Place"
   },
   "productDetails": {
     "labels": {

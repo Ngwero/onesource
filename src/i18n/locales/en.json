@@ -1090,9 +1090,10 @@
     "updateCategoryImage": "Failed to update category image"
   },
   "shop": {
-    "loading": "Loading fresh produce…",
+    "loading": "Loading your shop…",
     "unavailable": "Shop unavailable",
-    "setupHint": "Configure Supabase in server/.env, then run cd server && npm run dev"
+    "setupHint": "Configure Supabase in server/.env, then run cd server && npm run dev",
+    "slogan": "Everything on One Place"
   },
   "productDetails": {
     "labels": {
