@@ -10,6 +10,7 @@ import {
   kickYouTubePlayer,
   resolveYouTubeStartSeconds,
   youtubeEmbedUrl,
+  youtubePlayerPixelSize,
   youtubePostCommand,
   youtubeVideoId,
   type YtPlayer,
@@ -62,10 +63,15 @@ function CollageVideo({
     mount.setAttribute("title", title);
     host.appendChild(mount);
 
+    // Large pixel player → YouTube serves HD; CSS crops without upscaling blur.
+    const { width, height } = youtubePlayerPixelSize(host);
+
     createAmbientYouTubePlayer({
       element: mount,
       videoId,
       startSeconds: start,
+      width,
+      height,
     })
       .then((p) => {
         if (cancelled) {

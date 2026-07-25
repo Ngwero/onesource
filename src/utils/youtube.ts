@@ -113,6 +113,7 @@ export function youtubeEmbedUrl(
     iv_load_policy: "3",
     cc_load_policy: "0",
     enablejsapi: "1",
+    vq: "hd1080",
   });
   if (start > 0) params.set("start", String(start));
   if (typeof window !== "undefined" && window.location?.origin) {
@@ -221,8 +222,31 @@ export type CreateAmbientYouTubePlayerOptions = {
   element: HTMLElement;
   videoId: string;
   startSeconds?: number;
+  /** Pixel size — larger = YouTube serves sharper stream. */
+  width?: number;
+  height?: number;
   onReady?: (player: YtPlayer) => void;
 };
+
+/** Prefer a large player box so YouTube picks HD instead of 360p. */
+export function youtubePlayerPixelSize(
+  host: HTMLElement,
+  minWidth = 1280,
+  minHeight = 720
+): { width: number; height: number } {
+  const rect = host.getBoundingClientRect();
+  const dpr = Math.min(typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1, 2);
+  const width = Math.round(
+    Math.max(minWidth, (rect.width || minWidth) * Math.max(dpr, 1.75))
+  );
+  const height = Math.round(
+    Math.max(minHeight, (rect.height || minHeight) * Math.max(dpr, 1.75))
+  );
+  return {
+    width: Math.min(width, 1920),
+    height: Math.min(height, 1080),
+  };
+}
 
 /** Muted looping ambient player with optional start offset. */
 export async function createAmbientYouTubePlayer(
@@ -230,6 +254,8 @@ export async function createAmbientYouTubePlayer(
 ): Promise<YtPlayer> {
   const YT = await loadYouTubeIframeApi();
   const start = Math.max(0, Math.floor(options.startSeconds ?? 0));
+  const width = Math.max(640, Math.round(options.width ?? 1280));
+  const height = Math.max(360, Math.round(options.height ?? 720));
 
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -241,8 +267,8 @@ export async function createAmbientYouTubePlayer(
 
     const player = new YT.Player(options.element, {
       videoId: options.videoId,
-      width: "100%",
-      height: "100%",
+      width,
+      height,
       host: "https://www.youtube.com",
       playerVars: {
         autoplay: 1,
@@ -255,6 +281,8 @@ export async function createAmbientYouTubePlayer(
         playsinline: 1,
         iv_load_policy: 3,
         cc_load_policy: 0,
+        // Hint HD when the embed is large enough
+        vq: "hd1080",
         start,
         origin: window.location.origin,
       },
@@ -262,6 +290,13 @@ export async function createAmbientYouTubePlayer(
         onReady: (event: YtPlayerEvent) => {
           try {
             event.target.mute();
+            // Best-effort HD (ignored on many clients, harmless).
+            const anyPlayer = event.target as YtPlayer & {
+              setPlaybackQuality?: (q: string) => void;
+              setPlaybackQualityRange?: (min: string, max: string) => void;
+            };
+            anyPlayer.setPlaybackQualityRange?.("hd720", "highres");
+            anyPlayer.setPlaybackQuality?.("hd1080");
             if (start > 0) event.target.seekTo(start, true);
             event.target.playVideo();
           } catch {

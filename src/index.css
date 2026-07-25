@@ -7879,17 +7879,24 @@ body {
   background: #111;
 }
 
+/*
+ * Cover-crop the player into the slot.
+ * Avoid CSS scale() upscaling — that made the stream look soft/blurry.
+ * Oversized 16:9 box fills the slot; overflow clips letterboxing/chrome.
+ */
 .kitchen-collage-video-host .kitchen-collage-video,
 .kitchen-collage-video-host iframe,
 .kitchen-collage-video {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  border: 0;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 177.78% !important; /* 16/9 of height */
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  border: 0 !important;
   background: #111;
-  transform: translate(-50%, -50%) scale(2.8);
+  transform: translate(-50%, -50%);
   transform-origin: center center;
 }
 
@@ -7952,7 +7959,9 @@ body {
   .kitchen-collage-video-host .kitchen-collage-video,
   .kitchen-collage-video-host iframe,
   .kitchen-collage-video {
-    transform: translate(-50%, -50%) scale(2.4);
+    width: 177.78% !important;
+    height: 100% !important;
+    transform: translate(-50%, -50%);
   }
 }
 
@@ -8023,10 +8032,10 @@ body {
   .kitchen-collage-video-host .kitchen-collage-video,
   .kitchen-collage-video-host iframe,
   .kitchen-collage-video {
-    /* Crop Shorts side chrome (play / skip) on phones */
-    width: 177.78%;
-    height: 100%;
-    transform: translate(-50%, -50%) scale(1.35);
+    /* Cover the 16:10 hero; keep native pixels (no upscale blur) */
+    width: 160% !important;
+    height: 100% !important;
+    transform: translate(-50%, -50%);
   }
 
   .kitchen-collage-slot--hero.kitchen-collage-slot--video {
