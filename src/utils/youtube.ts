@@ -125,7 +125,7 @@ export function youtubeEmbedUrl(
 /** Ask the YouTube iframe to play/mute/seek (helps mobile autoplay + loop). */
 export function youtubePostCommand(
   iframe: HTMLIFrameElement | null,
-  func: "playVideo" | "mute" | "unMute" | "pauseVideo" | "seekTo",
+  func: "playVideo" | "mute" | "unMute" | "pauseVideo" | "seekTo" | "unloadModule" | "setOption",
   args: unknown[] = []
 ) {
   if (!iframe?.contentWindow) return;
@@ -133,6 +133,12 @@ export function youtubePostCommand(
     JSON.stringify({ event: "command", func, args }),
     "*"
   );
+}
+
+export function youtubePostDisableCaptions(iframe: HTMLIFrameElement | null) {
+  youtubePostCommand(iframe, "unloadModule", ["captions"]);
+  youtubePostCommand(iframe, "unloadModule", ["cc"]);
+  youtubePostCommand(iframe, "setOption", ["captions", "track", {}]);
 }
 
 /* —— Official IFrame API (more reliable mobile autoplay) —— */
@@ -144,9 +150,25 @@ export type YtPlayer = {
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;
   destroy: () => void;
   getPlayerState?: () => number;
+  unloadModule?: (module: string) => void;
+  loadModule?: (module: string) => void;
+  setOption?: (module: string, option: string, value: unknown) => void;
 };
 
 type YtPlayerEvent = { target: YtPlayer; data: number };
+
+/** Turn off closed captions / subtitles on ambient embeds. */
+export function disableYouTubeCaptions(player: YtPlayer | null) {
+  if (!player) return;
+  try {
+    player.unloadModule?.("captions");
+    player.unloadModule?.("cc");
+    player.setOption?.("captions", "track", {});
+    player.setOption?.("cc", "track", {});
+  } catch {
+    /* ignore */
+  }
+}
 
 declare global {
   interface Window {
@@ -290,6 +312,7 @@ export async function createAmbientYouTubePlayer(
         onReady: (event: YtPlayerEvent) => {
           try {
             event.target.mute();
+            disableYouTubeCaptions(event.target);
             // Best-effort HD (ignored on many clients, harmless).
             const anyPlayer = event.target as YtPlayer & {
               setPlaybackQuality?: (q: string) => void;
@@ -299,6 +322,9 @@ export async function createAmbientYouTubePlayer(
             anyPlayer.setPlaybackQuality?.("hd1080");
             if (start > 0) event.target.seekTo(start, true);
             event.target.playVideo();
+            // Captions often re-enable after the first play tick.
+            window.setTimeout(() => disableYouTubeCaptions(event.target), 300);
+            window.setTimeout(() => disableYouTubeCaptions(event.target), 1200);
           } catch {
             /* ignore */
           }
@@ -312,11 +338,16 @@ export async function createAmbientYouTubePlayer(
           }
         },
         onStateChange: (event: YtPlayerEvent) => {
+          const playing = YT.PlayerState?.PLAYING ?? 1;
           const ended = YT.PlayerState?.ENDED ?? 0;
+          if (event.data === playing) {
+            disableYouTubeCaptions(event.target);
+          }
           if (event.data === ended) {
             try {
               event.target.seekTo(start, true);
               event.target.mute();
+              disableYouTubeCaptions(event.target);
               event.target.playVideo();
             } catch {
               /* ignore */
@@ -335,6 +366,7 @@ export function kickYouTubePlayer(player: YtPlayer | null) {
   if (!player) return;
   try {
     player.mute();
+    disableYouTubeCaptions(player);
     player.playVideo();
   } catch {
     /* ignore */

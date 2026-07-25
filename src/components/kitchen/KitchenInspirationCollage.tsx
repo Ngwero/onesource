@@ -12,6 +12,7 @@ import {
   youtubeEmbedUrl,
   youtubePlayerPixelSize,
   youtubePostCommand,
+  youtubePostDisableCaptions,
   youtubeVideoId,
   type YtPlayer,
 } from "../../utils/youtube";
@@ -151,12 +152,14 @@ function CollageVideo({
 
     const play = () => {
       youtubePostCommand(iframe, "mute");
+      youtubePostDisableCaptions(iframe);
       youtubePostCommand(iframe, "playVideo");
     };
     kickRef.current = play;
 
     const onLoad = () => {
       youtubePostCommand(iframe, "mute");
+      youtubePostDisableCaptions(iframe);
       if (start > 0) youtubePostCommand(iframe, "seekTo", [start, true]);
       youtubePostCommand(iframe, "playVideo");
       window.setTimeout(play, 400);
