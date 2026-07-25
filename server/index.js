@@ -104,6 +104,32 @@ const shopDist = path.join(__dirname, "..", "dist");
 const shopIndex = path.join(shopDist, "index.html");
 const serveShop = fs.existsSync(shopIndex);
 
+function requestOrigin(req) {
+  const proto = String(req.headers["x-forwarded-proto"] || req.protocol || "https")
+    .split(",")[0]
+    .trim();
+  const host = String(req.headers["x-forwarded-host"] || req.get("host") || "")
+    .split(",")[0]
+    .trim();
+  if (!host) return "";
+  return `${proto}://${host}`;
+}
+
+function sendShopIndex(req, res) {
+  const origin = requestOrigin(req) || "https://one-sourcebrand.com";
+  fs.promises
+    .readFile(shopIndex, "utf8")
+    .then((html) => {
+      res
+        .type("html")
+        .set("Cache-Control", "no-cache")
+        .send(html.replaceAll("__OG_ORIGIN__", origin));
+    })
+    .catch(() => {
+      res.sendFile(shopIndex);
+    });
+}
+
 if (serveShop) {
   app.use(
     express.static(shopDist, {
@@ -117,9 +143,9 @@ if (serveShop) {
   );
 }
 
-app.get("/", (_req, res) => {
+app.get("/", (req, res) => {
   if (serveShop) {
-    res.sendFile(shopIndex);
+    sendShopIndex(req, res);
     return;
   }
   res.redirect("/admin");
@@ -134,7 +160,7 @@ if (serveShop) {
     ) {
       return next();
     }
-    res.sendFile(shopIndex);
+    sendShopIndex(req, res);
   });
 }
 

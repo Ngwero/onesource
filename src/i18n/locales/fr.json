@@ -24,7 +24,7 @@
   "common": {
     "brand": "One Source",
     "tld": "",
-    "tagline": "Produits frais en Ouganda",
+    "tagline": "Everything on One Place",
     "freshProduce": "Produits frais",
     "home": "Accueil",
     "close": "Fermer",
@@ -450,7 +450,7 @@
     "empty": "Pas encore d'historique. Parcourez la boutique pour voir des articles ici."
   },
   "footer": {
-    "tagline": "Votre source unique de produits frais de qualité — livrés partout en Ouganda.",
+    "tagline": "Everything on One Place — produits frais, cuisine et essentiels du quotidien.",
     "categories": "Catégories",
     "help": "Aide",
     "deliveryInfo": "Infos livraison",

@@ -24,7 +24,7 @@
   "common": {
     "brand": "One Source",
     "tld": "",
-    "tagline": "Uganda fresh produce",
+    "tagline": "Everything on One Place",
     "freshProduce": "Fresh Produce",
     "home": "Home",
     "close": "Close",
@@ -293,7 +293,7 @@
     "loginTitle": "Welcome back",
     "loginSubtitle": "Sign in to track orders and checkout faster.",
     "signupTitle": "Create your account",
-    "signupSubtitle": "Join One Source for fresh produce delivered across Uganda.",
+    "signupSubtitle": "Join One Source — everything on one place.",
     "accountTitle": "Your account",
     "accountSubtitle": "Manage your profile and orders.",
     "noAccount": "Don't have an account?",
@@ -339,7 +339,7 @@
     "passwordsMatch": "Passwords match.",
     "fullNamePlaceholder": "Your name",
     "benefitOrders": "Track orders and delivery updates",
-    "benefitFresh": "Fresh produce delivered across Uganda",
+    "benefitFresh": "Fresh foods, kitchen ware, and more",
     "benefitCheckout": "Save details for faster checkout",
     "continueToShop": "← Continue shopping"
   },
@@ -486,7 +486,7 @@
     "empty": "No browsing history yet. Explore the shop to see items here."
   },
   "footer": {
-    "tagline": "Your one source for quality fresh produce — delivered across Uganda.",
+    "tagline": "Everything on One Place — fresh foods, kitchen ware, and everyday essentials.",
     "categories": "Categories",
     "help": "Help",
     "deliveryInfo": "Delivery info",
