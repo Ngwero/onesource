@@ -2,10 +2,13 @@
 # https://docs.railway.com/guides/config-as-code
 
 [build]
-buildCommand = "npm ci --prefix server"
+# Root deps + Vite shop build, then server deps.
+# VITE_* variables must be set in Railway (needed at build time).
+buildCommand = "npm ci && npm ci --prefix server && npm run build"
 
 [deploy]
-startCommand = "npm start"
+# Shop is already in dist/; only start the API (serves dist + /api + /admin).
+startCommand = "npm start --prefix server"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
