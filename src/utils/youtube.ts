@@ -136,7 +136,7 @@ export function youtubePostCommand(
 
 /* —— Official IFrame API (more reliable mobile autoplay) —— */
 
-type YtPlayer = {
+export type YtPlayer = {
   mute: () => void;
   playVideo: () => void;
   pauseVideo: () => void;

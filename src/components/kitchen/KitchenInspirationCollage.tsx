@@ -12,6 +12,7 @@ import {
   youtubeEmbedUrl,
   youtubePostCommand,
   youtubeVideoId,
+  type YtPlayer,
 } from "../../utils/youtube";
 
 /**
@@ -28,12 +29,6 @@ const SLOT_CLASS = [
   "kitchen-collage-slot kitchen-collage-slot--r4",
 ] as const;
 
-type AmbientPlayer = {
-  mute: () => void;
-  playVideo: () => void;
-  destroy: () => void;
-};
-
 function CollageVideo({
   url,
   title,
@@ -47,7 +42,7 @@ function CollageVideo({
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const playerRef = useRef<AmbientPlayer | null>(null);
+  const playerRef = useRef<YtPlayer | null>(null);
   const kickRef = useRef<() => void>(() => {});
   const [useApi, setUseApi] = useState(true);
 
@@ -60,7 +55,7 @@ function CollageVideo({
     if (!useApi || !videoId || !hostRef.current) return;
 
     let cancelled = false;
-    let player: AmbientPlayer | null = null;
+    let player: YtPlayer | null = null;
     const host = hostRef.current;
     const mount = document.createElement("div");
     mount.className = "kitchen-collage-video";
