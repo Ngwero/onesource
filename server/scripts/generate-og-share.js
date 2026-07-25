@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "../..");
 const W = 1200;
 const H = 630;
-const logoPath = path.join(root, "public/brand/logo-horizontal.png");
+const logoPath = path.join(root, "public/brand/logo-on-dark-horizontal.png");
 const outPath = path.join(root, "public/brand/og-share.png");
 
 const logoWidth = 420;
