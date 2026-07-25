@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { ProductImage } from "../components/ProductImage";
+import { getKitchenAisleTitle } from "../i18n/useLocalizedProduct";
 import { useKitchenCatalog } from "../hooks/useKitchenCatalog";
 import { kitchenAislePath } from "../utils/kitchenMode";
 
@@ -61,7 +62,9 @@ export function KitchenCategoriesPage() {
                     )}
                   </div>
                   <div className="kitchen-cat-tile-body">
-                    <strong>{aisle.title}</strong>
+                    <strong>
+                      {getKitchenAisleTitle(aisle.id, t, aisle.title)}
+                    </strong>
                     <span>
                       {aisle.products.length > 0
                         ? t("kitchen.categoryCount", {

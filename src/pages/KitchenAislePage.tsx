@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { KitchenIkeaAisle } from "../components/kitchen/KitchenIkeaAisle";
+import { getKitchenAisleTitle } from "../i18n/useLocalizedProduct";
 import { KITCHEN_WARE_AISLES } from "../data/kitchenWare";
 import { useKitchenCatalog } from "../hooks/useKitchenCatalog";
 import { filterKitchenAisle, isValidKitchenAisleId } from "../utils/kitchenMode";
@@ -16,6 +17,7 @@ export function KitchenAislePage() {
   }
 
   const aisle = KITCHEN_WARE_AISLES.find((a) => a.id === aisleId)!;
+  const aisleTitle = getKitchenAisleTitle(aisle.id, t, aisle.title);
   const products = filterKitchenAisle(kitchenProducts, aisleId);
 
   return (
@@ -26,7 +28,7 @@ export function KitchenAislePage() {
           <span aria-hidden>/</span>
           <Link to="/kitchen/categories">{t("kitchen.home.tabCategories")}</Link>
           <span aria-hidden>/</span>
-          <span>{aisle.title}</span>
+          <span>{aisleTitle}</span>
         </nav>
 
         <header className="kitchen-aisle-hero">
@@ -35,7 +37,7 @@ export function KitchenAislePage() {
           </span>
           <div>
             <p className="kitchen-aisle-kicker">{t("kitchen.aisleOf")}</p>
-            <h1>{aisle.title}</h1>
+            <h1>{aisleTitle}</h1>
             <p>
               {loading
                 ? t("common.loading")
@@ -56,7 +58,7 @@ export function KitchenAislePage() {
         ) : (
           <KitchenIkeaAisle
             aisleId={aisle.id}
-            title={aisle.title}
+            title={aisleTitle}
             products={products}
           />
         )}

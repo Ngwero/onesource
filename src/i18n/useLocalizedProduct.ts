@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
 import type { Product } from "../types/product";
 import { getCategoryDisplayName } from "../data/categories";
+import {
+  aisleIdFromProductId,
+  KITCHEN_WARE_AISLES,
+} from "../data/kitchenWare";
 import { localizedProductField } from "./productTranslate";
 
 export type LocalizedProduct = Product & {
@@ -41,4 +45,34 @@ export function useCategoryName(categoryId: string): string {
   return getCategoryDisplayName(categoryId, (key, opts) =>
     t(key, { defaultValue: opts?.defaultValue })
   );
+}
+
+export function getKitchenAisleTitle(
+  aisleId: string,
+  t: ReturnType<typeof useTranslation>["t"],
+  fallback?: string
+): string {
+  const english =
+    fallback ??
+    KITCHEN_WARE_AISLES.find((a) => a.id === aisleId)?.title ??
+    aisleId;
+  return t(`kitchen.aisles.${aisleId}`, { defaultValue: english });
+}
+
+export function useKitchenAisleTitle(aisleId: string): string {
+  const { t } = useTranslation();
+  return getKitchenAisleTitle(aisleId, t);
+}
+
+export function getKitchenAisleTitleFromProductId(
+  productId: string,
+  t: ReturnType<typeof useTranslation>["t"]
+): string {
+  const id = aisleIdFromProductId(productId);
+  if (!id) {
+    return t("kitchen.aisles.organization", {
+      defaultValue: "Organization in the kitchen",
+    });
+  }
+  return getKitchenAisleTitle(id, t);
 }

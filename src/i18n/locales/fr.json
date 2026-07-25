@@ -60,7 +60,13 @@
     "unitedKingdom": "Ouganda",
     "searchPlaceholder": "Rechercher produits frais, céréales, laitiers…",
     "allProduce": "Tout",
-    "basket": "Panier"
+    "basket": "Panier",
+    "kitchenSearchPlaceholder": "Rechercher casseroles, poêles, meubles…",
+    "shopKitchen": "Cuisine",
+    "shopKitchenHint": "Batterie, meubles et table",
+    "shopSwitcherLabel": "Boutique",
+    "shopFresh": "Produits frais",
+    "shopFreshHint": "Fruits, légumes, viande…"
   },
   "nav": {
     "allCategories": "Toutes les catégories",
@@ -113,7 +119,62 @@
     "backToMarket": "Retour au marché frais",
     "ctaKicker": "Même panier",
     "ctaTitle": "Équipez la cuisine, remplissez le frigo",
-    "ctaBody": "La cuisine a ses propres catégories, mais rejoint le même panier que vos produits frais — une livraison, un paiement."
+    "ctaBody": "La cuisine a ses propres catégories, mais rejoint le même panier que vos produits frais — une livraison, un paiement.",
+    "aisles": {
+      "cookware": "Batterie de cuisine",
+      "stainless-clad": "Acier inoxydable multicouche",
+      "carbon-steel": "Acier carbone",
+      "cast-iron": "Fonte émaillée",
+      "non-stick": "Antiadhésif",
+      "cookware-accessories": "Accessoires de cuisson",
+      "tabletop": "Arts de la table",
+      "knoxhult": "Meubles de cuisine modulaires",
+      "cabinets": "Meubles, façades et intérieurs",
+      "small-furniture": "Petit mobilier de cuisine",
+      "extractor-hoods": "Hottes aspirantes",
+      "countertops-sinks": "Plans de travail, robinets et éviers",
+      "organization": "Organisation de la cuisine"
+    },
+    "home": {
+      "navLabel": "Sections cuisine",
+      "tabCategories": "Catégories",
+      "tabCatalogs": "Catalogues",
+      "allCategories": "Toute la cuisine",
+      "feedLabel": "Sélections de produits",
+      "feedBest": "Meilleures ventes",
+      "feedOffers": "Offres",
+      "feedHighlights": "Temps forts du mois",
+      "catalogsTitle": "Catalogues cuisine",
+      "catalogsBody": "Parcourez {{count}} pièces — batterie, inox, fonte, table, meubles et rangement — une boutique cuisine, plusieurs catégories.",
+      "welcomeTitle": "Bienvenue dans la cuisine du XXIe siècle",
+      "welcomeBody": "De la batterie de cuisine aux meubles modulaires, hottes, éviers et rangement : la boutique cuisine est un espace à part. Choisissez une catégorie, puis ajoutez au même panier que vos produits frais."
+    },
+    "moreOptions": "Plus d'options disponibles",
+    "searchTitle": "Rechercher dans la cuisine",
+    "searchHint": "Trouvez casseroles, poêles, sets, meubles et accessoires.",
+    "pdp": {
+      "regularPrice": "Prix habituel",
+      "articleNumber": "Numéro d'article",
+      "unitsAvailable": "Unités disponibles en offre : {{count}}",
+      "promiseStock": "En stock pour livraison le jour même avec votre commande de produits frais",
+      "promiseDelivery": "Livraison GRATUITE le jour même dès USh 100 000",
+      "promiseReturns": "Retours faciles sous 7 jours pour les articles de cuisine non utilisés",
+      "backToKitchen": "Retour à la cuisine",
+      "combineTitle": "Produits à associer",
+      "detailsTitle": "Détails du produit",
+      "tabDetails": "Détails du produit",
+      "tabMeasurements": "Dimensions",
+      "tabCare": "Matériaux et entretien",
+      "keyFeatures": "Caractéristiques principales",
+      "measurements": "Dimensions",
+      "materialsCare": "Matériaux et entretien",
+      "goodToKnow": "Bon à savoir",
+      "specCategory": "Catégorie",
+      "specUnit": "Vendue comme",
+      "careBody": "Nettoyez avec un chiffon humide. Utilisez uniquement de l'eau ou un détergent doux non abrasif. Séchez avec un chiffon propre.",
+      "goodToKnowBody": "Vérifiez l'espace et les fixations murales avant d'installer meubles ou hottes. Quincaillerie vendue séparément le cas échéant. Ajoutez des pièces assorties de la même catégorie pour un look cohérent.",
+      "defaultDescription": "Pièce de cuisine {{series}} de One Source Kitchen Ware — conçue pour les cuisines domestiques et prête à rejoindre le même panier que vos produits frais."
+    }
   },
   "exports": {
     "hero": {

@@ -20,7 +20,7 @@ import {
 import { ProductReviewsSection } from "../components/product/ProductReviewsSection";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
-import { useLocalizedProduct, useCategoryName } from "../i18n/useLocalizedProduct";
+import { useLocalizedProduct, useCategoryName, getKitchenAisleTitleFromProductId } from "../i18n/useLocalizedProduct";
 import { normalizeCategoryId, productMatchesCategory } from "../data/categories";
 import {
   buildBreadcrumbTrail,
@@ -35,10 +35,7 @@ import {
   isInSavedList,
   toggleSavedListItem,
 } from "../utils/userStorage";
-import {
-  aisleIdFromProductId,
-  aisleTitleFromProductId,
-} from "../data/kitchenWare";
+import { aisleIdFromProductId } from "../data/kitchenWare";
 import { kitchenAislePath, isKitchenProduct } from "../utils/kitchenMode";
 
 /** 7 columns on large screens × 4 rows (2 extra rows vs original 2-row layout). */
@@ -117,7 +114,7 @@ export function ProductPage() {
     if (!product) return [];
     if (isKitchenProduct(product)) {
       const aisleId = aisleIdFromProductId(product.id);
-      const aisleTitle = aisleTitleFromProductId(product.id);
+      const aisleTitle = getKitchenAisleTitleFromProductId(product.id, t);
       const crumbs: { label: string; href?: string }[] = [
         { label: t("kitchen.home.tabCategories"), href: "/kitchen/categories" },
       ];

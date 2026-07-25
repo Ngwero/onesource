@@ -159,6 +159,21 @@
       "careBody": "Wipe clean with a damp cloth. Use only water or a mild, non-abrasive detergent. Wipe dry with a clean cloth.",
       "goodToKnowBody": "Check space and wall fittings before installing cabinets or extractors. Hardware sold separately where noted. Add matching pieces from the same kitchen category for a coordinated look.",
       "defaultDescription": "{{series}} kitchen piece from One Source Kitchen Ware — sized for home kitchens and ready to add to the same basket as your fresh produce."
+    },
+    "aisles": {
+      "cookware": "Cookware",
+      "stainless-clad": "Stainless clad",
+      "carbon-steel": "Carbon steel",
+      "cast-iron": "Enamelled cast iron",
+      "non-stick": "Non-stick",
+      "cookware-accessories": "Cookware accessories",
+      "tabletop": "Tabletop",
+      "knoxhult": "Modular kitchen units",
+      "cabinets": "Cabinets, fronts and interiors",
+      "small-furniture": "Kitchen small furniture",
+      "extractor-hoods": "Extractor hoods",
+      "countertops-sinks": "Countertops, faucets and sinks",
+      "organization": "Organization in the kitchen"
     }
   },
   "exports": {

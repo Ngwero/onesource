@@ -5,9 +5,13 @@ import { fetchKitchenCollage } from "../../api/client";
 import type { KitchenCollage } from "../../types/kitchenCollage";
 import { resolveImageUrl } from "../../utils/imageUrl";
 import {
+  createAmbientYouTubePlayer,
   isYouTubeUrl,
+  kickYouTubePlayer,
+  resolveYouTubeStartSeconds,
   youtubeEmbedUrl,
   youtubePostCommand,
+  youtubeVideoId,
 } from "../../utils/youtube";
 
 /**
@@ -24,63 +28,198 @@ const SLOT_CLASS = [
   "kitchen-collage-slot kitchen-collage-slot--r4",
 ] as const;
 
+type AmbientPlayer = {
+  mute: () => void;
+  playVideo: () => void;
+  destroy: () => void;
+};
+
 function CollageVideo({
-  src,
+  url,
   title,
   className,
+  startSeconds,
 }: {
-  src: string;
+  url: string;
   title: string;
   className: string;
+  startSeconds?: number | null;
 }) {
+  const hostRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const playerRef = useRef<AmbientPlayer | null>(null);
+  const kickRef = useRef<() => void>(() => {});
+  const [useApi, setUseApi] = useState(true);
 
+  const videoId = youtubeVideoId(url);
+  const start = resolveYouTubeStartSeconds(url, startSeconds);
+  const fallbackSrc = youtubeEmbedUrl(url, { startSeconds: start });
+
+  // Prefer official IFrame API — muted autoplay is more reliable on iOS.
   useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
+    if (!useApi || !videoId || !hostRef.current) return;
 
-    const kick = () => {
-      youtubePostCommand(iframe, "mute");
-      youtubePostCommand(iframe, "playVideo");
-    };
+    let cancelled = false;
+    let player: AmbientPlayer | null = null;
+    const host = hostRef.current;
+    const mount = document.createElement("div");
+    mount.className = "kitchen-collage-video";
+    mount.setAttribute("title", title);
+    host.appendChild(mount);
 
-    // YouTube needs a beat after load before API commands work.
-    const onLoad = () => {
-      kick();
-      window.setTimeout(kick, 400);
-      window.setTimeout(kick, 1200);
-    };
-    iframe.addEventListener("load", onLoad);
+    createAmbientYouTubePlayer({
+      element: mount,
+      videoId,
+      startSeconds: start,
+    })
+      .then((p) => {
+        if (cancelled) {
+          p.destroy();
+          return;
+        }
+        player = p;
+        playerRef.current = p;
+        kickYouTubePlayer(p);
+      })
+      .catch(() => {
+        if (!cancelled) setUseApi(false);
+      });
 
-    // Keep it looping/playing if mobile pauses in the background.
-    const keepAlive = window.setInterval(kick, 8000);
+    const kick = () => kickYouTubePlayer(playerRef.current);
+    kickRef.current = kick;
 
     const onVisible = () => {
       if (document.visibilityState === "visible") kick();
     };
+
+    // iOS often needs a page gesture before the iframe will actually play.
+    const gestureEvents = [
+      "touchstart",
+      "touchend",
+      "pointerdown",
+      "click",
+      "scroll",
+    ] as const;
+    for (const evt of gestureEvents) {
+      document.addEventListener(evt, kick, { passive: true });
+    }
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", kick);
+    window.addEventListener("focus", kick);
+
+    const keepAlive = window.setInterval(() => {
+      if (document.visibilityState === "visible") kick();
+    }, 3500);
+
+    const io =
+      typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(
+            (entries) => {
+              if (entries.some((e) => e.isIntersecting)) kick();
+            },
+            { threshold: 0.15 }
+          )
+        : null;
+    io?.observe(host);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(keepAlive);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", kick);
+      window.removeEventListener("focus", kick);
+      for (const evt of gestureEvents) {
+        document.removeEventListener(evt, kick);
+      }
+      io?.disconnect();
+      try {
+        player?.destroy();
+      } catch {
+        /* ignore */
+      }
+      playerRef.current = null;
+      host.replaceChildren();
+    };
+  }, [useApi, videoId, start, title]);
+
+  // Fallback: plain embed + postMessage kicks
+  useEffect(() => {
+    if (useApi || !fallbackSrc) return;
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const play = () => {
+      youtubePostCommand(iframe, "mute");
+      youtubePostCommand(iframe, "playVideo");
+    };
+    kickRef.current = play;
+
+    const onLoad = () => {
+      youtubePostCommand(iframe, "mute");
+      if (start > 0) youtubePostCommand(iframe, "seekTo", [start, true]);
+      youtubePostCommand(iframe, "playVideo");
+      window.setTimeout(play, 400);
+      window.setTimeout(play, 1200);
+      window.setTimeout(play, 2500);
+    };
+    iframe.addEventListener("load", onLoad);
+
+    const gestureEvents = [
+      "touchstart",
+      "touchend",
+      "pointerdown",
+      "click",
+      "scroll",
+    ] as const;
+    for (const evt of gestureEvents) {
+      document.addEventListener(evt, play, { passive: true });
+    }
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") play();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", play);
+    window.addEventListener("focus", play);
+    const keepAlive = window.setInterval(() => {
+      if (document.visibilityState === "visible") play();
+    }, 3500);
 
     return () => {
       iframe.removeEventListener("load", onLoad);
       window.clearInterval(keepAlive);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", play);
+      window.removeEventListener("focus", play);
+      for (const evt of gestureEvents) {
+        document.removeEventListener(evt, play);
+      }
     };
-  }, [src]);
+  }, [useApi, fallbackSrc, start]);
 
   return (
     <div className={`${className} kitchen-collage-slot--video`}>
-      <iframe
-        ref={iframeRef}
-        className="kitchen-collage-video"
-        src={src}
-        title={title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowFullScreen={false}
-        loading="eager"
-        referrerPolicy="strict-origin-when-cross-origin"
+      {useApi ? (
+        <div ref={hostRef} className="kitchen-collage-video-host" />
+      ) : fallbackSrc ? (
+        <iframe
+          ref={iframeRef}
+          className="kitchen-collage-video"
+          src={fallbackSrc}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen={false}
+          loading="eager"
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      ) : null}
+      {/* Blocks YouTube chrome; first tap still kicks muted play on iOS */}
+      <div
+        className="kitchen-collage-video-shield"
+        aria-hidden="true"
+        onTouchStart={() => kickRef.current()}
+        onClick={() => kickRef.current()}
       />
-      {/* Blocks taps so YouTube play / skip controls never activate */}
-      <div className="kitchen-collage-video-shield" aria-hidden="true" />
     </div>
   );
 }
@@ -92,6 +231,7 @@ function CollageCell({
   className,
   priority,
   allowVideo,
+  startSeconds,
 }: {
   url: string;
   alt: string;
@@ -99,11 +239,17 @@ function CollageCell({
   className: string;
   priority?: boolean;
   allowVideo?: boolean;
+  startSeconds?: number | null;
 }) {
-  const embed = allowVideo ? youtubeEmbedUrl(url) : null;
-
-  if (embed) {
-    return <CollageVideo src={embed} title={alt} className={className} />;
+  if (allowVideo && isYouTubeUrl(url)) {
+    return (
+      <CollageVideo
+        url={url}
+        title={alt}
+        className={className}
+        startSeconds={startSeconds}
+      />
+    );
   }
 
   const src = resolveImageUrl(url);
@@ -163,13 +309,14 @@ export function KitchenInspirationCollage() {
         {images.map((img, index) =>
           img.url ? (
             <CollageCell
-              key={`${img.url}-${index}`}
+              key={`${img.url}-${img.startSeconds ?? ""}-${index}`}
               url={img.url}
               alt={img.alt || collage.introTitle || t("kitchen.brand")}
               href={img.href || undefined}
               className={SLOT_CLASS[index] ?? "kitchen-collage-slot"}
               priority={index < 4}
               allowVideo={index === 0 || isYouTubeUrl(img.url)}
+              startSeconds={img.startSeconds}
             />
           ) : null
         )}

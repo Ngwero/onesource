@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { KitchenAisleCarousel } from "../components/kitchen/KitchenAisleCarousel";
 import { KitchenInspirationCollage } from "../components/kitchen/KitchenInspirationCollage";
+import { getKitchenAisleTitle } from "../i18n/useLocalizedProduct";
 import { useKitchenCatalog } from "../hooks/useKitchenCatalog";
 import { kitchenAislePath } from "../utils/kitchenMode";
 import type { Product } from "../types/product";
@@ -22,16 +23,19 @@ export function KitchenShopPage() {
   const aisleCarousels = useMemo(
     () =>
       aisles
-        .map((aisle) => ({
-          key: aisle.id,
-          title: aisle.title,
-          count: aisle.products.length,
-          seeMoreHref: kitchenAislePath(aisle.id),
-          seeMoreLabel: t("categories.fresh.seeCategory", {
-            category: aisle.title,
-          }),
-          products: sortBestSellers(aisle.products),
-        }))
+        .map((aisle) => {
+          const title = getKitchenAisleTitle(aisle.id, t, aisle.title);
+          return {
+            key: aisle.id,
+            title,
+            count: aisle.products.length,
+            seeMoreHref: kitchenAislePath(aisle.id),
+            seeMoreLabel: t("categories.fresh.seeCategory", {
+              category: title,
+            }),
+            products: sortBestSellers(aisle.products),
+          };
+        })
         .filter((row) => row.count > 0)
         .sort((a, b) => b.count - a.count || a.title.localeCompare(b.title)),
     [aisles, t]

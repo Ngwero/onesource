@@ -1870,11 +1870,27 @@ function kitchenCollageSlotHtml(index, img = {}) {
   const n = index + 1;
   const isHero = index === 0;
   const yt = youtubeIdFromUrl(img.url || "");
+  const startVal =
+    img.startSeconds != null && img.startSeconds !== ""
+      ? String(img.startSeconds)
+      : "";
   const preview = yt
     ? `<img src="https://img.youtube.com/vi/${escapeHtml(yt)}/hqdefault.jpg" alt="" />`
     : img.url
       ? `<img src="${escapeHtml(img.url)}" alt="" />`
       : `<div class="placeholder">No media</div>`;
+  const startField = `
+      <label class="field" id="kitchenCollageStartWrap${n}" style="${
+        yt || isHero ? "" : "display:none"
+      }">
+        <span>Video starts at (seconds)</span>
+        <input type="number" min="0" step="1" id="kitchenCollageStart${n}" value="${escapeHtml(
+          startVal
+        )}" placeholder="0" />
+        <span class="panel-desc" style="margin:0.35rem 0 0;display:block">
+          Optional. e.g. 45 starts at 0:45. You can also put <code>?t=45</code> or <code>?t=1m30s</code> in the YouTube URL.
+        </span>
+      </label>`;
   return `
     <div class="kitchen-collage-admin-slot panel" style="padding:1rem;margin:0">
       <strong style="display:block;margin-bottom:0.65rem">${KITCHEN_SLOT_LABELS[index]}</strong>
@@ -1889,9 +1905,10 @@ function kitchenCollageSlotHtml(index, img = {}) {
       </label>
       ${
         isHero
-          ? `<p class="panel-desc" style="margin:0 0 0.65rem">Paste a YouTube Shorts or watch link for the large left panel (autoplays muted).</p>`
+          ? `<p class="panel-desc" style="margin:0 0 0.65rem">Paste a YouTube Shorts or watch link for the large left panel (autoplays muted on mobile).</p>`
           : ""
       }
+      ${startField}
       <div class="field-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.65rem">
         <input type="file" id="kitchenCollageFile${n}" accept="image/*" />
         <button type="button" class="btn btn-secondary btn-sm" data-kitchen-upload="${n}">Upload</button>
@@ -1913,6 +1930,10 @@ function updateKitchenCollagePreview(n) {
   const box = $(`kitchenCollagePreview${n}`);
   if (!box) return;
   const yt = youtubeIdFromUrl(url);
+  const startWrap = $(`kitchenCollageStartWrap${n}`);
+  if (startWrap) {
+    startWrap.style.display = yt || Number(n) === 1 ? "" : "none";
+  }
   if (yt) {
     box.innerHTML = `<img src="https://img.youtube.com/vi/${escapeHtml(yt)}/hqdefault.jpg" alt="" />`;
     return;
@@ -1954,10 +1975,12 @@ function renderKitchenCollageForm(collage) {
       ? `Last saved: ${new Date(collage.updatedAt).toLocaleString()}`
       : "Not saved yet";
     if (source === "local") {
-      hint.textContent = `${saved} · Stored locally (kitchen_collage table not in Supabase yet). Shop still shows your images.`;
+      hint.textContent = `${saved} · Stored on this server disk only — will reset on Railway redeploy. Prefer Storage/table persistence.`;
+    } else if (source === "storage") {
+      hint.textContent = `${saved} · Saved in Supabase Storage (survives deploys). Optional: run kitchen-collage.sql for the SQL table.`;
     } else if (source === "defaults") {
       hint.textContent =
-        "Showing defaults. Upload images and click Save collage — they will persist locally until you create the Supabase table.";
+        "Showing defaults. Upload images and click Save collage — they will persist in Supabase Storage across deploys.";
     } else if (collage.updatedAt) {
       hint.textContent = saved;
     } else {
@@ -1977,11 +2000,20 @@ function readKitchenCollageForm() {
     introTitle: $("kitchenCollageTitle").value.trim(),
     introBody: $("kitchenCollageBody").value.trim(),
     active: $("kitchenCollageActive").checked,
-    images: Array.from({ length: KITCHEN_SLOT_COUNT }, (_, i) => i + 1).map((n) => ({
-      url: $(`kitchenCollageUrl${n}`).value.trim(),
-      alt: $(`kitchenCollageAlt${n}`).value.trim(),
-      href: $(`kitchenCollageHref${n}`).value.trim(),
-    })),
+    images: Array.from({ length: KITCHEN_SLOT_COUNT }, (_, i) => i + 1).map((n) => {
+      const url = $(`kitchenCollageUrl${n}`).value.trim();
+      const startRaw = $(`kitchenCollageStart${n}`)?.value?.trim() ?? "";
+      const img = {
+        url,
+        alt: $(`kitchenCollageAlt${n}`).value.trim(),
+        href: $(`kitchenCollageHref${n}`).value.trim(),
+      };
+      if (startRaw !== "" && youtubeIdFromUrl(url)) {
+        const startSeconds = Math.max(0, Math.floor(Number(startRaw) || 0));
+        img.startSeconds = startSeconds;
+      }
+      return img;
+    }),
   };
 }
 
@@ -1994,10 +2026,15 @@ async function saveKitchenCollage() {
       body: JSON.stringify(body),
     });
     renderKitchenCollageForm(data.collage);
+    const src = data.collage?.source;
     const localNote =
-      data.collage?.source === "local"
-        ? " (saved locally — refresh /kitchen)"
-        : " — refresh /kitchen";
+      src === "local"
+        ? " (disk only — will reset on deploy)"
+        : src === "storage"
+          ? " (Supabase Storage — survives deploys)"
+          : src === "supabase"
+            ? " — refresh /kitchen"
+            : " — refresh /kitchen";
     toast(`Kitchen collage saved${localNote}`);
   } catch (err) {
     toast(err.message, true);

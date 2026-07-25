@@ -6,7 +6,7 @@ import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { CurrencySwitcher } from "./CurrencySwitcher";
-import { useCategoryName } from "../i18n/useLocalizedProduct";
+import { useCategoryName, useKitchenAisleTitle } from "../i18n/useLocalizedProduct";
 import { BrandLogo } from "./BrandLogo";
 import { AccountMenu } from "./AccountMenu";
 import { isExportOnlyCart } from "../utils/exportOrder";
@@ -23,6 +23,25 @@ function NavCategoryLink({ id, icon }: { id: string; icon: string }) {
       className={`site-header-chip${active ? " is-active" : ""}`}
     >
       {icon} {name}
+    </Link>
+  );
+}
+
+function KitchenAisleOption({ id }: { id: string }) {
+  const title = useKitchenAisleTitle(id);
+  return <option value={id}>{title}</option>;
+}
+
+function KitchenAisleChip({ id, icon }: { id: string; icon: string }) {
+  const location = useLocation();
+  const title = useKitchenAisleTitle(id);
+  const href = kitchenAislePath(id);
+  return (
+    <Link
+      to={href}
+      className={chipClass(location.pathname === href)}
+    >
+      {icon} {title}
     </Link>
   );
 }
@@ -202,9 +221,7 @@ export function Header() {
                   >
                     <option value="all">{t("kitchen.home.allCategories")}</option>
                     {KITCHEN_WARE_AISLES.map((aisle) => (
-                      <option key={aisle.id} value={aisle.id}>
-                        {aisle.title}
-                      </option>
+                      <KitchenAisleOption key={aisle.id} id={aisle.id} />
                     ))}
                   </select>
                 ) : (
@@ -364,15 +381,11 @@ export function Header() {
                   {t("kitchen.home.feedOffers")}
                 </Link>
                 {KITCHEN_WARE_AISLES.map((aisle) => (
-                  <Link
+                  <KitchenAisleChip
                     key={aisle.id}
-                    to={kitchenAislePath(aisle.id)}
-                    className={chipClass(
-                      location.pathname === kitchenAislePath(aisle.id)
-                    )}
-                  >
-                    {aisle.icon} {aisle.title}
-                  </Link>
+                    id={aisle.id}
+                    icon={aisle.icon}
+                  />
                 ))}
               </>
             ) : (

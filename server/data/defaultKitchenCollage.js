@@ -57,10 +57,17 @@ export function normalizeKitchenCollageImages(images = []) {
   const list = Array.isArray(images) ? images : [];
   const at = (i) => {
     const img = list[i] || {};
+    const startRaw = img.startSeconds ?? img.start_seconds;
+    let startSeconds;
+    if (startRaw !== undefined && startRaw !== null && startRaw !== "") {
+      const n = Number(startRaw);
+      if (Number.isFinite(n) && n >= 0) startSeconds = Math.floor(n);
+    }
     return {
       url: img.url ?? "",
       alt: img.alt ?? "",
       href: img.href ?? "",
+      ...(startSeconds !== undefined ? { startSeconds } : {}),
     };
   };
 

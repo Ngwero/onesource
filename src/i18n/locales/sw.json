@@ -60,7 +60,13 @@
     "unitedKingdom": "Uganda",
     "searchPlaceholder": "Tafuta mazao mapya, nafaka, maziwa…",
     "allProduce": "Zote",
-    "basket": "Kikapu"
+    "basket": "Kikapu",
+    "kitchenSearchPlaceholder": "Tafuta vyombo, sufuria, kabati...",
+    "shopKitchen": "Vifaa vya jikoni",
+    "shopKitchenHint": "Vyombo, kabati na meza",
+    "shopSwitcherLabel": "Duka",
+    "shopFresh": "Mazao mapya",
+    "shopFreshHint": "Matunda, mboga, nyama…"
   },
   "nav": {
     "allCategories": "Jamii zote",
@@ -113,7 +119,62 @@
     "backToMarket": "Rudi sokoni",
     "ctaKicker": "Kikapu kimoja",
     "ctaTitle": "Panga jikoni, jaza friji",
-    "ctaBody": "Jikoni ina kategoria zake, lakini bado inaingia kikapu kimoja na mazao yako — uwasilishaji mmoja, malipo moja."
+    "ctaBody": "Jikoni ina kategoria zake, lakini bado inaingia kikapu kimoja na mazao yako — uwasilishaji mmoja, malipo moja.",
+    "aisles": {
+      "cookware": "Vyombo vya kupikia",
+      "stainless-clad": "Chuma cha pua chenye tabaka",
+      "carbon-steel": "Chuma cha kaboni",
+      "cast-iron": "Chuma cha kutupwa chenye enamel",
+      "non-stick": "Visivyoshikana",
+      "cookware-accessories": "Vifaa vya kupikia",
+      "tabletop": "Meza na vyombo vya mezani",
+      "knoxhult": "Vitengo vya jikoni vinavyobadilika",
+      "cabinets": "Kabati, milango na ndani",
+      "small-furniture": "Samani ndogo za jikoni",
+      "extractor-hoods": "Hood za moshi",
+      "countertops-sinks": "Meza, bomba na sinki",
+      "organization": "Mpangilio wa jikoni"
+    },
+    "home": {
+      "navLabel": "Sehemu za vifaa vya jikoni",
+      "tabCategories": "Kategoria",
+      "tabCatalogs": "Katalogi",
+      "allCategories": "Vifaa vyote vya jikoni",
+      "feedLabel": "Vipengele vya bidhaa",
+      "feedBest": "Zinazouzwa zaidi",
+      "feedOffers": "Ofa",
+      "feedHighlights": "Muhimu wa mwezi",
+      "catalogsTitle": "Katalogi za jikoni",
+      "catalogsBody": "Vinjari vipande {{count}} — vyombo, chuma, kabati, meza na uhifadhi — duka moja la jikoni, kategoria nyingi.",
+      "welcomeTitle": "Karibu kwenye jikoni ya karne ya 21",
+      "welcomeBody": "Kutoka vyombo na kabati hadi hood, sinki na uhifadhi — jikoni ni duka lake. Chagua kategoria, kisha ongeza kwenye kikapu kimoja na mazao yako."
+    },
+    "moreOptions": "Chaguo zaidi zinapatikana",
+    "searchTitle": "Tafuta vifaa vya jikoni",
+    "searchHint": "Tafuta sufuria, seti, kabati na vifaa vya jikoni.",
+    "pdp": {
+      "regularPrice": "Bei ya kawaida",
+      "articleNumber": "Nambari ya bidhaa",
+      "unitsAvailable": "Vipande vinavyopatikana kwa ofa: {{count}}",
+      "promiseStock": "Ipo stock kwa uwasilishaji siku hiyo pamoja na oda yako ya mazao",
+      "promiseDelivery": "Uwasilishaji wa BURE siku hiyo kwa oda zaidi ya USh 100,000",
+      "promiseReturns": "Kurudisha rahisi ndani ya siku 7 kwa vifaa vya jikoni visivyotumika",
+      "backToKitchen": "Rudi kwenye vifaa vya jikoni",
+      "combineTitle": "Bidhaa za kuunganisha",
+      "detailsTitle": "Maelezo ya bidhaa",
+      "tabDetails": "Maelezo ya bidhaa",
+      "tabMeasurements": "Vipimo",
+      "tabCare": "Nyenzo na utunzaji",
+      "keyFeatures": "Vipengele muhimu",
+      "measurements": "Vipimo",
+      "materialsCare": "Nyenzo na utunzaji",
+      "goodToKnow": "Vizuri kujua",
+      "specCategory": "Kategoria",
+      "specUnit": "Inauzwa kama",
+      "careBody": "Futa kwa kitambaa chenye unyevu. Tumia maji tu au sabuni laini isiyokwaruza. Kausha kwa kitambaa safi.",
+      "goodToKnowBody": "Angalia nafasi na vifunga ukutani kabla ya kusakinisha kabati au hood. Hardware inauzwa kando inapohitajika. Ongeza vipande vinavyolingana kutoka kategoria ile ile.",
+      "defaultDescription": "Kipande cha jikoni {{series}} kutoka One Source Kitchen Ware — kwa jikoni za nyumbani na tayari kuongezwa kwenye kikapu kimoja na mazao yako."
+    }
   },
   "exports": {
     "hero": {
