@@ -7869,7 +7869,7 @@ body {
 
 .kitchen-collage-slot--video {
   pointer-events: none;
-  background: #f0f2eb;
+  background: #111;
 }
 
 .kitchen-collage-video {
@@ -7879,9 +7879,19 @@ body {
   width: 100%;
   height: 100%;
   border: 0;
-  background: transparent;
-  transform: translate(-50%, -50%) scale(2.6);
+  background: #111;
+  transform: translate(-50%, -50%) scale(2.8);
   transform-origin: center center;
+}
+
+/* Transparent hit layer — hides interaction with YouTube UI */
+.kitchen-collage-video-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: transparent;
+  pointer-events: auto;
+  cursor: default;
 }
 
 /* Tablet: mid + right as one 2×3 beside a shorter hero */
@@ -7931,7 +7941,7 @@ body {
   }
 
   .kitchen-collage-video {
-    transform: translate(-50%, -50%) scale(2.2);
+    transform: translate(-50%, -50%) scale(2.4);
   }
 }
 
@@ -8000,7 +8010,14 @@ body {
   }
 
   .kitchen-collage-video {
-    transform: translate(-50%, -50%) scale(1.85);
+    /* Crop Shorts side chrome (play / skip) on phones */
+    width: 177.78%;
+    height: 100%;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+
+  .kitchen-collage-slot--hero.kitchen-collage-slot--video {
+    background: #111;
   }
 }
 

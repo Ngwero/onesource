@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchKitchenCollage } from "../../api/client";
 import type { KitchenCollage } from "../../types/kitchenCollage";
 import { resolveImageUrl } from "../../utils/imageUrl";
-import { isYouTubeUrl, youtubeEmbedUrl } from "../../utils/youtube";
+import {
+  isYouTubeUrl,
+  youtubeEmbedUrl,
+  youtubePostCommand,
+} from "../../utils/youtube";
 
 /**
  * 0 hero | 1 mid-top | 2 mid-bottom
@@ -19,6 +23,67 @@ const SLOT_CLASS = [
   "kitchen-collage-slot kitchen-collage-slot--r3",
   "kitchen-collage-slot kitchen-collage-slot--r4",
 ] as const;
+
+function CollageVideo({
+  src,
+  title,
+  className,
+}: {
+  src: string;
+  title: string;
+  className: string;
+}) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const kick = () => {
+      youtubePostCommand(iframe, "mute");
+      youtubePostCommand(iframe, "playVideo");
+    };
+
+    // YouTube needs a beat after load before API commands work.
+    const onLoad = () => {
+      kick();
+      window.setTimeout(kick, 400);
+      window.setTimeout(kick, 1200);
+    };
+    iframe.addEventListener("load", onLoad);
+
+    // Keep it looping/playing if mobile pauses in the background.
+    const keepAlive = window.setInterval(kick, 8000);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") kick();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      iframe.removeEventListener("load", onLoad);
+      window.clearInterval(keepAlive);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [src]);
+
+  return (
+    <div className={`${className} kitchen-collage-slot--video`}>
+      <iframe
+        ref={iframeRef}
+        className="kitchen-collage-video"
+        src={src}
+        title={title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen={false}
+        loading="eager"
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
+      {/* Blocks taps so YouTube play / skip controls never activate */}
+      <div className="kitchen-collage-video-shield" aria-hidden="true" />
+    </div>
+  );
+}
 
 function CollageCell({
   url,
@@ -38,19 +103,7 @@ function CollageCell({
   const embed = allowVideo ? youtubeEmbedUrl(url) : null;
 
   if (embed) {
-    return (
-      <div className={`${className} kitchen-collage-slot--video`}>
-        <iframe
-          className="kitchen-collage-video"
-          src={embed}
-          title={alt}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          loading="eager"
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
-      </div>
-    );
+    return <CollageVideo src={embed} title={alt} className={className} />;
   }
 
   const src = resolveImageUrl(url);
