@@ -33,6 +33,26 @@ export function isYouTubeUrl(url: string): boolean {
   return Boolean(youtubeVideoId(url));
 }
 
+/** Direct MP4/WebM/MOV — these autoplay muted on iPhone; YouTube often will not. */
+export function isDirectVideoUrl(url: string): boolean {
+  const raw = String(url ?? "").trim();
+  if (!raw) return false;
+  if (isYouTubeUrl(raw)) return false;
+  try {
+    const u = new URL(raw, "https://example.com");
+    if (/\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(u.pathname)) return true;
+  } catch {
+    if (/\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(raw)) return true;
+  }
+  return /^data:video\//i.test(raw);
+}
+
+export function youtubePosterUrl(url: string): string | null {
+  const id = youtubeVideoId(url);
+  if (!id) return null;
+  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+}
+
 /** Parse YouTube time tokens: `90`, `90s`, `1m30s`, `1h2m3s`. */
 export function parseYouTubeTimeToken(raw: string): number {
   const t = String(raw ?? "").trim();

@@ -7872,11 +7872,23 @@ body {
   background: #111;
 }
 
+.kitchen-collage-video-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  background: #111;
+}
+
 .kitchen-collage-video-host {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: #111;
+  background: transparent;
+  z-index: 1;
 }
 
 /*
@@ -7895,9 +7907,20 @@ body {
   max-width: none !important;
   max-height: none !important;
   border: 0 !important;
-  background: #111;
+  background: transparent;
   transform: translate(-50%, -50%);
   transform-origin: center center;
+  z-index: 1;
+}
+
+.kitchen-collage-video--native {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  object-position: center;
+  transform: none !important;
+  top: 0 !important;
+  left: 0 !important;
 }
 
 /* Transparent hit layer — hides interaction with YouTube UI */

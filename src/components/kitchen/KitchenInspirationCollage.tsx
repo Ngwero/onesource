@@ -6,11 +6,13 @@ import type { KitchenCollage } from "../../types/kitchenCollage";
 import { resolveImageUrl } from "../../utils/imageUrl";
 import {
   createAmbientYouTubePlayer,
+  isDirectVideoUrl,
   isYouTubeUrl,
   kickYouTubePlayer,
   resolveYouTubeStartSeconds,
   youtubeEmbedUrl,
   youtubePlayerPixelSize,
+  youtubePosterUrl,
   youtubePostCommand,
   youtubePostDisableCaptions,
   youtubeVideoId,
@@ -31,7 +33,108 @@ const SLOT_CLASS = [
   "kitchen-collage-slot kitchen-collage-slot--r4",
 ] as const;
 
-function CollageVideo({
+function preferMobileYouTubeEmbed() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(
+    "(max-width: 639px), (hover: none) and (pointer: coarse)"
+  ).matches;
+}
+
+/** Native MP4/WebM — muted + playsInline autoplays on iPhone (YouTube often cannot). */
+function CollageNativeVideo({
+  url,
+  title,
+  className,
+  startSeconds,
+}: {
+  url: string;
+  title: string;
+  className: string;
+  startSeconds?: number | null;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const src = resolveImageUrl(url);
+  const start = Math.max(0, Math.floor(Number(startSeconds) || 0));
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    const play = async () => {
+      try {
+        el.muted = true;
+        el.defaultMuted = true;
+        el.playsInline = true;
+        el.setAttribute("muted", "");
+        el.setAttribute("playsinline", "");
+        el.setAttribute("webkit-playsinline", "");
+        if (start > 0 && Number.isFinite(el.duration) && el.duration > start) {
+          el.currentTime = start;
+        }
+        await el.play();
+      } catch {
+        /* Low Power Mode / policy — retry on gesture */
+      }
+    };
+
+    const onMeta = () => {
+      if (start > 0) {
+        try {
+          el.currentTime = start;
+        } catch {
+          /* ignore */
+        }
+      }
+      void play();
+    };
+
+    el.addEventListener("loadedmetadata", onMeta);
+    void play();
+
+    const kick = () => void play();
+    const events = ["touchstart", "touchend", "pointerdown", "click"] as const;
+    for (const evt of events) {
+      document.addEventListener(evt, kick, { passive: true });
+    }
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void play();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      el.removeEventListener("loadedmetadata", onMeta);
+      document.removeEventListener("visibilitychange", onVisible);
+      for (const evt of events) {
+        document.removeEventListener(evt, kick);
+      }
+    };
+  }, [src, start]);
+
+  return (
+    <div className={`${className} kitchen-collage-slot--video`}>
+      <video
+        ref={videoRef}
+        className="kitchen-collage-video kitchen-collage-video--native"
+        src={src}
+        title={title}
+        autoPlay
+        muted
+        playsInline
+        loop
+        preload="auto"
+        controls={false}
+        disablePictureInPicture
+      />
+      <div className="kitchen-collage-video-shield" aria-hidden="true" />
+    </div>
+  );
+}
+
+/**
+ * Mobile: plain muted iframe + gesture re-load (YT API often never autoplays on iOS).
+ * Desktop: IFrame API at large pixel size for sharper HD.
+ */
+function CollageYouTubeVideo({
   url,
   title,
   className,
@@ -46,13 +149,15 @@ function CollageVideo({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<YtPlayer | null>(null);
   const kickRef = useRef<() => void>(() => {});
-  const [useApi, setUseApi] = useState(true);
+  const unlockedRef = useRef(false);
+  const [useApi, setUseApi] = useState(() => !preferMobileYouTubeEmbed());
 
   const videoId = youtubeVideoId(url);
   const start = resolveYouTubeStartSeconds(url, startSeconds);
-  const fallbackSrc = youtubeEmbedUrl(url, { startSeconds: start });
+  const embedSrc = youtubeEmbedUrl(url, { startSeconds: start });
+  const poster = youtubePosterUrl(url);
 
-  // Prefer official IFrame API — muted autoplay is more reliable on iOS.
+  // Desktop / large screens: YouTube IFrame API
   useEffect(() => {
     if (!useApi || !videoId || !hostRef.current) return;
 
@@ -64,7 +169,6 @@ function CollageVideo({
     mount.setAttribute("title", title);
     host.appendChild(mount);
 
-    // Large pixel player → YouTube serves HD; CSS crops without upscaling blur.
     const { width, height } = youtubePlayerPixelSize(host);
 
     createAmbientYouTubePlayer({
@@ -93,47 +197,28 @@ function CollageVideo({
     const onVisible = () => {
       if (document.visibilityState === "visible") kick();
     };
-
-    // iOS often needs a page gesture before the iframe will actually play.
     const gestureEvents = [
       "touchstart",
       "touchend",
       "pointerdown",
       "click",
-      "scroll",
     ] as const;
     for (const evt of gestureEvents) {
-      document.addEventListener(evt, kick, { passive: true });
+      document.addEventListener(evt, kick, { passive: true, capture: true });
     }
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("pageshow", kick);
-    window.addEventListener("focus", kick);
 
     const keepAlive = window.setInterval(() => {
       if (document.visibilityState === "visible") kick();
-    }, 3500);
-
-    const io =
-      typeof IntersectionObserver !== "undefined"
-        ? new IntersectionObserver(
-            (entries) => {
-              if (entries.some((e) => e.isIntersecting)) kick();
-            },
-            { threshold: 0.15 }
-          )
-        : null;
-    io?.observe(host);
+    }, 4000);
 
     return () => {
       cancelled = true;
       window.clearInterval(keepAlive);
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("pageshow", kick);
-      window.removeEventListener("focus", kick);
       for (const evt of gestureEvents) {
-        document.removeEventListener(evt, kick);
+        document.removeEventListener(evt, kick, true);
       }
-      io?.disconnect();
       try {
         player?.destroy();
       } catch {
@@ -144,9 +229,9 @@ function CollageVideo({
     };
   }, [useApi, videoId, start, title]);
 
-  // Fallback: plain embed + postMessage kicks
+  // Mobile / fallback: direct embed. Re-assign src inside a real touch gesture.
   useEffect(() => {
-    if (useApi || !fallbackSrc) return;
+    if (useApi || !embedSrc) return;
     const iframe = iframeRef.current;
     if (!iframe) return;
 
@@ -155,69 +240,85 @@ function CollageVideo({
       youtubePostDisableCaptions(iframe);
       youtubePostCommand(iframe, "playVideo");
     };
-    kickRef.current = play;
+
+    const unlock = () => {
+      // Critical for iOS: bind a fresh autoplay load to a user gesture.
+      if (!unlockedRef.current) {
+        unlockedRef.current = true;
+        const join = embedSrc.includes("?") ? "&" : "?";
+        iframe.src = `${embedSrc}${join}cb=${Date.now()}`;
+      }
+      play();
+    };
+    kickRef.current = unlock;
 
     const onLoad = () => {
       youtubePostCommand(iframe, "mute");
       youtubePostDisableCaptions(iframe);
       if (start > 0) youtubePostCommand(iframe, "seekTo", [start, true]);
       youtubePostCommand(iframe, "playVideo");
-      window.setTimeout(play, 400);
-      window.setTimeout(play, 1200);
-      window.setTimeout(play, 2500);
+      window.setTimeout(play, 250);
+      window.setTimeout(play, 800);
+      window.setTimeout(play, 1600);
     };
     iframe.addEventListener("load", onLoad);
+
+    // Try without gesture first (Android / desktop often OK).
+    play();
 
     const gestureEvents = [
       "touchstart",
       "touchend",
       "pointerdown",
       "click",
-      "scroll",
     ] as const;
     for (const evt of gestureEvents) {
-      document.addEventListener(evt, play, { passive: true });
+      document.addEventListener(evt, unlock, { passive: true, capture: true });
     }
-
     const onVisible = () => {
       if (document.visibilityState === "visible") play();
     };
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("pageshow", play);
-    window.addEventListener("focus", play);
+
     const keepAlive = window.setInterval(() => {
       if (document.visibilityState === "visible") play();
-    }, 3500);
+    }, 4000);
 
     return () => {
       iframe.removeEventListener("load", onLoad);
       window.clearInterval(keepAlive);
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("pageshow", play);
-      window.removeEventListener("focus", play);
       for (const evt of gestureEvents) {
-        document.removeEventListener(evt, play);
+        document.removeEventListener(evt, unlock, true);
       }
     };
-  }, [useApi, fallbackSrc, start]);
+  }, [useApi, embedSrc, start]);
 
   return (
     <div className={`${className} kitchen-collage-slot--video`}>
+      {poster ? (
+        <img
+          className="kitchen-collage-video-poster"
+          src={poster}
+          alt=""
+          decoding="async"
+          fetchPriority="high"
+        />
+      ) : null}
       {useApi ? (
         <div ref={hostRef} className="kitchen-collage-video-host" />
-      ) : fallbackSrc ? (
+      ) : embedSrc ? (
         <iframe
           ref={iframeRef}
           className="kitchen-collage-video"
-          src={fallbackSrc}
+          src={embedSrc}
           title={title}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; muted"
           allowFullScreen={false}
           loading="eager"
           referrerPolicy="strict-origin-when-cross-origin"
         />
       ) : null}
-      {/* Blocks YouTube chrome; first tap still kicks muted play on iOS */}
       <div
         className="kitchen-collage-video-shield"
         aria-hidden="true"
@@ -245,9 +346,20 @@ function CollageCell({
   allowVideo?: boolean;
   startSeconds?: number | null;
 }) {
+  if (allowVideo && isDirectVideoUrl(url)) {
+    return (
+      <CollageNativeVideo
+        url={url}
+        title={alt}
+        className={className}
+        startSeconds={startSeconds}
+      />
+    );
+  }
+
   if (allowVideo && isYouTubeUrl(url)) {
     return (
-      <CollageVideo
+      <CollageYouTubeVideo
         url={url}
         title={alt}
         className={className}
@@ -319,7 +431,9 @@ export function KitchenInspirationCollage() {
               href={img.href || undefined}
               className={SLOT_CLASS[index] ?? "kitchen-collage-slot"}
               priority={index < 4}
-              allowVideo={index === 0 || isYouTubeUrl(img.url)}
+              allowVideo={
+                index === 0 || isYouTubeUrl(img.url) || isDirectVideoUrl(img.url)
+              }
               startSeconds={img.startSeconds}
             />
           ) : null

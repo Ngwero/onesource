@@ -1672,6 +1672,53 @@ async function uploadImageFile(file, { folder = "products", urlInputId, previewF
   }
 }
 
+async function uploadVideoFile(file, { folder = "kitchen", urlInputId, previewFn }) {
+  if (!file) {
+    toast("Choose an MP4/WebM file first", true);
+    return null;
+  }
+  const fd = new FormData();
+  fd.append("video", file);
+  fd.append("folder", folder);
+  setLoading(true);
+  try {
+    const res = await fetch("/api/upload/video", { method: "POST", body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    if (urlInputId) {
+      const el = document.getElementById(urlInputId);
+      if (el) el.value = data.url;
+    }
+    if (previewFn) previewFn();
+    toast(`Video uploaded (${data.storage}) — autoplays on phones`);
+    return data.url;
+  } catch (e) {
+    toast(e.message, true);
+    return null;
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function uploadKitchenMediaFile(file, n) {
+  if (!file) {
+    toast("Choose a file first", true);
+    return null;
+  }
+  if (file.type.startsWith("video/")) {
+    return uploadVideoFile(file, {
+      folder: "kitchen",
+      urlInputId: `kitchenCollageUrl${n}`,
+      previewFn: () => updateKitchenCollagePreview(n),
+    });
+  }
+  return uploadImageFile(file, {
+    folder: "kitchen",
+    urlInputId: `kitchenCollageUrl${n}`,
+    previewFn: () => updateKitchenCollagePreview(n),
+  });
+}
+
 window.uploadBannerFile = async (id) => {
   const input = document.getElementById(`banner-file-${id}`);
   const file = input?.files?.[0];
@@ -1905,12 +1952,14 @@ function kitchenCollageSlotHtml(index, img = {}) {
       </label>
       ${
         isHero
-          ? `<p class="panel-desc" style="margin:0 0 0.65rem">Paste a YouTube Shorts or watch link for the large left panel (autoplays muted on mobile).</p>`
+          ? `<p class="panel-desc" style="margin:0 0 0.65rem"><strong>Phone autoplay:</strong> Upload an <strong>MP4</strong> (muted autoplay works on iPhone). YouTube links often stay paused on mobile until a tap — use MP4 for the hero when you need reliable autoplay.</p>`
           : ""
       }
       ${startField}
       <div class="field-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.65rem">
-        <input type="file" id="kitchenCollageFile${n}" accept="image/*" />
+        <input type="file" id="kitchenCollageFile${n}" accept="${
+          isHero ? "image/*,video/mp4,video/webm,video/quicktime" : "image/*"
+        }" />
         <button type="button" class="btn btn-secondary btn-sm" data-kitchen-upload="${n}">Upload</button>
       </div>
       <label class="field">
@@ -1932,10 +1981,14 @@ function updateKitchenCollagePreview(n) {
   const yt = youtubeIdFromUrl(url);
   const startWrap = $(`kitchenCollageStartWrap${n}`);
   if (startWrap) {
-    startWrap.style.display = yt || Number(n) === 1 ? "" : "none";
+    startWrap.style.display = yt || /\.(mp4|webm|mov)(\?|#|$)/i.test(url) || Number(n) === 1 ? "" : "none";
   }
   if (yt) {
     box.innerHTML = `<img src="https://img.youtube.com/vi/${escapeHtml(yt)}/hqdefault.jpg" alt="" />`;
+    return;
+  }
+  if (/\.(mp4|webm|mov)(\?|#|$)/i.test(url)) {
+    box.innerHTML = `<video src="${escapeHtml(url)}" muted playsinline style="width:100%;height:100%;object-fit:cover"></video>`;
     return;
   }
   box.innerHTML = url
@@ -1957,11 +2010,7 @@ function renderKitchenCollageForm(collage) {
     btn.addEventListener("click", async () => {
       const n = btn.getAttribute("data-kitchen-upload");
       const file = $(`kitchenCollageFile${n}`)?.files?.[0];
-      await uploadImageFile(file, {
-        folder: "kitchen",
-        urlInputId: `kitchenCollageUrl${n}`,
-        previewFn: () => updateKitchenCollagePreview(n),
-      });
+      await uploadKitchenMediaFile(file, n);
       if ($(`kitchenCollageFile${n}`)) $(`kitchenCollageFile${n}`).value = "";
     });
   });
@@ -2008,7 +2057,7 @@ function readKitchenCollageForm() {
         alt: $(`kitchenCollageAlt${n}`).value.trim(),
         href: $(`kitchenCollageHref${n}`).value.trim(),
       };
-      if (startRaw !== "" && youtubeIdFromUrl(url)) {
+      if (startRaw !== "" && (youtubeIdFromUrl(url) || /\.(mp4|webm|mov)(\?|#|$)/i.test(url))) {
         const startSeconds = Math.max(0, Math.floor(Number(startRaw) || 0));
         img.startSeconds = startSeconds;
       }
