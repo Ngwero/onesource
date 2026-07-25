@@ -116,7 +116,7 @@ function requestOrigin(req) {
 }
 
 /** Bump when share preview copy/image changes so WhatsApp re-scrapes. */
-const OG_SHARE_VERSION = "20260725c";
+const OG_SHARE_VERSION = "20260725d";
 
 function ogMetaForPath(pathname) {
   const path = String(pathname || "/").split("?")[0];
