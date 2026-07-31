@@ -35,12 +35,8 @@ const CONCURRENCY = Math.max(1, Number(flagValue("--concurrency") || 5));
 /** Process order: prefer primary aisle when the same article appears in Organization too. */
 const FOLDER_AISLES = [
   { folder: "Cookware", aisleId: "cookware", title: "Cookware" },
-  { folder: "KNOXHULT", aisleId: "knoxhult", title: "Modular kitchen units" },
-  {
-    folder: "Cabinets,_fronts_and_interiors",
-    aisleId: "cabinets",
-    title: "Cabinets, fronts and interiors",
-  },
+  // KNOXHULT / Modular kitchen units intentionally omitted (category removed)
+  // Cabinets,_fronts_and_interiors intentionally omitted (category removed)
   {
     folder: "Kitchen_small_funiture",
     aisleId: "small-furniture",
@@ -65,8 +61,6 @@ const FOLDER_AISLES = [
 
 const PRICE_RANGE = {
   cookware: [48000, 320000],
-  knoxhult: [380000, 2800000],
-  cabinets: [28000, 520000],
   "small-furniture": [72000, 280000],
   "extractor-hoods": [320000, 780000],
   "countertops-sinks": [85000, 480000],

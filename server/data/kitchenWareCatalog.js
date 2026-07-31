@@ -45,18 +45,6 @@ export const KITCHEN_WARE_AISLES = [
     color: "#b7a99a",
   },
   {
-    id: "knoxhult",
-    title: "Modular kitchen units",
-    icon: "🗄️",
-    color: "#d9d2c5",
-  },
-  {
-    id: "cabinets",
-    title: "Cabinets, fronts and interiors",
-    icon: "🚪",
-    color: "#c4b7a6",
-  },
-  {
     id: "small-furniture",
     title: "Kitchen small furniture",
     icon: "🛒",
@@ -116,69 +104,9 @@ export const KITCHEN_WARE_PRODUCTS = [
       "Heavy-duty enamel cast iron pot for stews, matooke and slow Sunday cooking. Oven-safe lid included.",
   },
 
-  // KNOXHULT — modular kitchen units
-  {
-    id: "kitchen-knoxhult-01",
-    aisleId: "knoxhult",
-    name: "KNOXHULT Base Cabinet With Doors",
-    unit: "each",
-    price: 420000,
-    color: "#e8e2d6",
-    description:
-      "Compact modular base unit with soft-close doors. Sized for apartments and small home kitchens.",
-  },
-  {
-    id: "kitchen-knoxhult-02",
-    aisleId: "knoxhult",
-    name: "KNOXHULT Wall Cabinet Pair",
-    unit: "pair",
-    price: 310000,
-    color: "#d9d2c5",
-    description:
-      "Matching wall cabinets with adjustable shelves. Hang above the worktop for plates and dry goods.",
-  },
-  {
-    id: "kitchen-knoxhult-03",
-    aisleId: "knoxhult",
-    name: "KNOXHULT Corner Base Unit",
-    unit: "each",
-    price: 495000,
-    color: "#cfc7b8",
-    description:
-      "L-shaped modular corner cabinet that maximises awkward kitchen corners without custom carpentry.",
-  },
+  // KNOXHULT / Modular kitchen units — removed from catalogue
 
-  // Cabinets, fronts and interiors
-  {
-    id: "kitchen-cabinets-01",
-    aisleId: "cabinets",
-    name: "Drawer Front Set With Soft-Close Runners",
-    unit: "set",
-    price: 198000,
-    color: "#c4b7a6",
-    description:
-      "Replace tired drawer fronts and runners. Soft-close hardware keeps interiors organised and quiet.",
-  },
-  {
-    id: "kitchen-cabinets-02",
-    aisleId: "cabinets",
-    name: "Interior Cutlery Tray Insert",
-    unit: "each",
-    price: 45000,
-    color: "#b8a999",
-    description:
-      "Fits standard drawers. Separate compartments for spoons, knives and serving tools.",
-  },
-  {
-    id: "kitchen-cabinets-03",
-    aisleId: "cabinets",
-    name: "Pull-Out Pantry Basket Frame",
-    unit: "each",
-    price: 165000,
-    color: "#9a8b7a",
-    description:
-      "Wire basket frame that slides out of a tall cabinet for oil, spices and tinned goods.",
-  },
+  // Cabinets, fronts and interiors — removed from catalogue
 
   // Kitchen small furniture
   {

@@ -40,18 +40,6 @@ export const KITCHEN_WARE_AISLES = [
     accent: "#b7a99a",
   },
   {
-    id: "knoxhult",
-    title: "Modular kitchen units",
-    icon: "🗄️",
-    accent: "#d9d2c5",
-  },
-  {
-    id: "cabinets",
-    title: "Cabinets, fronts and interiors",
-    icon: "🚪",
-    accent: "#c4b7a6",
-  },
-  {
     id: "small-furniture",
     title: "Kitchen small furniture",
     icon: "🛒",

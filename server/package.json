@@ -26,6 +26,7 @@
     "seed:drinks": "node scripts/seed-drinks.js",
     "seed:kitchen-ware": "node scripts/seed-kitchen-ware.js",
     "import:ikea-kitchen": "node scripts/import-ikea-kitchen-catalog.js",
+    "import:cookwarestore": "node scripts/import-cookwarestore-catalog.js",
     "import:jumia-kitchen": "node scripts/import-jumia-kitchen-catalog.js",
     "import:madein-kitchen": "node scripts/import-madein-kitchen-catalog.js",
     "rename:kitchen-titles": "node scripts/rename-kitchen-titles.js",
