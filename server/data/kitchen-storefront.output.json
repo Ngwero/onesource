@@ -1,0 +1,92 @@
+[
+  {
+    "category": "Kitchen Carts",
+    "title": "Premium 3-Tier Rolling Mesh Steel 3-tier Utility Cart",
+    "original_reference": "OS-CART-01",
+    "price_ugx": 150000,
+    "description": "Bring order to your cooking space with this 3-tier utility cart sized for real Ugandan kitchens (50x35x76 cm). Crafted with powder-coated steel frame with polypropylene trays, it is built for daily use and designed around locking castors for stability while prepping. Home cooks love the mesh-style airflow between tiers — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "50x35x76 cm",
+    "image_path": "/images/placeholder/premium-3-tier-rolling-mesh-steel-3-tier-utility-cart.jpg"
+  },
+  {
+    "category": "Kitchen Carts",
+    "title": "Premium Compact Kitchen Island With Worktop",
+    "original_reference": "OS-ISLE-01",
+    "price_ugx": 825000,
+    "description": "Bring order to your cooking space with this compact kitchen island with worktop sized for real Ugandan kitchens (120x60x90 cm). Crafted with solid oak worktop on charcoal mdf base with steel feet, it is built for daily use and designed around extra chopping surface without renovation. Home cooks love the open lower shelves for baskets — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "120x60x90 cm",
+    "image_path": "/images/placeholder/premium-compact-kitchen-island-with-worktop.jpg"
+  },
+  {
+    "category": "Step Stools",
+    "title": "Premium 2-Step Steel Two-step Kitchen Stool With Handrail",
+    "original_reference": "OS-STEP-01",
+    "price_ugx": 105000,
+    "description": "Bring order to your cooking space with this two-step kitchen stool with handrail sized for real Ugandan kitchens (45x40x55 cm). Crafted with powder-coated steel with non-slip treads, it is built for daily use and designed around wide stable steps for adults. Home cooks love the folds flat behind a door — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "45x40x55 cm",
+    "image_path": "/images/placeholder/premium-2-step-steel-two-step-kitchen-stool-with-handrail.jpg"
+  },
+  {
+    "category": "Step Stools",
+    "title": "Premium 3-Tier Steel Three-step Folding Stepladder",
+    "original_reference": "OS-STEP-02",
+    "price_ugx": 169000,
+    "description": "Bring order to your cooking space with this three-step folding stepladder sized for real Ugandan kitchens (63x48x107 cm). Crafted with steel frame with aluminium treads, it is built for daily use and designed around reaches high cabinets safely. Home cooks love the lightweight to carry between rooms — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "63x48x107 cm",
+    "image_path": "/images/placeholder/premium-3-tier-steel-three-step-folding-stepladder.jpg"
+  },
+  {
+    "category": "Open Shelving",
+    "title": "Premium 3-Tier Wood Three-tier Open Kitchen Shelf",
+    "original_reference": "OS-SHELF-01",
+    "price_ugx": 206000,
+    "description": "Bring order to your cooking space with this three-tier open kitchen shelf sized for real Ugandan kitchens (90x30x95 cm). Crafted with steel uprights with oak shelves, it is built for daily use and designed around adjustable shelf pins. Home cooks love the open sides keep spaces feeling light — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "90x30x95 cm",
+    "image_path": "/images/placeholder/premium-3-tier-wood-three-tier-open-kitchen-shelf.jpg"
+  },
+  {
+    "category": "Open Shelving",
+    "title": "Premium Wood Wall Rail Shelf Set With Hooks",
+    "original_reference": "OS-RAIL-01",
+    "price_ugx": 83000,
+    "description": "Bring order to your cooking space with this wall rail shelf set with hooks sized for real Ugandan kitchens (80x15x12 cm). Crafted with steel rail, pine shelves, s-hooks, it is built for daily use and designed around frees cupboard space above the worktop. Home cooks love the hang utensils and towels — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "80x15x12 cm",
+    "image_path": "/images/placeholder/premium-wood-wall-rail-shelf-set-with-hooks.jpg"
+  },
+  {
+    "category": "Kitchen Organizers",
+    "title": "Premium Rolling Mesh Steel Slim Pantry Roll-out Cart",
+    "original_reference": "OS-PANTRY-01",
+    "price_ugx": 158000,
+    "description": "Bring order to your cooking space with this slim pantry roll-out cart sized for real Ugandan kitchens (25x45x90 cm). Crafted with steel frame with mesh baskets, it is built for daily use and designed around fits the gap next to a fridge. Home cooks love the four mesh baskets that slide out — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "25x45x90 cm",
+    "image_path": "/images/placeholder/premium-rolling-mesh-steel-slim-pantry-roll-out-cart.jpg"
+  },
+  {
+    "category": "Kitchen Organizers",
+    "title": "Premium Steel Under-sink Storage Frame",
+    "original_reference": "OS-SINK-01",
+    "price_ugx": 75000,
+    "description": "Bring order to your cooking space with this under-sink storage frame sized for real Ugandan kitchens (Adjustable 50–70 cm wide). Crafted with powder-coated steel with sliding trays, it is built for daily use and designed around organises detergents and bins. Home cooks love the open design for plumbing access — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "Adjustable 50–70 cm wide",
+    "image_path": "/images/placeholder/premium-steel-under-sink-storage-frame.jpg"
+  },
+  {
+    "category": "Kitchen Organizers",
+    "title": "Premium Freestanding Dish Drying Tower",
+    "original_reference": "OS-DISH-01",
+    "price_ugx": 143000,
+    "description": "Bring order to your cooking space with this freestanding dish drying tower sized for real Ugandan kitchens (55x35x110 cm). Crafted with steel frame with removable drip trays, it is built for daily use and designed around vertical plate and bowl storage. Home cooks love the ventilated sides for faster drying — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "55x35x110 cm",
+    "image_path": "/images/placeholder/premium-freestanding-dish-drying-tower.jpg"
+  },
+  {
+    "category": "Kitchen Carts",
+    "title": "Premium Rolling Bamboo Prep Cart On Castors",
+    "original_reference": "OS-BAMBOO-01",
+    "price_ugx": 244000,
+    "description": "Bring order to your cooking space with this bamboo prep cart on castors sized for real Ugandan kitchens (70x45x85 cm). Crafted with solid bamboo body with steel castors, it is built for daily use and designed around knife-friendly prep top. Home cooks love the rolls from kitchen to outdoor table — a smart upgrade for prep, serving, and tidy storage without a fitted renovation.",
+    "dimensions": "70x45x85 cm",
+    "image_path": "/images/placeholder/premium-rolling-bamboo-prep-cart-on-castors.jpg"
+  }
+]
