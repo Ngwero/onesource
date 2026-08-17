@@ -78,7 +78,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "cookware",
     name: "3-Piece Stainless Steel Pot Set",
     unit: "set",
-    price: 185000,
+    price: 78000,
     color: "#8a8f98",
     description:
       "Stainless steel saucepans with glass lids. Even heat for soups, sauces and everyday cooking.",
@@ -88,7 +88,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "cookware",
     name: "Non-Stick Frying Pan 28cm",
     unit: "each",
-    price: 72000,
+    price: 35000,
     color: "#4b5563",
     description:
       "Lightweight non-stick frying pan with stay-cool handle. Ideal for eggs, chapati and quick stir-fries.",
@@ -98,7 +98,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "cookware",
     name: "Cast Iron Dutch Oven 5L",
     unit: "each",
-    price: 265000,
+    price: 125000,
     color: "#6b3f2a",
     description:
       "Heavy-duty enamel cast iron pot for stews, matooke and slow Sunday cooking. Oven-safe lid included.",
@@ -114,7 +114,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "small-furniture",
     name: "3-Tier Rolling Mesh Utility Cart",
     unit: "each",
-    price: 150000,
+    price: 95000,
     color: "#4a6fa5",
     description:
       "Powder-coated steel cart with locking castors (50×35×76 cm). Move prep tools and produce around the kitchen.",
@@ -124,7 +124,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "small-furniture",
     name: "Bamboo Prep Cart On Castors",
     unit: "each",
-    price: 244000,
+    price: 145000,
     color: "#c4a574",
     description:
       "Solid bamboo prep top with lower storage (70×45×85 cm). Rolls from kitchen to outdoor table.",
@@ -134,7 +134,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "small-furniture",
     name: "2-Step Kitchen Stool With Handrail",
     unit: "each",
-    price: 105000,
+    price: 48000,
     color: "#5c6b73",
     description:
       "Stable folding stool for high cabinets. Non-slip treads; stores flat behind a door.",
@@ -146,7 +146,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "extractor-hoods",
     name: "Wall-Mount Stainless Extractor Hood 60cm",
     unit: "each",
-    price: 380000,
+    price: 280000,
     color: "#6b7280",
     description:
       "60cm stainless extractor with LED light and washable grease filters. Clears steam from charcoal and gas cooking.",
@@ -156,7 +156,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "extractor-hoods",
     name: "Slim Recirculating Hood 90cm",
     unit: "each",
-    price: 455000,
+    price: 350000,
     color: "#4b5563",
     description:
       "90cm recirculating hood for flats without an outdoor vent. Carbon filter pack included.",
@@ -168,7 +168,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "countertops-sinks",
     name: "Single Bowl Stainless Kitchen Sink",
     unit: "each",
-    price: 220000,
+    price: 145000,
     color: "#7d8b95",
     description:
       "Deep single-bowl sink with drain kit. Fits standard cabinet cut-outs for quick kitchen upgrades.",
@@ -178,7 +178,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "countertops-sinks",
     name: "Chrome Mixer Kitchen Faucet",
     unit: "each",
-    price: 98000,
+    price: 55000,
     color: "#94a3b8",
     description:
       "Swivel-spout mixer tap with ceramic cartridge. Easy install for kitchen and laundry sinks.",
@@ -188,7 +188,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "countertops-sinks",
     name: "Laminate Worktop Board 180cm",
     unit: "each",
-    price: 175000,
+    price: 120000,
     color: "#a8a29e",
     description:
       "Ready-cut laminate worktop (180×60 cm). Wipe-clean surface for prep without a full renovation.",
@@ -200,7 +200,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "organization",
     name: "Wall Rail Shelf Set With Hooks",
     unit: "set",
-    price: 83000,
+    price: 28000,
     color: "#7a8f6e",
     description:
       "Steel rail, pine shelves and S-hooks. Hang utensils and free cupboard space above the worktop.",
@@ -210,7 +210,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "organization",
     name: "Slim Pantry Roll-Out Cart",
     unit: "each",
-    price: 158000,
+    price: 75000,
     color: "#3d5a80",
     description:
       "Four mesh baskets that slide into the gap next to a fridge for dry goods and bottles.",
@@ -220,7 +220,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "organization",
     name: "Freestanding Dish Drying Tower",
     unit: "each",
-    price: 143000,
+    price: 45000,
     color: "#577590",
     description:
       "Vertical drying tower with drip trays. Keep plates and bowls off the crowded counter.",
@@ -230,7 +230,7 @@ export const KITCHEN_WARE_PRODUCTS = [
     aisleId: "organization",
     name: "Under-Sink Storage Frame",
     unit: "each",
-    price: 75000,
+    price: 32000,
     color: "#2f4858",
     description:
       "Adjustable steel frame with sliding trays for detergents and bins under the sink.",

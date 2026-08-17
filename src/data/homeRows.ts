@@ -1,5 +1,6 @@
 import type { Product } from "../types/product";
 import { normalizeCategoryId } from "./categories";
+import { isKitchenProduct } from "../utils/kitchenMode";
 
 const CHILLIES_CATEGORY_ID = "chillies-and-peppers";
 
@@ -129,18 +130,19 @@ function dealSavings(p: Product): number {
 }
 
 export function productsForHomeRow(products: Product[], row: HomeRowConfig, limit = 16): Product[] {
+  const catalog = products.filter((p) => !isKitchenProduct(p));
   if (row.id === "chillies") {
-    const mixed = mixChilliProducts(products, limit);
+    const mixed = mixChilliProducts(catalog, limit);
     if (mixed.length >= 4) return mixed;
   }
 
-  let matched = products.filter(row.match);
+  let matched = catalog.filter(row.match);
   if (row.id === "fresh-deals") {
     matched = [...matched].sort((a, b) => dealSavings(b) - dealSavings(a));
   }
   if (matched.length >= 4) return matched.slice(0, limit);
   if (row.seeAllCategoryId) {
-    const fromCat = products.filter(
+    const fromCat = catalog.filter(
       (p) => normalizeCategoryId(p.category) === row.seeAllCategoryId
     );
     const ids = new Set(matched.map((p) => p.id));

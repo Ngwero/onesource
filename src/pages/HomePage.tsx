@@ -7,17 +7,22 @@ import { HomeAdminProductsSection } from "../components/HomeAdminProductsSection
 import { ScrollReveal } from "../components/ScrollReveal";
 import { useProducts } from "../context/ProductsContext";
 import { HOME_PRODUCT_ROWS, productsForHomeRow } from "../data/homeRows";
+import { excludeKitchenProducts } from "../utils/kitchenMode";
 
 export function HomePage() {
   const { products } = useProducts();
+  const produceProducts = useMemo(
+    () => excludeKitchenProducts(products),
+    [products]
+  );
 
   const rows = useMemo(
     () =>
       HOME_PRODUCT_ROWS.map((row) => ({
         row,
-        products: productsForHomeRow(products, row),
+        products: productsForHomeRow(produceProducts, row),
       })),
-    [products]
+    [produceProducts]
   );
 
   return (
@@ -37,7 +42,7 @@ export function HomePage() {
           <HomeProductRow key={row.id} row={row} products={rowProducts} />
         ))}
 
-        <HomeAdminProductsSection products={products} />
+        <HomeAdminProductsSection products={produceProducts} />
       </PageContainer>
     </div>
   );

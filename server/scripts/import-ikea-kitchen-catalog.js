@@ -20,6 +20,7 @@ import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
 import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWareCatalog.js";
+import { ugandanKitchenPrice } from "../lib/ugandanKitchenPrices.js";
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
 const CATALOG_ROOT =
@@ -59,13 +60,6 @@ const FOLDER_AISLES = [
   },
 ];
 
-const PRICE_RANGE = {
-  cookware: [48000, 320000],
-  "small-furniture": [72000, 280000],
-  "extractor-hoods": [320000, 780000],
-  "countertops-sinks": [85000, 480000],
-  organization: [12000, 220000],
-};
 
 const FILE_RE = /^(.+)_(\d+)\.webp$/i;
 
@@ -112,13 +106,12 @@ function isPlaceholderKitchenId(id) {
   return /^kitchen-[a-z0-9-]+-\d{1,3}$/i.test(id);
 }
 
-function priceFor(aisleId, articleId) {
-  const [min, max] = PRICE_RANGE[aisleId] || [50000, 250000];
-  const n = Number(articleId) || 0;
-  const span = max - min;
-  const stepped = min + ((n * 7919) % Math.max(1, span));
-  // Round to nearest 1000 UGX
-  return Math.round(stepped / 1000) * 1000;
+function priceFor(item, title) {
+  return ugandanKitchenPrice({
+    id: item.id,
+    title: title ?? item.title ?? item.description,
+    aisleId: item.aisleId,
+  });
 }
 
 function humanizeKitchenTitle(rawTitle) {
@@ -394,8 +387,8 @@ async function main() {
     for (const item of items.slice(0, 8)) {
       console.log(
         `  ${item.id} | ${buildTitle(item.series, item.description)} | USh ${priceFor(
-          item.aisleId,
-          item.articleId
+          item,
+          buildTitle(item.series, item.description)
         ).toLocaleString()}`
       );
     }
@@ -424,7 +417,7 @@ async function main() {
   const errors = await runPool(toImport, CONCURRENCY, async (item, index) => {
     const image = await uploadImage(db, item);
     const title = buildTitle(item.series, item.description);
-    const price = priceFor(item.aisleId, item.articleId);
+    const price = priceFor(item, title);
     rows.push(
       seedRowFromJson({
         id: item.id,

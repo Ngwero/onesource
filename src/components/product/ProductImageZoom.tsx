@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
+import { createPortal } from "react-dom";
 
 const ZOOM_LEVEL = 2.5;
 const LENS_RATIO = 0.42;
@@ -7,6 +14,7 @@ const FLYOUT_WIDTH_SCALE = 2.25;
 const FLYOUT_HEIGHT_SCALE = 2.15;
 const FLYOUT_MAX_WIDTH = 720;
 const FLYOUT_MAX_HEIGHT = 680;
+const FLYOUT_GAP = 16;
 
 type LensState = {
   left: number;
@@ -22,6 +30,15 @@ type ZoomPan = {
   stageH: number;
 };
 
+type StageRect = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+};
+
 type Props = {
   imageSrc: string;
   alt: string;
@@ -33,6 +50,18 @@ type Props = {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function readStageRect(stage: HTMLElement): StageRect {
+  const rect = stage.getBoundingClientRect();
+  return {
+    left: rect.left,
+    top: rect.top,
+    right: rect.right,
+    bottom: rect.bottom,
+    width: rect.width,
+    height: rect.height,
+  };
 }
 
 export function ProductImageZoom({
@@ -48,9 +77,12 @@ export function ProductImageZoom({
   const [zooming, setZooming] = useState(false);
   const [lens, setLens] = useState<LensState | null>(null);
   const [pan, setPan] = useState<ZoomPan | null>(null);
+  const [stageRect, setStageRect] = useState<StageRect | null>(null);
 
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
+    const mq = window.matchMedia(
+      "(min-width: 1024px) and (hover: hover) and (pointer: fine)"
+    );
     const sync = () => setHoverZoomEnabled(mq.matches);
     sync();
     mq.addEventListener("change", sync);
@@ -62,7 +94,9 @@ export function ProductImageZoom({
       const stage = stageRef.current;
       if (!stage || !hoverZoomEnabled) return;
 
-      const rect = stage.getBoundingClientRect();
+      const rect = readStageRect(stage);
+      setStageRect(rect);
+
       const x = clientX - rect.left;
       const y = clientY - rect.top;
 
@@ -87,6 +121,8 @@ export function ProductImageZoom({
 
   const handleMouseEnter = () => {
     if (!hoverZoomEnabled) return;
+    const stage = stageRef.current;
+    if (stage) setStageRect(readStageRect(stage));
     setZooming(true);
   };
 
@@ -94,6 +130,7 @@ export function ProductImageZoom({
     setZooming(false);
     setLens(null);
     setPan(null);
+    setStageRect(null);
   };
 
   const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
@@ -101,7 +138,8 @@ export function ProductImageZoom({
     updateZoom(e.clientX, e.clientY);
   };
 
-  const flyoutVisible = zooming && hoverZoomEnabled && lens && pan;
+  const flyoutVisible =
+    zooming && hoverZoomEnabled && lens && pan && stageRect;
   const flyoutW = pan
     ? Math.min(Math.round(pan.stageW * FLYOUT_WIDTH_SCALE), FLYOUT_MAX_WIDTH)
     : 0;
@@ -114,6 +152,21 @@ export function ProductImageZoom({
   const zoomH = pan ? pan.stageH * ZOOM_LEVEL * flyoutScaleH : 0;
   const offsetX = pan ? pan.ratioX * Math.max(zoomW - flyoutW, 0) : 0;
   const offsetY = pan ? pan.ratioY * Math.max(zoomH - flyoutH, 0) : 0;
+
+  let flyoutLeft = 0;
+  let flyoutTop = 0;
+  if (stageRect && flyoutW > 0 && flyoutH > 0) {
+    const preferRight = stageRect.right + FLYOUT_GAP;
+    const fitsRight = preferRight + flyoutW <= window.innerWidth - 8;
+    flyoutLeft = fitsRight
+      ? preferRight
+      : Math.max(8, stageRect.left - FLYOUT_GAP - flyoutW);
+    flyoutTop = clamp(
+      stageRect.top,
+      8,
+      Math.max(8, window.innerHeight - flyoutH - 8)
+    );
+  }
 
   return (
     <div className={`pdp-zoom-main-col ${flyoutVisible ? "is-zooming" : ""}`}>
@@ -128,7 +181,12 @@ export function ProductImageZoom({
         aria-label={enlargeLabel}
       >
         {discount > 0 && <span className="pdp-badge-deal">-{discount}%</span>}
-        <img src={imageSrc} alt={alt} className="pdp-main-image" draggable={false} />
+        <img
+          src={imageSrc}
+          alt={alt}
+          className="pdp-main-image"
+          draggable={false}
+        />
         {flyoutVisible && lens && (
           <span
             className="pdp-zoom-lens"
@@ -146,25 +204,33 @@ export function ProductImageZoom({
         </span>
       </button>
 
-      {flyoutVisible && pan && (
-        <div
-          className="pdp-zoom-flyout"
-          aria-hidden
-          style={{ width: flyoutW, height: flyoutH }}
-        >
-          <img
-            src={imageSrc}
-            alt=""
-            className="pdp-zoom-flyout-image"
-            draggable={false}
+      {flyoutVisible &&
+        pan &&
+        createPortal(
+          <div
+            className="pdp-zoom-flyout pdp-zoom-flyout--portal"
+            aria-hidden
             style={{
-              width: zoomW,
-              height: zoomH,
-              transform: `translate(${-offsetX}px, ${-offsetY}px)`,
+              width: flyoutW,
+              height: flyoutH,
+              left: flyoutLeft,
+              top: flyoutTop,
             }}
-          />
-        </div>
-      )}
+          >
+            <img
+              src={imageSrc}
+              alt=""
+              className="pdp-zoom-flyout-image"
+              draggable={false}
+              style={{
+                width: zoomW,
+                height: zoomH,
+                transform: `translate(${-offsetX}px, ${-offsetY}px)`,
+              }}
+            />
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

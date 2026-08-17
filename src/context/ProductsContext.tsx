@@ -14,6 +14,8 @@ import {
   productMatchesCategory,
   normalizeCategoryId,
 } from "../data/categories";
+import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWare";
+import { isKitchenProduct } from "../utils/kitchenMode";
 
 type ProductsContextType = {
   products: Product[];
@@ -66,7 +68,13 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
 
   const getProductsByCategory = useCallback(
     (categoryId: string) =>
-      products.filter((p) => productMatchesCategory(p.category, categoryId)),
+      products.filter((p) => {
+        if (!productMatchesCategory(p.category, categoryId)) return false;
+        const listingKitchen =
+          normalizeCategoryId(categoryId) === KITCHEN_WARE_CATEGORY_ID;
+        if (isKitchenProduct(p) && !listingKitchen) return false;
+        return true;
+      }),
     [products]
   );
 
@@ -74,6 +82,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     const counts: Record<string, number> = {};
     for (const p of products) {
       const id = normalizeCategoryId(p.category);
+      if (isKitchenProduct(p) && id !== KITCHEN_WARE_CATEGORY_ID) continue;
       counts[id] = (counts[id] ?? 0) + 1;
     }
     return counts;

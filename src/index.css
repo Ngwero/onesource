@@ -3916,6 +3916,14 @@ body {
   z-index: 30;
 }
 
+/* Portaled to body so sibling PDP columns / overflow-x clip cannot hide it */
+.pdp-zoom-flyout--portal {
+  position: fixed;
+  left: auto;
+  top: auto;
+  z-index: 320;
+}
+
 @media (min-width: 1200px) {
   .pdp-zoom-flyout {
     min-width: 600px;
@@ -3964,7 +3972,7 @@ body {
 .pdp-lightbox {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 400;
   background: rgba(15, 17, 17, 0.92);
   display: flex;
   align-items: center;

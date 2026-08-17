@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useProducts } from "../context/ProductsContext";
 import { AGRI_CATEGORIES, CATEGORY_GROUPS } from "../data/categories";
+import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWare";
 
 type Props = {
   value: string;
@@ -18,11 +19,11 @@ export function CategoryFilter({
   const { t } = useTranslation();
   const { categories } = useProducts();
 
-  const list = categories.length ? categories : AGRI_CATEGORIES.map((c) => ({
+  const list = (categories.length ? categories : AGRI_CATEGORIES.map((c) => ({
     id: c.id,
     name: c.name,
     icon: c.icon,
-  }));
+  }))).filter((c) => c.id !== KITCHEN_WARE_CATEGORY_ID);
 
   return (
     <div className={`space-y-4 ${className}`}>

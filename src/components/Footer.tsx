@@ -3,13 +3,16 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useProducts } from "../context/ProductsContext";
 import { BrandLogo } from "./BrandLogo";
+import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWare";
 
 export function Footer() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { categories, getProductCountByCategory } = useProducts();
   const categoriesWithProducts = categories.filter(
-    (c) => (getProductCountByCategory()[c.id] ?? 0) > 0
+    (c) =>
+      c.id !== KITCHEN_WARE_CATEGORY_ID &&
+      (getProductCountByCategory()[c.id] ?? 0) > 0
   );
   const ordersTo = user ? "/orders" : "/login";
   const ordersState = user ? undefined : { from: "/orders" };

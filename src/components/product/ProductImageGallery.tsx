@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { ProductImageZoom } from "./ProductImageZoom";
 
@@ -17,10 +18,11 @@ export function ProductImageGallery({ imageSrc, alt, discount = 0 }: Props) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setLightboxOpen(false);
     };
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKey);
     };
   }, [lightboxOpen]);
@@ -38,30 +40,32 @@ export function ProductImageGallery({ imageSrc, alt, discount = 0 }: Props) {
         />
       </div>
 
-      {lightboxOpen && (
-        <div
-          className="pdp-lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label={alt}
-          onClick={() => setLightboxOpen(false)}
-        >
-          <button
-            type="button"
-            className="pdp-lightbox-close"
+      {lightboxOpen &&
+        createPortal(
+          <div
+            className="pdp-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={alt}
             onClick={() => setLightboxOpen(false)}
-            aria-label={t("common.close")}
           >
-            ×
-          </button>
-          <img
-            src={imageSrc}
-            alt={alt}
-            className="pdp-lightbox-image"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+            <button
+              type="button"
+              className="pdp-lightbox-close"
+              onClick={() => setLightboxOpen(false)}
+              aria-label={t("common.close")}
+            >
+              ×
+            </button>
+            <img
+              src={imageSrc}
+              alt={alt}
+              className="pdp-lightbox-image"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

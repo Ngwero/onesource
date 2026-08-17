@@ -16,7 +16,13 @@ export function isKitchenPath(pathname: string): boolean {
 
 export function isKitchenProduct(product: Product | null | undefined): boolean {
   if (!product) return false;
+  if (String(product.id).startsWith("kitchen-")) return true;
   return productMatchesCategory(product.category, KITCHEN_WARE_CATEGORY_ID);
+}
+
+/** Produce shop listings should never include kitchen-ware SKUs. */
+export function excludeKitchenProducts(products: Product[]): Product[] {
+  return products.filter((product) => !isKitchenProduct(product));
 }
 
 export function kitchenAislePath(aisleId: string): string {
@@ -42,9 +48,7 @@ export function groupKitchenByAisle(products: Product[]) {
 }
 
 export function filterKitchenProducts(products: Product[]): Product[] {
-  return products.filter((product) =>
-    productMatchesCategory(product.category, KITCHEN_WARE_CATEGORY_ID)
-  );
+  return products.filter(isKitchenProduct);
 }
 
 export function filterKitchenAisle(

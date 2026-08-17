@@ -19,6 +19,7 @@ import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
 import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWareCatalog.js";
+import { ugandanKitchenPrice } from "../lib/ugandanKitchenPrices.js";
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
 const CATALOG_ROOT =
@@ -131,10 +132,6 @@ const FOLDER_AISLES = [
   },
 ];
 
-const PRICE_RANGE = {
-  cookware: [18000, 380000],
-  organization: [12000, 160000],
-};
 
 const FILE_RE = /^(.+)_([A-Z]{2}\d{3}[A-Z0-9]+)\.(jpe?g|webp|png)$/i;
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".webp", ".png"]);
@@ -162,11 +159,12 @@ function skuFromProductId(id) {
   return m ? m[1].toUpperCase() : null;
 }
 
-function priceFor(aisleId, sku) {
-  const [min, max] = PRICE_RANGE[aisleId] || [20000, 250000];
-  const span = max - min;
-  const stepped = min + (hashSku(sku) % Math.max(1, span));
-  return Math.round(stepped / 1000) * 1000;
+function priceFor(item) {
+  return ugandanKitchenPrice({
+    id: item.id,
+    title: item.title,
+    aisleId: item.aisleId,
+  });
 }
 
 function cleanTitleFromStem(stem) {
@@ -428,8 +426,7 @@ async function main() {
     for (const item of items.slice(0, 10)) {
       console.log(
         `  ${item.id} | ${item.title} | USh ${priceFor(
-          item.aisleId,
-          item.sku
+          item
         ).toLocaleString()} | ${item.folder}`
       );
     }
@@ -457,7 +454,7 @@ async function main() {
   const rows = [];
   const errors = await runPool(toImport, CONCURRENCY, async (item, index) => {
     const image = await uploadImage(db, item);
-    const price = priceFor(item.aisleId, item.sku);
+    const price = priceFor(item);
     const h = hashSku(item.sku);
     rows.push(
       seedRowFromJson({

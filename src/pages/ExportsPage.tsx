@@ -7,6 +7,7 @@ import { ExportHeroCarousel } from "../components/ExportHeroCarousel";
 import { ScrollReveal } from "../components/ScrollReveal";
 import { useProducts } from "../context/ProductsContext";
 import { productMatchesCategory } from "../data/categories";
+import { excludeKitchenProducts } from "../utils/kitchenMode";
 import type { Product } from "../types/product";
 
 const EXPORT_CATEGORY_ID = "export-fresh-produce";
@@ -41,10 +42,9 @@ export function ExportsPage() {
   );
 
   const exportProducts = useMemo(() => {
-    const matched = products.filter((p) =>
+    return excludeKitchenProducts(products).filter((p) =>
       productMatchesCategory(p.category, EXPORT_CATEGORY_ID)
     );
-    return matched;
   }, [products]);
 
   /** Group export products into aisle rows by commodity. */

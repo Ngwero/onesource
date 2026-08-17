@@ -8,6 +8,7 @@ import { ShopListingLayout } from "../components/shop/ShopListingLayout";
 import { useProducts } from "../context/ProductsContext";
 import { productMatchesSearch } from "../utils/searchMatch";
 import { AGRI_CATEGORIES, normalizeCategoryId } from "../data/categories";
+import { excludeKitchenProducts } from "../utils/kitchenMode";
 
 export function SearchPage() {
   const { t } = useTranslation();
@@ -22,13 +23,14 @@ export function SearchPage() {
   const qTrim = query.trim();
   const isMeatOnly = qTrim === "meat" || qTrim === "meats";
 
-  const results = useMemo(
-    () =>
-      isMeatOnly
-        ? products.filter((p) => livestockSet.has(normalizeCategoryId(p.category)))
-        : products.filter((p) => productMatchesSearch(p, query)),
-    [products, query, isMeatOnly]
-  );
+  const results = useMemo(() => {
+    const produceOnly = excludeKitchenProducts(products);
+    return isMeatOnly
+      ? produceOnly.filter((p) =>
+          livestockSet.has(normalizeCategoryId(p.category))
+        )
+      : produceOnly.filter((p) => productMatchesSearch(p, query));
+  }, [products, query, isMeatOnly]);
 
   const header = (
     <ScrollReveal variant="fade-up">

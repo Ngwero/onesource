@@ -47,7 +47,10 @@ export function CategoryPage() {
   }, [rawId, normalizedId, categoryDef, isRemovedSlug, navigate]);
 
   const relatedCategories = useMemo(
-    () => categories.filter((c) => c.id !== normalizedId).slice(0, 8),
+    () =>
+      categories
+        .filter((c) => c.id !== normalizedId && c.id !== "kitchen-ware")
+        .slice(0, 8),
     [categories, normalizedId]
   );
 

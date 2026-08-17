@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useProducts } from "../../context/ProductsContext";
 import { useCurrency } from "../../context/CurrencyContext";
+import { KITCHEN_WARE_CATEGORY_ID } from "../../data/kitchenWare";
 import {
   type ShopFilters,
   type PriceRangeId,
@@ -95,6 +96,9 @@ export function ShopFilterSidebar({
   const { t } = useTranslation();
   const { categories } = useProducts();
   const { formatPrice } = useCurrency();
+  const produceCategories = categories.filter(
+    (c) => c.id !== KITCHEN_WARE_CATEGORY_ID
+  );
 
   const toggleCategory = (id: string) => {
     const next = filters.categoryIds.includes(id)
@@ -183,10 +187,10 @@ export function ShopFilterSidebar({
         />
       </FilterSection>
 
-      {showCategories && categories.length > 0 && (
+      {showCategories && produceCategories.length > 0 && (
         <FilterSection title={t("shopFilters.department")}>
           <ul className="shop-filter-list max-h-52 overflow-y-auto scrollbar-hide">
-            {categories.map((c) => {
+            {produceCategories.map((c) => {
               const count = facetCounts.categories[c.id] ?? 0;
               if (count === 0) return null;
               return (

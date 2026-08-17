@@ -28,6 +28,7 @@ import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
 import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWareCatalog.js";
+import { ugandanKitchenPrice } from "../lib/ugandanKitchenPrices.js";
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
 const CATALOG_ROOT =
@@ -111,14 +112,6 @@ const FOLDER_RULES = [
   },
 ];
 
-const PRICE_RANGE = {
-  cookware: [55000, 480000],
-  "cast-iron": [85000, 620000],
-  "stainless-clad": [72000, 520000],
-  "non-stick": [48000, 380000],
-  "cookware-accessories": [15000, 180000],
-  tabletop: [25000, 220000],
-};
 
 const FILE_RE = /^(.+)_(\d+)\.webp$/i;
 
@@ -185,12 +178,12 @@ function articleKeyFromProductId(id) {
   return m ? `cws${m[1]}` : null;
 }
 
-function priceFor(aisleId, articleId) {
-  const [min, max] = PRICE_RANGE[aisleId] || [50000, 250000];
-  const n = Number(articleId) || 0;
-  const span = max - min;
-  const stepped = min + ((n * 7919) % Math.max(1, span));
-  return Math.round(stepped / 1000) * 1000;
+function priceFor(item) {
+  return ugandanKitchenPrice({
+    id: item.id,
+    title: item.title,
+    aisleId: item.aisleId,
+  });
 }
 
 function buildDescription(title, aisleTitle, leafFolder) {
@@ -368,7 +361,7 @@ async function uploadImage(db, item) {
 }
 
 function buildProductRow(item, index, image) {
-  const price = priceFor(item.aisleId, item.articleId);
+  const price = priceFor(item);
   return seedRowFromJson({
     id: item.id,
     title: `${item.title} – One Source`,
@@ -472,8 +465,7 @@ async function main() {
     for (const item of items.slice(0, 12)) {
       console.log(
         `  ${item.id}\n    ${item.title}\n    ${item.aisleId} | USh ${priceFor(
-          item.aisleId,
-          item.articleId
+          item
         ).toLocaleString()} | ${item.relativePath}`
       );
     }

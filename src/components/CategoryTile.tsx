@@ -10,6 +10,7 @@ import {
 import { CategoryImage } from "./CategoryImage";
 import { StarRating } from "./StarRating";
 import { resolveImageUrl } from "../utils/imageUrl";
+import { isKitchenProduct } from "../utils/kitchenMode";
 
 type Props = {
   category: Category;
@@ -20,8 +21,10 @@ type Props = {
 export function CategoryTile({ category, products, variant = "tile" }: Props) {
   const { t } = useTranslation();
   const catId = category.id;
-  const inCategory = products.filter((p) =>
-    productMatchesCategory(p.category, catId)
+  const inCategory = products.filter(
+    (p) =>
+      productMatchesCategory(p.category, catId) &&
+      (catId === "kitchen-ware" || !isKitchenProduct(p))
   );
   const count = inCategory.length;
   const preview = inCategory[0];

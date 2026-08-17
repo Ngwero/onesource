@@ -36,7 +36,7 @@ import {
   toggleSavedListItem,
 } from "../utils/userStorage";
 import { aisleIdFromProductId } from "../data/kitchenWare";
-import { kitchenAislePath, isKitchenProduct } from "../utils/kitchenMode";
+import { kitchenAislePath, isKitchenProduct, excludeKitchenProducts } from "../utils/kitchenMode";
 
 /** 7 columns on large screens × 4 rows (2 extra rows vs original 2-row layout). */
 const PDP_RECOMMENDATION_COUNT = 28;
@@ -85,16 +85,22 @@ export function ProductPage() {
 
   const related = useMemo(() => {
     if (!product) return [] as typeof products;
-    return products
+    const pool = isKitchenProduct(product)
+      ? products.filter(isKitchenProduct)
+      : excludeKitchenProducts(products);
+    return pool
       .filter((p) => p.id !== product.id && productMatchesCategory(p.category, product.category))
       .slice(0, PDP_RECOMMENDATION_COUNT);
   }, [products, product]);
 
   const alsoViewed = useMemo(() => {
     if (!product) return [] as typeof products;
+    const pool = isKitchenProduct(product)
+      ? products.filter(isKitchenProduct)
+      : excludeKitchenProducts(products);
     return pickCustomersAlsoViewed(
       product,
-      products,
+      pool,
       user?.id,
       related.map((p) => p.id),
       PDP_RECOMMENDATION_COUNT

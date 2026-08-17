@@ -22,6 +22,7 @@ import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
 import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWareCatalog.js";
+import { gbpToUgandanKitchenPrice } from "../lib/ugandanKitchenPrices.js";
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
 const CATALOG_ROOT =
@@ -31,8 +32,6 @@ const SHOP_JSON =
   process.env.MADEIN_SHOP_JSON?.trim() ||
   "https://www.madeincookware.co.uk/collections/shop-all/products.json";
 
-/** Rough GBP → UGX for display prices (override with MADEIN_UGX_PER_GBP). */
-const UGX_PER_GBP = Number(process.env.MADEIN_UGX_PER_GBP || 4800);
 
 const dryRun = process.argv.includes("--dry-run");
 const replaceExisting = process.argv.includes("--replace");
@@ -117,23 +116,12 @@ function buildTitle(productTitle, variant) {
   return label ? `${base} – ${label}` : base;
 }
 
-function gbpToUgx(gbp) {
-  const n = Number(gbp);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return Math.round((n * UGX_PER_GBP) / 1000) * 1000;
-}
-
-function fallbackPrice(aisleId, key) {
-  const ranges = {
-    "stainless-clad": [280000, 1850000],
-    "carbon-steel": [220000, 980000],
-    "cast-iron": [320000, 1450000],
-    "non-stick": [180000, 720000],
-    "cookware-accessories": [45000, 380000],
-    tabletop: [95000, 620000],
-  };
-  const [min, max] = ranges[aisleId] || [120000, 600000];
-  return min + (hashStr(key) % Math.max(1, max - min));
+function kitchenPriceFor(item) {
+  return gbpToUgandanKitchenPrice(item.gbp, {
+    id: item.id,
+    title: item.title,
+    aisleId: item.aisleId,
+  });
 }
 
 async function fetchShopProducts() {
@@ -237,13 +225,16 @@ async function listCatalogItems() {
       }
       const variantId = String(variant.id);
       const title = buildTitle(product.title, variant);
-      const price =
-        gbpToUgx(variant.price) ??
-        Math.round(fallbackPrice(aisle.aisleId, `${handle}-${variantId}`) / 1000) *
-          1000;
+      const id = productId(aisle.aisleId, handle, variantId);
+      const price = kitchenPriceFor({
+        id,
+        title,
+        aisleId: aisle.aisleId,
+        gbp: Number(variant.price) || 0,
+      });
 
       items.push({
-        id: productId(aisle.aisleId, handle, variantId),
+        id,
         handle,
         variantId,
         title,
