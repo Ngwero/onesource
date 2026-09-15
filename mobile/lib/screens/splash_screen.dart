@@ -146,32 +146,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     children: [
                       ScaleTransition(
                         scale: _logoScale,
-                        child: const BrandLogo(height: 44, onDark: true),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 28),
+                          child: BrandLogo(
+                            height: 56,
+                            onDark: true,
+                            alignment: Alignment.center,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 28),
-                      Text(
-                        'One Source',
-                        style: TextStyle(
-                          fontFamily: 'Gabarito',
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 2.4,
-                          color: Colors.white.withValues(alpha: 0.55),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Shop fresh. Cook well.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Gabarito',
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.4,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 36),
                       SizedBox(
                         width: 28,
                         height: 28,

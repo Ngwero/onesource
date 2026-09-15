@@ -53,26 +53,44 @@ class BrandLogoMark extends StatelessWidget {
 }
 
 class BrandLogo extends StatelessWidget {
-  const BrandLogo({super.key, this.height = 40, this.onDark = false});
+  const BrandLogo({
+    super.key,
+    this.height = 40,
+    this.onDark = false,
+    this.alignment = Alignment.centerLeft,
+  });
 
   final double height;
   final bool onDark;
+  final Alignment alignment;
 
   @override
   Widget build(BuildContext context) {
-    // Dark headers use the white+lime lockup with transparent ground — no plate.
-    final asset =
-        onDark ? 'assets/brand/logo-on-dark.png' : 'assets/brand/logo-primary.png';
+    // Dark surfaces: transparent lockup from brand artboard (no white plate).
+    final asset = onDark
+        ? 'assets/brand/logo-splash-on-dark.png'
+        : 'assets/brand/logo-primary.png';
 
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment: alignment,
       child: Image.asset(
         asset,
         height: height,
         fit: BoxFit.contain,
-        alignment: Alignment.centerLeft,
+        alignment: alignment,
         filterQuality: FilterQuality.high,
-        errorBuilder: (_, __, ___) => BrandLogoMark(size: height * 1.4),
+        errorBuilder: (_, __, ___) => Image.asset(
+          onDark
+              ? 'assets/brand/logo-on-dark.png'
+              : 'assets/brand/logo-primary.png',
+          height: height,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => Icon(
+            Icons.eco_rounded,
+            size: height,
+            color: onDark ? Colors.white : AppColors.darkGreen,
+          ),
+        ),
       ),
     );
   }

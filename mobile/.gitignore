@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Play Store signing — never commit
+/android/key.properties
+/android/upload-keystore.jks
+/android/*.jks
+/android/*.keystore
+/android/PLAY_SIGNING_BACKUP.txt
