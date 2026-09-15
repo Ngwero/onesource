@@ -11,6 +11,7 @@ import '../screens/kitchen_aisle_screen.dart';
 import '../screens/kitchen_categories_screen.dart';
 import '../screens/kitchen_home_screen.dart';
 import '../screens/onboarding_screen.dart';
+import '../screens/notifications_screen.dart';
 import '../screens/order_detail_screen.dart';
 import '../screens/product_detail_screen.dart';
 import '../screens/category_screen.dart';
@@ -96,6 +97,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(path: '/checkout', builder: (_, __) => const CheckoutScreen()),
+      GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
       GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),

@@ -22,7 +22,7 @@ class HomeProductRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (products.length < 3) return const SizedBox.shrink();
+    if (products.isEmpty) return const SizedBox.shrink();
 
     final strings = ref.watch(stringsProvider);
     final seeAll = homeRowSeeAllPath(row);

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 
 import '../config/env.dart';
+import '../models/app_notification.dart';
 import '../models/hero_slide.dart';
 import '../models/order.dart';
 import '../models/product.dart';
@@ -277,6 +278,24 @@ class ApiClient {
       }
     }
     return [];
+  }
+
+  Future<List<AppNotification>> fetchNotifications() async {
+    try {
+      final res = await _client
+          .get(_uri('/notifications'))
+          .timeout(const Duration(seconds: 15));
+      if (res.statusCode != 200) return const [];
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final list = data['notifications'] as List<dynamic>? ?? [];
+      return list
+          .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
+          .where((n) => n.id.isNotEmpty && n.active)
+          .toList();
+    } catch (e) {
+      debugPrint('[OneSource] notifications error: $e');
+      return const [];
+    }
   }
 
   Future<List<HeroSlide>> fetchHeroSlides({String placement = 'home'}) async {

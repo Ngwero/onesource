@@ -9,10 +9,12 @@ import '../models/hero_slide.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../providers/hero_provider.dart';
+import '../providers/home_aisle_catalog_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../providers/products_provider.dart';
 import '../providers/search_catalog_provider.dart';
 import '../services/auth_service.dart';
+import '../utils/fresh_categories.dart';
 import '../widgets/category_marquee.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/home_header.dart';
@@ -127,19 +129,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     final products = productsState.items;
-    // Use the home feed for rows — don't pull the full search catalog here
-    // (that used to race the first paint and feel like a stuck splash).
-    final catalog = products;
+    // Seed chicken/meat/fish/etc. so aisle rows under Special Offers stay full.
+    final aisleSeed = ref.watch(homeAisleCatalogProvider).valueOrNull ?? const [];
+    final catalog = mergeProductPools(products, aisleSeed);
     final popularProducts = products.take(_popularCount).toList();
     final moreProducts = products.length > _popularCount ? products.skip(_popularCount).toList() : <Product>[];
-    final themedRows = homeProductRows
-        .map((row) => (row: row, products: productsForHomeRow(catalog, row)))
-        .where((entry) => entry.products.length >= 3)
-        .toList();
-
-    final produceCategories = (categoriesAsync.valueOrNull ?? [])
-        .where((c) => c.id != 'kitchen-ware' && c.id != 'kitchen-furniture')
-        .toList();
+    final themedRows = buildHomeThemedRows(catalog, minRows: 10);
+    final produceCategories = diversifyFreshCategories(
+      (categoriesAsync.valueOrNull ?? [])
+          .where((c) => c.id != 'kitchen-ware' && c.id != 'kitchen-furniture')
+          .map(
+            (c) => Category(
+              id: c.id,
+              name: freshCategoryDisplayName(c),
+              icon: c.icon,
+              image: c.image,
+            ),
+          )
+          .toList(),
+    );
 
     return Container(
       decoration: const BoxDecoration(gradient: AppGradients.canvas),
@@ -151,6 +159,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             await ref.read(paginatedProductsProvider(query).notifier).refresh();
             ref.invalidate(categoriesProvider);
             ref.invalidate(heroSlidesProvider('home'));
+            ref.invalidate(homeAisleCatalogProvider);
             ref.invalidate(searchCatalogProvider('fresh'));
           },
           child: CustomScrollView(

@@ -4,6 +4,7 @@ const HERO_API = "/api/hero/slides";
 const ORDERS_API = "/api/orders";
 const SUPPLIERS_API = "/api/suppliers";
 const PACKAGING_API = "/api/packaging";
+const NOTIFICATIONS_API = "/api/notifications";
 const HEALTH = "/api/health";
 const ADMIN_STATS = "/api/admin/stats";
 /** Dummy catalogue size shown in admin KPIs / badges (not the real SKU count). */
@@ -36,6 +37,8 @@ let orders = [];
 let suppliers = [];
 let packagingMaterials = [];
 let packagingTableReady = true;
+let appNotifications = [];
+let editingNotificationId = null;
 let editingOrderId = null;
 let editingId = null;
 let editingHeroId = null;
@@ -351,6 +354,7 @@ const viewTitles = {
   categories: "Category banners",
   hero: "Hero carousel",
   "kitchen-collage": "Kitchen collage",
+  notifications: "Notifications",
   orders: "Orders",
   suppliers: "Suppliers",
   packaging: "Packaging",
@@ -368,6 +372,7 @@ const viewBreadcrumbs = {
   categories: ["Home", "Storefront", "Category banners"],
   hero: ["Home", "Storefront", "Hero carousel"],
   "kitchen-collage": ["Home", "Storefront", "Kitchen collage"],
+  notifications: ["Home", "Storefront", "Notifications"],
   suppliers: ["Home", "Marketplace", "Suppliers"],
   orders: ["Home", "Sales", "Orders"],
   customers: ["Home", "Sales", "Customers"],
@@ -424,6 +429,7 @@ function buildPageMeta(view) {
     catalog: `<strong>${categories.length}</strong> categories in catalogue`,
     settings: `Store admin · API at <code>${location.origin}/api</code>`,
     hero: `<strong>${heroSlides.filter((s) => s.active).length}</strong> active slides`,
+    notifications: `<strong>${appNotifications.filter((n) => n.active).length}</strong> active · <strong>${appNotifications.length}</strong> total sent`,
     categories: `<strong>${categories.length}</strong> category banners`,
   };
   return maps[view] || `${DISPLAY_PRODUCT_COUNT.toLocaleString()} products · ${orders.length} orders${refreshed}`;
@@ -747,6 +753,7 @@ const addProductBtnDefaultHtml = `<svg width="16" height="16" viewBox="0 0 24 24
 const addHeroBtnHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add slide</span>`;
 const addSupplierBtnHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add supplier</span>`;
 const addPackagingBtnHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add packaging</span>`;
+const addNotificationBtnHtml = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="12" y1="2" x2="12" y2="5"/></svg><span>Send notification</span>`;
 
 function setLoading(on) {
   $("loading").classList.toggle("show", on);
@@ -2144,10 +2151,185 @@ function closeHeroDrawer() {
     !$("drawer").classList.contains("open") &&
     !$("supplierDrawer").classList.contains("open") &&
     !$("packagingDrawer")?.classList.contains("open") &&
+    !$("notificationDrawer")?.classList.contains("open") &&
     !$("orderDrawer").classList.contains("open")
   ) {
     $("overlay").classList.remove("open");
     document.body.style.overflow = "";
+  }
+}
+
+async function loadNotifications() {
+  const res = await fetch(`${NOTIFICATIONS_API}?admin=true`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to load notifications");
+  appNotifications = data.notifications || [];
+  renderNotifications();
+  updatePageHeader();
+  const badge = $("navNotificationsBadge");
+  if (badge) {
+    const active = appNotifications.filter((n) => n.active).length;
+    badge.textContent = String(active);
+    badge.style.display = active ? "" : "none";
+  }
+}
+
+function renderNotifications() {
+  const el = $("notificationsList");
+  const empty = $("notificationsEmpty");
+  if (!el) return;
+  const showInactive = $("showInactiveNotifications")?.checked;
+  const list = showInactive
+    ? appNotifications
+    : appNotifications.filter((n) => n.active !== false);
+
+  if (!list.length) {
+    el.innerHTML = "";
+    if (empty) empty.style.display = "";
+    return;
+  }
+  if (empty) empty.style.display = "none";
+
+  el.innerHTML = list
+    .map((n) => {
+      const when = n.createdAt
+        ? new Date(n.createdAt).toLocaleString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "—";
+      const audience =
+        n.audience === "fresh"
+          ? "Fresh"
+          : n.audience === "kitchen"
+            ? "Kitchen"
+            : "Everyone";
+      return `
+      <article class="resource-card" style="${n.active === false ? "opacity:0.55" : ""}">
+        <div class="resource-card-body">
+          <div style="display:flex;justify-content:space-between;gap:0.75rem;align-items:flex-start">
+            <div>
+              <h3 style="margin:0 0 0.35rem">${escapeHtml(n.title)}</h3>
+              <p style="margin:0;color:var(--muted);font-size:0.92rem">${escapeHtml(n.body)}</p>
+            </div>
+            <span class="status-pill" style="flex-shrink:0">${n.active === false ? "Inactive" : "Live"}</span>
+          </div>
+          <p style="margin:0.75rem 0 0;font-size:0.8rem;color:var(--muted)">
+            ${escapeHtml(audience)} · ${escapeHtml(when)}
+            ${n.href ? ` · <code>${escapeHtml(n.href)}</code>` : ""}
+          </p>
+          <div style="display:flex;gap:0.5rem;margin-top:0.85rem;flex-wrap:wrap">
+            <button type="button" class="btn btn-secondary btn-sm" data-edit-notification="${escapeHtml(n.id)}">Edit</button>
+            ${
+              n.active !== false
+                ? `<button type="button" class="btn btn-ghost btn-sm" data-deactivate-notification="${escapeHtml(n.id)}">Deactivate</button>`
+                : `<button type="button" class="btn btn-ghost btn-sm" data-activate-notification="${escapeHtml(n.id)}">Reactivate</button>`
+            }
+          </div>
+        </div>
+      </article>`;
+    })
+    .join("");
+
+  el.querySelectorAll("[data-edit-notification]").forEach((btn) => {
+    btn.addEventListener("click", () => editNotification(btn.dataset.editNotification));
+  });
+  el.querySelectorAll("[data-deactivate-notification]").forEach((btn) => {
+    btn.addEventListener("click", () => deactivateNotification(btn.dataset.deactivateNotification));
+  });
+  el.querySelectorAll("[data-activate-notification]").forEach((btn) => {
+    btn.addEventListener("click", () => activateNotification(btn.dataset.activateNotification));
+  });
+}
+
+function openNotificationDrawer(mode = "add") {
+  $("overlay").classList.add("open");
+  $("notificationDrawer").classList.add("open");
+  document.body.style.overflow = "hidden";
+  if (mode === "add") resetNotificationForm();
+}
+
+function closeNotificationDrawer() {
+  $("notificationDrawer")?.classList.remove("open");
+  if (
+    !$("drawer").classList.contains("open") &&
+    !$("supplierDrawer").classList.contains("open") &&
+    !$("packagingDrawer")?.classList.contains("open") &&
+    !$("heroDrawer").classList.contains("open") &&
+    !$("orderDrawer").classList.contains("open")
+  ) {
+    $("overlay").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+}
+
+function resetNotificationForm() {
+  editingNotificationId = null;
+  $("notificationForm")?.reset();
+  if ($("notificationDrawerTitle")) $("notificationDrawerTitle").textContent = "Send notification";
+  if ($("notificationDrawerSubtitle")) {
+    $("notificationDrawerSubtitle").textContent = "Appears in the One Source app inbox";
+  }
+  if ($("notificationId")) $("notificationId").value = "";
+  if ($("notificationAudience")) $("notificationAudience").value = "all";
+  if ($("notificationActive")) $("notificationActive").checked = true;
+  if ($("notificationSubmitBtn")) $("notificationSubmitBtn").textContent = "Send to app";
+  if ($("deactivateNotificationBtn")) $("deactivateNotificationBtn").style.display = "none";
+}
+
+function editNotification(id) {
+  const n = appNotifications.find((x) => x.id === id);
+  if (!n) return;
+  editingNotificationId = id;
+  $("notificationId").value = id;
+  $("notificationTitle").value = n.title || "";
+  $("notificationBody").value = n.body || "";
+  $("notificationHref").value = n.href || "";
+  $("notificationAudience").value = n.audience || "all";
+  $("notificationActive").checked = n.active !== false;
+  $("notificationDrawerTitle").textContent = "Edit notification";
+  $("notificationDrawerSubtitle").textContent = "Update message shown in the app";
+  $("notificationSubmitBtn").textContent = "Save changes";
+  $("deactivateNotificationBtn").style.display = n.active !== false ? "" : "none";
+  openNotificationDrawer("edit");
+}
+
+async function deactivateNotification(id) {
+  try {
+    setLoading(true);
+    const res = await fetch(`${NOTIFICATIONS_API}/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Failed to deactivate");
+    toast("Notification deactivated");
+    await loadNotifications();
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function activateNotification(id) {
+  try {
+    setLoading(true);
+    const res = await fetch(`${NOTIFICATIONS_API}/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active: true }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Failed to reactivate");
+    toast("Notification reactivated");
+    await loadNotifications();
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    setLoading(false);
   }
 }
 
@@ -3013,6 +3195,7 @@ function switchView(name) {
   currentView = name;
   closeDrawer();
   closeHeroDrawer();
+  closeNotificationDrawer();
   closeSupplierDrawer();
   closePackagingDrawer();
   closeOrderDrawer();
@@ -3032,15 +3215,20 @@ function switchView(name) {
     addBtn.innerHTML =
       name === "hero"
         ? addHeroBtnHtml
-        : name === "suppliers"
-          ? addSupplierBtnHtml
-          : name === "packaging"
-            ? addPackagingBtnHtml
-            : addProductBtnDefaultHtml;
+        : name === "notifications"
+          ? addNotificationBtnHtml
+          : name === "suppliers"
+            ? addSupplierBtnHtml
+            : name === "packaging"
+              ? addPackagingBtnHtml
+              : addProductBtnDefaultHtml;
   }
   $("exportCsvBtn").style.display = name === "products" ? "" : "none";
   if (name === "orders") loadOrders();
   if (name === "packaging") loadPackaging().then(() => renderPackaging());
+  if (name === "notifications") {
+    loadNotifications().catch((err) => toast(err.message, true));
+  }
   if (name === "kitchen-collage") {
     loadKitchenCollage().catch((err) => toast(err.message, true));
   }
@@ -3321,6 +3509,9 @@ $("sidebarNewBtn")?.addEventListener("click", () => {
   } else if (currentView === "hero") {
     resetHeroForm();
     openHeroDrawer("add");
+  } else if (currentView === "notifications") {
+    resetNotificationForm();
+    openNotificationDrawer("add");
   } else {
     switchView("products");
     resetForm();
@@ -3363,6 +3554,9 @@ $("addProductBtn").addEventListener("click", () => {
   if (currentView === "hero") {
     resetHeroForm();
     openHeroDrawer("add");
+  } else if (currentView === "notifications") {
+    resetNotificationForm();
+    openNotificationDrawer("add");
   } else if (currentView === "suppliers") {
     resetSupplierForm();
     openSupplierDrawer("add");
@@ -3376,16 +3570,61 @@ $("addProductBtn").addEventListener("click", () => {
 });
 $("closeDrawer").addEventListener("click", closeDrawer);
 $("closeHeroDrawer").addEventListener("click", closeHeroDrawer);
+$("closeNotificationDrawer")?.addEventListener("click", closeNotificationDrawer);
 $("closeSupplierDrawer")?.addEventListener("click", closeSupplierDrawer);
 $("closePackagingDrawer")?.addEventListener("click", closePackagingDrawer);
 $("overlay").addEventListener("click", () => {
   closeDrawer();
   closeHeroDrawer();
+  closeNotificationDrawer();
   closeSupplierDrawer();
   closePackagingDrawer();
   closeOrderDrawer();
 });
 $("closeOrderDrawer").addEventListener("click", closeOrderDrawer);
+
+$("showInactiveNotifications")?.addEventListener("change", renderNotifications);
+$("resetNotificationFormBtn")?.addEventListener("click", resetNotificationForm);
+$("deactivateNotificationBtn")?.addEventListener("click", async () => {
+  if (!editingNotificationId) return;
+  await deactivateNotification(editingNotificationId);
+  closeNotificationDrawer();
+});
+$("notificationForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const payload = {
+    title: $("notificationTitle").value.trim(),
+    body: $("notificationBody").value.trim(),
+    href: $("notificationHref").value.trim(),
+    audience: $("notificationAudience").value,
+    active: $("notificationActive").checked,
+  };
+  if (!payload.title || !payload.body) {
+    toast("Title and message are required", true);
+    return;
+  }
+  try {
+    setLoading(true);
+    const editing = Boolean(editingNotificationId);
+    const url = editing
+      ? `${NOTIFICATIONS_API}/${encodeURIComponent(editingNotificationId)}`
+      : NOTIFICATIONS_API;
+    const res = await fetch(url, {
+      method: editing ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Failed to save notification");
+    toast(editing ? "Notification updated" : "Notification sent to the app");
+    closeNotificationDrawer();
+    await loadNotifications();
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    setLoading(false);
+  }
+});
 
 async function saveOrderStatus() {
   const errEl = $("orderSaveError");
@@ -3460,6 +3699,7 @@ $("refreshBtn").addEventListener("click", async () => {
   try {
     await loadHeroSlides().catch(() => {});
     await loadKitchenCollage().catch(() => {});
+    await loadNotifications().catch(() => {});
     await loadSuppliers().catch(() => {});
     await loadPackaging().catch(() => {});
     await loadOrders().catch(() => {});
@@ -3904,6 +4144,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     closeDrawer();
     closeHeroDrawer();
+    closeNotificationDrawer();
     closeSupplierDrawer();
     closePackagingDrawer();
     closeOrderDrawer();
@@ -3925,6 +4166,7 @@ document.addEventListener("keydown", (e) => {
         "Hero slides use defaults until you run server/supabase/hero-slides.sql, then: cd server && npm run seed:hero"
       );
     });
+    await loadNotifications().catch(() => {});
     await loadOrders().catch(() => {
       showError(
         (document.getElementById("errorBanner").textContent || "") +

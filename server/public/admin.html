@@ -84,6 +84,11 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="12" y="3" width="9" height="8" rx="1"/><rect x="12" y="13" width="9" height="8" rx="1"/></svg>
           Kitchen collage
         </button>
+        <button type="button" class="nav-btn" data-view="notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Notifications
+          <span class="nav-badge" id="navNotificationsBadge" style="display:none">0</span>
+        </button>
         <div class="nav-label">Marketplace</div>
         <button type="button" class="nav-btn" data-view="suppliers">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -716,6 +721,28 @@
           </div>
         </section>
 
+        <section class="view" id="view-notifications">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>In-app notifications</h2>
+                <p class="panel-desc">
+                  Messages sent here appear in the mobile app inbox (bell icon).
+                  Use a deep link like <code>/shop</code>, <code>/category/fresh-fruits</code>, or <code>/kitchen</code>.
+                </p>
+              </div>
+              <label class="checkbox-field" style="margin:0">
+                <input type="checkbox" id="showInactiveNotifications" />
+                Show inactive
+              </label>
+            </div>
+            <div id="notificationsList" class="resource-grid"></div>
+            <p class="panel-desc" id="notificationsEmpty" style="display:none;margin-top:1rem">
+              No notifications yet. Click <strong>Send notification</strong> to reach app users.
+            </p>
+          </div>
+        </section>
+
         <section class="view" id="view-settings">
           <div class="dash-grid">
             <div class="panel">
@@ -906,6 +933,50 @@
       <button type="submit" form="heroForm" class="btn btn-primary" id="heroSubmitBtn">Save slide</button>
       <button type="button" class="btn btn-secondary" id="resetHeroFormBtn">Clear</button>
       <button type="button" class="btn btn-danger" id="deleteHeroBtn" style="display:none">Remove</button>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="notificationDrawer">
+    <div class="drawer-head">
+      <div>
+        <h2 id="notificationDrawerTitle">Send notification</h2>
+        <p id="notificationDrawerSubtitle">Appears in the One Source app inbox</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-icon" id="closeNotificationDrawer" aria-label="Close">✕</button>
+    </div>
+    <form id="notificationForm" class="drawer-body">
+      <input type="hidden" id="notificationId" />
+      <div class="form-section">
+        <div class="field">
+          <label class="field-label" for="notificationTitle">Title *</label>
+          <input type="text" id="notificationTitle" required maxlength="120" placeholder="Weekend specials are live" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="notificationBody">Message *</label>
+          <textarea id="notificationBody" required rows="4" maxlength="500" placeholder="Fresh chicken, beef and fish — free delivery over UGX 50,000."></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label" for="notificationHref">Deep link <em>(optional)</em></label>
+          <input type="text" id="notificationHref" placeholder="/shop or /category/poultry-products" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="notificationAudience">Audience</label>
+          <select id="notificationAudience">
+            <option value="all">Everyone</option>
+            <option value="fresh">Fresh produce shop</option>
+            <option value="kitchen">Kitchen Ware shop</option>
+          </select>
+        </div>
+        <label class="checkbox-field">
+          <input type="checkbox" id="notificationActive" checked />
+          Active (visible in the app)
+        </label>
+      </div>
+    </form>
+    <div class="drawer-foot">
+      <button type="submit" form="notificationForm" class="btn btn-primary" id="notificationSubmitBtn">Send to app</button>
+      <button type="button" class="btn btn-secondary" id="resetNotificationFormBtn">Clear</button>
+      <button type="button" class="btn btn-danger" id="deactivateNotificationBtn" style="display:none">Deactivate</button>
     </div>
   </aside>
 

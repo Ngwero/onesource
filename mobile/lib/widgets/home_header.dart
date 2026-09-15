@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
+import '../providers/notifications_provider.dart';
 import 'brand_logo.dart';
 import 'home_search_bar.dart';
 import 'locale_currency_bar.dart';
@@ -115,6 +117,10 @@ class _HomeHeaderState extends ConsumerState<HomeHeader>
                         ),
                       ),
                       const SizedBox(width: 12),
+                      _NotificationBellButton(
+                        onTap: () => context.push('/notifications'),
+                      ),
+                      const SizedBox(width: 8),
                       _HeaderIconButton(
                         icon: Icons.person_outline_rounded,
                         onTap: widget.onAccount,
@@ -164,6 +170,59 @@ class _HomeHeaderState extends ConsumerState<HomeHeader>
           ),
         ),
       ],
+    );
+  }
+}
+
+class _NotificationBellButton extends ConsumerWidget {
+  const _NotificationBellButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(unreadNotificationCountProvider);
+    return Material(
+      color: Colors.white.withValues(alpha: 0.08),
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 22),
+                  if (unread > 0)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: unread > 9 ? 20 : 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: AppColors.lemonGreen,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      unread > 9 ? '9+' : '$unread',
+                      style: const TextStyle(
+                        color: AppColors.darkGreen,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

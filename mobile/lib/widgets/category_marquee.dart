@@ -115,6 +115,7 @@ class _CategoryMarqueeState extends State<CategoryMarquee>
             child: _CategoryChip(
               label: item.label,
               icon: item.icon,
+              colorIndex: index,
               onTap: item.onTap,
             ),
           );
@@ -132,6 +133,7 @@ class _CategoryMarqueeState extends State<CategoryMarquee>
           icon: '🛒',
           animation: animation,
           phase: 0,
+          colorIndex: 0,
           onTap: () => context.push(widget.allPath),
         ),
         for (var i = 0; i < widget.categories.length; i++)
@@ -140,6 +142,7 @@ class _CategoryMarqueeState extends State<CategoryMarquee>
             icon: widget.categories[i].icon,
             animation: animation,
             phase: i + 1,
+            colorIndex: i + 1,
             onTap: () => context.push(_categoryPath(widget.categories[i])),
           ),
       ],
@@ -261,30 +264,53 @@ class _CategoryChip extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onTap,
+    this.colorIndex = 0,
   });
 
   final String label;
   final String icon;
   final VoidCallback onTap;
+  final int colorIndex;
+
+  static const _palette = <Color>[
+    Color(0xFFFFE8DC), // peach
+    Color(0xFFE8F5E9), // mint
+    Color(0xFFFFF3E0), // amber
+    Color(0xFFE3F2FD), // sky
+    Color(0xFFF3E5F5), // lilac
+    Color(0xFFFFEBEE), // rose
+    Color(0xFFE0F7FA), // teal
+    Color(0xFFF1F8E9), // lime
+    Color(0xFFFFE0B2), // orange soft
+    Color(0xFFE8EAF6), // indigo soft
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final fill = _palette[colorIndex % _palette.length];
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 72,
+        width: 76,
         child: Column(
           children: [
             Container(
-              width: 58,
-              height: 58,
+              width: 60,
+              height: 60,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: fill,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: fill.withValues(alpha: 0.9)),
+                boxShadow: [
+                  BoxShadow(
+                    color: fill.withValues(alpha: 0.55),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               alignment: Alignment.center,
-              child: Text(icon, style: const TextStyle(fontSize: 24)),
+              child: Text(icon, style: const TextStyle(fontSize: 26)),
             ),
             const SizedBox(height: 8),
             Text(
@@ -294,8 +320,8 @@ class _CategoryChip extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textMuted,
+                fontWeight: FontWeight.w700,
+                color: AppColors.text,
               ),
             ),
           ],
@@ -312,6 +338,7 @@ class _CategoryMarqueeItem extends StatelessWidget {
     required this.animation,
     required this.phase,
     required this.onTap,
+    this.colorIndex = 0,
   });
 
   final String label;
@@ -319,15 +346,30 @@ class _CategoryMarqueeItem extends StatelessWidget {
   final Animation<double> animation;
   final int phase;
   final VoidCallback onTap;
+  final int colorIndex;
+
+  static const _palette = <Color>[
+    Color(0xFFFFE8DC),
+    Color(0xFFE8F5E9),
+    Color(0xFFFFF3E0),
+    Color(0xFFE3F2FD),
+    Color(0xFFF3E5F5),
+    Color(0xFFFFEBEE),
+    Color(0xFFE0F7FA),
+    Color(0xFFF1F8E9),
+    Color(0xFFFFE0B2),
+    Color(0xFFE8EAF6),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final fill = _palette[colorIndex % _palette.length];
     return Padding(
       padding: const EdgeInsets.only(right: 16),
       child: GestureDetector(
         onTap: onTap,
         child: SizedBox(
-          width: 72,
+          width: 76,
           child: AnimatedBuilder(
             animation: animation,
             builder: (context, child) {
@@ -346,16 +388,21 @@ class _CategoryMarqueeItem extends StatelessWidget {
             child: Column(
               children: [
                 Container(
-                  width: 58,
-                  height: 58,
+                  width: 60,
+                  height: 60,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: fill,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
-                    boxShadow: softCardShadow,
+                    boxShadow: [
+                      BoxShadow(
+                        color: fill.withValues(alpha: 0.55),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   alignment: Alignment.center,
-                  child: Text(icon, style: const TextStyle(fontSize: 24)),
+                  child: Text(icon, style: const TextStyle(fontSize: 26)),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -365,8 +412,8 @@ class _CategoryMarqueeItem extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text,
                   ),
                 ),
               ],

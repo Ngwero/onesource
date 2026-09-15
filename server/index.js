@@ -15,6 +15,7 @@ import suppliersRouter from "./routes/suppliers.js";
 import packagingRouter from "./routes/packaging.js";
 import authRouter from "./routes/auth.js";
 import imgRouter from "./routes/img.js";
+import notificationsRouter from "./routes/notifications.js";
 import { requireSupabase } from "./lib/supabase.js";
 import { isSupabaseConnectionError } from "./lib/supabaseErrors.js";
 import { localProductCount } from "./lib/localSeed.js";
@@ -69,6 +70,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/suppliers", suppliersRouter);
 app.use("/api/packaging", packagingRouter);
+app.use("/api/notifications", notificationsRouter);
 app.use("/api/img", imgRouter);
 
 const uploadsDir = path.join(__dirname, "uploads");

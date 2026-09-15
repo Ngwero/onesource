@@ -42,10 +42,40 @@ bool _isChilliProduct(Product p) {
 
 final homeProductRows = <HomeRowConfig>[
   HomeRowConfig(
+    id: 'fruits',
+    seeAllCategoryId: 'fresh-fruits',
+    seeAllSearch: 'fruit',
+    match: _inCategory('fresh-fruits'),
+  ),
+  HomeRowConfig(
+    id: 'chicken',
+    seeAllCategoryId: 'poultry-products',
+    seeAllSearch: 'chicken',
+    match: _isChicken,
+  ),
+  HomeRowConfig(
+    id: 'vegetables',
+    seeAllCategoryId: 'fresh-vegetables',
+    seeAllSearch: 'vegetable',
+    match: _isVegetable,
+  ),
+  HomeRowConfig(
+    id: 'fish',
+    seeAllCategoryId: 'fish-and-aquaculture',
+    seeAllSearch: 'fish',
+    match: _isFish,
+  ),
+  HomeRowConfig(
     id: 'chillies',
     seeAllCategoryId: chilliesCategoryId,
     seeAllSearch: 'chilli',
     match: _isChilliProduct,
+  ),
+  HomeRowConfig(
+    id: 'beef',
+    seeAllCategoryId: 'livestock-products',
+    seeAllSearch: 'beef',
+    match: _isBeef,
   ),
   HomeRowConfig(
     id: 'mangoes',
@@ -59,22 +89,10 @@ final homeProductRows = <HomeRowConfig>[
     match: _isBanana,
   ),
   HomeRowConfig(
-    id: 'fruits',
-    seeAllCategoryId: 'fresh-fruits',
-    seeAllSearch: 'fruit',
-    match: _inCategory('fresh-fruits'),
-  ),
-  HomeRowConfig(
     id: 'tomatoes',
     seeAllSearch: 'tomato',
     fallbackToCategory: false,
     match: _isTomato,
-  ),
-  HomeRowConfig(
-    id: 'vegetables',
-    seeAllCategoryId: 'fresh-vegetables',
-    seeAllSearch: 'vegetable',
-    match: _isVegetable,
   ),
   HomeRowConfig(
     id: 'onions',
@@ -95,36 +113,6 @@ final homeProductRows = <HomeRowConfig>[
     match: _isHerbs,
   ),
   HomeRowConfig(
-    id: 'legumes',
-    seeAllCategoryId: 'legumes-and-pulses',
-    seeAllSearch: 'beans',
-    match: _isLegumes,
-  ),
-  HomeRowConfig(
-    id: 'nuts',
-    seeAllCategoryId: 'oilseeds-and-nuts',
-    seeAllSearch: 'nuts',
-    match: _isNuts,
-  ),
-  HomeRowConfig(
-    id: 'chicken',
-    seeAllCategoryId: 'poultry-products',
-    seeAllSearch: 'chicken',
-    match: _isChicken,
-  ),
-  HomeRowConfig(
-    id: 'beef',
-    seeAllCategoryId: 'livestock-products',
-    seeAllSearch: 'beef',
-    match: _isBeef,
-  ),
-  HomeRowConfig(
-    id: 'fish',
-    seeAllCategoryId: 'fish-and-aquaculture',
-    seeAllSearch: 'fish',
-    match: _isFish,
-  ),
-  HomeRowConfig(
     id: 'eggs',
     seeAllCategoryId: 'poultry-products',
     seeAllSearch: 'egg',
@@ -135,6 +123,18 @@ final homeProductRows = <HomeRowConfig>[
     seeAllCategoryId: 'dairy-products',
     seeAllSearch: 'milk',
     match: _inCategory('dairy-products'),
+  ),
+  HomeRowConfig(
+    id: 'legumes',
+    seeAllCategoryId: 'legumes-and-pulses',
+    seeAllSearch: 'beans',
+    match: _isLegumes,
+  ),
+  HomeRowConfig(
+    id: 'nuts',
+    seeAllCategoryId: 'oilseeds-and-nuts',
+    seeAllSearch: 'nuts',
+    match: _isNuts,
   ),
   HomeRowConfig(
     id: 'rice-grains',
@@ -182,7 +182,8 @@ bool _isNuts(Product p) =>
 
 bool _isChicken(Product p) =>
     !_isEgg(p) &&
-    (normalizeCategoryId(p.category) == 'poultry-products' || _titleMatches(p, r'chicken'));
+    (normalizeCategoryId(p.category) == 'poultry-products' ||
+        _titleMatches(p, r'chicken|broiler|poultry|drumstick|thigh|wing'));
 
 bool _isBeef(Product p) =>
     normalizeCategoryId(p.category) == 'livestock-products' ||
@@ -224,6 +225,36 @@ List<Product> productsForHomeRow(
   }
 
   return matched.take(limit).toList();
+}
+
+/// Build visible home aisle rows — aim for [minRows] sections under Special Offers.
+List<({HomeRowConfig row, List<Product> products})> buildHomeThemedRows(
+  List<Product> catalog, {
+  int minRows = 10,
+  int minProductsPerRow = 2,
+  int productLimit = 12,
+}) {
+  final matched = <({HomeRowConfig row, List<Product> products})>[];
+  for (final row in homeProductRows) {
+    final products = productsForHomeRow(catalog, row, limit: productLimit);
+    if (products.length >= minProductsPerRow) {
+      matched.add((row: row, products: products));
+    }
+  }
+
+  if (matched.length >= minRows) return matched.take(14).toList();
+
+  // Pad with any remaining configured rows that have at least 1 product.
+  final seen = matched.map((e) => e.row.id).toSet();
+  for (final row in homeProductRows) {
+    if (seen.contains(row.id)) continue;
+    final products = productsForHomeRow(catalog, row, limit: productLimit);
+    if (products.isEmpty) continue;
+    matched.add((row: row, products: products));
+    seen.add(row.id);
+    if (matched.length >= minRows) break;
+  }
+  return matched;
 }
 
 String? homeRowSeeAllPath(HomeRowConfig row) {
