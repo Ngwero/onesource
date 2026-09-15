@@ -118,7 +118,7 @@ router.post("/forgot-password", async (req, res) => {
       console.error("[auth] forgot-password email failed:", err);
       return res.status(503).json({
         error:
-          "We could not send the reset email right now. On Railway, set BREVO_API_KEY (HTTPS) — outbound SMTP is blocked on Hobby plans. Or try again shortly.",
+          "We could not send the reset email right now. Email delivery is misconfigured (SMTP password rejected). Set BREVO_API_KEY on Railway, or upload server/cpanel/send-app-mail.php and set CPANEL_MAIL_URL + CPANEL_MAIL_SECRET.",
       });
     }
   } catch (e) {
@@ -189,9 +189,21 @@ router.post("/login/request-otp", async (req, res) => {
     }
 
     if (!isMailConfigured()) {
-      return res.status(503).json({
-        error:
-          "Login email is not configured. Set BREVO_API_KEY (recommended on Railway) or SMTP_* in server/.env.",
+      // Mail broken / missing — still allow password sign-in so users are not locked out.
+      const session = await createUserSession(email, password);
+      if (!session.ok) {
+        console.error("[auth] login fallback session failed:", session.error);
+        return res.status(500).json({
+          error: "Could not complete sign-in. Please try again.",
+        });
+      }
+      console.warn(`[auth] login OTP skipped (mail not configured) for ${email}`);
+      return res.json({
+        ok: true,
+        verified: true,
+        otpRequired: false,
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
       });
     }
 
@@ -204,16 +216,39 @@ router.post("/login/request-otp", async (req, res) => {
       (await lookupProfileName(requireSupabase(), verified.user?.id)) ||
       "";
 
+    try {
+      await sendLoginOtpEmail({ email, fullName, otp });
+    } catch (err) {
+      console.error("[auth] login OTP email failed:", err);
+      // SMTP/Brevo outage — complete sign-in with password only.
+      const session = await createUserSession(email, password);
+      if (!session.ok) {
+        return res.status(503).json({
+          error:
+            "We could not send your login code and could not complete sign-in. Check mail settings (BREVO_API_KEY or SMTP_PASS), then try again.",
+        });
+      }
+      console.warn(`[auth] login OTP bypassed after mail failure for ${email}`);
+      return res.json({
+        ok: true,
+        verified: true,
+        otpRequired: false,
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      });
+    }
+
     storeLoginOtp(email, otp, { password });
 
-    await sendLoginOtpEmail({ email, fullName, otp });
-
-    return res.json({ ok: true, verified: true });
+    return res.json({ ok: true, verified: true, otpRequired: true });
   } catch (e) {
     console.error("[auth] login/request-otp failed:", e);
-    return res.status(500).json({
-      error: e instanceof Error ? e.message : "Could not start login",
-    });
+    const raw = e instanceof Error ? e.message : "Could not start login";
+    const friendly =
+      /535|authentication data|Invalid login|ECONNREFUSED|ETIMEDOUT|mail/i.test(raw)
+        ? "We could not send your login email right now. Please try again shortly."
+        : raw;
+    return res.status(500).json({ error: friendly });
   }
 });
 
@@ -278,7 +313,13 @@ router.get("/status", async (req, res) => {
     smtp: isSmtpConfigured(),
     shopUrl: env.shopUrl,
     otpLogin: true,
-    otpProvider: env.brevoApiKey ? "brevo" : env.resendApiKey ? "resend" : "smtp",
+    otpProvider: env.brevoApiKey
+      ? "brevo"
+      : env.resendApiKey
+        ? "resend"
+        : env.cpanelMailUrl && env.cpanelMailSecret
+          ? "cpanel"
+          : "smtp",
     anonKeyConfigured: isAnonKeyConfigured(),
     supabaseHost,
   };

@@ -376,7 +376,7 @@ class ApiClient {
     return Order.fromJson(data['order'] as Map<String, dynamic>);
   }
 
-  Future<void> requestLoginOtp(String email, String password) async {
+  Future<LoginStartResult> requestLoginOtp(String email, String password) async {
     final res = await _client
         .post(
           _uri('/auth/login/request-otp'),
@@ -397,6 +397,18 @@ class ApiClient {
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
     }
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    final accessToken = data['accessToken'] as String?;
+    final refreshToken = data['refreshToken'] as String?;
+    final otpRequired = data['otpRequired'] != false;
+    if (accessToken != null && refreshToken != null) {
+      return LoginStartResult(
+        otpRequired: false,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      );
+    }
+    return LoginStartResult(otpRequired: otpRequired);
   }
 
   Future<({String accessToken, String refreshToken})> verifyLoginOtp(
@@ -462,6 +474,18 @@ class ApiException implements Exception {
 
   @override
   String toString() => message;
+}
+
+class LoginStartResult {
+  const LoginStartResult({
+    required this.otpRequired,
+    this.accessToken,
+    this.refreshToken,
+  });
+
+  final bool otpRequired;
+  final String? accessToken;
+  final String? refreshToken;
 }
 
 final apiClientProvider = ApiClient();

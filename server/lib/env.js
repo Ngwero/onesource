@@ -48,6 +48,9 @@ export const env = {
   brevoApiKey: process.env.BREVO_API_KEY?.trim() ?? "",
   /** Resend API key (HTTPS alternative). */
   resendApiKey: process.env.RESEND_API_KEY?.trim() ?? "",
+  /** cPanel PHP mail() relay (HTTPS — works when remote SMTP is blocked). */
+  cpanelMailUrl: process.env.CPANEL_MAIL_URL?.trim() ?? "",
+  cpanelMailSecret: process.env.CPANEL_MAIL_SECRET?.trim() ?? "",
 };
 
 export function isSupabaseConfigured() {
@@ -68,12 +71,18 @@ export function isSmtpConfigured() {
 
 /** True when any production-capable mail transport is configured (HTTPS API or SMTP). */
 export function isMailConfigured() {
-  return Boolean(env.brevoApiKey || env.resendApiKey || isSmtpConfigured());
+  return Boolean(
+    env.brevoApiKey ||
+      env.resendApiKey ||
+      (env.cpanelMailUrl && env.cpanelMailSecret) ||
+      isSmtpConfigured()
+  );
 }
 
 export function getMailTransportLabel() {
   if (env.brevoApiKey) return "Brevo HTTPS API";
   if (env.resendApiKey) return "Resend HTTPS API";
+  if (env.cpanelMailUrl && env.cpanelMailSecret) return `cPanel relay ${env.cpanelMailUrl}`;
   if (isSmtpConfigured()) return `SMTP ${env.smtp.host}:${env.smtp.port}`;
   return "not configured";
 }
@@ -96,7 +105,12 @@ export function getSmtpConfigErrors() {
 
 export function getMailConfigErrors() {
   if (isMailConfigured()) return [];
-  return ["BREVO_API_KEY (recommended on Railway)", "or RESEND_API_KEY", "or SMTP_HOST/SMTP_USER/SMTP_PASS/SMTP_FROM"];
+  return [
+    "BREVO_API_KEY (recommended on Railway)",
+    "or RESEND_API_KEY",
+    "or CPANEL_MAIL_URL + CPANEL_MAIL_SECRET",
+    "or SMTP_HOST/SMTP_USER/SMTP_PASS/SMTP_FROM",
+  ];
 }
 
 export function assertSupabaseConfigured() {

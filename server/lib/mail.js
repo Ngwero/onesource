@@ -154,6 +154,40 @@ async function sendViaSmtp({ to, subject, html, text }) {
   );
 }
 
+async function sendViaCpanelRelay({ to, subject, html, text }) {
+  const url = env.cpanelMailUrl;
+  const secret = env.cpanelMailSecret;
+  if (!url || !secret) {
+    throw new Error("cPanel mail relay is not configured");
+  }
+
+  const res = await withTimeout(
+    fetch(url, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "X-OneSource-Mail-Secret": secret,
+        Authorization: `Bearer ${secret}`,
+      },
+      body: JSON.stringify({
+        to,
+        subject,
+        html: htmlForHttpApi(html),
+        text,
+      }),
+    }),
+    "cPanel mail relay",
+    HTTP_TIMEOUT_MS
+  );
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`cPanel mail ${res.status}: ${body.slice(0, 300) || res.statusText}`);
+  }
+  return res.json().catch(() => ({ ok: true }));
+}
+
 async function sendBrandedMail({ to, subject, html, text }) {
   assertMailConfigured();
 
@@ -166,6 +200,11 @@ async function sendBrandedMail({ to, subject, html, text }) {
   if (env.resendApiKey) {
     const info = await sendViaResend({ to, subject, html, text });
     console.info(`[mail] sent via Resend to ${to}`);
+    return info;
+  }
+  if (env.cpanelMailUrl && env.cpanelMailSecret) {
+    const info = await sendViaCpanelRelay({ to, subject, html, text });
+    console.info(`[mail] sent via cPanel relay to ${to}`);
     return info;
   }
 

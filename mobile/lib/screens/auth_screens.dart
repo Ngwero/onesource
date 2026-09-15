@@ -41,9 +41,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await ref.read(authServiceProvider).startLogin(_email.text, _password.text);
+      final needsOtp =
+          await ref.read(authServiceProvider).startLogin(_email.text, _password.text);
       if (!mounted) return;
-      setState(() => _otpStep = true);
+      if (needsOtp) {
+        setState(() => _otpStep = true);
+      } else {
+        context.go('/account');
+      }
     } catch (e) {
       setState(() => _error = formatAuthError(e));
     } finally {
@@ -367,7 +372,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       });
     } catch (e) {
       setState(() {
-        _message = 'Could not send reset email. Please try again.';
+        _message = formatAuthError(e);
         _isError = true;
       });
     } finally {

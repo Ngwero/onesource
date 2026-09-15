@@ -52,10 +52,23 @@ class AuthService {
     return UserProfile(id: userId);
   }
 
-  /// Step 1: verify password on server and email OTP via One Source SMTP.
-  Future<void> startLogin(String email, String password) async {
+  /// Step 1: verify password. Returns true when an email OTP step is required.
+  Future<bool> startLogin(String email, String password) async {
     await _ensureSupabaseReady();
-    await _api.requestLoginOtp(email.trim(), password);
+    final result = await _api.requestLoginOtp(email.trim(), password);
+    if (!result.otpRequired &&
+        result.accessToken != null &&
+        result.refreshToken != null) {
+      final response = await _client.auth.setSession(
+        result.refreshToken!,
+        accessToken: result.accessToken!,
+      );
+      if (response.session == null) {
+        throw AuthException('Could not complete sign-in. Please try again.');
+      }
+      return false;
+    }
+    return true;
   }
 
   Future<void> verifyLoginOtp(String email, String otp) async {
