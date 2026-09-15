@@ -62,9 +62,17 @@ If allowed, use in **Supabase → SMTP**:
 
 ---
 
-## Railway welcome emails
+## Railway welcome emails / app OTP / password reset
 
-Railway also cannot reach cPanel SMTP reliably. Options:
+Railway also cannot reach cPanel SMTP reliably (`535` / blocked ports). Options:
 
-- Use the same cPanel PHP endpoint for welcome mail (custom API call), or
-- Use Brevo/SendGrid only on Railway while auth mail stays on cPanel via the hook above
+1. **Brevo (recommended)** — set `BREVO_API_KEY` on Railway (HTTPS).
+2. **cPanel HTTPS relay** — upload `send-app-mail.php` from this folder to  
+   `public_html/onesource-api/send-app-mail.php`, set a shared secret in the PHP  
+   (`ONESOURCE_APP_MAIL_SECRET` or edit the file), then on Railway:
+   ```
+   CPANEL_MAIL_URL=https://one-sourcebrand.com/onesource-api/send-app-mail.php
+   CPANEL_MAIL_SECRET=same-secret-as-php
+   ```
+3. Fix the `noreply@one-sourcebrand.com` mailbox password and update `SMTP_PASS`  
+   (only helps hosts that allow remote SMTP).
