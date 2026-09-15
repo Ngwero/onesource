@@ -32,6 +32,7 @@ import { KitchenAislePage } from "./pages/KitchenAislePage";
 import { KitchenCategoriesPage } from "./pages/KitchenCategoriesPage";
 import { KitchenProductsPage } from "./pages/KitchenProductsPage";
 import { KitchenSearchPage } from "./pages/KitchenSearchPage";
+import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
 
 
 export default function App() {
@@ -106,6 +107,7 @@ export default function App() {
                   />
                   <Route path="lists" element={<ListsPage />} />
                   <Route path="history" element={<HistoryPage />} />
+                  <Route path="privacy" element={<PrivacyPolicyPage />} />
                 </Route>
               </Routes>
             </CartProvider>

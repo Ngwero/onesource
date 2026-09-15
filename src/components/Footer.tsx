@@ -54,6 +54,11 @@ export function Footer() {
             <h3 className="font-semibold text-sm mb-4">{t("footer.help")}</h3>
             <ul className="space-y-2 text-sm text-text-muted">
               <li>
+                <Link to="/privacy" className="hover:text-accent transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
                 <Link to="/categories" className="hover:text-accent transition-colors">
                   {t("footer.deliveryInfo")}
                 </Link>
@@ -99,7 +104,10 @@ export function Footer() {
 
         <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-text-muted">
           <p className="max-w-3xl">{t("footer.copyright")}</p>
-          <div className="flex flex-wrap gap-2 sm:gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
+            <Link to="/privacy" className="hover:text-accent transition-colors underline-offset-2 hover:underline">
+              Privacy Policy
+            </Link>
             <span className="px-3 py-1.5 rounded-lg bg-muted whitespace-nowrap">🇬🇧 {t("footer.country")}</span>
             <span className="px-3 py-1.5 rounded-lg bg-muted whitespace-nowrap">{t("footer.locale")}</span>
           </div>
