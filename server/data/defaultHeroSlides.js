@@ -96,3 +96,104 @@ export const DEFAULT_EXPORT_HERO_SLIDES = [
     active: true,
   },
 ];
+
+/** Kitchen Ware carousel (mobile + /kitchen). The `kitchen-` ID prefix identifies placement. */
+export const DEFAULT_KITCHEN_HERO_SLIDES = [
+  {
+    id: "kitchen-hero-1",
+    sortOrder: 0,
+    image:
+      "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1400&h=600&fit=crop",
+    badge: "Kitchen Ware",
+    title: "Cookware for every kitchen",
+    subtitle: "Saucepans, pans & sets — Kampala-ready prices",
+    cta: "Shop cookware",
+    ctaHref: "/kitchen/aisle/cookware",
+    cta2: "Browse aisles",
+    cta2Href: "/kitchen/categories",
+    active: true,
+  },
+  {
+    id: "kitchen-hero-2",
+    sortOrder: 1,
+    image:
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1400&h=600&fit=crop",
+    badge: "Saucepans first",
+    title: "Everyday saucepans & pots",
+    subtitle: "Stainless, non-stick and more for daily cooking",
+    cta: "Shop saucepans",
+    ctaHref: "/kitchen/aisle/cookware",
+    active: true,
+  },
+  {
+    id: "kitchen-hero-3",
+    sortOrder: 2,
+    image:
+      "https://images.unsplash.com/photo-1584990347448-c81a0c2c0f1e?w=1400&h=600&fit=crop",
+    badge: "Tabletop & organisation",
+    title: "Set the table, organise the room",
+    subtitle: "Tabletop, small furniture and kitchen organisation",
+    cta: "Shop tabletop",
+    ctaHref: "/kitchen/aisle/tabletop",
+    cta2: "Shop all",
+    cta2Href: "/kitchen/shop",
+    active: true,
+  },
+  {
+    id: "kitchen-hero-4",
+    sortOrder: 3,
+    image:
+      "https://images.unsplash.com/photo-1590794056226-9dc76bed5166?w=1400&h=600&fit=crop",
+    badge: "Same basket",
+    title: "Kitchen + fresh in one order",
+    subtitle: "Add cookware to your produce basket for one delivery",
+    cta: "Shop kitchen",
+    ctaHref: "/kitchen/shop",
+    active: true,
+  },
+];
+
+/** Mobile app onboarding. The `onboarding-` ID prefix identifies placement.
+ *  badge = eyebrow, title, subtitle = body, cta = button label, image = hero photo.
+ */
+export const DEFAULT_ONBOARDING_SLIDES = [
+  {
+    id: "onboarding-1",
+    sortOrder: 0,
+    image:
+      "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&h=1200&fit=crop",
+    badge: "Fresh produce",
+    title: "Your shop.\nYour time.",
+    subtitle:
+      "Groceries when you need them — clear prices, Kampala delivery, your way.",
+    cta: "Continue",
+    ctaHref: "/home",
+    active: true,
+  },
+  {
+    id: "onboarding-2",
+    sortOrder: 1,
+    image:
+      "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1200&h=1200&fit=crop",
+    badge: "Kitchen ware",
+    title: "Cookware\nin the same app",
+    subtitle:
+      "Pots, pans and tabletop — drop cookware into the same basket as produce.",
+    cta: "Continue",
+    ctaHref: "/home",
+    active: true,
+  },
+  {
+    id: "onboarding-3",
+    sortOrder: 2,
+    image:
+      "https://images.unsplash.com/photo-1550989460-0adf9ea7628c?w=1200&h=1200&fit=crop",
+    badge: "One Source",
+    title: "One basket.\nOne delivery.",
+    subtitle:
+      "Fresh + kitchen together. Free delivery over UGX 100k across Kampala.",
+    cta: "Get started",
+    ctaHref: "/home",
+    active: true,
+  },
+];

@@ -16,20 +16,29 @@ class FreeDeliveryBar extends ConsumerWidget {
 
     if (subtotal >= freeDeliveryThresholdUgx) {
       return Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.accentLight,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.leafPale,
+              AppColors.lemonGreen.withValues(alpha: 0.35),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: const Row(
           children: [
-            Icon(Icons.local_shipping_outlined, color: AppColors.accent, size: 20),
+            Icon(Icons.bolt_rounded, color: AppColors.darkGreen, size: 20),
             SizedBox(width: 8),
             Expanded(
               child: Text(
-                'You qualify for FREE delivery!',
-                style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.accent),
+                'Free delivery unlocked',
+                style: TextStyle(
+                  fontFamily: 'Gabarito',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  color: AppColors.darkGreen,
+                ),
               ),
             ),
           ],
@@ -41,27 +50,44 @@ class FreeDeliveryBar extends ConsumerWidget {
     final progress = (subtotal / freeDeliveryThresholdUgx).clamp(0.0, 1.0);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Add ${formatPrice(remainingUgx)} more for FREE delivery',
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          Row(
+            children: [
+              const Icon(
+                Icons.local_shipping_outlined,
+                size: 18,
+                color: AppColors.darkGreen,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Add ${formatPrice(remainingUgx)} for free delivery',
+                  style: const TextStyle(
+                    fontFamily: 'Gabarito',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 6,
+              minHeight: 7,
               backgroundColor: AppColors.muted,
-              color: AppColors.accent,
+              color: AppColors.darkGreen,
             ),
           ),
         ],

@@ -60,11 +60,20 @@ class BrandLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/brand/logo-primary.png',
-      height: height,
-      fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => BrandLogoMark(size: height * 1.4),
+    // Dark headers use the white+lime lockup with transparent ground — no plate.
+    final asset =
+        onDark ? 'assets/brand/logo-on-dark.png' : 'assets/brand/logo-primary.png';
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Image.asset(
+        asset,
+        height: height,
+        fit: BoxFit.contain,
+        alignment: Alignment.centerLeft,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (_, __, ___) => BrandLogoMark(size: height * 1.4),
+      ),
     );
   }
 }

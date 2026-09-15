@@ -9,10 +9,11 @@ import '../providers/paginated_products_provider.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/horizontal_product_card.dart';
 import '../widgets/loading_view.dart';
-import '../widgets/scroll_slide_in.dart';
 import '../widgets/product_card.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/products_load_more.dart';
+import '../widgets/scroll_slide_in.dart';
+import '../widgets/shop_mode_switch.dart';
 
 enum ShopFilter { all, deals, prime, inStock }
 
@@ -128,6 +129,8 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const ShopModeSwitch(kitchenMode: false),
+                    const SizedBox(height: 12),
                     ScrollSlideIn(
                       index: 0,
                       child: Row(

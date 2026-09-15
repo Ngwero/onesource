@@ -2,6 +2,8 @@ import { v4 as uuidv4 } from "uuid";
 import {
   DEFAULT_HERO_SLIDES,
   DEFAULT_EXPORT_HERO_SLIDES,
+  DEFAULT_KITCHEN_HERO_SLIDES,
+  DEFAULT_ONBOARDING_SLIDES,
 } from "../data/defaultHeroSlides.js";
 import { isSupabaseConnectionError } from "./supabaseErrors.js";
 
@@ -22,7 +24,27 @@ export const HERO_TABLE_SETUP_HINT =
 const ALL_DEFAULT_HERO_SLIDES = [
   ...DEFAULT_HERO_SLIDES,
   ...DEFAULT_EXPORT_HERO_SLIDES,
+  ...DEFAULT_KITCHEN_HERO_SLIDES,
+  ...DEFAULT_ONBOARDING_SLIDES,
 ];
+
+/** @returns {"home"|"exports"|"kitchen"|"onboarding"} */
+export function heroPlacementOf(id = "") {
+  if (String(id).startsWith("export-")) return "exports";
+  if (String(id).startsWith("kitchen-")) return "kitchen";
+  if (String(id).startsWith("onboarding-")) return "onboarding";
+  return "home";
+}
+
+export function filterHeroSlidesByPlacement(slides, placement) {
+  const wanted =
+    placement === "exports" ||
+    placement === "kitchen" ||
+    placement === "onboarding"
+      ? placement
+      : "home";
+  return slides.filter((slide) => heroPlacementOf(slide.id) === wanted);
+}
 
 function rowToSlide(row) {
   return {

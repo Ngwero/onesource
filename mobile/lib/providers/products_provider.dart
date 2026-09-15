@@ -4,7 +4,7 @@ import '../models/product.dart';
 import '../services/api_client.dart';
 
 final productsProvider = FutureProvider<List<Product>>((ref) async {
-  return apiClientProvider.fetchProducts();
+  return apiClientProvider.fetchProducts(shop: 'fresh');
 });
 
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
@@ -18,7 +18,7 @@ final productProvider = FutureProvider.family<Product?, String>((ref, id) async 
 final productsByCategoryProvider =
     FutureProvider.family<List<Product>, String?>((ref, categoryId) async {
   if (categoryId == null || categoryId.isEmpty) {
-    return apiClientProvider.fetchProducts();
+    return apiClientProvider.fetchProducts(shop: 'fresh');
   }
   return apiClientProvider.fetchProducts(category: categoryId);
 });
@@ -26,5 +26,5 @@ final productsByCategoryProvider =
 final searchProductsProvider =
     FutureProvider.family<List<Product>, String>((ref, query) async {
   if (query.trim().isEmpty) return [];
-  return apiClientProvider.fetchProducts(query: query.trim());
+  return apiClientProvider.fetchProducts(query: query.trim(), shop: 'fresh');
 });

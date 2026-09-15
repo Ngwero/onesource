@@ -24,7 +24,11 @@ class AccountScreen extends ConsumerWidget {
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Account')),
+        backgroundColor: AppColors.canvas,
+        appBar: AppBar(
+          title: const Text('Account'),
+          backgroundColor: AppColors.canvas,
+        ),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -64,11 +68,16 @@ class AccountScreen extends ConsumerWidget {
     final name = profileAsync.value?.fullName ?? user.email ?? 'Customer';
     final initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
     final strings = ref.watch(stringsProvider);
+    final bottomPad = MediaQuery.viewPaddingOf(context).bottom + 100;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Account')),
+      backgroundColor: AppColors.canvas,
+      appBar: AppBar(
+        title: const Text('Account'),
+        backgroundColor: AppColors.canvas,
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPad),
         children: [
           Card(
             child: Padding(
@@ -216,7 +225,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('My orders')),
+        backgroundColor: AppColors.canvas,
+        appBar: AppBar(
+          title: const Text('My orders'),
+          backgroundColor: AppColors.canvas,
+        ),
         body: Center(
           child: FilledButton(
             onPressed: () => context.push('/login'),

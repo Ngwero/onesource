@@ -9,9 +9,14 @@ import '../providers/currency_provider.dart';
 import '../providers/locale_provider.dart';
 
 class LocaleCurrencyBar extends ConsumerWidget {
-  const LocaleCurrencyBar({super.key, this.onDark = false});
+  const LocaleCurrencyBar({
+    super.key,
+    this.onDark = false,
+    this.compact = false,
+  });
 
   final bool onDark;
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,6 +25,27 @@ class LocaleCurrencyBar extends ConsumerWidget {
     final currency = ref.watch(currencyProvider);
     final lang = languageInfo(language);
     final curr = currencyInfo(currency.currency);
+
+    if (compact) {
+      return Row(
+        children: [
+          _CompactChip(
+            onDark: onDark,
+            flag: lang.flag,
+            label: lang.nativeName,
+            onTap: () => _showLanguageSheet(context, ref, strings),
+          ),
+          const SizedBox(width: 8),
+          _CompactChip(
+            onDark: onDark,
+            flag: curr.flag,
+            label: currencyCodeLabel(curr.code),
+            loading: currency.loading,
+            onTap: () => _showCurrencySheet(context, ref, strings),
+          ),
+        ],
+      );
+    }
 
     return Row(
       children: [
@@ -123,6 +149,81 @@ class LocaleCurrencyBar extends ConsumerWidget {
                 onPressed: () => ref.read(currencyProvider.notifier).refreshRates(),
                 child: Text(strings.refreshRates),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactChip extends StatelessWidget {
+  const _CompactChip({
+    required this.onDark,
+    required this.flag,
+    required this.label,
+    required this.onTap,
+    this.loading = false,
+  });
+
+  final bool onDark;
+  final String flag;
+  final String label;
+  final VoidCallback onTap;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: onDark ? Colors.white.withValues(alpha: 0.1) : Colors.white,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(10, 7, 8, 7),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: onDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : AppColors.border.withValues(alpha: 0.6),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(flag, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 88),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: onDark ? Colors.white : AppColors.text,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              if (loading)
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.8,
+                    color: AppColors.lemonGreen,
+                  ),
+                )
+              else
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: onDark ? Colors.white70 : AppColors.textMuted,
+                ),
             ],
           ),
         ),

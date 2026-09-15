@@ -7,6 +7,7 @@ const _legacyCategoryMap = <String, String>{
   'salad-herbs': 'fresh-vegetables',
   'root-veg': 'roots-and-tubers',
   'root-crops-and-tubers': 'roots-and-tubers',
+  'kitchen-furniture': 'kitchen-ware',
 };
 
 String normalizeCategoryId(String raw) {

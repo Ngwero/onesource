@@ -5,6 +5,7 @@ import {
   createHeroSlide,
   updateHeroSlide,
   deleteHeroSlide,
+  filterHeroSlidesByPlacement,
 } from "../lib/heroService.js";
 
 const router = Router();
@@ -14,16 +15,17 @@ router.get("/slides", async (req, res) => {
     const db = requireSupabase();
     const admin = req.query.admin === "true";
     const slides = await listHeroSlides(db, { admin });
-    const requestedPlacement = req.query.placement;
+    const requestedPlacement = String(req.query.placement ?? "").trim().toLowerCase();
     if (admin && !requestedPlacement) {
       return res.json({ slides });
     }
-    const placement = requestedPlacement === "exports" ? "exports" : "home";
-    const filtered = slides.filter((slide) => {
-      const isExport = slide.id.startsWith("export-");
-      return placement === "exports" ? isExport : !isExport;
-    });
-    res.json({ slides: filtered });
+    const placement =
+      requestedPlacement === "exports" ||
+      requestedPlacement === "kitchen" ||
+      requestedPlacement === "onboarding"
+        ? requestedPlacement
+        : "home";
+    res.json({ slides: filterHeroSlidesByPlacement(slides, placement) });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

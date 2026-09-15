@@ -7,32 +7,99 @@ import type { CreateOrderPayload, Order } from "../types/order";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
+function isKitchenSku(p: Product): boolean {
+  return p.id.startsWith("kitchen-") || p.category === "kitchen-ware";
+}
+
+async function fetchProductsPageRaw(
+  search: URLSearchParams,
+  page: number
+): Promise<{ products: Product[]; total: number }> {
+  search.set("page", String(page));
+  const res = await fetch(`${API_BASE}/products?${search.toString()}`);
+  if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
+  const data = await res.json();
+  return {
+    products: (data.products as Product[]) ?? [],
+    total: typeof data.total === "number" ? data.total : 0,
+  };
+}
+
+/** When API ignores shop=fresh, binary-search the first page that has produce. */
+async function findLegacyFreshStartPage(
+  search: URLSearchParams,
+  pageSize: number,
+  catalogTotal: number
+): Promise<number> {
+  const last = catalogTotal <= 0 ? 0 : Math.floor((catalogTotal - 1) / pageSize);
+  let lo = 0;
+  let hi = last;
+  let answer = last;
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const { products } = await fetchProductsPageRaw(search, mid);
+    if (products.some((p) => !isKitchenSku(p))) {
+      answer = mid;
+      hi = mid - 1;
+    } else {
+      lo = mid + 1;
+    }
+  }
+  return answer;
+}
+
 export async function fetchProducts(params?: {
   category?: string;
   q?: string;
+  shop?: "fresh" | "kitchen";
 }): Promise<Product[]> {
+  const shop = params?.shop ?? "fresh";
   const search = new URLSearchParams();
   if (params?.category) search.set("category", params.category);
   if (params?.q) search.set("q", params.q);
-  search.set("pageSize", "1000");
+  search.set("shop", shop);
+  const pageSize = 1000;
+  search.set("pageSize", String(pageSize));
+
+  const first = await fetchProductsPageRaw(search, 0);
+  let startPage = 0;
+
+  if (shop === "fresh" && !params?.category && !params?.q) {
+    const produceOnFirst = first.products.filter((p) => !isKitchenSku(p));
+    if (first.products.length > 0 && produceOnFirst.length === 0) {
+      startPage = await findLegacyFreshStartPage(search, pageSize, first.total);
+    }
+  }
 
   const products: Product[] = [];
-  let page = 0;
-  let total = Infinity;
+  let page = startPage;
+  let total = first.total || Infinity;
+  const maxPages = 50;
 
-  while (products.length < total) {
-    search.set("page", String(page));
-    const qs = search.toString();
-    const res = await fetch(`${API_BASE}/products?${qs}`);
-    if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
-    const data = await res.json();
-    const batch = (data.products as Product[]) ?? [];
-    products.push(...batch);
-    total = typeof data.total === "number" ? data.total : products.length;
+  while (products.length < total && page - startPage < maxPages) {
+    const batch =
+      page === 0 && startPage === 0
+        ? first.products
+        : (await fetchProductsPageRaw(search, page)).products;
+
+    if (shop === "fresh") {
+      const fresh = batch.filter((p) => !isKitchenSku(p));
+      products.push(...fresh);
+      // Old API: once we leave the kitchen block, empty fresh page means done.
+      if (startPage > 0 && fresh.length === 0) break;
+    } else if (shop === "kitchen") {
+      const kitchen = batch.filter(isKitchenSku);
+      products.push(...kitchen);
+      if (kitchen.length === 0) break;
+    } else {
+      products.push(...batch);
+    }
+
     if (batch.length === 0) break;
     page += 1;
-    // Safety: avoid infinite loops if the API ignores pagination
-    if (page > 50) break;
+    if (startPage > 0) {
+      total = Math.max(0, first.total - startPage * pageSize);
+    }
   }
 
   return products;
@@ -71,7 +138,7 @@ export async function updateCategoryImage(
 }
 
 export async function fetchHeroSlides(
-  placement: "home" | "exports" = "home"
+  placement: "home" | "exports" | "kitchen" | "onboarding" = "home"
 ): Promise<HeroSlide[]> {
   const res = await fetch(`${API_BASE}/hero/slides?placement=${placement}`);
   if (!res.ok) throw new Error(i18n.t("errors.loadHeroSlides"));

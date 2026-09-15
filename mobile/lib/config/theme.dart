@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utils/device_perf.dart';
+
 /// Bundled in pubspec.yaml — do not use google_fonts here (wrong asset path on device).
 const _fontFamily = 'Gabarito';
 
@@ -117,8 +119,10 @@ class AppGradients {
 ThemeData buildAppTheme() {
   final base = ThemeData(
     useMaterial3: true,
+    brightness: Brightness.light,
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.darkGreen,
+      brightness: Brightness.light,
       primary: AppColors.darkGreen,
       onPrimary: Colors.white,
       secondary: AppColors.amber,
@@ -202,11 +206,22 @@ ThemeData buildAppTheme() {
 }
 
 /// Soft card shadow used across the shop UI.
-List<BoxShadow> get softCardShadow => [
+List<BoxShadow> get softCardShadow {
+  if (reduceMotionForDevice) {
+    return const [
       BoxShadow(
-        color: AppColors.darkGreen.withValues(alpha: 0.08),
-        blurRadius: 20,
-        offset: const Offset(0, 8),
+        color: Color(0x142E5E4A),
+        blurRadius: 6,
+        offset: Offset(0, 2),
       ),
     ];
+  }
+  return [
+    BoxShadow(
+      color: AppColors.darkGreen.withValues(alpha: 0.08),
+      blurRadius: 20,
+      offset: const Offset(0, 8),
+    ),
+  ];
+}
 

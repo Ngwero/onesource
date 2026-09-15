@@ -1817,8 +1817,22 @@ window.clearCategoryBanner = async (id) => {
   }
 };
 
+function heroPlacementOf(id = "") {
+  if (String(id).startsWith("export-")) return "exports";
+  if (String(id).startsWith("kitchen-")) return "kitchen";
+  if (String(id).startsWith("onboarding-")) return "onboarding";
+  return "home";
+}
+
+function heroPlacementLabel(placement) {
+  if (placement === "exports") return "Exports";
+  if (placement === "kitchen") return "Kitchen";
+  if (placement === "onboarding") return "Onboarding";
+  return "Homepage";
+}
+
 function heroSlideCardHtml(s) {
-  const placement = s.id.startsWith("export-") ? "Exports" : "Homepage";
+  const placement = heroPlacementLabel(heroPlacementOf(s.id));
   return `
         <article class="banner-card">
           <div class="banner-card-preview">
@@ -1841,10 +1855,22 @@ function renderHeroSlides() {
   const sorted = [...heroSlides].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   const active = sorted.filter((s) => s.active !== false);
   const inactive = sorted.filter((s) => s.active === false);
-  const homeActive = active.filter((s) => !s.id.startsWith("export-"));
-  const exportActive = active.filter((s) => s.id.startsWith("export-"));
+  const homeActive = active.filter((s) => heroPlacementOf(s.id) === "home");
+  const exportActive = active.filter((s) => heroPlacementOf(s.id) === "exports");
+  const kitchenActive = active.filter((s) => heroPlacementOf(s.id) === "kitchen");
+  const onboardingActive = active.filter((s) => heroPlacementOf(s.id) === "onboarding");
   $("heroSlideGrid").innerHTML = homeActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active homepage slides</div>';
   $("exportHeroSlideGrid").innerHTML = exportActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active export slides</div>';
+  const kitchenGrid = $("kitchenHeroSlideGrid");
+  if (kitchenGrid) {
+    kitchenGrid.innerHTML = kitchenActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active kitchen slides — Add slide → Kitchen Ware</div>';
+  }
+  const onboardingGrid = $("onboardingHeroSlideGrid");
+  if (onboardingGrid) {
+    onboardingGrid.innerHTML =
+      onboardingActive.map(heroSlideCardHtml).join("") ||
+      '<div class="empty" style="padding:2rem">No onboarding slides — Add slide → App onboarding</div>';
+  }
   const inSec = $("heroInactiveSection");
   const inGrid = $("heroInactiveGrid");
   if (showInactiveHero && inactive.length) {
@@ -2134,7 +2160,9 @@ function resetHeroForm() {
   $("heroId").disabled = false;
   $("heroPlacement").disabled = false;
   $("heroPlacement").value = "home";
-  $("heroSortOrder").value = heroSlides.filter((s) => s.active !== false && !s.id.startsWith("export-")).length;
+  $("heroSortOrder").value = heroSlides.filter(
+    (s) => s.active !== false && heroPlacementOf(s.id) === "home"
+  ).length;
   $("heroActive").checked = true;
   $("heroCta").value = "Shop now";
   $("heroCtaHref").value = "/categories";
@@ -2161,7 +2189,7 @@ window.editHeroSlide = (id) => {
   $("heroDrawerTitle").textContent = "Edit hero slide";
   $("heroDrawerSubtitle").textContent = `Slide ${id}`;
   $("heroEditId").value = id;
-  $("heroPlacement").value = id.startsWith("export-") ? "exports" : "home";
+  $("heroPlacement").value = heroPlacementOf(id);
   $("heroPlacement").disabled = true;
   $("heroId").value = id;
   $("heroId").disabled = true;
@@ -2183,7 +2211,7 @@ window.editHeroSlide = (id) => {
 
 window.deleteHeroSlide = (id) => {
   const s = heroSlides.find((x) => x.id === id);
-  const placement = id.startsWith("export-") ? "exports" : "homepage";
+  const placement = heroPlacementLabel(heroPlacementOf(id)).toLowerCase();
   confirmDialog(
     "Remove hero slide",
     `Remove "${s?.title || id}" from the ${placement} carousel?`,
@@ -3778,16 +3806,31 @@ $("uploadHeroImageBtn").addEventListener("click", async () => {
 });
 $("resetHeroFormBtn").addEventListener("click", resetHeroForm);
 $("heroPlacement").addEventListener("change", () => {
-  const isExport = $("heroPlacement").value === "exports";
-  $("heroDrawerSubtitle").textContent = isExport
-    ? "Shown on the exports page carousel"
-    : "Shown on the homepage carousel";
+  const placement = $("heroPlacement").value;
+  $("heroDrawerSubtitle").textContent =
+    placement === "exports"
+      ? "Shown on the exports page carousel"
+      : placement === "kitchen"
+        ? "Shown on Kitchen Ware home (mobile app)"
+        : placement === "onboarding"
+          ? "Shown on first-launch onboarding (mobile app)"
+          : "Shown on the homepage carousel";
   $("heroSortOrder").value = heroSlides.filter(
-    (s) => s.active !== false && s.id.startsWith("export-") === isExport
+    (s) => s.active !== false && heroPlacementOf(s.id) === placement
   ).length;
-  if (isExport) {
+  if (placement === "exports") {
     $("heroCta").value = "Browse export produce";
     $("heroCtaHref").value = "/category/export-fresh-produce";
+  } else if (placement === "kitchen") {
+    $("heroCta").value = "Shop cookware";
+    $("heroCtaHref").value = "/kitchen/aisle/cookware";
+  } else if (placement === "onboarding") {
+    $("heroCta").value = "Continue";
+    $("heroCtaHref").value = "/home";
+    $("heroBadge").value = $("heroBadge").value || "Fresh produce";
+  } else {
+    $("heroCta").value = "Shop now";
+    $("heroCtaHref").value = "/categories";
   }
 });
 
@@ -3802,6 +3845,12 @@ $("heroForm").addEventListener("submit", async (e) => {
   let slideId = $("heroId").value.trim();
   if (!editingHeroId && placement === "exports" && !slideId.startsWith("export-")) {
     slideId = `export-${slideId || `hero-${Date.now()}`}`;
+  }
+  if (!editingHeroId && placement === "kitchen" && !slideId.startsWith("kitchen-")) {
+    slideId = `kitchen-${slideId || `hero-${Date.now()}`}`;
+  }
+  if (!editingHeroId && placement === "onboarding" && !slideId.startsWith("onboarding-")) {
+    slideId = `onboarding-${slideId || `${Date.now()}`}`;
   }
   const body = {
     id: slideId || undefined,
@@ -3820,7 +3869,7 @@ $("heroForm").addEventListener("submit", async (e) => {
   try {
     if (editingHeroId) {
       await heroApi(`/${editingHeroId}`, { method: "PUT", body: JSON.stringify(body) });
-      toast("Hero slide updated — refresh the shop");
+      toast("Hero slide updated — refresh the shop / app");
     } else {
       await heroApi("", { method: "POST", body: JSON.stringify(body) });
       toast("Hero slide created");

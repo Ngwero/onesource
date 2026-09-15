@@ -23,6 +23,20 @@ router.get("/", async (req, res) => {
     const search = req.query.q?.trim();
     const page = Math.max(0, parseInt(req.query.page ?? "0", 10) || 0);
     const pageSize = Math.min(1000, Math.max(1, parseInt(req.query.pageSize ?? "1000", 10) || 1000));
+    const shopRaw = String(req.query.shop ?? "").trim().toLowerCase();
+    const aisleRaw = String(req.query.aisle ?? "").trim().toLowerCase();
+    const aisleId = aisleRaw.replace(/[^a-z0-9-]/g, "");
+    const excludeKitchen =
+      req.query.excludeKitchen === "1" ||
+      req.query.excludeKitchen === "true" ||
+      shopRaw === "fresh" ||
+      shopRaw === "produce";
+    const kitchenOnly =
+      shopRaw === "kitchen" ||
+      Boolean(aisleId) ||
+      (category &&
+        (String(category) === "kitchen-ware" ||
+          String(category) === "kitchen-furniture"));
 
     const result = await withLocalProductFallback(
       async () => {
@@ -39,6 +53,16 @@ router.get("/", async (req, res) => {
         }
         if (supplierId) {
           query = query.eq("supplier_id", supplierId);
+        }
+        // Keep Fresh and Kitchen catalogues from drowning each other out.
+        if (excludeKitchen && !kitchenOnly) {
+          query = query
+            .not("id", "like", "kitchen-%")
+            .neq("category", "kitchen-ware");
+        } else if (aisleId) {
+          query = query.like("id", `kitchen-${aisleId}-%`);
+        } else if (kitchenOnly && !category) {
+          query = query.like("id", "kitchen-%");
         }
 
         if (search) {
@@ -82,7 +106,16 @@ router.get("/", async (req, res) => {
           total: count ?? (rows ?? []).length,
         };
       },
-      { admin, category, search, page, pageSize }
+      {
+        admin,
+        category,
+        search,
+        page,
+        pageSize,
+        aisle: aisleId || undefined,
+        excludeKitchen: excludeKitchen && !kitchenOnly,
+        kitchenOnly: kitchenOnly && !category && !aisleId,
+      }
     );
 
     res.json({

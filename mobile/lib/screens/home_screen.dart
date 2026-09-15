@@ -42,9 +42,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       controller: _scrollController,
       onLoadMore: _loadMore,
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(searchCatalogProvider.future);
-    });
   }
 
   void _loadMore() {
@@ -78,7 +75,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final query = _query;
     final productsState = ref.watch(paginatedProductsProvider(query));
-    final catalogAsync = ref.watch(searchCatalogProvider);
 
     ref.listen(paginatedProductsProvider(query), (_, next) {
       if (next.items.isNotEmpty) {
@@ -87,7 +83,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     final categoriesAsync = ref.watch(categoriesProvider);
-    final heroAsync = ref.watch(heroSlidesProvider);
+    final heroAsync = ref.watch(heroSlidesProvider('home'));
     final profile = ref.watch(profileProvider).value;
     final user = ref.watch(authStateProvider).value?.session?.user;
     final greetingName = profile?.fullName?.split(' ').first ??
@@ -96,9 +92,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final strings = ref.watch(stringsProvider);
 
     if (productsState.isInitialLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.canvas,
-        body: LoadingView(message: 'Loading fresh produce…'),
+      return Container(
+        decoration: const BoxDecoration(gradient: AppGradients.canvas),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: CustomScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: HomeHeader(
+                  name: greetingName,
+                  kitchenMode: false,
+                  onAccount: () => context.go('/account'),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 48)),
+              const SliverToBoxAdapter(
+                child: LoadingView(message: 'Loading fresh produce…'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -113,12 +127,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     final products = productsState.items;
-    final catalog = catalogAsync.valueOrNull ?? products;
+    // Use the home feed for rows — don't pull the full search catalog here
+    // (that used to race the first paint and feel like a stuck splash).
+    final catalog = products;
     final popularProducts = products.take(_popularCount).toList();
     final moreProducts = products.length > _popularCount ? products.skip(_popularCount).toList() : <Product>[];
     final themedRows = homeProductRows
         .map((row) => (row: row, products: productsForHomeRow(catalog, row)))
         .where((entry) => entry.products.length >= 3)
+        .toList();
+
+    final produceCategories = (categoriesAsync.valueOrNull ?? [])
+        .where((c) => c.id != 'kitchen-ware' && c.id != 'kitchen-furniture')
         .toList();
 
     return Container(
@@ -130,8 +150,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onRefresh: () async {
             await ref.read(paginatedProductsProvider(query).notifier).refresh();
             ref.invalidate(categoriesProvider);
-            ref.invalidate(heroSlidesProvider);
-            ref.invalidate(searchCatalogProvider);
+            ref.invalidate(heroSlidesProvider('home'));
+            ref.invalidate(searchCatalogProvider('fresh'));
           },
           child: CustomScrollView(
             controller: _scrollController,
@@ -139,20 +159,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               SliverToBoxAdapter(
                 child: HomeHeader(
                   name: greetingName,
+                  kitchenMode: false,
                   onAccount: () => context.go('/account'),
                 ),
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 36, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      categoriesAsync.when(
-                        loading: () => const SizedBox(height: 120),
-                        error: (_, __) => const SizedBox.shrink(),
-                        data: (categories) => CategoryMarquee(categories: categories),
-                      ),
+                      CategoryMarquee(categories: produceCategories),
                       const SizedBox(height: 22),
                       Text(
                         strings.specialOffers,

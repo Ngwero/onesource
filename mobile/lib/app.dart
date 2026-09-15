@@ -56,6 +56,7 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp> {
       title: 'One Source',
       debugShowCheckedModeBanner: false,
       theme: _theme,
+      themeMode: ThemeMode.light,
       locale: Locale(languageCodeLabel(language)),
       routerConfig: router,
     );

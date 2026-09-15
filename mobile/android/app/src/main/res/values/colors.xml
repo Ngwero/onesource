@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#FFFFFF</color>
+    <color name="ic_launcher_background">#2E5E4A</color>
+    <!-- One Source canvas — keep light even when the OS is in dark mode. -->
+    <color name="onesource_canvas">#FFF3F2EE</color>
 </resources>

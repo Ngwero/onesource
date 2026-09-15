@@ -22,6 +22,22 @@ const popularSearchTerms = [
   'Honey',
 ];
 
+const popularKitchenSearchTerms = [
+  'Pan',
+  'Pot',
+  'Knife',
+  'Spatula',
+  'Bowl',
+  'Plate',
+  'Whisk',
+  'Cast iron',
+  'Non-stick',
+  'Lid',
+];
+
+/// Which shop the active search screen is querying.
+final searchShopProvider = StateProvider<String>((ref) => 'fresh');
+
 class SearchState {
   const SearchState({
     this.query = '',
@@ -97,7 +113,8 @@ class SearchNotifier extends Notifier<SearchState> {
   Future<void> _runSearch(String query) async {
     final id = ++_requestId;
     try {
-      final catalog = await ref.read(searchCatalogProvider.future);
+      final shop = ref.read(searchShopProvider);
+      final catalog = await ref.read(searchCatalogProvider(shop).future);
       if (id != _requestId) return;
 
       var results = filterAndRankProducts(catalog, query);
@@ -106,6 +123,7 @@ class SearchNotifier extends Notifier<SearchState> {
       try {
         final page = await apiClientProvider.fetchProductsPage(
           query: query,
+          shop: shop,
           page: 0,
           pageSize: 80,
         );
@@ -133,11 +151,15 @@ class SearchNotifier extends Notifier<SearchState> {
     }
   }
 
-  List<String> _defaultSuggestions() => popularSearchTerms;
+  List<String> _defaultSuggestions() {
+    final shop = ref.read(searchShopProvider);
+    return shop == 'kitchen' ? popularKitchenSearchTerms : popularSearchTerms;
+  }
 
   List<String> _matchingSuggestions(String query) {
     final q = query.toLowerCase();
-    final fromPopular = popularSearchTerms
+    final popular = _defaultSuggestions();
+    final fromPopular = popular
         .where((t) {
           final tl = t.toLowerCase();
           return tl.contains(q) ||

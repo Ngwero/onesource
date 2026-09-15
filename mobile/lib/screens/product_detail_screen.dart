@@ -9,7 +9,9 @@ import '../providers/currency_provider.dart';
 import '../providers/products_provider.dart';
 import '../providers/search_catalog_provider.dart';
 import '../utils/categories.dart';
+import '../utils/kitchen_mode.dart';
 import '../utils/product_recommendations.dart';
+import '../data/kitchen_ware.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_card_details.dart';
 import '../widgets/product_recommendation_row.dart';
@@ -36,7 +38,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
     _tabs = TabController(length: 3, vsync: this);
     _tabs.addListener(() => setState(() {}));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(searchCatalogProvider.future);
+      final shop = widget.productId.startsWith('kitchen-') ? 'kitchen' : 'fresh';
+      ref.read(searchCatalogProvider(shop).future);
     });
   }
 
@@ -49,7 +52,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
   @override
   Widget build(BuildContext context) {
     final productAsync = ref.watch(productProvider(widget.productId));
-    final catalogAsync = ref.watch(searchCatalogProvider);
+    final kitchenSku = widget.productId.startsWith('kitchen-');
+    final catalogAsync = ref.watch(searchCatalogProvider(kitchenSku ? 'kitchen' : 'fresh'));
     final categoriesAsync = ref.watch(categoriesProvider);
     final cartQty = ref
         .watch(cartProvider)
@@ -71,12 +75,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
           catalog,
           excludeIds: related.map((p) => p.id),
         );
+        final kitchen = isKitchenProduct(product);
+        final aisleId = aisleIdFromProductId(product.id);
         final categoryId = normalizeCategoryId(product.category);
-        final categoryName = categoriesAsync.valueOrNull
-                ?.where((c) => c.id == categoryId)
-                .map((c) => c.name)
-                .firstOrNull ??
-            categoryDisplayName(product.category);
+        final categoryName = kitchen
+            ? (kitchenAisleById(aisleId)?.title ?? 'Kitchen Ware')
+            : categoriesAsync.valueOrNull
+                    ?.where((c) => c.id == categoryId)
+                    .map((c) => c.name)
+                    .firstOrNull ??
+                categoryDisplayName(product.category);
         final discount = ProductCardDetails.discountPercent(product);
         final maxQty = product.stockQuantity ?? 99;
         final formatPrice = ref.watch(formatPriceProvider);
@@ -125,21 +133,37 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2),
                       ),
                       const SizedBox(height: 12),
-                      _MetaRow(product: product),
-                      const SizedBox(height: 14),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            formatPrice(product.price),
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.darkGreen,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  formatPrice(product.price),
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.darkGreen,
+                                  ),
+                                ),
+                                if (product.unit.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      '${formatPrice(product.price)} / ${product.unit}',
+                                      style: const TextStyle(
+                                        color: AppColors.textMuted,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                          if (product.originalPrice != null && product.originalPrice! > product.price) ...[
-                            const SizedBox(width: 10),
+                          if (product.originalPrice != null &&
+                              product.originalPrice! > product.price)
                             Text(
                               formatPrice(product.originalPrice!),
                               style: const TextStyle(
@@ -148,17 +172,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                                 decoration: TextDecoration.lineThrough,
                               ),
                             ),
-                          ],
                         ],
                       ),
-                      if (product.unit.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            'Per ${product.unit}',
-                            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                          ),
-                        ),
+                      const SizedBox(height: 18),
+                      _ProductFacts(
+                        categoryName: categoryName,
+                        product: product,
+                      ),
+                      const SizedBox(height: 18),
+                      _HighlightStats(product: product),
                       const SizedBox(height: 20),
                       _TabSelector(controller: _tabs),
                       const SizedBox(height: 16),
@@ -181,10 +203,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         const SizedBox(height: 28),
                         ProductRecommendationRow(
                           title: 'Related products',
-                          subtitle: 'More fresh picks in $categoryName',
+                          subtitle: kitchen
+                              ? 'More from $categoryName'
+                              : 'More fresh picks in $categoryName',
                           products: related,
                           viewAllLabel: 'See all',
-                          onViewAll: () => context.push('/category/$categoryId'),
+                          onViewAll: () => context.push(
+                            kitchen && aisleId != null
+                                ? kitchenAislePath(aisleId)
+                                : kitchen
+                                    ? '/kitchen/shop'
+                                    : '/category/$categoryId',
+                          ),
                           onAdd: addToCart,
                         ),
                       ],
@@ -192,10 +222,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         const SizedBox(height: 28),
                         ProductRecommendationRow(
                           title: 'You might also like',
-                          subtitle: 'Popular items from other categories',
+                          subtitle: kitchen
+                              ? 'Popular picks from other kitchen aisles'
+                              : 'Popular items from other categories',
                           products: alsoLike,
                           viewAllLabel: 'Browse all',
-                          onViewAll: () => context.push('/products'),
+                          onViewAll: () => context.go(kitchen ? '/kitchen/shop' : '/shop'),
                           onAdd: addToCart,
                         ),
                       ],
@@ -271,6 +303,22 @@ class _HeroImage extends StatelessWidget {
             onTap: () => context.pop(),
           ),
         ),
+        Positioned(
+          top: top + 8,
+          right: 12,
+          child: _CircleBtn(
+            icon: Icons.favorite_border_rounded,
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Saved for later'),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: AppColors.darkGreen,
+                ),
+              );
+            },
+          ),
+        ),
       ],
     );
   }
@@ -302,63 +350,147 @@ class _CircleBtn extends StatelessWidget {
   }
 }
 
-class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.product});
+class _ProductFacts extends StatelessWidget {
+  const _ProductFacts({required this.categoryName, required this.product});
+
+  final String categoryName;
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <({IconData icon, String label, String value})>[
+      (icon: Icons.grid_view_rounded, label: 'Category', value: categoryName),
+      if (product.supplierName?.isNotEmpty == true)
+        (
+          icon: Icons.public_rounded,
+          label: 'Origin / seller',
+          value: product.supplierName!,
+        ),
+      if (product.unit.isNotEmpty)
+        (icon: Icons.scale_rounded, label: 'Unit', value: product.unit),
+      (
+        icon: Icons.inventory_2_outlined,
+        label: 'Availability',
+        value: product.inStock
+            ? (product.stockQuantity != null
+                ? '${product.stockQuantity} in stock'
+                : 'In stock')
+            : 'Out of stock',
+      ),
+      if (product.delivery?.isNotEmpty == true)
+        (
+          icon: Icons.local_shipping_outlined,
+          label: 'Delivery',
+          value: product.delivery!,
+        ),
+      if (product.prime)
+        (
+          icon: Icons.bolt_rounded,
+          label: 'Prime',
+          value: 'Faster fulfilment',
+        ),
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: softCardShadow,
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const Divider(height: 18, color: AppColors.border),
+            Row(
+              children: [
+                Icon(rows[i].icon, size: 18, color: AppColors.darkGreen),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    rows[i].label,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    rows[i].value,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HighlightStats extends StatelessWidget {
+  const _HighlightStats({required this.product});
 
   final Product product;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+    final items = <({String value, String label})>[
+      (value: product.rating.toStringAsFixed(1), label: 'Rating'),
+      (value: '${product.reviewCount}', label: 'Reviews'),
+      (
+        value: product.stockQuantity != null ? '${product.stockQuantity}' : '—',
+        label: 'Stock',
+      ),
+      (value: product.prime ? 'Yes' : 'Std', label: 'Prime'),
+    ];
+
+    return Row(
       children: [
-        _MetaChip(
-          icon: Icons.star_rounded,
-          label: product.rating.toStringAsFixed(1),
-          color: AppColors.amber,
-        ),
-        if (product.unit.isNotEmpty)
-          _MetaChip(icon: Icons.scale_rounded, label: product.unit, color: AppColors.textMuted),
-        if (product.supplierName?.isNotEmpty == true)
-          _MetaChip(
-            icon: Icons.storefront_outlined,
-            label: product.supplierName!,
-            color: AppColors.darkGreen,
+        for (final item in items)
+          Expanded(
+            child: Column(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.leafPale,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Text(
+                    item.value,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: AppColors.darkGreen,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item.label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
           ),
-        if (product.prime)
-          const _MetaChip(icon: Icons.local_shipping_outlined, label: 'Prime', color: AppColors.darkGreen),
       ],
-    );
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({required this.icon, required this.label, required this.color});
-
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.muted,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -263,7 +263,13 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                       loading: () => const SizedBox.shrink(),
                       error: (_, __) => const SizedBox.shrink(),
                       data: (categories) {
-                        final related = categories.where((c) => c.id != widget.categoryId).take(8).toList();
+                        final related = categories
+                            .where((c) =>
+                                c.id != widget.categoryId &&
+                                c.id != 'kitchen-ware' &&
+                                c.id != 'kitchen-furniture')
+                            .take(8)
+                            .toList();
                         if (related.isEmpty) return const SizedBox.shrink();
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

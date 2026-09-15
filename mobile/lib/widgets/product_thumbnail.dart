@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../services/image_url.dart';
 
-/// Clean product image — no pad, border, or background.
+/// Product image thumbnail with sized decode for long lists.
 class ProductThumbnail extends StatelessWidget {
   const ProductThumbnail({
     super.key,
@@ -25,9 +25,19 @@ class ProductThumbnail extends StatelessWidget {
       return SizedBox(
         width: size,
         height: size,
-        child: Icon(Icons.local_florist_outlined, color: AppColors.accent, size: size * 0.38),
+        child: ColoredBox(
+          color: AppColors.muted,
+          child: Icon(
+            Icons.local_florist_outlined,
+            color: AppColors.accent,
+            size: size * 0.38,
+          ),
+        ),
       );
     }
+
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final cachePx = (size * dpr).round().clamp(96, 512);
 
     return SizedBox(
       width: size,
@@ -35,15 +45,33 @@ class ProductThumbnail extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: imageUrl,
         fit: fit,
-        placeholder: (_, __) => const Center(
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+        width: size,
+        height: size,
+        // Width-only cache keeps aspect correct; height-only square decode can blank some assets.
+        memCacheWidth: cachePx,
+        maxWidthDiskCache: cachePx * 2,
+        fadeInDuration: const Duration(milliseconds: 150),
+        placeholder: (_, __) => ColoredBox(
+          color: AppColors.leafPale,
+          child: Center(
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.darkGreen.withValues(alpha: 0.55),
+              ),
+            ),
           ),
         ),
-        errorWidget: (_, __, ___) =>
-            Icon(Icons.image_not_supported_outlined, color: AppColors.textMuted, size: size * 0.3),
+        errorWidget: (_, url, error) => ColoredBox(
+          color: AppColors.leafPale,
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            color: AppColors.textMuted,
+            size: size * 0.32,
+          ),
+        ),
       ),
     );
   }

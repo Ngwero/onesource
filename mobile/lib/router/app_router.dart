@@ -2,15 +2,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 
+import '../data/kitchen_ware.dart';
 import '../screens/account_screen.dart';
 import '../screens/app_shell.dart';
 import '../screens/auth_screens.dart';
 import '../screens/checkout_screen.dart';
+import '../screens/kitchen_aisle_screen.dart';
+import '../screens/kitchen_categories_screen.dart';
+import '../screens/kitchen_home_screen.dart';
+import '../screens/onboarding_screen.dart';
 import '../screens/order_detail_screen.dart';
 import '../screens/product_detail_screen.dart';
-import '../screens/splash_screen.dart';
 import '../screens/category_screen.dart';
 import '../screens/search_screen.dart';
+import '../screens/splash_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -30,6 +35,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+      GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
       ShellRoute(
         builder: (context, state, child) => AppShell(
           location: state.uri.toString(),
@@ -41,7 +47,32 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/shop', builder: (_, __) => const TabShopScreen()),
           GoRoute(path: '/cart', builder: (_, __) => const TabCartScreen()),
           GoRoute(path: '/account', builder: (_, __) => const TabAccountScreen()),
+          GoRoute(path: '/kitchen', builder: (_, __) => const KitchenHomeScreen()),
+          GoRoute(
+            path: '/kitchen/categories',
+            builder: (_, __) => const SafeArea(child: KitchenCategoriesScreen()),
+          ),
+          GoRoute(
+            path: '/kitchen/shop',
+            builder: (context, state) {
+              final deals = state.uri.queryParameters['deals'] == '1';
+              return SafeArea(child: KitchenProductsScreen(dealsOnly: deals));
+            },
+          ),
         ],
+      ),
+      GoRoute(
+        path: '/kitchen/aisle/:aisleId',
+        builder: (context, state) => KitchenAisleScreen(
+          aisleId: state.pathParameters['aisleId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/kitchen/search',
+        builder: (context, state) => SearchScreen(
+          initialQuery: state.uri.queryParameters['q'],
+          kitchenOnly: true,
+        ),
       ),
       GoRoute(
         path: '/product/:id',
@@ -49,6 +80,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/category/:id',
+        redirect: (context, state) {
+          final id = state.pathParameters['id'];
+          if (id == kitchenWareCategoryId || id == 'kitchen-furniture') {
+            return '/kitchen';
+          }
+          return null;
+        },
         builder: (context, state) => CategoryScreen(categoryId: state.pathParameters['id']!),
       ),
       GoRoute(

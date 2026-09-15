@@ -3,112 +3,191 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
+import 'brand_logo.dart';
 import 'home_search_bar.dart';
 import 'locale_currency_bar.dart';
+import 'shop_mode_switch.dart';
 
-/// Dark curved header with welcome row + search (grocery-app style).
-class HomeHeader extends ConsumerWidget {
+/// Brand-first home header with a short staggered entrance.
+class HomeHeader extends ConsumerStatefulWidget {
   const HomeHeader({
     super.key,
     required this.name,
     required this.onAccount,
+    this.kitchenMode = false,
   });
 
   final String name;
   final VoidCallback onAccount;
+  final bool kitchenMode;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeHeader> createState() => _HomeHeaderState();
+}
+
+class _HomeHeaderState extends ConsumerState<HomeHeader>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _intro;
+  late final Animation<double> _brand;
+  late final Animation<double> _body;
+  late final Animation<Offset> _searchSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _intro = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 720),
+    );
+    _brand = CurvedAnimation(
+      parent: _intro,
+      curve: const Interval(0.0, 0.45, curve: Curves.easeOutCubic),
+    );
+    _body = CurvedAnimation(
+      parent: _intro,
+      curve: const Interval(0.2, 0.75, curve: Curves.easeOutCubic),
+    );
+    _searchSlide = Tween<Offset>(
+      begin: const Offset(0, 0.35),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _intro,
+        curve: const Interval(0.4, 1.0, curve: Curves.easeOutBack),
+      ),
+    );
+    _intro.forward();
+  }
+
+  @override
+  void dispose() {
+    _intro.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final strings = ref.watch(stringsProvider);
     final topPad = MediaQuery.paddingOf(context).top;
+    final kitchen = widget.kitchenMode;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, topPad + 8, 20, 24),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF244A3B), AppColors.darkGreen, Color(0xFF3A7359)],
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x332E5E4A),
-            blurRadius: 24,
-            offset: Offset(0, 10),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(20, topPad + 12, 20, 34),
+          decoration: BoxDecoration(
+            color: kitchen ? const Color(0xFF243D32) : AppColors.darkGreen,
+            borderRadius:
+                const BorderRadius.vertical(bottom: Radius.circular(24)),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 2),
-                  gradient: AppGradients.lemonAccent,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  name.isNotEmpty ? name[0].toUpperCase() : '?',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.text,
-                    fontSize: 18,
+              FadeTransition(
+                opacity: _brand,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.18),
+                    end: Offset.zero,
+                  ).animate(_brand),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const BrandLogo(height: 34, onDark: true),
+                            const SizedBox(height: 10),
+                            Text(
+                              '${strings.greetingForTime()}, ${widget.name}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      _HeaderIconButton(
+                        icon: Icons.person_outline_rounded,
+                        onTap: widget.onAccount,
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      strings.greetingForTime(),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.78),
-                        fontWeight: FontWeight.w500,
+              const SizedBox(height: 16),
+              FadeTransition(
+                opacity: _body,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.12),
+                    end: Offset.zero,
+                  ).animate(_body),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const LocaleCurrencyBar(onDark: true, compact: true),
+                      const SizedBox(height: 12),
+                      ShopModeSwitch(
+                        kitchenMode: kitchen,
+                        onDark: true,
                       ),
-                    ),
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Material(
-                color: Colors.white.withValues(alpha: 0.14),
-                shape: const CircleBorder(),
-                child: InkWell(
-                  onTap: onAccount,
-                  customBorder: const CircleBorder(),
-                  child: const SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Icon(Icons.notifications_none_rounded, color: Colors.white, size: 22),
+                      const SizedBox(height: 22),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          const LocaleCurrencyBar(onDark: true),
-          const SizedBox(height: 14),
-          const HomeSearchBar(onDark: true),
-        ],
+        ),
+        Positioned(
+          left: 20,
+          right: 20,
+          bottom: -22,
+          child: FadeTransition(
+            opacity: _body,
+            child: SlideTransition(
+              position: _searchSlide,
+              child: HomeSearchBar(
+                onDark: true,
+                kitchenMode: kitchen,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.08),
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Icon(icon, color: Colors.white, size: 22),
+        ),
       ),
     );
   }

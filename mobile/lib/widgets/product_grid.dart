@@ -41,13 +41,12 @@ class ProductGrid extends StatelessWidget {
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];
-        return ScrollSlideIn(
-          index: index,
-          child: ProductCard(
-            product: product,
-            onAdd: onAdd == null ? null : () => onAdd!(product),
-          ),
+        final card = ProductCard(
+          product: product,
+          onAdd: onAdd == null ? null : () => onAdd!(product),
         );
+        if (index >= 8) return card;
+        return ScrollSlideIn(index: index, child: card);
       },
     );
   }
@@ -75,15 +74,17 @@ class PopularProductSliverGrid extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final product = products[index];
-            return ScrollSlideIn(
-              index: index,
-              child: PopularProductCard(
-                product: product,
-                onAdd: onAdd == null ? null : () => onAdd!(product),
-              ),
+            final card = PopularProductCard(
+              product: product,
+              onAdd: onAdd == null ? null : () => onAdd!(product),
             );
+            // Animating thousands of cells creates too many tickers and can abort.
+            if (index >= 8) return card;
+            return ScrollSlideIn(index: index, child: card);
           },
           childCount: products.length,
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: true,
         ),
       ),
     );
@@ -112,15 +113,16 @@ class ProductSliverGrid extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final product = products[index];
-            return ScrollSlideIn(
-              index: index,
-              child: ProductCard(
-                product: product,
-                onAdd: onAdd == null ? null : () => onAdd!(product),
-              ),
+            final card = ProductCard(
+              product: product,
+              onAdd: onAdd == null ? null : () => onAdd!(product),
             );
+            if (index >= 8) return card;
+            return ScrollSlideIn(index: index, child: card);
           },
           childCount: products.length,
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: true,
         ),
       ),
     );
@@ -147,13 +149,12 @@ class ProductGridScrollable extends StatelessWidget {
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];
-        return ScrollSlideIn(
-          index: index,
-          child: ProductCard(
-            product: product,
-            onAdd: onAdd == null ? null : () => onAdd!(product),
-          ),
+        final card = ProductCard(
+          product: product,
+          onAdd: onAdd == null ? null : () => onAdd!(product),
         );
+        if (index >= 8) return card;
+        return ScrollSlideIn(index: index, child: card);
       },
     );
   }

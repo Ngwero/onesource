@@ -28,7 +28,16 @@ function warnOnce() {
   );
 }
 
-export function filterLocalProducts({ admin = false, category, search, page = 0, pageSize = 1000 } = {}) {
+export function filterLocalProducts({
+  admin = false,
+  category,
+  search,
+  page = 0,
+  pageSize = 1000,
+  excludeKitchen = false,
+  kitchenOnly = false,
+  aisle,
+} = {}) {
   let filtered = loadRows();
   if (!admin) {
     filtered = filtered.filter((r) => r.in_stock && r.stock_quantity > 0);
@@ -36,6 +45,22 @@ export function filterLocalProducts({ admin = false, category, search, page = 0,
   if (category) {
     const aliases = categoryMatchAliases(category);
     filtered = filtered.filter((r) => aliases.includes(r.category));
+  }
+  const aisleId = String(aisle ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "");
+  if (excludeKitchen) {
+    filtered = filtered.filter(
+      (r) => !String(r.id).startsWith("kitchen-") && r.category !== "kitchen-ware"
+    );
+  } else if (aisleId) {
+    const prefix = `kitchen-${aisleId}-`;
+    filtered = filtered.filter((r) => String(r.id).startsWith(prefix));
+  } else if (kitchenOnly) {
+    filtered = filtered.filter(
+      (r) => String(r.id).startsWith("kitchen-") || r.category === "kitchen-ware"
+    );
   }
   if (search) {
     const all = rankSearchResults(

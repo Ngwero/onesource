@@ -553,6 +553,28 @@
             </div>
             <div class="banner-editor-grid" id="exportHeroSlideGrid"></div>
           </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Kitchen Ware hero carousel</h2>
+                <p class="panel-desc">Shown on the Kitchen home screen in the mobile app (and kitchen shop). Use Add slide → Kitchen Ware. Slide IDs must start with <code>kitchen-</code>.</p>
+              </div>
+            </div>
+            <div class="banner-editor-grid" id="kitchenHeroSlideGrid"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>App onboarding screens</h2>
+                <p class="panel-desc">
+                  First-launch screens in the mobile app. <strong>Badge</strong> = eyebrow,
+                  <strong>Title</strong> / <strong>Subtitle</strong> = copy, <strong>Image</strong> = circular hero photo,
+                  <strong>CTA</strong> = button label. IDs must start with <code>onboarding-</code>.
+                </p>
+              </div>
+            </div>
+            <div class="banner-editor-grid" id="onboardingHeroSlideGrid"></div>
+          </div>
         </section>
 
         <section class="view" id="view-kitchen-collage">
@@ -843,7 +865,9 @@
         <div class="field">
           <label class="field-label" for="heroPlacement">Carousel</label>
           <select id="heroPlacement">
-            <option value="home">Homepage</option>
+            <option value="home">Homepage (Fresh)</option>
+            <option value="kitchen">Kitchen Ware (mobile)</option>
+            <option value="onboarding">App onboarding (mobile)</option>
             <option value="exports">Exports page</option>
           </select>
         </div>

@@ -8,7 +8,7 @@ import '../providers/currency_provider.dart';
 import 'product_thumbnail.dart';
 import 'quantity_stepper.dart';
 
-/// Compact cart row — image, title, price, qty controls, remove.
+/// Modern cart row — soft tile, cover image, inline qty pill.
 class CartLineItem extends ConsumerWidget {
   const CartLineItem({
     super.key,
@@ -26,87 +26,107 @@ class CartLineItem extends ConsumerWidget {
     final product = item.product;
     final formatPrice = ref.watch(formatPriceProvider);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: softCardShadow,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap: () => context.push('/product/${product.id}'),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: ColoredBox(
-                color: AppColors.muted,
-                child: ProductThumbnail(image: product.image, size: 88),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        borderRadius: BorderRadius.circular(22),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push('/product/${product.id}'),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => context.push('/product/${product.id}'),
-                        child: Text(
-                          product.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: ColoredBox(
+                    color: AppColors.leafPale,
+                    child: ProductThumbnail(
+                      image: product.image,
+                      size: 84,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              product.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Gabarito',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                height: 1.25,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: onRemove,
+                            behavior: HitTestBehavior.opaque,
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 18,
+                                color: AppColors.textMuted.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (product.unit.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          product.unit,
                           style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            height: 1.25,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textMuted,
                           ),
                         ),
+                      ],
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Text(
+                            formatPrice(item.lineTotal),
+                            style: const TextStyle(
+                              fontFamily: 'Gabarito',
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              letterSpacing: -0.3,
+                              color: AppColors.darkGreen,
+                            ),
+                          ),
+                          const Spacer(),
+                          QuantityStepper(
+                            quantity: item.quantity,
+                            compact: true,
+                            min: 1,
+                            onChanged: onQuantityChanged,
+                          ),
+                        ],
                       ),
-                    ),
-                    IconButton(
-                      onPressed: onRemove,
-                      icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                      color: AppColors.textMuted,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                    ),
-                  ],
-                ),
-                if (product.unit.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      'Per ${product.unit}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                    ),
+                    ],
                   ),
-                const SizedBox(height: 10),
-                Text(
-                  formatPrice(item.lineTotal),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    color: AppColors.darkGreen,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                QuantityStepper(
-                  quantity: item.quantity,
-                  compact: true,
-                  min: 1,
-                  onChanged: onQuantityChanged,
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

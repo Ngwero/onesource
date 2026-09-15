@@ -1,8 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for API / image loads in release builds (debug/profile already declare this). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="One Source"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -25,6 +29,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Must be under <application>, not <activity>, or Impeller stays on. -->
+        <!-- Samsung A36 (and some Mali GPUs) crash with Impeller Vulkan ErrorDeviceLost. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

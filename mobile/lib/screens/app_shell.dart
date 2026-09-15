@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../providers/cart_provider.dart';
+import '../utils/kitchen_mode.dart';
 import 'account_screen.dart';
 import 'cart_screen.dart';
 import 'categories_screen.dart';
@@ -17,9 +18,19 @@ class AppShell extends ConsumerWidget {
   final String location;
 
   int _indexForLocation(String location) {
-    if (location.startsWith('/shop') || location.startsWith('/category')) return 1;
-    if (location.startsWith('/categories')) return 2;
-    if (location.startsWith('/account') || location.startsWith('/orders')) return 3;
+    if (location.startsWith('/kitchen/shop') ||
+        location.startsWith('/kitchen/aisle') ||
+        location.startsWith('/shop') ||
+        location.startsWith('/category')) {
+      return 1;
+    }
+    if (location.startsWith('/kitchen/categories') ||
+        location.startsWith('/categories')) {
+      return 2;
+    }
+    if (location.startsWith('/account') || location.startsWith('/orders')) {
+      return 3;
+    }
     return 0;
   }
 
@@ -27,75 +38,109 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cartCount = ref.watch(cartItemCountProvider);
     final index = _indexForLocation(location);
+    final kitchen = isKitchenPath(location);
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppGradients.canvas),
-        child: child,
+      backgroundColor: AppColors.canvas,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final slide = Tween<Offset>(
+            begin: const Offset(0.02, 0.012),
+            end: Offset.zero,
+          ).animate(animation);
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(position: slide, child: child),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey(location.split('?').first),
+          child: child,
+        ),
       ),
       extendBody: true,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: FloatingActionButton(
-          onPressed: () => context.go('/cart'),
-          elevation: 6,
-          backgroundColor: AppColors.darkGreen,
-          shape: const CircleBorder(),
-          child: Badge(
-            isLabelVisible: cartCount > 0,
-            label: Text('$cartCount'),
-            backgroundColor: AppColors.amber,
-            child: const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 26),
-          ),
-        ),
-      ),
+      floatingActionButton: location.startsWith('/cart')
+          ? null
+          : _CartFab(
+              cartCount: cartCount,
+              onPressed: () => context.go('/cart'),
+            ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-        child: Container(
-          height: 72,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.darkGreen.withValues(alpha: 0.1),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
+        padding: EdgeInsets.fromLTRB(16, 0, 16, bottomInset + 12),
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.92, end: 1),
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutBack,
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: value,
+              alignment: Alignment.bottomCenter,
+              child: Opacity(
+                opacity: value.clamp(0.0, 1.0),
+                child: child,
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                icon: Icons.home_rounded,
-                label: 'Home',
-                selected: index == 0,
-                onTap: () => context.go('/home'),
-              ),
-              _NavItem(
-                icon: Icons.storefront_rounded,
-                label: 'Shop',
-                selected: index == 1,
-                onTap: () => context.go('/shop'),
-              ),
-              const SizedBox(width: 56),
-              _NavItem(
-                icon: Icons.grid_view_rounded,
-                label: 'Categories',
-                selected: index == 2,
-                onTap: () => context.go('/categories'),
-              ),
-              _NavItem(
-                icon: Icons.person_outline_rounded,
-                label: 'Account',
-                selected: index == 3,
-                onTap: () => context.go('/account'),
-              ),
-            ],
+            );
+          },
+          child: Container(
+            height: 72,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.darkGreen.withValues(alpha: 0.12),
+                  blurRadius: 22,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _NavItem(
+                  icon: Icons.home_rounded,
+                  label: 'Home',
+                  selected: index == 0,
+                  onTap: () => context.go(kitchen ? '/kitchen' : '/home'),
+                ),
+                _NavItem(
+                  icon: Icons.storefront_rounded,
+                  label: 'Shop',
+                  selected: index == 1,
+                  onTap: () =>
+                      context.go(kitchen ? '/kitchen/shop' : '/shop'),
+                ),
+                // Keep centre gap only when the cart FAB is showing.
+                if (!location.startsWith('/cart')) const SizedBox(width: 56),
+                if (location.startsWith('/cart'))
+                  _NavItem(
+                    icon: Icons.shopping_bag_rounded,
+                    label: 'Cart',
+                    selected: true,
+                    onTap: () => context.go('/cart'),
+                  ),
+                _NavItem(
+                  icon: Icons.grid_view_rounded,
+                  label: 'Categories',
+                  selected: index == 2,
+                  onTap: () => context.go(
+                    kitchen ? '/kitchen/categories' : '/categories',
+                  ),
+                ),
+                _NavItem(
+                  icon: Icons.person_outline_rounded,
+                  label: 'Account',
+                  selected: index == 3,
+                  onTap: () => context.go('/account'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -103,7 +148,72 @@ class AppShell extends ConsumerWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _CartFab extends StatefulWidget {
+  const _CartFab({required this.cartCount, required this.onPressed});
+
+  final int cartCount;
+  final VoidCallback onPressed;
+
+  @override
+  State<_CartFab> createState() => _CartFabState();
+}
+
+class _CartFabState extends State<_CartFab>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+  int _lastCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastCount = widget.cartCount;
+  }
+
+  @override
+  void didUpdateWidget(covariant _CartFab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.cartCount != _lastCount) {
+      _lastCount = widget.cartCount;
+      _pulse.forward(from: 0).then((_) {
+        if (mounted) _pulse.reverse();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: Tween<double>(begin: 1, end: 1.12).animate(
+        CurvedAnimation(parent: _pulse, curve: Curves.easeOutBack),
+      ),
+      child: FloatingActionButton(
+        onPressed: widget.onPressed,
+        elevation: 6,
+        backgroundColor: AppColors.darkGreen,
+        shape: const CircleBorder(),
+        child: Badge(
+          isLabelVisible: widget.cartCount > 0,
+          label: Text('${widget.cartCount}'),
+          backgroundColor: AppColors.amber,
+          child: const Icon(
+            Icons.shopping_bag_outlined,
+            color: Colors.white,
+            size: 26,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatefulWidget {
   const _NavItem({
     required this.icon,
     required this.label,
@@ -117,28 +227,62 @@ class _NavItem extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_NavItem> createState() => _NavItemState();
+}
+
+class _NavItemState extends State<_NavItem> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final selected = widget.selected;
     final color = selected ? AppColors.darkGreen : AppColors.textMuted;
 
     return GestureDetector(
-      onTap: onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTap: widget.onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 64,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: color,
+        child: AnimatedScale(
+          scale: _pressed ? 0.9 : 1,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppColors.lemonGreen.withValues(alpha: 0.35)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: AnimatedScale(
+                  scale: selected ? 1.08 : 1,
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeOutBack,
+                  child: Icon(widget.icon, color: color, size: 24),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: color,
+                ),
+                child: Text(widget.label),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -154,7 +298,8 @@ class TabHomeScreen extends StatelessWidget {
 class TabCategoriesScreen extends StatelessWidget {
   const TabCategoriesScreen({super.key});
   @override
-  Widget build(BuildContext context) => const SafeArea(child: CategoriesScreen());
+  Widget build(BuildContext context) =>
+      const SafeArea(child: CategoriesScreen());
 }
 
 class TabShopScreen extends ConsumerWidget {

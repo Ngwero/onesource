@@ -3,18 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/product.dart';
 import '../services/api_client.dart';
 
-/// Identifies a paginated product feed (optional category filter).
+/// Identifies a paginated product feed.
 class ProductsQuery {
-  const ProductsQuery({this.categoryId});
+  const ProductsQuery({
+    this.categoryId,
+    this.shop = 'fresh',
+  });
 
   final String? categoryId;
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) || other is ProductsQuery && other.categoryId == categoryId;
+  /// `fresh` (default produce), `kitchen`, or null for unfiltered.
+  final String? shop;
 
   @override
-  int get hashCode => categoryId.hashCode;
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProductsQuery && other.categoryId == categoryId && other.shop == shop;
+
+  @override
+  int get hashCode => Object.hash(categoryId, shop);
 }
 
 class PaginatedProductsState {
@@ -83,6 +90,7 @@ class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, P
     try {
       final result = await apiClientProvider.fetchProductsPage(
         category: arg.categoryId,
+        shop: arg.shop,
         page: page,
         pageSize: pageSize,
       );

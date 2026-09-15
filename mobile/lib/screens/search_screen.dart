@@ -7,12 +7,18 @@ import '../providers/cart_provider.dart';
 import '../providers/products_provider.dart';
 import '../providers/search_catalog_provider.dart';
 import '../providers/search_provider.dart';
+import '../utils/kitchen_mode.dart';
 import '../widgets/search_result_tile.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key, this.initialQuery});
+  const SearchScreen({
+    super.key,
+    this.initialQuery,
+    this.kitchenOnly = false,
+  });
 
   final String? initialQuery;
+  final bool kitchenOnly;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -28,7 +34,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _controller = TextEditingController(text: widget.initialQuery ?? '');
     _focusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(searchCatalogProvider.future);
+      ref.read(searchShopProvider.notifier).state =
+          widget.kitchenOnly ? 'kitchen' : 'fresh';
+      ref.read(searchCatalogProvider(widget.kitchenOnly ? 'kitchen' : 'fresh').future);
       ref.read(searchProvider.notifier).setQuery(_controller.text);
       _focusNode.requestFocus();
     });
@@ -55,6 +63,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final search = ref.watch(searchProvider);
+    final results = widget.kitchenOnly
+        ? search.results.where(isKitchenProduct).toList()
+        : search.results.where((p) => !isKitchenProduct(p)).toList();
+    final scoped = SearchState(
+      query: search.query,
+      results: results,
+      suggestions: search.suggestions,
+      isLoading: search.isLoading,
+      error: search.error,
+      total: results.length,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -80,7 +99,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             onChanged: _onQueryChanged,
             onSubmitted: _onQueryChanged,
             decoration: InputDecoration(
-              hintText: 'Search fresh produce…',
+              hintText: widget.kitchenOnly
+                  ? 'Search pots, pans, utensils…'
+                  : 'Search fresh produce…',
               hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 15),
               prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 22),
               suffixIcon: _controller.text.isNotEmpty
@@ -99,7 +120,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         ),
       ),
-      body: _buildBody(search),
+      body: _buildBody(scoped),
     );
   }
 
@@ -132,10 +153,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               const SizedBox(height: 12),
               Text('No results for "${search.query}"', textAlign: TextAlign.center),
               const SizedBox(height: 8),
-              const Text(
-                'Try chicken, mango, tomatoes, or organic',
+              Text(
+                widget.kitchenOnly
+                    ? 'Try pan, spatula, knife, or bowl'
+                    : 'Try chicken, mango, tomatoes, or organic',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textMuted),
+                style: const TextStyle(color: AppColors.textMuted),
               ),
             ],
           ),

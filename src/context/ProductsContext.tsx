@@ -41,11 +41,12 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const [prods, cats] = await Promise.all([
-        fetchProducts(),
+      const [prods, kitchen, cats] = await Promise.all([
+        fetchProducts({ shop: "fresh" }),
+        fetchProducts({ shop: "kitchen" }).catch(() => [] as Awaited<ReturnType<typeof fetchProducts>>),
         fetchCategories().catch(() => staticCategories),
       ]);
-      setProducts(prods);
+      setProducts([...prods, ...kitchen]);
       setCategories(cats.length ? cats : staticCategories);
     } catch (e) {
       setError(
