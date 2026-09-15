@@ -82,3 +82,29 @@ export function verifyLoginOtp(email, otp) {
 export function generateOtp() {
   return String(crypto.randomInt(100000, 999999));
 }
+
+/**
+ * Optional fixed OTP for a QA account.
+ * Env: FIXED_LOGIN_OTP_EMAIL + FIXED_LOGIN_OTP
+ * Default QA: engwero@gmail.com → 246810 (disable with FIXED_LOGIN_OTP_DISABLED=1)
+ */
+export function resolveLoginOtp(email) {
+  const key = normalizeEmail(email);
+  const fixedEmail = String(process.env.FIXED_LOGIN_OTP_EMAIL ?? "")
+    .trim()
+    .toLowerCase();
+  const fixedCode = String(process.env.FIXED_LOGIN_OTP ?? "").trim();
+  if (fixedEmail && /^\d{6}$/.test(fixedCode) && key === fixedEmail) {
+    return fixedCode;
+  }
+
+  if (
+    process.env.FIXED_LOGIN_OTP_DISABLED !== "1" &&
+    key === "engwero@gmail.com"
+  ) {
+    const code = fixedCode && /^\d{6}$/.test(fixedCode) ? fixedCode : "246810";
+    return code;
+  }
+
+  return generateOtp();
+}

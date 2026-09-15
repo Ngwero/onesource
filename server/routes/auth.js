@@ -10,7 +10,7 @@ import {
 import {
   canRequestOtp,
   recordOtpRequest,
-  generateOtp,
+  resolveLoginOtp,
   storeLoginOtp,
   verifyLoginOtp as checkStoredOtp,
 } from "../lib/otpStore.js";
@@ -209,7 +209,7 @@ router.post("/login/request-otp", async (req, res) => {
 
     recordOtpRequest(email);
 
-    const otp = generateOtp();
+    const otp = resolveLoginOtp(email);
     const metaName = verified.user?.user_metadata?.full_name;
     const fullName =
       (typeof metaName === "string" ? metaName.trim() : "") ||
