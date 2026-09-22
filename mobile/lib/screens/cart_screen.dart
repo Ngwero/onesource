@@ -7,6 +7,7 @@ import '../config/theme.dart';
 import '../providers/cart_provider.dart';
 import '../providers/currency_provider.dart';
 import '../services/checkout.dart';
+import '../utils/responsive.dart';
 import '../widgets/cart_line_item.dart';
 import '../widgets/free_delivery_bar.dart';
 
@@ -31,8 +32,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final items = ref.watch(cartProvider);
     final subtotal = ref.watch(cartSubtotalProvider);
     final totals = calcOrderTotal(subtotal);
-    final bottomNavClearance =
-        MediaQuery.viewPaddingOf(context).bottom + 100;
+    final bottomNavClearance = shellBottomPadding(context);
 
     return Scaffold(
       backgroundColor: AppColors.canvas,

@@ -163,6 +163,100 @@ router.post("/welcome", async (req, res) => {
   }
 });
 
+/**
+ * Create account via Admin API (email already confirmed) and send welcome
+ * through the same Brevo/SMTP path as login OTP — avoids Supabase Auth SMTP.
+ */
+router.post("/signup", async (req, res) => {
+  try {
+    const email = String(req.body?.email ?? "")
+      .trim()
+      .toLowerCase();
+    const password = String(req.body?.password ?? "");
+    const fullName = String(req.body?.fullName ?? req.body?.full_name ?? "").trim();
+
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: "A valid email address is required." });
+    }
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters." });
+    }
+
+    const supabase = requireSupabase();
+    const { data: created, error: createError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: fullName ? { full_name: fullName } : undefined,
+    });
+
+    if (createError) {
+      const msg = String(createError.message ?? "").toLowerCase();
+      if (
+        msg.includes("already") ||
+        msg.includes("registered") ||
+        msg.includes("exists") ||
+        createError.code === "email_exists" ||
+        createError.status === 422
+      ) {
+        return res.status(409).json({
+          error: "An account with this email already exists. Try logging in instead.",
+        });
+      }
+      console.warn("[auth] signup createUser:", createError.code ?? createError.message);
+      return res.status(400).json({
+        error: createError.message || "Could not create account. Please try again.",
+      });
+    }
+
+    const userId = created.user?.id;
+    if (userId) {
+      try {
+        await supabase.from("profiles").upsert({
+          id: userId,
+          full_name: fullName || null,
+          updated_at: new Date().toISOString(),
+        });
+      } catch (profileErr) {
+        console.warn("[auth] signup profile upsert:", profileErr);
+      }
+    }
+
+    if (isMailConfigured()) {
+      try {
+        await sendWelcomeEmail({ email, fullName });
+        console.info(`[auth] signup welcome sent to ${email}`);
+      } catch (mailErr) {
+        // Account is created — don't fail signup if welcome mail fails.
+        console.error("[auth] signup welcome email failed:", mailErr);
+      }
+    } else {
+      console.warn(`[auth] signup welcome skipped (mail not configured) for ${email}`);
+    }
+
+    const session = await createUserSession(email, password);
+    if (!session.ok) {
+      console.error("[auth] signup session failed:", session.error);
+      return res.status(201).json({
+        ok: true,
+        needsSignIn: true,
+        message: "Account created. Please log in.",
+      });
+    }
+
+    return res.status(201).json({
+      ok: true,
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+    });
+  } catch (e) {
+    console.error("[auth] signup failed:", e);
+    return res.status(500).json({
+      error: e instanceof Error ? e.message : "Could not create account",
+    });
+  }
+});
+
 router.post("/login/request-otp", async (req, res) => {
   try {
     const email = String(req.body?.email ?? "")

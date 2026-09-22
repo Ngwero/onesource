@@ -8,6 +8,7 @@ import '../providers/products_provider.dart';
 import '../providers/search_catalog_provider.dart';
 import '../providers/search_provider.dart';
 import '../utils/kitchen_mode.dart';
+import '../utils/responsive.dart';
 import '../widgets/search_result_tile.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -198,7 +199,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+            padding: EdgeInsets.fromLTRB(20, 12, 20, shellBottomPadding(context)),
             itemCount: search.results.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
@@ -234,7 +235,7 @@ class _SuggestionsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+      padding: EdgeInsets.fromLTRB(20, 8, 20, shellBottomPadding(context)),
       children: [
         const Text(
           'Popular searches',

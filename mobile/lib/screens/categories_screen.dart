@@ -6,6 +6,7 @@ import '../config/theme.dart';
 import '../data/kitchen_ware.dart';
 import '../providers/products_provider.dart';
 import '../utils/kitchen_mode.dart';
+import '../utils/responsive.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/shop_mode_switch.dart';
@@ -40,7 +41,8 @@ class CategoriesScreen extends ConsumerWidget {
             error: (e, _) => ErrorView(message: e.toString()),
             data: (allProducts) {
               final produceProducts = excludeKitchenProducts(allProducts);
-              final bottomPad = MediaQuery.viewPaddingOf(context).bottom + 100;
+              final bottomPad = shellBottomPadding(context);
+              final catCols = categoryGridCount(context);
               return RefreshIndicator(
                 color: AppColors.darkGreen,
                 onRefresh: () async {
@@ -108,8 +110,8 @@ class CategoriesScreen extends ConsumerWidget {
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: catCols,
                         mainAxisExtent: 96,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../utils/responsive.dart';
 
 /// Footer shown while loading the next page of products.
 class ProductsLoadMoreSliver extends StatelessWidget {
@@ -19,11 +20,13 @@ class ProductsLoadMoreSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottom = shellBottomPadding(context);
+
     if (isLoadingMore) {
-      return const SliverToBoxAdapter(
+      return SliverToBoxAdapter(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 24),
-          child: Center(
+          padding: EdgeInsets.fromLTRB(0, 24, 0, bottom),
+          child: const Center(
             child: SizedBox(
               width: 28,
               height: 28,
@@ -37,7 +40,7 @@ class ProductsLoadMoreSliver extends StatelessWidget {
     if (!hasMore && itemCount > 0) {
       return SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, bottom),
           child: Text(
             total > 0 ? 'Showing all $total products' : 'End of list',
             textAlign: TextAlign.center,
@@ -47,7 +50,7 @@ class ProductsLoadMoreSliver extends StatelessWidget {
       );
     }
 
-    return const SliverToBoxAdapter(child: SizedBox(height: 100));
+    return SliverToBoxAdapter(child: SizedBox(height: bottom));
   }
 }
 

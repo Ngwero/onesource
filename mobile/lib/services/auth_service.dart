@@ -91,29 +91,34 @@ class AuthService {
     }
   }
 
+  /// Creates account via API (same Brevo mail path as login OTP).
+  /// Returns true if the user must sign in manually (rare).
   Future<bool> signUp({
     required String email,
     required String password,
     required String fullName,
   }) async {
     await _ensureSupabaseReady();
-    final res = await _client.auth.signUp(
+    final result = await _api.signUp(
       email: email.trim(),
       password: password,
-      data: {'full_name': fullName.trim()},
+      fullName: fullName.trim(),
     );
 
-    if (res.user != null) {
-      try {
-        await _client.from('profiles').upsert({
-          'id': res.user!.id,
-          'full_name': fullName.trim(),
-          'updated_at': DateTime.now().toIso8601String(),
-        });
-      } catch (_) {}
+    if (result.needsSignIn ||
+        result.accessToken == null ||
+        result.refreshToken == null) {
+      return true;
     }
 
-    return res.session == null;
+    final response = await _client.auth.setSession(
+      result.refreshToken!,
+      accessToken: result.accessToken!,
+    );
+    if (response.session == null) {
+      return true;
+    }
+    return false;
   }
 
   Future<void> requestPasswordReset(String email) async {

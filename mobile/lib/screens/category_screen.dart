@@ -351,7 +351,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 sliver: SliverGrid(
-                  gridDelegate: ProductGrid.gridDelegate,
+                  gridDelegate: ProductGrid.gridDelegateFor(context),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) => ScrollSlideIn(
                       index: index,

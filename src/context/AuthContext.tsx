@@ -3,7 +3,7 @@ import {
   requestLoginOtp,
   verifyLoginOtp as verifyLoginOtpApi,
   requestPasswordReset as requestPasswordResetApi,
-  sendWelcomeEmail as sendWelcomeEmailApi,
+  signUpAccount as signUpAccountApi,
 } from "../api/client";
 import {
   createContext,
@@ -46,7 +46,11 @@ type AuthContextValue = {
     email: string,
     password: string,
     fullName: string
-  ) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
+  ) => Promise<{
+    error: string | null;
+    needsEmailConfirmation: boolean;
+    needsSignIn?: boolean;
+  }>;
   requestPasswordReset: (email: string) => Promise<{ error: string | null; sent?: boolean }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -224,44 +228,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = useCallback(
     async (email: string, password: string, fullName: string) => {
       try {
+        const result = await signUpAccountApi(email, password, fullName);
+        if (result.error) {
+          return { error: result.error, needsEmailConfirmation: false };
+        }
+
         const supabase = getSupabase();
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: fullName.trim() },
-          },
-        });
 
-        if (error) {
-          return { error: error.message, needsEmailConfirmation: false };
-        }
-
-        if (data.user?.id) {
-          try {
-            await supabase.from("profiles").upsert({
-              id: data.user.id,
-              full_name: fullName.trim(),
-              updated_at: new Date().toISOString(),
-            });
-          } catch {
-            /* profiles table may not exist yet — auth still succeeds via user_metadata */
+        if (result.accessToken && result.refreshToken) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: result.accessToken,
+            refresh_token: result.refreshToken,
+          });
+          if (error) {
+            return {
+              error: error.message,
+              needsEmailConfirmation: false,
+            };
           }
-        }
-
-        if (data.session?.user) {
-          setSession(data.session);
-          setUser(data.session.user);
-          await fetchProfile(data.session.user.id);
-          if (data.session.access_token) {
-            sendWelcomeEmailApi(data.session.access_token).catch(() => {
-              /* welcome email is best-effort */
-            });
+          if (data.session?.user) {
+            setSession(data.session);
+            setUser(data.session.user);
+            await fetchProfile(data.session.user.id);
           }
+          return { error: null, needsEmailConfirmation: false };
         }
 
-        const needsEmailConfirmation = !data.session;
-        return { error: null, needsEmailConfirmation };
+        // Account created but session missing — ask user to log in.
+        return { error: null, needsEmailConfirmation: false, needsSignIn: true };
       } catch (e) {
         return {
           error: e instanceof Error ? e.message : i18n.t("errors.signUpFailed"),

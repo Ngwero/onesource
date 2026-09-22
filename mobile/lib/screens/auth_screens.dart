@@ -238,13 +238,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     });
 
     try {
-      final needsConfirm = await ref.read(authServiceProvider).signUp(
+      final needsSignIn = await ref.read(authServiceProvider).signUp(
             email: _email.text,
             password: _password.text,
             fullName: _name.text,
           );
-      if (needsConfirm) {
-        setState(() => _success = 'Check your email to confirm your account.');
+      if (needsSignIn) {
+        setState(() => _success = 'Account created. Please log in to continue.');
       } else if (mounted) {
         context.go('/account');
       }

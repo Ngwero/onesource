@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/product.dart';
+import '../utils/responsive.dart';
 import 'popular_product_card.dart';
 import 'product_card.dart';
 import 'scroll_slide_in.dart';
@@ -11,13 +12,38 @@ class ProductGrid extends StatelessWidget {
     super.key,
     required this.products,
     this.onAdd,
-    this.crossAxisCount = 2,
+    this.crossAxisCount,
   });
 
   final List<Product> products;
   final void Function(Product product)? onAdd;
-  final int crossAxisCount;
+  final int? crossAxisCount;
 
+  static SliverGridDelegateWithFixedCrossAxisCount gridDelegateFor(
+    BuildContext context, {
+    int? crossAxisCount,
+  }) {
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: crossAxisCount ?? productGridCount(context),
+      mainAxisExtent: 392,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+    );
+  }
+
+  static SliverGridDelegateWithFixedCrossAxisCount popularGridDelegateFor(
+    BuildContext context, {
+    int? crossAxisCount,
+  }) {
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: crossAxisCount ?? productGridCount(context),
+      mainAxisExtent: 248,
+      crossAxisSpacing: 14,
+      mainAxisSpacing: 14,
+    );
+  }
+
+  /// Phone default — prefer [gridDelegateFor] when a [BuildContext] is available.
   static const gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
     crossAxisCount: 2,
     mainAxisExtent: 392,
@@ -37,7 +63,7 @@ class ProductGrid extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: gridDelegate,
+      gridDelegate: gridDelegateFor(context, crossAxisCount: crossAxisCount),
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];
@@ -70,7 +96,7 @@ class PopularProductSliverGrid extends StatelessWidget {
     return SliverPadding(
       padding: padding,
       sliver: SliverGrid(
-        gridDelegate: ProductGrid.popularGridDelegate,
+        gridDelegate: ProductGrid.popularGridDelegateFor(context),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final product = products[index];
@@ -109,7 +135,7 @@ class ProductSliverGrid extends StatelessWidget {
     return SliverPadding(
       padding: padding,
       sliver: SliverGrid(
-        gridDelegate: ProductGrid.gridDelegate,
+        gridDelegate: ProductGrid.gridDelegateFor(context),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final product = products[index];
@@ -145,7 +171,7 @@ class ProductGridScrollable extends StatelessWidget {
   Widget build(BuildContext context) {
     return GridView.builder(
       padding: padding,
-      gridDelegate: ProductGrid.gridDelegate,
+      gridDelegate: ProductGrid.gridDelegateFor(context),
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];

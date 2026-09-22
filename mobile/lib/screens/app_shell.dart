@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../config/theme.dart';
 import '../providers/cart_provider.dart';
 import '../utils/kitchen_mode.dart';
+import '../utils/responsive.dart';
 import 'account_screen.dart';
 import 'cart_screen.dart';
 import 'categories_screen.dart';
@@ -18,6 +19,7 @@ class AppShell extends ConsumerWidget {
   final String location;
 
   int _indexForLocation(String location) {
+    if (location.startsWith('/cart')) return 4;
     if (location.startsWith('/kitchen/shop') ||
         location.startsWith('/kitchen/aisle') ||
         location.startsWith('/shop') ||
@@ -34,34 +36,136 @@ class AppShell extends ConsumerWidget {
     return 0;
   }
 
+  void _goHome(BuildContext context, bool kitchen) {
+    context.go(kitchen ? '/kitchen' : '/home');
+  }
+
+  void _goShop(BuildContext context, bool kitchen) {
+    context.go(kitchen ? '/kitchen/shop' : '/shop');
+  }
+
+  void _goCategories(BuildContext context, bool kitchen) {
+    context.go(kitchen ? '/kitchen/categories' : '/categories');
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartCount = ref.watch(cartItemCountProvider);
     final index = _indexForLocation(location);
     final kitchen = isKitchenPath(location);
+    final wide = isWideLayout(context);
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
+    final pageBody = AnimatedSwitcher(
+      duration: const Duration(milliseconds: 280),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        final slide = Tween<Offset>(
+          begin: const Offset(0.02, 0.012),
+          end: Offset.zero,
+        ).animate(animation);
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(position: slide, child: child),
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey(location.split('?').first),
+        child: child,
+      ),
+    );
+
+    if (wide) {
+      final railIndex = index.clamp(0, 4);
+      return Scaffold(
+        backgroundColor: AppColors.canvas,
+        body: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: railIndex,
+              onDestinationSelected: (i) {
+                switch (i) {
+                  case 0:
+                    _goHome(context, kitchen);
+                  case 1:
+                    _goShop(context, kitchen);
+                  case 2:
+                    _goCategories(context, kitchen);
+                  case 3:
+                    context.go('/account');
+                  case 4:
+                    context.go('/cart');
+                }
+              },
+              backgroundColor: Colors.white,
+              indicatorColor: AppColors.lemonGreen.withValues(alpha: 0.45),
+              selectedIconTheme: const IconThemeData(color: AppColors.darkGreen),
+              unselectedIconTheme: const IconThemeData(color: AppColors.textMuted),
+              selectedLabelTextStyle: const TextStyle(
+                color: AppColors.darkGreen,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+              ),
+              unselectedLabelTextStyle: const TextStyle(
+                color: AppColors.textMuted,
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+              ),
+              labelType: NavigationRailLabelType.all,
+              minWidth: 88,
+              destinations: [
+                const NavigationRailDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home_rounded),
+                  label: Text('Home'),
+                ),
+                const NavigationRailDestination(
+                  icon: Icon(Icons.storefront_outlined),
+                  selectedIcon: Icon(Icons.storefront_rounded),
+                  label: Text('Shop'),
+                ),
+                const NavigationRailDestination(
+                  icon: Icon(Icons.grid_view_outlined),
+                  selectedIcon: Icon(Icons.grid_view_rounded),
+                  label: Text('Categories'),
+                ),
+                const NavigationRailDestination(
+                  icon: Icon(Icons.person_outline_rounded),
+                  selectedIcon: Icon(Icons.person_rounded),
+                  label: Text('Account'),
+                ),
+                NavigationRailDestination(
+                  icon: Badge(
+                    isLabelVisible: cartCount > 0,
+                    label: Text('$cartCount'),
+                    backgroundColor: AppColors.amber,
+                    child: const Icon(Icons.shopping_bag_outlined),
+                  ),
+                  selectedIcon: Badge(
+                    isLabelVisible: cartCount > 0,
+                    label: Text('$cartCount'),
+                    backgroundColor: AppColors.amber,
+                    child: const Icon(Icons.shopping_bag_rounded),
+                  ),
+                  label: const Text('Cart'),
+                ),
+              ],
+            ),
+            const VerticalDivider(width: 1, thickness: 1, color: AppColors.border),
+            Expanded(
+              child: ContentWidth(child: pageBody),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Phone: bottom bar + docked cart FAB
+    final phoneNavIndex = index == 4 ? -1 : index;
     return Scaffold(
       backgroundColor: AppColors.canvas,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 280),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) {
-          final slide = Tween<Offset>(
-            begin: const Offset(0.02, 0.012),
-            end: Offset.zero,
-          ).animate(animation);
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(position: slide, child: child),
-          );
-        },
-        child: KeyedSubtree(
-          key: ValueKey(location.split('?').first),
-          child: child,
-        ),
-      ),
+      body: pageBody,
       extendBody: true,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: location.startsWith('/cart')
@@ -106,17 +210,15 @@ class AppShell extends ConsumerWidget {
                 _NavItem(
                   icon: Icons.home_rounded,
                   label: 'Home',
-                  selected: index == 0,
-                  onTap: () => context.go(kitchen ? '/kitchen' : '/home'),
+                  selected: phoneNavIndex == 0,
+                  onTap: () => _goHome(context, kitchen),
                 ),
                 _NavItem(
                   icon: Icons.storefront_rounded,
                   label: 'Shop',
-                  selected: index == 1,
-                  onTap: () =>
-                      context.go(kitchen ? '/kitchen/shop' : '/shop'),
+                  selected: phoneNavIndex == 1,
+                  onTap: () => _goShop(context, kitchen),
                 ),
-                // Keep centre gap only when the cart FAB is showing.
                 if (!location.startsWith('/cart')) const SizedBox(width: 56),
                 if (location.startsWith('/cart'))
                   _NavItem(
@@ -128,15 +230,13 @@ class AppShell extends ConsumerWidget {
                 _NavItem(
                   icon: Icons.grid_view_rounded,
                   label: 'Categories',
-                  selected: index == 2,
-                  onTap: () => context.go(
-                    kitchen ? '/kitchen/categories' : '/categories',
-                  ),
+                  selected: phoneNavIndex == 2,
+                  onTap: () => _goCategories(context, kitchen),
                 ),
                 _NavItem(
                   icon: Icons.person_outline_rounded,
                   label: 'Account',
-                  selected: index == 3,
+                  selected: phoneNavIndex == 3,
                   onTap: () => context.go('/account'),
                 ),
               ],

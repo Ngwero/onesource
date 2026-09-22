@@ -44,7 +44,7 @@ export function SignupPage() {
     }
 
     setSubmitting(true);
-    const { error: err, needsEmailConfirmation } = await signUp(
+    const { error: err, needsEmailConfirmation, needsSignIn } = await signUp(
       email.trim(),
       password,
       fullName.trim()
@@ -58,6 +58,11 @@ export function SignupPage() {
 
     if (needsEmailConfirmation) {
       setSuccess(t("auth.checkEmail"));
+      return;
+    }
+
+    if (needsSignIn) {
+      setSuccess("Account created. Please log in to continue.");
       return;
     }
 

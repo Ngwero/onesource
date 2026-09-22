@@ -296,6 +296,55 @@ export async function sendWelcomeEmail(accessToken: string): Promise<void> {
   });
 }
 
+export type SignUpResult = {
+  error: string | null;
+  accessToken?: string;
+  refreshToken?: string;
+  needsSignIn?: boolean;
+};
+
+/** Create account via API (Admin + Brevo) — same mail path as login OTP. */
+export async function signUpAccount(
+  email: string,
+  password: string,
+  fullName: string
+): Promise<SignUpResult> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 45_000);
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email.trim().toLowerCase(),
+        password,
+        fullName: fullName.trim(),
+      }),
+      signal: controller.signal,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: (data.error as string) || i18n.t("errors.signUpFailed") };
+    }
+    return {
+      error: null,
+      accessToken: data.accessToken as string | undefined,
+      refreshToken: data.refreshToken as string | undefined,
+      needsSignIn: Boolean(data.needsSignIn),
+    };
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      return { error: i18n.t("errors.signUpFailed") };
+    }
+    return {
+      error: e instanceof Error ? e.message : i18n.t("errors.signUpFailed"),
+    };
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 export async function checkApiHealth(): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/health`);

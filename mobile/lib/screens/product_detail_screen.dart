@@ -11,6 +11,7 @@ import '../providers/search_catalog_provider.dart';
 import '../utils/categories.dart';
 import '../utils/kitchen_mode.dart';
 import '../utils/product_recommendations.dart';
+import '../utils/responsive.dart';
 import '../data/kitchen_ware.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_card_details.dart';
@@ -119,128 +120,165 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
               );
             },
           ),
-          body: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: _HeroImage(product: product, discount: discount)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.title,
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  formatPrice(product.price),
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.darkGreen,
-                                  ),
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= AppBreakpoints.wide;
+              final details = Padding(
+                padding: EdgeInsets.fromLTRB(wide ? 8 : 20, wide ? 28 : 20, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.title,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                formatPrice(product.price),
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.darkGreen,
                                 ),
-                                if (product.unit.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Text(
-                                      '${formatPrice(product.price)} / ${product.unit}',
-                                      style: const TextStyle(
-                                        color: AppColors.textMuted,
-                                        fontSize: 13,
-                                      ),
+                              ),
+                              if (product.unit.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    '${formatPrice(product.price)} / ${product.unit}',
+                                    style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 13,
                                     ),
                                   ),
-                              ],
-                            ),
-                          ),
-                          if (product.originalPrice != null &&
-                              product.originalPrice! > product.price)
-                            Text(
-                              formatPrice(product.originalPrice!),
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: AppColors.textMuted,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      _ProductFacts(
-                        categoryName: categoryName,
-                        product: product,
-                      ),
-                      const SizedBox(height: 18),
-                      _HighlightStats(product: product),
-                      const SizedBox(height: 20),
-                      _TabSelector(controller: _tabs),
-                      const SizedBox(height: 16),
-                      _TabContent(product: product, tabIndex: _tabs.index),
-                      if (catalogAsync.isLoading && related.isEmpty && alsoLike.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 28),
-                          child: Center(
-                            child: SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: AppColors.darkGreen,
-                              ),
-                            ),
+                                ),
+                            ],
                           ),
                         ),
-                      if (related.isNotEmpty) ...[
-                        const SizedBox(height: 28),
-                        ProductRecommendationRow(
-                          title: 'Related products',
-                          subtitle: kitchen
-                              ? 'More from $categoryName'
-                              : 'More fresh picks in $categoryName',
-                          products: related,
-                          viewAllLabel: 'See all',
-                          onViewAll: () => context.push(
-                            kitchen && aisleId != null
-                                ? kitchenAislePath(aisleId)
-                                : kitchen
-                                    ? '/kitchen/shop'
-                                    : '/category/$categoryId',
+                        if (product.originalPrice != null &&
+                            product.originalPrice! > product.price)
+                          Text(
+                            formatPrice(product.originalPrice!),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: AppColors.textMuted,
+                              decoration: TextDecoration.lineThrough,
+                            ),
                           ),
-                          onAdd: addToCart,
-                        ),
                       ],
-                      if (alsoLike.isNotEmpty) ...[
-                        const SizedBox(height: 28),
-                        ProductRecommendationRow(
-                          title: 'You might also like',
-                          subtitle: kitchen
-                              ? 'Popular picks from other kitchen aisles'
-                              : 'Popular items from other categories',
-                          products: alsoLike,
-                          viewAllLabel: 'Browse all',
-                          onViewAll: () => context.go(kitchen ? '/kitchen/shop' : '/shop'),
-                          onAdd: addToCart,
+                    ),
+                    const SizedBox(height: 18),
+                    _ProductFacts(
+                      categoryName: categoryName,
+                      product: product,
+                    ),
+                    const SizedBox(height: 18),
+                    _HighlightStats(product: product),
+                    const SizedBox(height: 20),
+                    _TabSelector(controller: _tabs),
+                    const SizedBox(height: 16),
+                    _TabContent(product: product, tabIndex: _tabs.index),
+                    if (catalogAsync.isLoading && related.isEmpty && alsoLike.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 28),
+                        child: Center(
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: AppColors.darkGreen,
+                            ),
+                          ),
                         ),
-                      ],
-                      const SizedBox(height: 24),
+                      ),
+                    if (related.isNotEmpty) ...[
+                      const SizedBox(height: 28),
+                      ProductRecommendationRow(
+                        title: 'Related products',
+                        subtitle: kitchen
+                            ? 'More from $categoryName'
+                            : 'More fresh picks in $categoryName',
+                        products: related,
+                        viewAllLabel: 'See all',
+                        onViewAll: () => context.push(
+                          kitchen && aisleId != null
+                              ? kitchenAislePath(aisleId)
+                              : kitchen
+                                  ? '/kitchen/shop'
+                                  : '/category/$categoryId',
+                        ),
+                        onAdd: addToCart,
+                      ),
+                    ],
+                    if (alsoLike.isNotEmpty) ...[
+                      const SizedBox(height: 28),
+                      ProductRecommendationRow(
+                        title: 'You might also like',
+                        subtitle: kitchen
+                            ? 'Popular picks from other kitchen aisles'
+                            : 'Popular items from other categories',
+                        products: alsoLike,
+                        viewAllLabel: 'Browse all',
+                        onViewAll: () => context.go(kitchen ? '/kitchen/shop' : '/shop'),
+                        onAdd: addToCart,
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              );
+
+              if (wide) {
+                return ContentWidth(
+                  maxWidth: 1200,
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 5,
+                                child: _HeroImage(
+                                  product: product,
+                                  discount: discount,
+                                  compact: true,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 6,
+                                child: details,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ),
-            ],
+                );
+              }
+
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _HeroImage(product: product, discount: discount)),
+                  SliverToBoxAdapter(child: details),
+                ],
+              );
+            },
           ),
           floatingActionButton: cartQty > 0
               ? Padding(
-                  padding: const EdgeInsets.only(bottom: 72),
+                  padding: EdgeInsets.only(bottom: isWideLayout(context) ? 16 : 72),
                   child: FloatingActionButton.small(
                     onPressed: () => context.go('/cart'),
                     backgroundColor: AppColors.darkGreen,
@@ -258,24 +296,33 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
 }
 
 class _HeroImage extends StatelessWidget {
-  const _HeroImage({required this.product, this.discount});
+  const _HeroImage({
+    required this.product,
+    this.discount,
+    this.compact = false,
+  });
 
   final Product product;
   final int? discount;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
+    final imageSize = compact ? 320.0 : 280.0;
 
     return Stack(
       children: [
         Container(
           width: double.infinity,
-          color: Colors.white,
-          padding: EdgeInsets.fromLTRB(20, top + 12, 20, 24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: compact ? BorderRadius.circular(24) : null,
+          ),
+          padding: EdgeInsets.fromLTRB(20, compact ? 48 : top + 12, 20, 24),
           child: Stack(
             children: [
-              Center(child: ProductThumbnail(image: product.image, size: 280)),
+              Center(child: ProductThumbnail(image: product.image, size: imageSize)),
               if (discount != null)
                 Positioned(
                   top: 0,
@@ -296,7 +343,7 @@ class _HeroImage extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: top + 8,
+          top: compact ? 12 : top + 8,
           left: 12,
           child: _CircleBtn(
             icon: Icons.arrow_back_ios_new_rounded,
@@ -304,7 +351,7 @@ class _HeroImage extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: top + 8,
+          top: compact ? 12 : top + 8,
           right: 12,
           child: _CircleBtn(
             icon: Icons.favorite_border_rounded,

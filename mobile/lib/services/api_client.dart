@@ -458,6 +458,42 @@ class ApiClient {
     }
   }
 
+  /// Create account via API (Admin + Brevo welcome) — avoids Supabase confirm email.
+  Future<({String? accessToken, String? refreshToken, bool needsSignIn})> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
+    final res = await _client
+        .post(
+          _uri('/auth/signup'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': email.trim().toLowerCase(),
+            'password': password,
+            'fullName': fullName.trim(),
+          }),
+        )
+        .timeout(const Duration(seconds: 45));
+
+    if (res.statusCode == 409) {
+      throw ApiException(_errorMessage(res));
+    }
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw ApiException(_errorMessage(res));
+    }
+
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    final accessToken = data['accessToken'] as String?;
+    final refreshToken = data['refreshToken'] as String?;
+    final needsSignIn = data['needsSignIn'] == true;
+    return (
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      needsSignIn: needsSignIn || accessToken == null || refreshToken == null,
+    );
+  }
+
   String _errorMessage(http.Response res) {
     try {
       final data = jsonDecode(res.body) as Map<String, dynamic>;

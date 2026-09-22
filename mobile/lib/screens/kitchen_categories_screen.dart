@@ -6,6 +6,7 @@ import '../config/theme.dart';
 import '../data/kitchen_ware.dart';
 import '../providers/kitchen_catalog_provider.dart';
 import '../utils/kitchen_mode.dart';
+import '../utils/responsive.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/shop_mode_switch.dart';
@@ -53,8 +54,8 @@ class KitchenCategoriesScreen extends ConsumerWidget {
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: categoryGridCount(context),
                     mainAxisExtent: 108,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,

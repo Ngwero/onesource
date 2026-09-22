@@ -8,6 +8,7 @@ import '../providers/currency_provider.dart';
 import '../models/order.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
+import '../utils/responsive.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/order_progress.dart';
 
@@ -68,7 +69,7 @@ class AccountScreen extends ConsumerWidget {
     final name = profileAsync.value?.fullName ?? user.email ?? 'Customer';
     final initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
     final strings = ref.watch(stringsProvider);
-    final bottomPad = MediaQuery.viewPaddingOf(context).bottom + 100;
+    final bottomPad = shellBottomPadding(context);
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -150,13 +151,14 @@ class _HubGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cols = isWideLayout(context) ? 3 : 2;
     return GridView.count(
-      crossAxisCount: 2,
+      crossAxisCount: cols,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 10,
       crossAxisSpacing: 10,
-      childAspectRatio: 1.6,
+      childAspectRatio: cols >= 3 ? 1.8 : 1.6,
       children: children,
     );
   }
