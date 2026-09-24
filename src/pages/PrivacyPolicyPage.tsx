@@ -27,7 +27,7 @@ export function PrivacyPolicyPage() {
         Privacy and Cookie Notice
       </h1>
       <p className="text-sm text-text-muted mb-8">
-        Last updated: 15 September 2026 · One Source (`onesourco.com`)
+        Last updated: 24 September 2026 · One Source (`onesourco.com`)
       </p>
 
       <nav
@@ -72,9 +72,9 @@ export function PrivacyPolicyPage() {
             </li>
             <li>
               <strong className="text-text">Order and payment-related data:</strong> items
-              purchased, basket contents, delivery preferences, and payment confirmation
-              details processed through our payment partners (we do not store full card
-              numbers on our servers).
+              purchased, basket contents, delivery preferences, and cash-on-delivery order
+              details. We currently accept cash on delivery only and do not process card
+              payments in the app.
             </li>
             <li>
               <strong className="text-text">Usage data:</strong> pages and products viewed,
@@ -141,12 +141,8 @@ export function PrivacyPolicyPage() {
               your order can reach you
             </li>
             <li>
-              <strong className="text-text">Payment providers</strong> to process payments
-              securely
-            </li>
-            <li>
               <strong className="text-text">Infrastructure providers</strong> (hosting,
-              database, email delivery, analytics) acting on our instructions
+              database, email delivery) acting on our instructions
             </li>
             <li>
               <strong className="text-text">Authorities</strong> when required by law or to
@@ -192,8 +188,12 @@ export function PrivacyPolicyPage() {
             <li>Unsubscribe from marketing emails</li>
           </ul>
           <p className="text-text-muted mt-4">
-            To exercise these rights, contact us using the details below. Please keep your
-            account details up to date so we can serve you correctly.
+            You can delete your One Source account at any time in the mobile app: open{" "}
+            <strong className="text-text">Account</strong>, then choose{" "}
+            <strong className="text-text">Delete account</strong> and confirm. This
+            permanently removes your login and personal account details. Order records we
+            must keep for business or legal reasons are anonymized so they no longer
+            identify you. For other privacy requests, contact us using the details below.
           </p>
         </section>
 

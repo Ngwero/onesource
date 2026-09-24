@@ -134,7 +134,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         body: ErrorView(
-          message: productsState.error.toString(),
+          message: productsState.error!,
           onRetry: () {
             ref.read(paginatedProductsProvider(query).notifier).refresh();
             ref.read(kitchenCatalogNotifierProvider.notifier).refresh();

@@ -458,6 +458,26 @@ class ApiClient {
     }
   }
 
+  /// Permanently delete the signed-in account (Bearer access token required).
+  Future<void> deleteAccount(String accessToken) async {
+    final res = await _client
+        .delete(
+          _uri('/auth/account'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $accessToken',
+          },
+        )
+        .timeout(const Duration(seconds: 45));
+
+    if (res.statusCode == 401) {
+      throw ApiException('Please sign in again to delete your account.');
+    }
+    if (res.statusCode != 200) {
+      throw ApiException(_errorMessage(res));
+    }
+  }
+
   /// Create account via API (Admin + Brevo welcome) — avoids Supabase confirm email.
   Future<({String? accessToken, String? refreshToken, bool needsSignIn})> signUp({
     required String email,
@@ -496,11 +516,31 @@ class ApiClient {
 
   String _errorMessage(http.Response res) {
     try {
-      final data = jsonDecode(res.body) as Map<String, dynamic>;
-      return data['error'] as String? ?? 'Request failed (${res.statusCode})';
-    } catch (_) {
-      return 'Request failed (${res.statusCode})';
+      final data = jsonDecode(res.body);
+      if (data is Map<String, dynamic>) {
+        final err = data['error'];
+        if (err is String && err.trim().isNotEmpty) return err.trim();
+        if (err is Map && err['message'] is String) {
+          return (err['message'] as String).trim();
+        }
+        final msg = data['message'];
+        if (msg is String && msg.trim().isNotEmpty) return msg.trim();
+      }
+    } catch (_) {}
+
+    if (res.statusCode >= 500) {
+      return 'Our servers are temporarily unavailable. Please try again shortly.';
     }
+    if (res.statusCode == 404) {
+      return 'We could not find what you were looking for.';
+    }
+    if (res.statusCode == 401 || res.statusCode == 403) {
+      return 'Please sign in again to continue.';
+    }
+    if (res.statusCode == 429) {
+      return 'Too many attempts. Please wait a few minutes and try again.';
+    }
+    return 'Something went wrong. Please try again.';
   }
 }
 

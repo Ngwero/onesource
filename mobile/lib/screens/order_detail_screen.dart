@@ -108,7 +108,7 @@ class OrderDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       _SummaryRow(
                         'Payment',
-                        paymentMethod == 'mobile' ? 'Mobile money' : 'Pay on delivery',
+                        'Cash on delivery',
                       ),
                     ],
                   ],

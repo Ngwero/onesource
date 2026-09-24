@@ -59,9 +59,9 @@ android {
                 : signingConfigs.debug
             minifyEnabled false
             shrinkResources false
-            // Upload native crash symbols to Play Console with the bundle.
+            // Prefer FULL so AGP can ship native symbols when available (Flutter .so are often pre-stripped).
             ndk {
-                debugSymbolLevel 'SYMBOL_TABLE'
+                debugSymbolLevel 'FULL'
             }
         }
     }

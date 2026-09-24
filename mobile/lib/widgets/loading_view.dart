@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../utils/user_facing_error.dart';
 
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key, this.message});
@@ -25,9 +26,11 @@ class LoadingView extends StatelessWidget {
 }
 
 class ErrorView extends StatelessWidget {
-  const ErrorView({super.key, required this.message, this.onRetry});
+  /// [message] may be an [Object] error or an already-built string.
+  ErrorView({super.key, required Object message, this.onRetry})
+      : displayMessage = formatLoadError(message);
 
-  final String message;
+  final String displayMessage;
   final VoidCallback? onRetry;
 
   @override
@@ -40,7 +43,11 @@ class ErrorView extends StatelessWidget {
           children: [
             const Icon(Icons.error_outline, color: AppColors.deal, size: 40),
             const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center),
+            Text(
+              displayMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 15, height: 1.4, color: AppColors.text),
+            ),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
               OutlinedButton(onPressed: onRetry, child: const Text('Try again')),

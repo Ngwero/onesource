@@ -27,7 +27,7 @@ class CategoriesScreen extends ConsumerWidget {
       ),
       body: categoriesAsync.when(
         loading: () => const LoadingView(message: 'Loading categories…'),
-        error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(categoriesProvider)),
+        error: (e, _) => ErrorView(message: e, onRetry: () => ref.invalidate(categoriesProvider)),
         data: (categories) {
           final produceCategories = categories
               .where((c) => c.id != kitchenWareCategoryId && c.id != 'kitchen-furniture')
@@ -38,7 +38,7 @@ class CategoriesScreen extends ConsumerWidget {
 
           return productsAsync.when(
             loading: () => const LoadingView(),
-            error: (e, _) => ErrorView(message: e.toString()),
+            error: (e, _) => ErrorView(message: e),
             data: (allProducts) {
               final produceProducts = excludeKitchenProducts(allProducts);
               final bottomPad = shellBottomPadding(context);

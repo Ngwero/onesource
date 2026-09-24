@@ -6,6 +6,7 @@ import '../config/theme.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../utils/auth_errors.dart';
+import '../utils/open_url.dart';
 import '../widgets/auth_shell.dart';
 import '../widgets/auth_step_indicator.dart';
 import '../widgets/password_strength_meter.dart';
@@ -326,6 +327,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             label: 'Create account',
             loading: _submitting,
             onPressed: _submit,
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => openPrivacyPolicy(),
+            child: const Text('Privacy Policy'),
           ),
         ],
       ),

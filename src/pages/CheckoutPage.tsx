@@ -26,7 +26,6 @@ export function CheckoutPage() {
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [notes, setNotes] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "mobile">("cod");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -79,10 +78,16 @@ export function CheckoutPage() {
       clearCart();
       navigate(`/checkout/confirmation/${order.id}`, {
         replace: true,
-        state: { paymentMethod },
+        state: { paymentMethod: "cod" },
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("checkout.placeOrderFailed"));
+      const raw = err instanceof Error ? err.message : "";
+      const looksTechnical =
+        /exception|socket|failed host|statuscode|unexpected_failure|\{"/i.test(raw) ||
+        raw.length > 180;
+      setError(
+        looksTechnical || !raw.trim() ? t("checkout.placeOrderFailed") : raw.trim()
+      );
     } finally {
       setSubmitting(false);
     }
@@ -218,33 +223,14 @@ export function CheckoutPage() {
 
           <section className="card p-5 sm:p-6">
             <h2 className="text-lg font-bold text-text mb-4">{t("checkout.payment")}</h2>
-            <div className="space-y-3">
-              <label className="flex items-start gap-3 p-4 rounded-xl border border-border cursor-pointer has-[:checked]:border-accent has-[:checked]:bg-accent-light/50">
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={paymentMethod === "cod"}
-                  onChange={() => setPaymentMethod("cod")}
-                  className="mt-1"
-                />
-                <div>
-                  <p className="font-semibold text-sm">{t("checkout.payOnDelivery")}</p>
-                  <p className="text-xs text-text-muted mt-1">{t("checkout.payOnDeliveryHint")}</p>
-                </div>
-              </label>
-              <label className="flex items-start gap-3 p-4 rounded-xl border border-border cursor-pointer has-[:checked]:border-accent has-[:checked]:bg-accent-light/50">
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={paymentMethod === "mobile"}
-                  onChange={() => setPaymentMethod("mobile")}
-                  className="mt-1"
-                />
-                <div>
-                  <p className="font-semibold text-sm">{t("checkout.mobileMoney")}</p>
-                  <p className="text-xs text-text-muted mt-1">{t("checkout.mobileMoneyHint")}</p>
-                </div>
-              </label>
+            <div className="flex items-start gap-3 p-4 rounded-xl border border-accent bg-accent-light/40">
+              <span className="mt-0.5 text-accent" aria-hidden>
+                ✓
+              </span>
+              <div>
+                <p className="font-semibold text-sm">{t("checkout.payOnDelivery")}</p>
+                <p className="text-xs text-text-muted mt-1">{t("checkout.payOnDeliveryHint")}</p>
+              </div>
             </div>
           </section>
         </div>

@@ -85,11 +85,7 @@ export function CheckoutConfirmationPage() {
             {paymentMethod && (
               <div className="flex justify-between gap-4">
                 <span className="text-text-muted">{t("checkout.payment")}</span>
-                <span>
-                  {paymentMethod === "mobile"
-                    ? t("checkout.mobileMoney")
-                    : t("checkout.payOnDelivery")}
-                </span>
+                <span>{t("checkout.payOnDelivery")}</span>
               </div>
             )}
           </div>

@@ -23,9 +23,9 @@ class SystemNotifications {
 
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosInit = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
       defaultPresentAlert: true,
       defaultPresentBadge: true,
       defaultPresentSound: true,
@@ -40,8 +40,7 @@ class SystemNotifications {
       },
     );
 
-    final granted = await requestPermission();
-    debugPrint('[OneSource] notification permission granted=$granted');
+    // Do not request permission on launch — ask when banners are first needed.
     _ready = true;
   }
 
@@ -83,6 +82,7 @@ class SystemNotifications {
     if (!_ready) {
       await init();
     }
+    await requestPermission();
 
     final android = AndroidNotificationDetails(
       _channelId,

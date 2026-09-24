@@ -9,6 +9,7 @@ import '../providers/search_catalog_provider.dart';
 import '../providers/search_provider.dart';
 import '../utils/kitchen_mode.dart';
 import '../utils/responsive.dart';
+import '../utils/user_facing_error.dart';
 import '../widgets/search_result_tile.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -133,7 +134,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
 
     if (search.error != null && search.results.isEmpty) {
-      return Center(child: Text(search.error.toString()));
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(formatLoadError(search.error!), textAlign: TextAlign.center),
+        ),
+      );
     }
 
     if (search.query.length < 2) {

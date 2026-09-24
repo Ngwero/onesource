@@ -12,6 +12,7 @@ import '../utils/categories.dart';
 import '../utils/kitchen_mode.dart';
 import '../utils/product_recommendations.dart';
 import '../utils/responsive.dart';
+import '../utils/user_facing_error.dart';
 import '../data/kitchen_ware.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_card_details.dart';
@@ -63,7 +64,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
 
     return productAsync.when(
       loading: () => const Scaffold(backgroundColor: AppColors.canvas, body: LoadingView()),
-      error: (e, _) => Scaffold(appBar: AppBar(), body: Center(child: Text(e.toString()))),
+      error: (e, _) => Scaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(formatLoadError(e), textAlign: TextAlign.center),
+          ),
+        ),
+      ),
       data: (product) {
         if (product == null) {
           return Scaffold(appBar: AppBar(), body: const Center(child: Text('Product not found')));

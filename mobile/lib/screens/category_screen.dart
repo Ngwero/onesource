@@ -138,7 +138,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
         backgroundColor: AppColors.canvas,
         appBar: AppBar(title: Text(categoryName)),
         body: ErrorView(
-          message: productsState.error.toString(),
+          message: productsState.error!,
           onRetry: () => ref.read(paginatedProductsProvider(query).notifier).refresh(),
         ),
       );

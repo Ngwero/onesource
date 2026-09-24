@@ -19,14 +19,6 @@ class CartScreen extends ConsumerStatefulWidget {
 }
 
 class _CartScreenState extends ConsumerState<CartScreen> {
-  final _promoController = TextEditingController();
-
-  @override
-  void dispose() {
-    _promoController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final items = ref.watch(cartProvider);
@@ -89,12 +81,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             },
                             childCount: items.length,
                           ),
-                        ),
-                      ),
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-                        sliver: SliverToBoxAdapter(
-                          child: _PromoField(controller: _promoController),
                         ),
                       ),
                     ],
@@ -271,68 +257,6 @@ class _EmptyCart extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _PromoField extends StatelessWidget {
-  const _PromoField({required this.controller});
-
-  final TextEditingController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style: const TextStyle(
-                fontFamily: 'Gabarito',
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              decoration: const InputDecoration(
-                hintText: 'Promo code',
-                hintStyle: TextStyle(
-                  color: AppColors.textMuted,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                isDense: true,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Promo codes coming soon'),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: AppColors.darkGreen,
-                ),
-              );
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.darkGreen,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            ),
-            child: const Text(
-              'Apply',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -108,7 +108,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         body: ErrorView(
-          message: productsState.error.toString(),
+          message: productsState.error!,
           onRetry: () => ref.read(paginatedProductsProvider(_query).notifier).refresh(),
         ),
       );

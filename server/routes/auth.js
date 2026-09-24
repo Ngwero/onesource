@@ -393,6 +393,63 @@ router.post("/login/verify-otp", async (req, res) => {
   }
 });
 
+/**
+ * Permanently delete the signed-in user's account (App Store 5.1.1(v)).
+ * Anonymizes order PII, then removes auth.users (profiles cascade).
+ */
+router.delete("/account", async (req, res) => {
+  try {
+    const token = getBearerToken(req);
+    if (!token) {
+      return res.status(401).json({ error: "Authentication required." });
+    }
+
+    const supabase = requireSupabase();
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user?.id) {
+      return res.status(401).json({ error: "Invalid session." });
+    }
+
+    const userId = data.user.id;
+    const deletedLabel = `deleted-user-${userId.slice(0, 8)}`;
+
+    const { error: anonError } = await supabase
+      .from("orders")
+      .update({
+        email: `${deletedLabel}@deleted.local`,
+        full_name: "Deleted user",
+        phone: null,
+        address_line1: "Removed",
+        address_line2: null,
+        city: "Removed",
+        notes: null,
+      })
+      .eq("user_id", userId);
+
+    if (anonError) {
+      console.error("[auth] delete account anonymize orders:", anonError.message);
+      return res.status(500).json({
+        error: "Could not remove personal data from orders. Please try again.",
+      });
+    }
+
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+    if (deleteError) {
+      console.error("[auth] deleteUser:", deleteError.message);
+      return res.status(500).json({
+        error: "Could not delete your account. Please try again.",
+      });
+    }
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error("[auth] delete account failed:", e);
+    return res.status(500).json({
+      error: e instanceof Error ? e.message : "Could not delete account",
+    });
+  }
+});
+
 router.get("/status", async (req, res) => {
   let supabaseHost = "";
   try {

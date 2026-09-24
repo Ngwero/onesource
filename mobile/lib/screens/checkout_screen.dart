@@ -8,6 +8,7 @@ import '../providers/cart_provider.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../services/checkout.dart';
+import '../utils/user_facing_error.dart';
 
 final _currency = NumberFormat.currency(symbol: 'UGX ', decimalDigits: 0);
 
@@ -28,7 +29,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _notes = TextEditingController();
   bool _submitting = false;
   String? _error;
-  String _paymentMethod = 'cod';
 
   @override
   void initState() {
@@ -96,9 +96,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       ref.read(cartProvider.notifier).clear();
 
       if (!mounted) return;
-      context.go('/orders/${order.id}', extra: _paymentMethod);
+      context.go('/orders/${order.id}', extra: 'cod');
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = formatCheckoutError(e));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -153,23 +153,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               maxLines: 2,
             ),
             const SizedBox(height: 20),
-            const Text('Payment method', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            const Text('Payment', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
             const SizedBox(height: 8),
-            RadioListTile<String>(
-              value: 'cod',
-              groupValue: _paymentMethod,
-              onChanged: (v) => setState(() => _paymentMethod = v!),
-              title: const Text('Pay on delivery (cash)'),
-              subtitle: const Text('Pay when your order arrives'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            RadioListTile<String>(
-              value: 'mobile',
-              groupValue: _paymentMethod,
-              onChanged: (v) => setState(() => _paymentMethod = v!),
-              title: const Text('Mobile money'),
-              subtitle: const Text('MTN or Airtel — we\'ll contact you to complete payment'),
-              contentPadding: EdgeInsets.zero,
+            Card(
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: const Icon(Icons.payments_outlined),
+                title: const Text('Cash on delivery', style: TextStyle(fontWeight: FontWeight.w700)),
+                subtitle: const Text('Pay when your order arrives'),
+              ),
             ),
             const SizedBox(height: 12),
             Card(
@@ -187,7 +179,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
+              Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13, height: 1.35)),
             ],
             const SizedBox(height: 16),
             ElevatedButton(

@@ -126,6 +126,17 @@ class AuthService {
     await _api.requestPasswordReset(email, redirectTo);
   }
 
+  /// Permanently deletes the account on the server, then clears the local session.
+  Future<void> deleteAccount() async {
+    await _ensureSupabaseReady();
+    final accessToken = _client.auth.currentSession?.accessToken;
+    if (accessToken == null || accessToken.isEmpty) {
+      throw AuthException('Please sign in again to delete your account.');
+    }
+    await _api.deleteAccount(accessToken);
+    await _client.auth.signOut();
+  }
+
   Future<void> signOut() => _client.auth.signOut();
 }
 

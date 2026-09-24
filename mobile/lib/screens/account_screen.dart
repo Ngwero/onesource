@@ -9,6 +9,8 @@ import '../models/order.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../utils/responsive.dart';
+import '../utils/open_url.dart';
+import '../utils/user_facing_error.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/order_progress.dart';
 
@@ -55,6 +57,10 @@ class AccountScreen extends ConsumerWidget {
                 const SizedBox(height: 10),
                 OutlinedButton(onPressed: () => context.push('/signup'), child: const Text('Create account')),
                 const Spacer(flex: 2),
+                TextButton(
+                  onPressed: () => openPrivacyPolicy(),
+                  child: const Text('Privacy Policy'),
+                ),
                 TextButton(
                   onPressed: () => context.go('/home'),
                   child: const Text('Continue browsing'),
@@ -138,9 +144,100 @@ class AccountScreen extends ConsumerWidget {
             },
             child: const Text('Sign out'),
           ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => _confirmDeleteAccount(context, ref),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFB42318)),
+            child: const Text('Delete account'),
+          ),
+          TextButton(
+            onPressed: () => openPrivacyPolicy(),
+            child: const Text('Privacy Policy'),
+          ),
         ],
       ),
     );
+  }
+}
+
+Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+  final proceed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Delete account?'),
+      content: const Text(
+        'This permanently deletes your account and personal details. '
+        'You will not be able to sign in again with this email. '
+        'Order history kept for business records will be anonymized.',
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: TextButton.styleFrom(foregroundColor: const Color(0xFFB42318)),
+          child: const Text('Continue'),
+        ),
+      ],
+    ),
+  );
+  if (proceed != true || !context.mounted) return;
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Confirm deletion'),
+      content: const Text(
+        'Are you sure you want to permanently delete your account? This cannot be undone.',
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFFB42318),
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Delete permanently'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !context.mounted) return;
+
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => const PopScope(
+      canPop: false,
+      child: AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Expanded(child: Text('Deleting account…')),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  try {
+    await ref.read(authServiceProvider).deleteAccount();
+    ref.invalidate(profileProvider);
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your account has been deleted.')),
+      );
+      context.go('/home');
+    }
+  } catch (e) {
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(formatUserFacingError(e))),
+      );
+    }
   }
 }
 
@@ -266,7 +363,12 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
             return const Center(child: CircularProgressIndicator(color: AppColors.darkGreen));
           }
           if (snapshot.hasError) {
-            return Center(child: Text(snapshot.error.toString()));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(formatLoadError(snapshot.error!), textAlign: TextAlign.center),
+              ),
+            );
           }
           final orders = snapshot.data ?? [];
 
