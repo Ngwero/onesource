@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +27,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final Animation<Offset> _slide;
 
   Timer? _auto;
+  Timer? _fallback;
   bool _navigated = false;
 
   @override
@@ -58,13 +60,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
     _enter.forward();
 
+    // Warm auth in the background — never block leaving the splash.
     unawaited(_warmSupabase());
-    _auto = Timer(const Duration(milliseconds: 2200), _continue);
+
+    _auto = Timer(const Duration(milliseconds: 1800), () {
+      unawaited(_continue());
+    });
+    // Hard failsafe if prefs / router stall (common on cold Xcode device runs).
+    _fallback = Timer(const Duration(seconds: 5), () {
+      unawaited(_continue(forceHome: true));
+    });
   }
 
   @override
   void dispose() {
     _auto?.cancel();
+    _fallback?.cancel();
     _enter.dispose();
     _breathe.dispose();
     super.dispose();
@@ -74,19 +85,44 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (isSupabaseReady) return;
     try {
       await initializeSupabase().timeout(const Duration(seconds: 4));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[OneSource] splash Supabase warm skipped: $e');
+    }
     if (mounted) {
       ref.read(supabaseReadyProvider.notifier).state = isSupabaseReady;
     }
   }
 
-  Future<void> _continue() async {
+  Future<void> _continue({bool forceHome = false}) async {
     if (_navigated || !mounted) return;
     _navigated = true;
     _auto?.cancel();
-    final done = await isOnboardingDone();
+    _fallback?.cancel();
+
+    var done = forceHome;
+    if (!forceHome) {
+      try {
+        done = await isOnboardingDone().timeout(const Duration(seconds: 2));
+      } catch (e) {
+        debugPrint('[OneSource] onboarding prefs failed: $e');
+        done = false;
+      }
+    }
+
     if (!mounted) return;
-    context.go(done ? '/home' : '/onboarding');
+    final target = done ? '/home' : '/onboarding';
+    debugPrint('[OneSource] splash → $target');
+    try {
+      context.go(target);
+    } catch (e) {
+      debugPrint('[OneSource] splash navigate failed: $e');
+      _navigated = false;
+      if (mounted) {
+        try {
+          context.go('/home');
+        } catch (_) {}
+      }
+    }
   }
 
   @override
