@@ -34,8 +34,7 @@ export function filterLocalProducts({
   search,
   page = 0,
   pageSize = 1000,
-  excludeKitchen = false,
-  kitchenOnly = false,
+  shop,
   aisle,
 } = {}) {
   let filtered = loadRows();
@@ -50,16 +49,24 @@ export function filterLocalProducts({
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, "");
-  if (excludeKitchen) {
-    filtered = filtered.filter(
-      (r) => !String(r.id).startsWith("kitchen-") && r.category !== "kitchen-ware"
-    );
+  const shopPrefix = shop === "cosmetics" ? "cosmetics" : "kitchen";
+  const shopCategory = shop === "cosmetics" ? "cosmetics" : "kitchen-ware";
+  if (shop === "fresh") {
+    filtered = filtered.filter((r) => {
+      const id = String(r.id);
+      return (
+        !id.startsWith("kitchen-") &&
+        !id.startsWith("cosmetics-") &&
+        r.category !== "kitchen-ware" &&
+        r.category !== "cosmetics"
+      );
+    });
   } else if (aisleId) {
-    const prefix = `kitchen-${aisleId}-`;
+    const prefix = `${shopPrefix}-${aisleId}-`;
     filtered = filtered.filter((r) => String(r.id).startsWith(prefix));
-  } else if (kitchenOnly) {
+  } else if ((shop === "kitchen" || shop === "cosmetics") && !category) {
     filtered = filtered.filter(
-      (r) => String(r.id).startsWith("kitchen-") || r.category === "kitchen-ware"
+      (r) => String(r.id).startsWith(`${shopPrefix}-`) || r.category === shopCategory
     );
   }
   if (search) {

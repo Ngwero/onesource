@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { BRAND_LOGOS } from "../brand/logos";
-import { useProducts } from "../context/ProductsContext";
+import { useLocation } from "react-router-dom";
+import { useProducts, type ProductShop } from "../context/ProductsContext";
+import { shopModeForPath } from "../utils/shopMode";
 
 const MIN_VISIBLE_MS = 850;
 const EXIT_MS = 400;
@@ -10,9 +12,22 @@ type Phase = "loading" | "exiting" | "done";
 
 type Props = { children: ReactNode };
 
+function shopsNeededFor(pathname: string): ProductShop[] {
+  const productId = pathname.match(/^\/product\/([^/]+)/)?.[1];
+  if (productId) {
+    const id = decodeURIComponent(productId);
+    if (id.startsWith("kitchen-")) return ["kitchen"];
+    if (id.startsWith("cosmetics-")) return ["cosmetics"];
+    return ["fresh", "kitchen", "cosmetics"];
+  }
+  return [shopModeForPath(pathname)];
+}
+
 export function WebsiteLoader({ children }: Props) {
   const { t } = useTranslation();
-  const { loading, error, refresh } = useProducts();
+  const { shopLoading, error, refresh } = useProducts();
+  const { pathname } = useLocation();
+  const loading = shopsNeededFor(pathname).some((shop) => shopLoading[shop]);
   const mountTime = useRef(Date.now());
   const [phase, setPhase] = useState<Phase>("loading");
 

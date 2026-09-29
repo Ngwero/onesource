@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useProducts } from "../context/ProductsContext";
 import { AGRI_CATEGORIES, CATEGORY_GROUPS } from "../data/categories";
-import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWare";
+import { SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
 
 type Props = {
   value: string;
@@ -23,7 +23,7 @@ export function CategoryFilter({
     id: c.id,
     name: c.name,
     icon: c.icon,
-  }))).filter((c) => c.id !== KITCHEN_WARE_CATEGORY_ID);
+  }))).filter((c) => !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id));
 
   return (
     <div className={`space-y-4 ${className}`}>

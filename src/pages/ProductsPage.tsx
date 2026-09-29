@@ -11,7 +11,7 @@ import {
   productMatchesCategory,
 } from "../data/categories";
 import { useCategoryName } from "../i18n/useLocalizedProduct";
-import { excludeKitchenProducts } from "../utils/kitchenMode";
+import { excludeSpecialtyProducts } from "../utils/shopMode";
 
 export function ProductsPage() {
   const { t } = useTranslation();
@@ -26,7 +26,7 @@ export function ProductsPage() {
   const onSaleOnly = params.get("sale") === "1";
 
   const baseProducts = useMemo(() => {
-    const produceOnly = excludeKitchenProducts(products);
+    const produceOnly = excludeSpecialtyProducts(products);
     if (!rawCategoryParam) return produceOnly;
     return produceOnly.filter((p) =>
       productMatchesCategory(p.category, rawCategoryParam)

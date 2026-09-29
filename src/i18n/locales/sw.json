@@ -66,7 +66,10 @@
     "shopKitchenHint": "Vyombo, kabati na meza",
     "shopSwitcherLabel": "Duka",
     "shopFresh": "Mazao mapya",
-    "shopFreshHint": "Matunda, mboga, nyama…"
+    "shopFreshHint": "Matunda, mboga, nyama…",
+    "shopCosmetics": "Vipodozi",
+    "shopCosmeticsHint": "Ngozi, vipodozi & manukato",
+    "cosmeticsSearchPlaceholder": "Tafuta vipodozi, seramu, kinga ya jua..."
   },
   "nav": {
     "allCategories": "Jamii zote",
@@ -76,7 +79,8 @@
     "exports": "Usafirishaji nje",
     "kitchen": "Vifaa vya jikoni",
     "categoriesLabel": "Kategoria",
-    "mobileLabel": "Urambazaji wa simu"
+    "mobileLabel": "Urambazaji wa simu",
+    "cosmetics": "Vipodozi"
   },
   "kitchen": {
     "brand": "One Source Vifaa vya Jikoni",
@@ -645,7 +649,8 @@
       "root-veg": "Mizizi na viazi vitamu",
       "berries": "Matunda mapya",
       "citrus": "Matunda mapya",
-      "tropical": "Matunda mapya"
+      "tropical": "Matunda mapya",
+      "cosmetics": "Vipodozi"
     }
   },
   "categoryTile": {
@@ -1942,6 +1947,65 @@
       "freshVegetables": "Mboga mbichi",
       "yams": "Nduma",
       "chilliesPeppers": "Pilipili"
+    }
+  },
+  "cosmetics": {
+    "brand": "One Source Vipodozi",
+    "title": "Utunzaji wa ngozi & vipodozi",
+    "lede": "Bidhaa {{count}} za urembo wa hadhi — utunzaji wa ngozi, vipodozi, kinga ya jua, mwili na manukato — zinaletwa pamoja na mboga zako.",
+    "navAll": "Tazama vipodozi vyote",
+    "navCategories": "Makundi yote",
+    "navLabel": "Sehemu za vipodozi",
+    "zonesTitle": "Nunua kwa kundi la utunzaji wa ngozi",
+    "catalogSub": "Bidhaa {{count}} katika makundi ya utunzaji wa ngozi.",
+    "aisleOf": "Kundi la vipodozi",
+    "empty": "Vipodozi vinaongezwa tena — rudi baadaye kidogo.",
+    "searchTitle": "Tafuta vipodozi",
+    "searchHint": "Pata kinga ya jua, seramu, visafishaji, krimu na seti.",
+    "aisles": {
+      "face-makeup": "Vipodozi vya uso",
+      "eye-makeup": "Vipodozi vya macho",
+      "lips": "Midomo",
+      "face-eye-care": "Uso & macho",
+      "serums-oils": "Seramu & mafuta",
+      "cleansers-bars": "Visafishaji & sabuni",
+      "sun-protection": "Kinga ya jua",
+      "acne-care": "Tiba ya chunusi",
+      "body-care": "Utunzaji wa mwili",
+      "hair-baby-more": "Nywele, manukato & zaidi",
+      "kits-bundles": "Seti & zawadi",
+      "brushes-tools": "Brashi & vifaa"
+    },
+    "brandLabel": "Chapa:",
+    "allBrands": "Chapa zote",
+    "shopByCategory": "Nunua kwa kundi",
+    "topBrands": "Chapa maarufu",
+    "seeAll": "Tazama zote",
+    "hero": {
+      "prev": "Slaidi iliyotangulia",
+      "next": "Slaidi inayofuata",
+      "pause": "Simamisha",
+      "play": "Endesha",
+      "goTo": "Nenda slaidi {{n}}",
+      "giftsBadge": "Seti za zawadi",
+      "giftsTitle": "Zawadi za urembo watakazopenda",
+      "giftsSub": "Seti teule za utunzaji wa ngozi hadi manukato, tayari kufungwa.",
+      "giftsCta": "Nunua seti za zawadi",
+      "makeupBadge": "Vipodozi",
+      "makeupTitle": "Rangi za joto zinazong'aa",
+      "makeupSub": "Paleti, blush na brashi kwa kila rangi ya ngozi.",
+      "makeupCta": "Vipodozi vya uso",
+      "makeupCta2": "Vipodozi vya macho",
+      "skincareBadge": "Utunzaji wa ngozi",
+      "skincareTitle": "Rafu yako ya kila siku",
+      "skincareSub": "Seramu, losheni na SPF kulinda ngozi dhidi ya jua la Kampala.",
+      "skincareCta": "Nunua seramu",
+      "skincareCta2": "Kinga ya jua",
+      "fragranceBadge": "Manukato",
+      "fragranceTitle": "Harufu za kipekee",
+      "fragranceSub": "Manukato na mist za mwili upate unayopenda zaidi.",
+      "fragranceCta": "Nunua manukato",
+      "offersCta": "Tazama ofa"
     }
   }
 }

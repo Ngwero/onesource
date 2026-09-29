@@ -8,7 +8,7 @@ import { ShopListingLayout } from "../components/shop/ShopListingLayout";
 import { useProducts } from "../context/ProductsContext";
 import { productMatchesSearch } from "../utils/searchMatch";
 import { AGRI_CATEGORIES, normalizeCategoryId } from "../data/categories";
-import { excludeKitchenProducts } from "../utils/kitchenMode";
+import { excludeSpecialtyProducts } from "../utils/shopMode";
 
 export function SearchPage() {
   const { t } = useTranslation();
@@ -24,7 +24,7 @@ export function SearchPage() {
   const isMeatOnly = qTrim === "meat" || qTrim === "meats";
 
   const results = useMemo(() => {
-    const produceOnly = excludeKitchenProducts(products);
+    const produceOnly = excludeSpecialtyProducts(products);
     return isMeatOnly
       ? produceOnly.filter((p) =>
           livestockSet.has(normalizeCategoryId(p.category))

@@ -22,6 +22,7 @@ router.get("/slides", async (req, res) => {
     const placement =
       requestedPlacement === "exports" ||
       requestedPlacement === "kitchen" ||
+      requestedPlacement === "cosmetics" ||
       requestedPlacement === "onboarding"
         ? requestedPlacement
         : "home";

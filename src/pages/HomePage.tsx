@@ -7,12 +7,12 @@ import { HomeAdminProductsSection } from "../components/HomeAdminProductsSection
 import { ScrollReveal } from "../components/ScrollReveal";
 import { useProducts } from "../context/ProductsContext";
 import { HOME_PRODUCT_ROWS, productsForHomeRow } from "../data/homeRows";
-import { excludeKitchenProducts } from "../utils/kitchenMode";
+import { excludeSpecialtyProducts } from "../utils/shopMode";
 
 export function HomePage() {
   const { products } = useProducts();
   const produceProducts = useMemo(
-    () => excludeKitchenProducts(products),
+    () => excludeSpecialtyProducts(products),
     [products]
   );
 

@@ -1827,6 +1827,7 @@ window.clearCategoryBanner = async (id) => {
 function heroPlacementOf(id = "") {
   if (String(id).startsWith("export-")) return "exports";
   if (String(id).startsWith("kitchen-")) return "kitchen";
+  if (String(id).startsWith("cosmetics-")) return "cosmetics";
   if (String(id).startsWith("onboarding-")) return "onboarding";
   return "home";
 }
@@ -1834,6 +1835,7 @@ function heroPlacementOf(id = "") {
 function heroPlacementLabel(placement) {
   if (placement === "exports") return "Exports";
   if (placement === "kitchen") return "Kitchen";
+  if (placement === "cosmetics") return "Cosmetics";
   if (placement === "onboarding") return "Onboarding";
   return "Homepage";
 }
@@ -1865,12 +1867,19 @@ function renderHeroSlides() {
   const homeActive = active.filter((s) => heroPlacementOf(s.id) === "home");
   const exportActive = active.filter((s) => heroPlacementOf(s.id) === "exports");
   const kitchenActive = active.filter((s) => heroPlacementOf(s.id) === "kitchen");
+  const cosmeticsActive = active.filter((s) => heroPlacementOf(s.id) === "cosmetics");
   const onboardingActive = active.filter((s) => heroPlacementOf(s.id) === "onboarding");
   $("heroSlideGrid").innerHTML = homeActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active homepage slides</div>';
   $("exportHeroSlideGrid").innerHTML = exportActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active export slides</div>';
   const kitchenGrid = $("kitchenHeroSlideGrid");
   if (kitchenGrid) {
     kitchenGrid.innerHTML = kitchenActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active kitchen slides — Add slide → Kitchen Ware</div>';
+  }
+  const cosmeticsGrid = $("cosmeticsHeroSlideGrid");
+  if (cosmeticsGrid) {
+    cosmeticsGrid.innerHTML =
+      cosmeticsActive.map(heroSlideCardHtml).join("") ||
+      '<div class="empty" style="padding:2rem">No cosmetics slides — the website shows its built-in banners. Add slide → Cosmetics shop</div>';
   }
   const onboardingGrid = $("onboardingHeroSlideGrid");
   if (onboardingGrid) {
@@ -4052,6 +4061,8 @@ $("heroPlacement").addEventListener("change", () => {
       ? "Shown on the exports page carousel"
       : placement === "kitchen"
         ? "Shown on Kitchen Ware home (mobile app)"
+        : placement === "cosmetics"
+          ? "Shown on the Cosmetics shop home (website)"
         : placement === "onboarding"
           ? "Shown on first-launch onboarding (mobile app)"
           : "Shown on the homepage carousel";
@@ -4064,6 +4075,9 @@ $("heroPlacement").addEventListener("change", () => {
   } else if (placement === "kitchen") {
     $("heroCta").value = "Shop cookware";
     $("heroCtaHref").value = "/kitchen/aisle/cookware";
+  } else if (placement === "cosmetics") {
+    $("heroCta").value = "Shop now";
+    $("heroCtaHref").value = "/cosmetics/products";
   } else if (placement === "onboarding") {
     $("heroCta").value = "Continue";
     $("heroCtaHref").value = "/home";
@@ -4088,6 +4102,9 @@ $("heroForm").addEventListener("submit", async (e) => {
   }
   if (!editingHeroId && placement === "kitchen" && !slideId.startsWith("kitchen-")) {
     slideId = `kitchen-${slideId || `hero-${Date.now()}`}`;
+  }
+  if (!editingHeroId && placement === "cosmetics" && !slideId.startsWith("cosmetics-")) {
+    slideId = `cosmetics-${slideId || `hero-${Date.now()}`}`;
   }
   if (!editingHeroId && placement === "onboarding" && !slideId.startsWith("onboarding-")) {
     slideId = `onboarding-${slideId || `${Date.now()}`}`;

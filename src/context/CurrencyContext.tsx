@@ -4,6 +4,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import i18n from "../i18n";
@@ -79,22 +80,28 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     [currency, rates]
   );
 
+  const formatter = useMemo(() => {
+    const info = getCurrencyInfo(currency);
+    try {
+      return new Intl.NumberFormat(info.locale, {
+        style: "currency",
+        currency: info.code,
+        minimumFractionDigits: info.decimals,
+        maximumFractionDigits: info.decimals,
+      });
+    } catch {
+      return null;
+    }
+  }, [currency]);
+
   const formatPrice = useCallback(
     (amountGbp: number) => {
-      const info = getCurrencyInfo(currency);
       const converted = convert(amountGbp);
-      try {
-        return new Intl.NumberFormat(info.locale, {
-          style: "currency",
-          currency: info.code,
-          minimumFractionDigits: info.decimals,
-          maximumFractionDigits: info.decimals,
-        }).format(converted);
-      } catch {
-        return `${info.symbol}${converted.toFixed(info.decimals)}`;
-      }
+      if (formatter) return formatter.format(converted);
+      const info = getCurrencyInfo(currency);
+      return `${info.symbol}${converted.toFixed(info.decimals)}`;
     },
-    [currency, convert]
+    [currency, convert, formatter]
   );
 
   const freeDeliveryThreshold = convert(FREE_DELIVERY_THRESHOLD_GBP);

@@ -129,6 +129,13 @@ function ogMetaForPath(pathname) {
         "Cookware, cabinets, and kitchen essentials — shop One Source, everything on one place.",
     };
   }
+  if (path === "/cosmetics" || path.startsWith("/cosmetics/")) {
+    return {
+      title: "One Source Cosmetics — Skincare & Sun Care",
+      description:
+        "Clabane skincare, sunscreen, serums and body care — delivered with your One Source order.",
+    };
+  }
   return {
     title: "One Source — Everything on One Place",
     description:

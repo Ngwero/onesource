@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { isExportOnlyCart } from "../utils/exportOrder";
-import { isKitchenPath } from "../utils/kitchenMode";
+import { shopModeForPath } from "../utils/shopMode";
 
 type NavItem = {
   key: string;
@@ -36,7 +36,9 @@ export function MobileBottomNav() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { itemCount, openBasket, items: cartItems } = useCart();
-  const kitchenMode = isKitchenPath(pathname);
+  const shopMode = shopModeForPath(pathname);
+  const specialtyBase =
+    shopMode === "kitchen" ? "/kitchen" : shopMode === "cosmetics" ? "/cosmetics" : null;
 
   const accountTo = user ? "/account" : "/login";
   const accountState = user ? undefined : { from: "/account" };
@@ -52,9 +54,14 @@ export function MobileBottomNav() {
   const items: NavItem[] = [
     {
       key: "home",
-      label: kitchenMode ? t("nav.kitchen") : t("common.home"),
-      to: kitchenMode ? "/kitchen" : "/",
-      match: (p) => (kitchenMode ? p === "/kitchen" : p === "/"),
+      label:
+        shopMode === "kitchen"
+          ? t("nav.kitchen")
+          : shopMode === "cosmetics"
+            ? t("nav.cosmetics")
+            : t("common.home"),
+      to: specialtyBase ?? "/",
+      match: (p) => p === (specialtyBase ?? "/"),
       icon: (active) => (
         <NavIcon
           active={active}
@@ -65,10 +72,11 @@ export function MobileBottomNav() {
     {
       key: "categories",
       label: t("nav.categoriesLabel"),
-      to: kitchenMode ? "/kitchen/categories" : "/categories",
+      to: specialtyBase ? `${specialtyBase}/categories` : "/categories",
       match: (p) =>
-        kitchenMode
-          ? p.startsWith("/kitchen/categories") || p.startsWith("/kitchen/aisle/")
+        specialtyBase
+          ? p.startsWith(`${specialtyBase}/categories`) ||
+            p.startsWith(`${specialtyBase}/aisle/`)
           : p.startsWith("/categories") || p.startsWith("/category/"),
       icon: (active) => (
         <NavIcon
@@ -80,9 +88,8 @@ export function MobileBottomNav() {
     {
       key: "search",
       label: t("common.search"),
-      to: kitchenMode ? "/kitchen/search" : "/search",
-      match: (p) =>
-        kitchenMode ? p.startsWith("/kitchen/search") : p.startsWith("/search"),
+      to: specialtyBase ? `${specialtyBase}/search` : "/search",
+      match: (p) => p.startsWith(specialtyBase ? `${specialtyBase}/search` : "/search"),
       icon: (active) => (
         <NavIcon
           active={active}

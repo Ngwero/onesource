@@ -27,6 +27,8 @@
     "seed:kitchen-ware": "node scripts/seed-kitchen-ware.js",
     "import:ikea-kitchen": "node scripts/import-ikea-kitchen-catalog.js",
     "import:cookwarestore": "node scripts/import-cookwarestore-catalog.js",
+    "import:clabane": "node scripts/import-clabane-cosmetics.js",
+    "import:boots": "node scripts/import-boots-cosmetics.js",
     "reprice:kitchen-uganda": "node scripts/reprice-kitchen-uganda.js",
     "repair:cookwarestore-images": "node scripts/repair-cookwarestore-images.js",
     "import:jumia-kitchen": "node scripts/import-jumia-kitchen-catalog.js",
@@ -62,7 +64,8 @@
     "seed:suppliers": "node scripts/seed-suppliers.js",
     "seed:packaging": "node scripts/seed-packaging.js",
     "repair:images": "node scripts/repair-broken-images.js",
-    "i18n:build": "npm run i18n:build --prefix .."
+    "i18n:build": "npm run i18n:build --prefix ..",
+    "import:lookfantastic": "node scripts/import-lookfantastic-cosmetics.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",

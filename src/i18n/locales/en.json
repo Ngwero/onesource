@@ -66,7 +66,10 @@
     "shopFresh": "Fresh produce",
     "shopFreshHint": "Fruit, veg, meat & more",
     "shopKitchen": "Kitchen Ware",
-    "shopKitchenHint": "Cookware, cabinets & tabletop"
+    "shopKitchenHint": "Cookware, cabinets & tabletop",
+    "shopCosmetics": "Cosmetics",
+    "shopCosmeticsHint": "Skincare, makeup & fragrance",
+    "cosmeticsSearchPlaceholder": "Search makeup, serums, sunscreen..."
   },
   "nav": {
     "allCategories": "All categories",
@@ -76,7 +79,8 @@
     "exports": "Exports",
     "kitchen": "Kitchen Ware",
     "categoriesLabel": "Categories",
-    "mobileLabel": "Mobile navigation"
+    "mobileLabel": "Mobile navigation",
+    "cosmetics": "Cosmetics"
   },
   "kitchen": {
     "brand": "One Source Kitchen Ware",
@@ -681,7 +685,8 @@
       "root-veg": "Roots and Tubers",
       "berries": "Fresh Fruits",
       "citrus": "Fresh Fruits",
-      "tropical": "Fresh Fruits"
+      "tropical": "Fresh Fruits",
+      "cosmetics": "Cosmetics"
     }
   },
   "categoryTile": {
@@ -1212,6 +1217,65 @@
       "freshVegetables": "Fresh Vegetables",
       "yams": "Yams",
       "chilliesPeppers": "Chillies & Peppers"
+    }
+  },
+  "cosmetics": {
+    "brand": "One Source Cosmetics",
+    "title": "Skincare & cosmetics",
+    "lede": "{{count}} luxury beauty products — skincare, makeup, sun care, body and fragrance — delivered with your groceries.",
+    "navAll": "View all cosmetics",
+    "navCategories": "All categories",
+    "navLabel": "Cosmetics sections",
+    "zonesTitle": "Shop by skincare category",
+    "catalogSub": "{{count}} products across skincare categories.",
+    "aisleOf": "Cosmetics category",
+    "empty": "Cosmetics are being restocked — check back shortly.",
+    "searchTitle": "Search Cosmetics",
+    "searchHint": "Find sunscreen, serums, cleansers, creams and kits.",
+    "aisles": {
+      "face-makeup": "Face makeup",
+      "eye-makeup": "Eye makeup",
+      "lips": "Lips",
+      "face-eye-care": "Face & eye care",
+      "serums-oils": "Serums & oils",
+      "cleansers-bars": "Cleansers & bars",
+      "sun-protection": "Sun protection",
+      "acne-care": "Acne care",
+      "body-care": "Body care",
+      "hair-baby-more": "Hair, fragrance & more",
+      "kits-bundles": "Kits & gift sets",
+      "brushes-tools": "Brushes & tools"
+    },
+    "brandLabel": "Brand:",
+    "allBrands": "All brands",
+    "shopByCategory": "Shop by category",
+    "topBrands": "Top brands",
+    "seeAll": "See all",
+    "hero": {
+      "prev": "Previous slide",
+      "next": "Next slide",
+      "pause": "Pause carousel",
+      "play": "Play carousel",
+      "goTo": "Go to slide {{n}}",
+      "giftsBadge": "Gift sets",
+      "giftsTitle": "Beauty gifts they'll love",
+      "giftsSub": "Curated kits and gift sets from skincare to fragrance, ready to wrap.",
+      "giftsCta": "Shop gift sets",
+      "makeupBadge": "Makeup edit",
+      "makeupTitle": "Warm neutrals, made to glow",
+      "makeupSub": "Palettes, blush and brushes for every skin tone.",
+      "makeupCta": "Shop face makeup",
+      "makeupCta2": "Eye makeup",
+      "skincareBadge": "Skincare",
+      "skincareTitle": "Your daily skincare shelf",
+      "skincareSub": "Serums, moisturisers and SPF to keep skin healthy in the Kampala sun.",
+      "skincareCta": "Shop serums",
+      "skincareCta2": "Sun protection",
+      "fragranceBadge": "Fragrance",
+      "fragranceTitle": "Signature scents",
+      "fragranceSub": "Perfumes and body mists to find your new favourite.",
+      "fragranceCta": "Shop fragrance",
+      "offersCta": "See offers"
     }
   }
 }

@@ -6,7 +6,8 @@ import {
 } from "../utils/kitchenMode";
 
 export function useKitchenCatalog() {
-  const { products, loading } = useProducts();
+  const { products, shopLoading } = useProducts();
+  const loading = shopLoading.kitchen;
 
   const kitchenProducts = useMemo(
     () => filterKitchenProducts(products),

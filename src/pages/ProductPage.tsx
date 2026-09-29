@@ -36,7 +36,16 @@ import {
   toggleSavedListItem,
 } from "../utils/userStorage";
 import { aisleIdFromProductId } from "../data/kitchenWare";
-import { kitchenAislePath, isKitchenProduct, excludeKitchenProducts } from "../utils/kitchenMode";
+import { kitchenAislePath, isKitchenProduct } from "../utils/kitchenMode";
+import { cosmeticsAislePath, isCosmeticsProduct } from "../utils/cosmeticsMode";
+import { COSMETICS_AISLES, cosmeticsAisleIdFromProductId } from "../data/cosmetics";
+import { excludeSpecialtyProducts } from "../utils/shopMode";
+
+function sameShopPool(product: Product, products: Product[]) {
+  if (isKitchenProduct(product)) return products.filter(isKitchenProduct);
+  if (isCosmeticsProduct(product)) return products.filter(isCosmeticsProduct);
+  return excludeSpecialtyProducts(products);
+}
 
 /** 7 columns on large screens × 4 rows (2 extra rows vs original 2-row layout). */
 const PDP_RECOMMENDATION_COUNT = 28;
@@ -85,22 +94,16 @@ export function ProductPage() {
 
   const related = useMemo(() => {
     if (!product) return [] as typeof products;
-    const pool = isKitchenProduct(product)
-      ? products.filter(isKitchenProduct)
-      : excludeKitchenProducts(products);
-    return pool
+    return sameShopPool(product, products)
       .filter((p) => p.id !== product.id && productMatchesCategory(p.category, product.category))
       .slice(0, PDP_RECOMMENDATION_COUNT);
   }, [products, product]);
 
   const alsoViewed = useMemo(() => {
     if (!product) return [] as typeof products;
-    const pool = isKitchenProduct(product)
-      ? products.filter(isKitchenProduct)
-      : excludeKitchenProducts(products);
     return pickCustomersAlsoViewed(
       product,
-      pool,
+      sameShopPool(product, products),
       user?.id,
       related.map((p) => p.id),
       PDP_RECOMMENDATION_COUNT
@@ -126,6 +129,21 @@ export function ProductPage() {
       ];
       if (aisleId) {
         crumbs.push({ label: aisleTitle, href: kitchenAislePath(aisleId) });
+      }
+      crumbs.push({ label: localized.localizedTitle });
+      return crumbs;
+    }
+    if (isCosmeticsProduct(product)) {
+      const aisleId = cosmeticsAisleIdFromProductId(product.id);
+      const crumbs: { label: string; href?: string }[] = [
+        { label: t("cosmetics.navCategories"), href: "/cosmetics/categories" },
+      ];
+      if (aisleId) {
+        const fallback = COSMETICS_AISLES.find((a) => a.id === aisleId)?.title;
+        crumbs.push({
+          label: t(`cosmetics.aisles.${aisleId}`, { defaultValue: fallback }),
+          href: cosmeticsAislePath(aisleId),
+        });
       }
       crumbs.push({ label: localized.localizedTitle });
       return crumbs;
@@ -203,9 +221,13 @@ export function ProductPage() {
     <div className="pdp-page w-full">
       <PageContainer className="py-3 sm:py-5 max-w-[1500px]">
         <nav className="pdp-breadcrumbs" aria-label={t("common.breadcrumb")}>
-          <Link to={isKitchenProduct(product) ? "/kitchen" : "/"}>
-            {isKitchenProduct(product) ? t("kitchen.brand") : t("common.home")}
-          </Link>
+          {isKitchenProduct(product) ? (
+            <Link to="/kitchen">{t("kitchen.brand")}</Link>
+          ) : isCosmeticsProduct(product) ? (
+            <Link to="/cosmetics">{t("cosmetics.brand")}</Link>
+          ) : (
+            <Link to="/">{t("common.home")}</Link>
+          )}
           {breadcrumbs.map((crumb, i) => (
             <span key={i} className="pdp-breadcrumb-sep">
               <span aria-hidden> › </span>

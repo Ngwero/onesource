@@ -11,12 +11,21 @@ function isKitchenSku(p: Product): boolean {
   return p.id.startsWith("kitchen-") || p.category === "kitchen-ware";
 }
 
+function isCosmeticsSku(p: Product): boolean {
+  return p.id.startsWith("cosmetics-") || p.category === "cosmetics";
+}
+
+function isFreshSku(p: Product): boolean {
+  return !isKitchenSku(p) && !isCosmeticsSku(p);
+}
+
 async function fetchProductsPageRaw(
   search: URLSearchParams,
   page: number
 ): Promise<{ products: Product[]; total: number }> {
-  search.set("page", String(page));
-  const res = await fetch(`${API_BASE}/products?${search.toString()}`);
+  const query = new URLSearchParams(search);
+  query.set("page", String(page));
+  const res = await fetch(`${API_BASE}/products?${query.toString()}`);
   if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
   const data = await res.json();
   return {
@@ -38,7 +47,7 @@ async function findLegacyFreshStartPage(
   while (lo <= hi) {
     const mid = Math.floor((lo + hi) / 2);
     const { products } = await fetchProductsPageRaw(search, mid);
-    if (products.some((p) => !isKitchenSku(p))) {
+    if (products.some(isFreshSku)) {
       answer = mid;
       hi = mid - 1;
     } else {
@@ -51,7 +60,7 @@ async function findLegacyFreshStartPage(
 export async function fetchProducts(params?: {
   category?: string;
   q?: string;
-  shop?: "fresh" | "kitchen";
+  shop?: "fresh" | "kitchen" | "cosmetics";
 }): Promise<Product[]> {
   const shop = params?.shop ?? "fresh";
   const search = new URLSearchParams();
@@ -65,10 +74,29 @@ export async function fetchProducts(params?: {
   let startPage = 0;
 
   if (shop === "fresh" && !params?.category && !params?.q) {
-    const produceOnFirst = first.products.filter((p) => !isKitchenSku(p));
+    const produceOnFirst = first.products.filter(isFreshSku);
     if (first.products.length > 0 && produceOnFirst.length === 0) {
       startPage = await findLegacyFreshStartPage(search, pageSize, first.total);
     }
+  }
+
+  const matchesShop =
+    shop === "kitchen" ? isKitchenSku : shop === "cosmetics" ? isCosmeticsSku : isFreshSku;
+  const serverFiltered =
+    startPage === 0 && first.total > 0 && first.products.every(matchesShop);
+  if (serverFiltered) {
+    const pageCount = Math.min(Math.ceil(first.total / pageSize), 50);
+    const pages: Product[][] = [first.products];
+    const concurrency = 4;
+    for (let from = 1; from < pageCount; from += concurrency) {
+      const batch = await Promise.all(
+        Array.from({ length: Math.min(concurrency, pageCount - from) }, (_, i) =>
+          fetchProductsPageRaw(search, from + i).then((r) => r.products.filter(matchesShop))
+        )
+      );
+      pages.push(...batch);
+    }
+    return pages.flat();
   }
 
   const products: Product[] = [];
@@ -83,7 +111,7 @@ export async function fetchProducts(params?: {
         : (await fetchProductsPageRaw(search, page)).products;
 
     if (shop === "fresh") {
-      const fresh = batch.filter((p) => !isKitchenSku(p));
+      const fresh = batch.filter(isFreshSku);
       products.push(...fresh);
       // Old API: once we leave the kitchen block, empty fresh page means done.
       if (startPage > 0 && fresh.length === 0) break;
@@ -91,6 +119,10 @@ export async function fetchProducts(params?: {
       const kitchen = batch.filter(isKitchenSku);
       products.push(...kitchen);
       if (kitchen.length === 0) break;
+    } else if (shop === "cosmetics") {
+      const cosmetics = batch.filter(isCosmeticsSku);
+      products.push(...cosmetics);
+      if (cosmetics.length === 0) break;
     } else {
       products.push(...batch);
     }
@@ -138,7 +170,7 @@ export async function updateCategoryImage(
 }
 
 export async function fetchHeroSlides(
-  placement: "home" | "exports" | "kitchen" | "onboarding" = "home"
+  placement: "home" | "exports" | "kitchen" | "cosmetics" | "onboarding" = "home"
 ): Promise<HeroSlide[]> {
   const res = await fetch(`${API_BASE}/hero/slides?placement=${placement}`);
   if (!res.ok) throw new Error(i18n.t("errors.loadHeroSlides"));

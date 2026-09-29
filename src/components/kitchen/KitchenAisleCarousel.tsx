@@ -14,6 +14,8 @@ type Props = {
   products: Product[];
 };
 
+const ROW_LIMIT = 24;
+
 function sortBestSellers(products: Product[]) {
   return [...products].sort(
     (a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount
@@ -34,14 +36,11 @@ export function KitchenAisleCarousel({
   const [canNext, setCanNext] = useState(false);
 
   const feedProducts = useMemo(() => {
-    if (feedTab === "offers") {
-      return sortBestSellers(
-        products.filter(
-          (p) => p.originalPrice != null && p.originalPrice > p.price
-        )
-      );
-    }
-    return sortBestSellers(products);
+    const pool =
+      feedTab === "offers"
+        ? products.filter((p) => p.originalPrice != null && p.originalPrice > p.price)
+        : products;
+    return sortBestSellers(pool).slice(0, ROW_LIMIT);
   }, [products, feedTab]);
 
   useAutoScrollByItems(trackRef, feedProducts.length, {

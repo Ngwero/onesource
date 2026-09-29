@@ -28,10 +28,11 @@ const ALL_DEFAULT_HERO_SLIDES = [
   ...DEFAULT_ONBOARDING_SLIDES,
 ];
 
-/** @returns {"home"|"exports"|"kitchen"|"onboarding"} */
+/** @returns {"home"|"exports"|"kitchen"|"cosmetics"|"onboarding"} */
 export function heroPlacementOf(id = "") {
   if (String(id).startsWith("export-")) return "exports";
   if (String(id).startsWith("kitchen-")) return "kitchen";
+  if (String(id).startsWith("cosmetics-")) return "cosmetics";
   if (String(id).startsWith("onboarding-")) return "onboarding";
   return "home";
 }
@@ -40,6 +41,7 @@ export function filterHeroSlidesByPlacement(slides, placement) {
   const wanted =
     placement === "exports" ||
     placement === "kitchen" ||
+    placement === "cosmetics" ||
     placement === "onboarding"
       ? placement
       : "home";

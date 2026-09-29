@@ -66,7 +66,10 @@
     "shopKitchenHint": "Batterie, meubles mpe mesa",
     "shopSwitcherLabel": "Boutique",
     "shopFresh": "Biloko ya sika",
-    "shopFreshHint": "Ba fruits, ba légumes, mosuni…"
+    "shopFreshHint": "Ba fruits, ba légumes, mosuni…",
+    "shopCosmetics": "Cosmétiques",
+    "shopCosmeticsHint": "Soins, maquillage & malasi",
+    "cosmeticsSearchPlaceholder": "Luka maquillage, sérums, crème ya moi..."
   },
   "nav": {
     "allCategories": "Ba catégories nyonso",
@@ -76,7 +79,8 @@
     "exports": "Kotinda na libanda",
     "kitchen": "Biloko ya cuisine",
     "categoriesLabel": "Ba catégorie",
-    "mobileLabel": "Navigation ya téléphone"
+    "mobileLabel": "Navigation ya téléphone",
+    "cosmetics": "Cosmétiques"
   },
   "kitchen": {
     "brand": "One Source Biloko ya Cuisine",
@@ -645,7 +649,8 @@
       "root-veg": "Racine mpe tubercule",
       "berries": "Bambuma ya sika",
       "citrus": "Bambuma ya sika",
-      "tropical": "Bambuma ya sika"
+      "tropical": "Bambuma ya sika",
+      "cosmetics": "Cosmétiques"
     }
   },
   "categoryTile": {
@@ -1942,6 +1947,65 @@
       "freshVegetables": "Légumes ya sika",
       "yams": "Ba igname",
       "chilliesPeppers": "Ba piment"
+    }
+  },
+  "cosmetics": {
+    "brand": "One Source Cosmétiques",
+    "title": "Soins ya loposo & cosmétiques",
+    "lede": "Biloko {{count}} ya kitoko ya luxe — soins ya loposo, maquillage, kobatela na moi, nzoto mpe malasi — bayanganisaka yango na biloko na yo ya kolya.",
+    "navAll": "Tala cosmétiques nyonso",
+    "navCategories": "Bacatégorie nyonso",
+    "navLabel": "Biteni ya cosmétiques",
+    "zonesTitle": "Somba na catégorie ya soins",
+    "catalogSub": "Biloko {{count}} na bacatégorie ya soins ya loposo.",
+    "aisleOf": "Catégorie ya cosmétiques",
+    "empty": "Cosmétiques ezali kobakisama — zonga mwa moke.",
+    "searchTitle": "Luka cosmétiques",
+    "searchHint": "Luka crème ya moi, sérums, ba nettoyants, ba crèmes mpe ba coffrets.",
+    "aisles": {
+      "face-makeup": "Maquillage ya elongi",
+      "eye-makeup": "Maquillage ya miso",
+      "lips": "Mbɛbu",
+      "face-eye-care": "Elongi & miso",
+      "serums-oils": "Sérums & mafuta",
+      "cleansers-bars": "Ba nettoyants & ba savons",
+      "sun-protection": "Kobatela na moi",
+      "acne-care": "Soins ya bouton",
+      "body-care": "Soins ya nzoto",
+      "hair-baby-more": "Nsuki, malasi & bisusu",
+      "kits-bundles": "Ba coffrets & makabo",
+      "brushes-tools": "Ba pinceaux & bisaleli"
+    },
+    "brandLabel": "Marque :",
+    "allBrands": "Ba marques nyonso",
+    "shopByCategory": "Somba na catégorie",
+    "topBrands": "Ba marques ya liboso",
+    "seeAll": "Tala nyonso",
+    "hero": {
+      "prev": "Oyo ya liboso",
+      "next": "Oyo elandi",
+      "pause": "Telemisa",
+      "play": "Tambwisa",
+      "goTo": "Kende na elilingi {{n}}",
+      "giftsBadge": "Makabo",
+      "giftsTitle": "Makabo ya kitoko oyo bakolinga",
+      "giftsSub": "Ba kits mpe ba coffrets, banda soins tii parfum, ya kopesa.",
+      "giftsCta": "Tala makabo",
+      "makeupBadge": "Maquillage",
+      "makeupTitle": "Langi ya moto oyo engengaka",
+      "makeupSub": "Ba palettes, blush mpe ba brosses mpo na loposo nyonso.",
+      "makeupCta": "Maquillage ya elongi",
+      "makeupCta2": "Maquillage ya miso",
+      "skincareBadge": "Soins ya loposo",
+      "skincareTitle": "Soins na yo ya mokolo na mokolo",
+      "skincareSub": "Sérums, ba crèmes mpe SPF mpo na kobatela loposo na moi.",
+      "skincareCta": "Tala ba sérums",
+      "skincareCta2": "Kobatela na moi",
+      "fragranceBadge": "Parfum",
+      "fragranceTitle": "Nsolo ya kokamwa",
+      "fragranceSub": "Ba parfums mpe ba brumes mpo ozwa oyo olingi.",
+      "fragranceCta": "Tala ba parfums",
+      "offersCta": "Tala ba offres"
     }
   }
 }

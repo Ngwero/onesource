@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useProducts } from "../context/ProductsContext";
 import { BrandLogo } from "./BrandLogo";
-import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWare";
+import { SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
 
 export function Footer() {
   const { t } = useTranslation();
@@ -11,7 +11,7 @@ export function Footer() {
   const { categories, getProductCountByCategory } = useProducts();
   const categoriesWithProducts = categories.filter(
     (c) =>
-      c.id !== KITCHEN_WARE_CATEGORY_ID &&
+      !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id) &&
       (getProductCountByCategory()[c.id] ?? 0) > 0
   );
   const ordersTo = user ? "/orders" : "/login";

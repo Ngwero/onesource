@@ -8,7 +8,7 @@ import { CategoriesAisleCarousel } from "../components/categories/CategoriesAisl
 import { useCart } from "../context/CartContext";
 import { useCategoryName } from "../i18n/useLocalizedProduct";
 import { isExportOnlyCart } from "../utils/exportOrder";
-import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWare";
+import { SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
 
 const FEATURED_AISLE = "featured";
 const PRODUCTS_PER_ROW = 14;
@@ -31,7 +31,7 @@ export function CategoriesPage() {
   const list = (categories.length
     ? categories
     : AGRI_CATEGORIES.map((c) => ({ id: c.id, name: c.name, icon: c.icon }))
-  ).filter((c) => c.id !== KITCHEN_WARE_CATEGORY_ID);
+  ).filter((c) => !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id));
 
   const activeAisle = searchParams.get("aisle") ?? FEATURED_AISLE;
   const aisleIds = useMemo(

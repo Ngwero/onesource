@@ -66,7 +66,10 @@
     "shopKitchenHint": "Ibikoresho, amakabati n'ameza",
     "shopSwitcherLabel": "Iduka",
     "shopFresh": "Ibiribwa bishya",
-    "shopFreshHint": "Imbuto, imboga, inyama…"
+    "shopFreshHint": "Imbuto, imboga, inyama…",
+    "shopCosmetics": "Ibirungo by'ubwiza",
+    "shopCosmeticsHint": "Uruhu, kwisiga na parfum",
+    "cosmeticsSearchPlaceholder": "Shakisha ibyo kwisiga, serumu, amavuta arinda izuba..."
   },
   "nav": {
     "allCategories": "Ibyiciro byose",
@@ -76,7 +79,8 @@
     "exports": "Ibyoherezwa hanze",
     "kitchen": "Ibikoresho byo mu gikoni",
     "categoriesLabel": "Ibyiciro",
-    "mobileLabel": "Kugenda kuri telefoni"
+    "mobileLabel": "Kugenda kuri telefoni",
+    "cosmetics": "Ubwiza"
   },
   "kitchen": {
     "brand": "One Source Ibikoresho byo mu Gikoni",
@@ -645,7 +649,8 @@
       "root-veg": "Imizi n'ibinyampeke",
       "berries": "Imbuto nshya",
       "citrus": "Imbuto nshya",
-      "tropical": "Imbuto nshya"
+      "tropical": "Imbuto nshya",
+      "cosmetics": "Ibirungo by'ubwiza"
     }
   },
   "categoryTile": {
@@ -1942,6 +1947,65 @@
       "freshVegetables": "Imboga nshya",
       "yams": "Ibirayi by'ubwoko",
       "chilliesPeppers": "Uruhoko"
+    }
+  },
+  "cosmetics": {
+    "brand": "One Source Ubwiza",
+    "title": "Kwita ku ruhu n'ibirungo by'ubwiza",
+    "lede": "Ibicuruzwa {{count}} by'ubwiza bihenze — kwita ku ruhu, kwisiga, kurinda izuba, umubiri na parfum — bikugezwaho hamwe n'ibiribwa byawe.",
+    "navAll": "Reba ibirungo byose",
+    "navCategories": "Ibyiciro byose",
+    "navLabel": "Ibice by'ibirungo by'ubwiza",
+    "zonesTitle": "Gura ukurikije icyiciro cyo kwita ku ruhu",
+    "catalogSub": "Ibicuruzwa {{count}} mu byiciro byo kwita ku ruhu.",
+    "aisleOf": "Icyiciro cy'ubwiza",
+    "empty": "Ibirungo by'ubwiza biri kongerwamo — garuka vuba.",
+    "searchTitle": "Shakisha ibirungo by'ubwiza",
+    "searchHint": "Shakisha amavuta arinda izuba, serumu, ibisukura, amavuta n'amaseti.",
+    "aisles": {
+      "face-makeup": "Kwisiga mu maso",
+      "eye-makeup": "Kwisiga ku maso",
+      "lips": "Iminwa",
+      "face-eye-care": "Mu maso n'amaso",
+      "serums-oils": "Serumu n'amavuta",
+      "cleansers-bars": "Ibisukura n'amasabune",
+      "sun-protection": "Kurinda izuba",
+      "acne-care": "Kuvura ibiheri",
+      "body-care": "Kwita ku mubiri",
+      "hair-baby-more": "Umusatsi, parfum n'ibindi",
+      "kits-bundles": "Amaseti n'impano",
+      "brushes-tools": "Uburoso n'ibikoresho"
+    },
+    "brandLabel": "Ikirango:",
+    "allBrands": "Ibirango byose",
+    "shopByCategory": "Gura ukurikije icyiciro",
+    "topBrands": "Ibirango bikunzwe",
+    "seeAll": "Reba byose",
+    "hero": {
+      "prev": "Ibanziriza",
+      "next": "Ikurikira",
+      "pause": "Hagarika",
+      "play": "Komeza",
+      "goTo": "Jya ku ifoto {{n}}",
+      "giftsBadge": "Impano",
+      "giftsTitle": "Impano z'ubwiza bazakunda",
+      "giftsSub": "Ibikoresho byatoranyijwe, kuva ku kwita ku ruhu kugeza ku parfum.",
+      "giftsCta": "Reba impano",
+      "makeupBadge": "Maquillage",
+      "makeupTitle": "Amabara ashyushye arabagirana",
+      "makeupSub": "Palettes, blush n'amabrosi ku ruhu urwo ari rwo rwose.",
+      "makeupCta": "Maquillage y'isura",
+      "makeupCta2": "Maquillage y'amaso",
+      "skincareBadge": "Kwita ku ruhu",
+      "skincareTitle": "Ibyo ukoresha buri munsi",
+      "skincareSub": "Serum, amavuta na SPF birinda uruhu izuba.",
+      "skincareCta": "Reba serum",
+      "skincareCta2": "Kurinda izuba",
+      "fragranceBadge": "Parfum",
+      "fragranceTitle": "Impumuro yihariye",
+      "fragranceSub": "Parfum n'ibihumura by'umubiri ubone ukunda.",
+      "fragranceCta": "Reba parfum",
+      "offersCta": "Reba poromosiyo"
     }
   }
 }

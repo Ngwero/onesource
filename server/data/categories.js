@@ -24,6 +24,7 @@ export const AGRI_CATEGORIES = [
   { id: "dairy-products", name: "Dairy Products", icon: "🥛", group: "livestock" },
   { id: "export-fresh-produce", name: "Export Fresh Produce", icon: "✈️", group: "specialty" },
   { id: "kitchen-ware", name: "Kitchen Ware", icon: "🍳", group: "specialty" },
+  { id: "cosmetics", name: "Cosmetics", icon: "💄", group: "specialty" },
 ];
 
 export const REMOVED_CATEGORY_SLUGS = new Set([

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useProducts } from "../../context/ProductsContext";
 import { useCurrency } from "../../context/CurrencyContext";
-import { KITCHEN_WARE_CATEGORY_ID } from "../../data/kitchenWare";
+import { SPECIALTY_SHOP_CATEGORY_IDS } from "../../utils/shopMode";
 import {
   type ShopFilters,
   type PriceRangeId,
@@ -97,7 +97,7 @@ export function ShopFilterSidebar({
   const { categories } = useProducts();
   const { formatPrice } = useCurrency();
   const produceCategories = categories.filter(
-    (c) => c.id !== KITCHEN_WARE_CATEGORY_ID
+    (c) => !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id)
   );
 
   const toggleCategory = (id: string) => {

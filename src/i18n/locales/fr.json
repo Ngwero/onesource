@@ -66,7 +66,10 @@
     "shopKitchenHint": "Batterie, meubles et table",
     "shopSwitcherLabel": "Boutique",
     "shopFresh": "Produits frais",
-    "shopFreshHint": "Fruits, légumes, viande…"
+    "shopFreshHint": "Fruits, légumes, viande…",
+    "shopCosmetics": "Cosmétiques",
+    "shopCosmeticsHint": "Soins, maquillage & parfums",
+    "cosmeticsSearchPlaceholder": "Rechercher maquillage, sérums, solaires..."
   },
   "nav": {
     "allCategories": "Toutes les catégories",
@@ -76,7 +79,8 @@
     "exports": "Exportations",
     "kitchen": "Cuisine",
     "categoriesLabel": "Catégories",
-    "mobileLabel": "Navigation mobile"
+    "mobileLabel": "Navigation mobile",
+    "cosmetics": "Cosmétiques"
   },
   "kitchen": {
     "brand": "One Source Cuisine",
@@ -645,7 +649,8 @@
       "root-veg": "Racines et tubercules",
       "berries": "Fruits frais",
       "citrus": "Fruits frais",
-      "tropical": "Fruits frais"
+      "tropical": "Fruits frais",
+      "cosmetics": "Cosmétiques"
     }
   },
   "categoryTile": {
@@ -1942,6 +1947,65 @@
       "freshVegetables": "Légumes frais",
       "yams": "Ignames",
       "chilliesPeppers": "Piments"
+    }
+  },
+  "cosmetics": {
+    "brand": "One Source Cosmétiques",
+    "title": "Soins & cosmétiques",
+    "lede": "{{count}} produits de beauté de luxe — soins, maquillage, solaires, corps et parfums — livrés avec vos courses.",
+    "navAll": "Voir tous les cosmétiques",
+    "navCategories": "Toutes les catégories",
+    "navLabel": "Rubriques cosmétiques",
+    "zonesTitle": "Acheter par catégorie de soin",
+    "catalogSub": "{{count}} produits dans les catégories de soin.",
+    "aisleOf": "Catégorie cosmétiques",
+    "empty": "Les cosmétiques sont en réapprovisionnement — revenez bientôt.",
+    "searchTitle": "Rechercher des cosmétiques",
+    "searchHint": "Trouvez crèmes solaires, sérums, nettoyants, crèmes et coffrets.",
+    "aisles": {
+      "face-makeup": "Maquillage du teint",
+      "eye-makeup": "Maquillage des yeux",
+      "lips": "Lèvres",
+      "face-eye-care": "Visage & contour des yeux",
+      "serums-oils": "Sérums & huiles",
+      "cleansers-bars": "Nettoyants & pains",
+      "sun-protection": "Protection solaire",
+      "acne-care": "Soins anti-acné",
+      "body-care": "Soins du corps",
+      "hair-baby-more": "Cheveux, parfums & plus",
+      "kits-bundles": "Coffrets & cadeaux",
+      "brushes-tools": "Pinceaux & accessoires"
+    },
+    "brandLabel": "Marque :",
+    "allBrands": "Toutes les marques",
+    "shopByCategory": "Acheter par catégorie",
+    "topBrands": "Marques phares",
+    "seeAll": "Tout voir",
+    "hero": {
+      "prev": "Diapositive précédente",
+      "next": "Diapositive suivante",
+      "pause": "Mettre en pause",
+      "play": "Lancer le carrousel",
+      "goTo": "Aller à la diapositive {{n}}",
+      "giftsBadge": "Coffrets",
+      "giftsTitle": "Des cadeaux beauté qui font plaisir",
+      "giftsSub": "Kits et coffrets sélectionnés, des soins au parfum, prêts à offrir.",
+      "giftsCta": "Voir les coffrets",
+      "makeupBadge": "Maquillage",
+      "makeupTitle": "Des nudes chauds pour un teint lumineux",
+      "makeupSub": "Palettes, blush et pinceaux pour toutes les carnations.",
+      "makeupCta": "Maquillage du teint",
+      "makeupCta2": "Maquillage des yeux",
+      "skincareBadge": "Soins",
+      "skincareTitle": "Votre routine soin au quotidien",
+      "skincareSub": "Sérums, crèmes et SPF pour protéger la peau du soleil de Kampala.",
+      "skincareCta": "Voir les sérums",
+      "skincareCta2": "Protection solaire",
+      "fragranceBadge": "Parfums",
+      "fragranceTitle": "Parfums signature",
+      "fragranceSub": "Parfums et brumes pour trouver votre nouveau favori.",
+      "fragranceCta": "Voir les parfums",
+      "offersCta": "Voir les offres"
     }
   }
 }

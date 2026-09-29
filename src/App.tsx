@@ -32,6 +32,11 @@ import { KitchenAislePage } from "./pages/KitchenAislePage";
 import { KitchenCategoriesPage } from "./pages/KitchenCategoriesPage";
 import { KitchenProductsPage } from "./pages/KitchenProductsPage";
 import { KitchenSearchPage } from "./pages/KitchenSearchPage";
+import { CosmeticsShopPage } from "./pages/CosmeticsShopPage";
+import { CosmeticsCategoriesPage } from "./pages/CosmeticsCategoriesPage";
+import { CosmeticsAislePage } from "./pages/CosmeticsAislePage";
+import { CosmeticsProductsPage } from "./pages/CosmeticsProductsPage";
+import { CosmeticsSearchPage } from "./pages/CosmeticsSearchPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
 
 
@@ -74,6 +79,20 @@ export default function App() {
                     element={<KitchenProductsPage />}
                   />
                   <Route path="kitchen/search" element={<KitchenSearchPage />} />
+                  <Route path="cosmetics" element={<CosmeticsShopPage />} />
+                  <Route
+                    path="cosmetics/categories"
+                    element={<CosmeticsCategoriesPage />}
+                  />
+                  <Route
+                    path="cosmetics/aisle/:aisleId"
+                    element={<CosmeticsAislePage />}
+                  />
+                  <Route
+                    path="cosmetics/products"
+                    element={<CosmeticsProductsPage />}
+                  />
+                  <Route path="cosmetics/search" element={<CosmeticsSearchPage />} />
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="category/:categoryId" element={<CategoryPage />} />
                   <Route path="search" element={<SearchPage />} />

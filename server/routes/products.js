@@ -26,17 +26,24 @@ router.get("/", async (req, res) => {
     const shopRaw = String(req.query.shop ?? "").trim().toLowerCase();
     const aisleRaw = String(req.query.aisle ?? "").trim().toLowerCase();
     const aisleId = aisleRaw.replace(/[^a-z0-9-]/g, "");
-    const excludeKitchen =
-      req.query.excludeKitchen === "1" ||
-      req.query.excludeKitchen === "true" ||
-      shopRaw === "fresh" ||
-      shopRaw === "produce";
+    const categoryId = category ? String(category) : "";
+    const cosmeticsOnly = shopRaw === "cosmetics" || categoryId === "cosmetics";
     const kitchenOnly =
-      shopRaw === "kitchen" ||
-      Boolean(aisleId) ||
-      (category &&
-        (String(category) === "kitchen-ware" ||
-          String(category) === "kitchen-furniture"));
+      !cosmeticsOnly &&
+      (shopRaw === "kitchen" ||
+        Boolean(aisleId) ||
+        categoryId === "kitchen-ware" ||
+        categoryId === "kitchen-furniture");
+    const freshOnly =
+      !cosmeticsOnly &&
+      !kitchenOnly &&
+      (req.query.excludeKitchen === "1" ||
+        req.query.excludeKitchen === "true" ||
+        shopRaw === "fresh" ||
+        shopRaw === "produce");
+    const shopPrefix = cosmeticsOnly ? "cosmetics" : "kitchen";
+    // Local dev only: show hidden cosmetics before they go live.
+    const previewCosmetics = cosmeticsOnly && process.env.PREVIEW_COSMETICS === "1";
 
     const result = await withLocalProductFallback(
       async () => {
@@ -45,7 +52,7 @@ router.get("/", async (req, res) => {
           ascending: false,
         });
 
-        if (!admin) {
+        if (!admin && !previewCosmetics) {
           query = query.eq("in_stock", true).gt("stock_quantity", 0);
         }
         if (category) {
@@ -54,13 +61,16 @@ router.get("/", async (req, res) => {
         if (supplierId) {
           query = query.eq("supplier_id", supplierId);
         }
-        // Keep Fresh and Kitchen catalogues from drowning each other out.
-        if (excludeKitchen && !kitchenOnly) {
+        // Keep the Fresh, Kitchen and Cosmetics catalogues from drowning each other out.
+        if (freshOnly) {
           query = query
             .not("id", "like", "kitchen-%")
-            .neq("category", "kitchen-ware");
+            .not("id", "like", "cosmetics-%")
+            .not("category", "in", "(kitchen-ware,cosmetics)");
         } else if (aisleId) {
-          query = query.like("id", `kitchen-${aisleId}-%`);
+          query = query.like("id", `${shopPrefix}-${aisleId}-%`);
+        } else if (cosmeticsOnly && !category) {
+          query = query.or("id.like.cosmetics-%,category.eq.cosmetics");
         } else if (kitchenOnly && !category) {
           query = query.like("id", "kitchen-%");
         }
@@ -113,13 +123,14 @@ router.get("/", async (req, res) => {
         page,
         pageSize,
         aisle: aisleId || undefined,
-        excludeKitchen: excludeKitchen && !kitchenOnly,
-        kitchenOnly: kitchenOnly && !category && !aisleId,
+        shop: freshOnly ? "fresh" : cosmeticsOnly ? "cosmetics" : kitchenOnly ? "kitchen" : undefined,
       }
     );
 
     res.json({
-      products: result.products,
+      products: previewCosmetics
+        ? result.products.map((p) => ({ ...p, inStock: true }))
+        : result.products,
       total: result.total,
       ...(result.source === "local-seed" ? { source: "local-seed" } : {}),
     });

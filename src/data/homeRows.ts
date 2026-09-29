@@ -1,6 +1,6 @@
 import type { Product } from "../types/product";
 import { normalizeCategoryId } from "./categories";
-import { isKitchenProduct } from "../utils/kitchenMode";
+import { isSpecialtyProduct } from "../utils/shopMode";
 
 const CHILLIES_CATEGORY_ID = "chillies-and-peppers";
 
@@ -130,7 +130,7 @@ function dealSavings(p: Product): number {
 }
 
 export function productsForHomeRow(products: Product[], row: HomeRowConfig, limit = 16): Product[] {
-  const catalog = products.filter((p) => !isKitchenProduct(p));
+  const catalog = products.filter((p) => !isSpecialtyProduct(p));
   if (row.id === "chillies") {
     const mixed = mixChilliProducts(catalog, limit);
     if (mixed.length >= 4) return mixed;

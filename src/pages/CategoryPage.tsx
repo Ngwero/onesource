@@ -14,6 +14,8 @@ import {
   REMOVED_CATEGORY_SLUGS,
 } from "../data/categories";
 import { resolveImageUrl } from "../utils/imageUrl";
+import { COSMETICS_CATEGORY_ID } from "../data/cosmetics";
+import { SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
 
 export function CategoryPage() {
   const { t } = useTranslation();
@@ -35,6 +37,10 @@ export function CategoryPage() {
       navigate("/kitchen", { replace: true });
       return;
     }
+    if (normalizedId === COSMETICS_CATEGORY_ID) {
+      navigate("/cosmetics", { replace: true });
+      return;
+    }
     if (
       rawId &&
       normalizedId &&
@@ -49,7 +55,7 @@ export function CategoryPage() {
   const relatedCategories = useMemo(
     () =>
       categories
-        .filter((c) => c.id !== normalizedId && c.id !== "kitchen-ware")
+        .filter((c) => c.id !== normalizedId && !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id))
         .slice(0, 8),
     [categories, normalizedId]
   );

@@ -10,7 +10,7 @@ import {
 import { CategoryImage } from "./CategoryImage";
 import { StarRating } from "./StarRating";
 import { resolveImageUrl } from "../utils/imageUrl";
-import { isKitchenProduct } from "../utils/kitchenMode";
+import { isSpecialtyProduct, SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
 
 type Props = {
   category: Category;
@@ -24,7 +24,7 @@ export function CategoryTile({ category, products, variant = "tile" }: Props) {
   const inCategory = products.filter(
     (p) =>
       productMatchesCategory(p.category, catId) &&
-      (catId === "kitchen-ware" || !isKitchenProduct(p))
+      (SPECIALTY_SHOP_CATEGORY_IDS.has(catId) || !isSpecialtyProduct(p))
   );
   const count = inCategory.length;
   const preview = inCategory[0];
