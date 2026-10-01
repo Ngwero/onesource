@@ -268,7 +268,17 @@
       "emptyText": "Pona biloko ya export liboso ya kokondima commande.",
       "browse": "Tala biloko ya kotinda na libanda",
       "confirmedTitle": "Commande ya export ezwami",
-      "confirmedSubtitle": "Biro na biso ya export ekotala kozwama, mikanda mpe kotinda, sima ekosolola na yo mpo na kondima ya suka."
+      "confirmedSubtitle": "Biro na biso ya export ekotala kozwama, mikanda mpe kotinda, sima ekosolola na yo mpo na kondima ya suka.",
+      "addressPlaceholder": "Ndako ya biloko, zando to esika ya biloko na libanda ya mpepo",
+      "buyerHint": "Ndenge biro na biso ya export ekobenga yo.",
+      "cityPlaceholder": "Engumba to libongo ya kokota",
+      "companyPlaceholder": "Kompani ya mombongo (ezali na ntina te)",
+      "countryPlaceholder": "ndakisa Angleterre",
+      "destinationHint": "Esika biloko esengeli kokoma.",
+      "emailPlaceholder": "mosombi@kompani.com",
+      "namePlaceholder": "Nkombo ya mosombi to moto ya kobenga",
+      "phonePlaceholder": "+256 to nimero ya mokili mobimba",
+      "requirementsPlaceholder": "ndakisa GlobalGAP, mokanda ya bokolongono ya milona, malili, monene ya palette"
     }
   },
   "auth": {
@@ -309,7 +319,20 @@
     "updatingPassword": "Ezali kobongisa lijambo ya kobomba…",
     "passwordUpdated": "Lijambo ya kobomba na yo ebongisami. Okoki kokota na lijambo ya kobomba na yo ya sika.",
     "resetLinkInvalid": "Lien oyo ya kozongisa ezali malamu te to esili ngonga. Senga ya sika mpo na kokoba.",
-    "verifyingResetLink": "Ezali kotala lien na yo…"
+    "verifyingResetLink": "Ezali kotala lien na yo…",
+    "fullNamePlaceholder": "Nkombo na yo",
+    "otpHint": "Koma code ya mituya 6–8 oyo ozwi na e-mail. Ekosila nsima ya miniti 5 boye.",
+    "otpLabel": "Code ya mbala moko (OTP)",
+    "otpSubtitle": "Totindi code ya kondimisa na {{email}}. Ekosila nsima ya miniti 5.",
+    "otpTitle": "Koma code na yo ya kokota",
+    "passwordStrengthWeak": "Ya pete — bakisa minkoko ya minene, mituya to bilembo.",
+    "passwordStrengthFair": "Ya katikati — meka mot de passe ya molai na mituya.",
+    "passwordStrengthGood": "Mot de passe ya malamu.",
+    "passwordStrengthStrong": "Mot de passe ya makasi.",
+    "passwordsMatch": "Ba mot de passe ekokani.",
+    "stepCredentials": "Kokota",
+    "stepVerify": "Ndimisa code",
+    "verifyOtp": "Ndimisa mpe kota"
   },
   "accountMenu": {
     "helloGuest": "Mbote, mokɛ́i",
@@ -1822,7 +1845,10 @@
     "passwordResetFailed": "Could not send password reset email",
     "passwordUpdateFailed": "Could not update password",
     "supabaseNotConfigured": "Supabase ekokani te. Bakisa VITE_SUPABASE_URL mpe VITE_SUPABASE_ANON_KEY na fichier .env na racine ya projet.",
-    "updateCategoryImage": "Failed to update category image"
+    "updateCategoryImage": "Failed to update category image",
+    "emailNotRegistered": "Compte moko te ekomami na e-mail oyo. Tala soki ezali na libunga to komikomisa.",
+    "otpInvalid": "Code ya kokota ezali malamu te to esili",
+    "otpSessionExpired": "Code na yo ya kokota esili. Kota lisusu mpo na kozwa code ya sika."
   },
   "shop": {
     "loading": "Ezali kotonga boutique na yo…",

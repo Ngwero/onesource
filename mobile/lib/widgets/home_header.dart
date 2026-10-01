@@ -9,6 +9,7 @@ import 'brand_logo.dart';
 import 'home_search_bar.dart';
 import 'locale_currency_bar.dart';
 import 'shop_mode_switch.dart';
+import '../utils/shop_mode.dart';
 
 /// Brand-first home header with a short staggered entrance.
 class HomeHeader extends ConsumerStatefulWidget {
@@ -16,12 +17,12 @@ class HomeHeader extends ConsumerStatefulWidget {
     super.key,
     required this.name,
     required this.onAccount,
-    this.kitchenMode = false,
+    this.mode = ShopMode.fresh,
   });
 
   final String name;
   final VoidCallback onAccount;
-  final bool kitchenMode;
+  final ShopMode mode;
 
   @override
   ConsumerState<HomeHeader> createState() => _HomeHeaderState();
@@ -71,7 +72,7 @@ class _HomeHeaderState extends ConsumerState<HomeHeader>
   Widget build(BuildContext context) {
     final strings = ref.watch(stringsProvider);
     final topPad = MediaQuery.paddingOf(context).top;
-    final kitchen = widget.kitchenMode;
+    final mode = widget.mode;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -80,7 +81,11 @@ class _HomeHeaderState extends ConsumerState<HomeHeader>
           width: double.infinity,
           padding: EdgeInsets.fromLTRB(20, topPad + 12, 20, 34),
           decoration: BoxDecoration(
-            color: kitchen ? const Color(0xFF243D32) : AppColors.darkGreen,
+            color: switch (mode) {
+              ShopMode.kitchen => const Color(0xFF243D32),
+              ShopMode.cosmetics => const Color(0xFF3B2A33),
+              ShopMode.fresh => AppColors.darkGreen,
+            },
             borderRadius:
                 const BorderRadius.vertical(bottom: Radius.circular(24)),
           ),
@@ -143,7 +148,7 @@ class _HomeHeaderState extends ConsumerState<HomeHeader>
                       const LocaleCurrencyBar(onDark: true, compact: true),
                       const SizedBox(height: 12),
                       ShopModeSwitch(
-                        kitchenMode: kitchen,
+                        mode: mode,
                         onDark: true,
                       ),
                       const SizedBox(height: 22),
@@ -164,7 +169,7 @@ class _HomeHeaderState extends ConsumerState<HomeHeader>
               position: _searchSlide,
               child: HomeSearchBar(
                 onDark: true,
-                kitchenMode: kitchen,
+                mode: mode,
               ),
             ),
           ),

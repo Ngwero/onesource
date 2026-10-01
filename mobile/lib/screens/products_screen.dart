@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
+import '../utils/cart_feedback.dart';
 import '../models/product.dart';
-import '../providers/cart_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/horizontal_product_card.dart';
@@ -13,6 +13,7 @@ import '../widgets/product_card.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/products_load_more.dart';
 import '../widgets/scroll_slide_in.dart';
+import '../utils/shop_mode.dart';
 import '../widgets/shop_mode_switch.dart';
 
 enum ShopFilter { all, deals, prime, inStock }
@@ -75,32 +76,23 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
       case ShopSort.priceHigh:
         list.sort((a, b) => b.price.compareTo(a.price));
       case ShopSort.name:
-        list.sort((a, b) => a.title.compareTo(b.title));
+        list.sort((a, b) => AppStrings.current.productTitle(a).compareTo(AppStrings.current.productTitle(b)));
       case ShopSort.featured:
         break;
     }
     return list;
   }
 
-  void _addToCart(Product product) {
-    ref.read(cartProvider.notifier).add(product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.title} added'),
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(label: 'Basket', onPressed: () => context.go('/cart')),
-      ),
-    );
-  }
+  void _addToCart(Product product) => addToCartWithFeedback(context, ref, product);
 
   @override
   Widget build(BuildContext context) {
     final productsState = ref.watch(paginatedProductsProvider(_query));
 
     if (productsState.isInitialLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.canvas,
-        body: LoadingView(message: 'Loading shop…'),
+        body: LoadingView(message: context.tr.get('common.loading')),
       );
     }
 
@@ -129,14 +121,14 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const ShopModeSwitch(kitchenMode: false),
+                    const ShopModeSwitch(mode: ShopMode.fresh),
                     const SizedBox(height: 12),
                     ScrollSlideIn(
                       index: 0,
                       child: Row(
                         children: [
-                          const Expanded(
-                            child: Text('Shop', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+                          Expanded(
+                            child: Text(context.tr.get('header.shopSwitcherLabel'), style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
                           ),
                           IconButton(
                             onPressed: () => setState(() => _gridView = !_gridView),
@@ -145,11 +137,11 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                           PopupMenuButton<ShopSort>(
                             initialValue: _sort,
                             onSelected: (v) => setState(() => _sort = v),
-                            itemBuilder: (_) => const [
-                              PopupMenuItem(value: ShopSort.featured, child: Text('Featured')),
-                              PopupMenuItem(value: ShopSort.priceLow, child: Text('Price: low to high')),
-                              PopupMenuItem(value: ShopSort.priceHigh, child: Text('Price: high to low')),
-                              PopupMenuItem(value: ShopSort.name, child: Text('Name A–Z')),
+                            itemBuilder: (_) => [
+                              PopupMenuItem(value: ShopSort.featured, child: Text(context.tr.get('app.sort.featured'))),
+                              PopupMenuItem(value: ShopSort.priceLow, child: Text(context.tr.get('kitchen.sortPriceAsc'))),
+                              PopupMenuItem(value: ShopSort.priceHigh, child: Text(context.tr.get('kitchen.sortPriceDesc'))),
+                              PopupMenuItem(value: ShopSort.name, child: Text(context.tr.get('app.sort.name'))),
                             ],
                             child: const Padding(
                               padding: EdgeInsets.all(8),
@@ -169,10 +161,10 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: [
-                            _Pill('All', _filter == ShopFilter.all, () => setState(() => _filter = ShopFilter.all)),
-                            _Pill('Deals', _filter == ShopFilter.deals, () => setState(() => _filter = ShopFilter.deals)),
-                            _Pill('Prime', _filter == ShopFilter.prime, () => setState(() => _filter = ShopFilter.prime)),
-                            _Pill('In stock', _filter == ShopFilter.inStock, () => setState(() => _filter = ShopFilter.inStock)),
+                            _Pill(context.tr.get('app.filter.all'), _filter == ShopFilter.all, () => setState(() => _filter = ShopFilter.all)),
+                            _Pill(context.tr.get('app.filter.deals'), _filter == ShopFilter.deals, () => setState(() => _filter = ShopFilter.deals)),
+                            _Pill(context.tr.get('app.filter.prime'), _filter == ShopFilter.prime, () => setState(() => _filter = ShopFilter.prime)),
+                            _Pill(context.tr.get('app.filter.inStock'), _filter == ShopFilter.inStock, () => setState(() => _filter = ShopFilter.inStock)),
                           ],
                         ),
                       ),
@@ -180,10 +172,14 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                     const SizedBox(height: 8),
                     Text(
                       filtered.isEmpty
-                          ? 'No products match your filters'
+                          ? context.tr.get('kitchen.noFilterResults')
                           : productsState.total > 0
-                              ? '${filtered.length} shown · ${productsState.items.length} of ${productsState.total} loaded'
-                              : '${filtered.length} products',
+                              ? context.tr.t('app.products.shownLoaded', {
+                                  'shown': filtered.length,
+                                  'loaded': productsState.items.length,
+                                  'total': productsState.total,
+                                })
+                              : context.tr.t('app.products.count', {'count': filtered.length}),
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                     ),
                     const SizedBox(height: 8),
@@ -192,9 +188,9 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
               ),
             ),
             if (filtered.isEmpty)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 hasScrollBody: false,
-                child: Center(child: Text('No products match your filters')),
+                child: Center(child: Text(context.tr.get('kitchen.noFilterResults'))),
               )
             else if (_gridView)
               SliverPadding(

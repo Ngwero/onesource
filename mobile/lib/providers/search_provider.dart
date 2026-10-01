@@ -35,6 +35,19 @@ const popularKitchenSearchTerms = [
   'Lid',
 ];
 
+const popularCosmeticsSearchTerms = [
+  'Serum',
+  'Sunscreen',
+  'Moisturiser',
+  'Lipstick',
+  'Mascara',
+  'Foundation',
+  'Cleanser',
+  'Perfume',
+  'Gift set',
+  'Hair oil',
+];
+
 /// Which shop the active search screen is querying.
 final searchShopProvider = StateProvider<String>((ref) => 'fresh');
 
@@ -153,7 +166,11 @@ class SearchNotifier extends Notifier<SearchState> {
 
   List<String> _defaultSuggestions() {
     final shop = ref.read(searchShopProvider);
-    return shop == 'kitchen' ? popularKitchenSearchTerms : popularSearchTerms;
+    return switch (shop) {
+      'kitchen' => popularKitchenSearchTerms,
+      'cosmetics' => popularCosmeticsSearchTerms,
+      _ => popularSearchTerms,
+    };
   }
 
   List<String> _matchingSuggestions(String query) {

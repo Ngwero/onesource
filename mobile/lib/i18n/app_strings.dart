@@ -1,15 +1,52 @@
-import 'languages.dart';
-import '../providers/locale_provider.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../models/product.dart';
+import '../providers/locale_provider.dart';
+import 'i18n_catalog.dart';
+import 'languages.dart';
 
 typedef StringMap = Map<String, String>;
 
 class AppStrings {
   AppStrings(this.language);
 
+  /// Strings for the active language, for code without a [BuildContext]
+  /// (error formatting, services). Updated by [stringsProvider].
+  static AppStrings current = AppStrings(LanguageCode.en);
+
   final LanguageCode language;
 
-  String get(String key) => _bundles[language]?[key] ?? _bundles[LanguageCode.en]![key] ?? key;
+  /// Looks up [key] (app strings first, then the website bundles), falling
+  /// back to English and finally [fallback] or the key itself.
+  /// `{{name}}` placeholders are filled from [params]; a `count` param selects
+  /// i18next-style `_one` / `_other` plural keys.
+  String get(String key, {Map<String, Object?>? params, String? fallback}) {
+    final count = params?['count'];
+    String? raw;
+    if (count is num) {
+      final suffix = count == 1 ? '_one' : '_other';
+      raw = _resolve('$key$suffix');
+    }
+    raw ??= _resolve(key) ?? fallback ?? key;
+    if (params == null || params.isEmpty || !raw.contains('{{')) return raw;
+    return raw.replaceAllMapped(RegExp(r'\{\{\s*(\w+)\s*\}\}'), (m) {
+      final v = params[m.group(1)];
+      return v == null ? m.group(0)! : '$v';
+    });
+  }
+
+  /// Shorthand for [get] with placeholders.
+  String t(String key, [Map<String, Object?>? params]) => get(key, params: params);
+
+  /// True when [key] has a translation in any bundle.
+  bool has(String key) => _resolve(key) != null;
+
+  String? _resolve(String key) =>
+      _bundles[language]?[key] ??
+      I18nCatalog.lookup(language, key) ??
+      _bundles[LanguageCode.en]![key] ??
+      I18nCatalog.lookup(LanguageCode.en, key);
 
   String get langSelect => get('lang.select');
   String get currencySelect => get('currency.select');
@@ -49,6 +86,149 @@ class AppStrings {
 
   String homeRowTitle(String id) => get('home.rows.$id.title');
   String homeRowSubtitle(String id) => get('home.rows.$id.subtitle');
+
+  /// Translated value or [fallback] when the key is missing everywhere.
+  String or(String key, String fallback, [Map<String, Object?>? params]) =>
+      get(key, params: params, fallback: fallback);
+
+  String categoryName(String id, [String? fallback]) {
+    final trimmed = id.trim();
+    return or('categories.names.$trimmed', fallback ?? trimmed.replaceAll('-', ' '));
+  }
+
+  String kitchenAisle(String id, String fallback) => or('kitchen.aisles.$id', fallback);
+  String cosmeticsAisle(String id, String fallback) => or('cosmetics.aisles.$id', fallback);
+
+  /// Order status label (`out_for_delivery` → `orders.statusOutForDelivery`).
+  String orderStatus(String status) {
+    final camel = status
+        .toLowerCase()
+        .split(RegExp(r'[_\s-]+'))
+        .where((p) => p.isNotEmpty)
+        .map((p) => p[0].toUpperCase() + p.substring(1))
+        .join();
+    return or('orders.status$camel', status.replaceAll('_', ' '));
+  }
+
+  String unit(String unit) {
+    final u = unit.trim();
+    if (u.isEmpty) return u;
+    final key = 'units.${u.toLowerCase()}';
+    if (has(key)) return get(key);
+    if (u.toLowerCase().startsWith('per ')) {
+      return t('app.product.perUnit', {'unit': u.substring(4)});
+    }
+    return u;
+  }
+
+  String productTitle(Product p) => productText(p.title, ProductTextKind.title);
+  String productDescription(Product p) =>
+      productText(p.description, ProductTextKind.description);
+  String productDelivery(Product p) =>
+      p.delivery == null ? '' : productText(p.delivery!, ProductTextKind.delivery);
+
+  /// Mirrors the website's `translateProductText`: whole-title entries,
+  /// then per-segment glossary (`products.terms`), then word rules.
+  String productText(String text, ProductTextKind kind) {
+    if (text.trim().isEmpty || language == LanguageCode.en) {
+      return kind == ProductTextKind.title ? _stripBrand(text) : text;
+    }
+    final cacheKey = '${language.name}|${kind.name}|$text';
+    final cached = _productCache[cacheKey];
+    if (cached != null) return cached;
+    final out = _translateProductText(text, kind);
+    if (_productCache.length > 4000) _productCache.clear();
+    _productCache[cacheKey] = out;
+    return out;
+  }
+
+  static final Map<String, String> _productCache = {};
+  static final _brandSuffix = RegExp(r'\s*–\s*One Source$', caseSensitive: false);
+
+  static String _stripBrand(String text) => text.replaceFirst(_brandSuffix, '').trim();
+
+  static String segmentKey(String text) {
+    var s = text.trim().toLowerCase().replaceAll(RegExp("['\u2019]"), '');
+    s = s.replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
+    return s.length > 120 ? s.substring(0, 120) : s;
+  }
+
+  String _segment(String segment) {
+    final trimmed = segment.trim();
+    if (trimmed.isEmpty) return trimmed;
+    final glossary = _resolve('products.terms.${segmentKey(trimmed)}');
+    if (glossary != null && glossary != trimmed) return glossary;
+    return I18nCatalog.applyProductTermRules(trimmed, language);
+  }
+
+  String _translateProductText(String text, ProductTextKind kind) {
+    final base = _stripBrand(text);
+    final byTitle = _resolve('products.byTitle.${segmentKey(base)}.${kind.name}');
+    if (byTitle != null && byTitle != base) return byTitle;
+
+    switch (kind) {
+      case ProductTextKind.title:
+        final parts = base.split(' – ').map((p) => p.trim()).where((p) => p.isNotEmpty);
+        return parts.map(_segment).join(' – ');
+      case ProductTextKind.delivery:
+        return _translateDelivery(text);
+      case ProductTextKind.description:
+        final listed = RegExp(r'Listed for "([^"]+)" search', caseSensitive: false)
+            .firstMatch(text);
+        if (listed != null) {
+          return or('products.description.listedForSearch', text,
+              {'keyword': listed.group(1)});
+        }
+        if (RegExp('Upload your product photo', caseSensitive: false).hasMatch(text)) {
+          return or('products.description.uploadPhoto', text);
+        }
+        final first = text.split(RegExp(r'\.\s+')).first;
+        if (first != text) {
+          final translated = _segment(first);
+          if (translated != first) return text.replaceFirst(first, translated);
+        }
+        return _segment(text);
+    }
+  }
+
+  String _translateDelivery(String text) {
+    final freeOver = RegExp(r'FREE (?:same-day )?delivery on orders over USh\s*([\d,]+)',
+            caseSensitive: false)
+        .firstMatch(text);
+    if (freeOver != null) {
+      return or('products.delivery.freeOver', text, {'amount': freeOver.group(1)});
+    }
+    if (RegExp('FREE same-day delivery Tomorrow', caseSensitive: false).hasMatch(text)) {
+      return or('products.delivery.freeTomorrow', text);
+    }
+    if (RegExp('FREE same-day delivery', caseSensitive: false).hasMatch(text)) {
+      return or('products.delivery.freeSameDay', text);
+    }
+    return text;
+  }
+}
+
+enum ProductTextKind { title, description, delivery }
+
+/// Exposes [AppStrings] to any widget via `context.tr`, rebuilding
+/// dependents when the language changes.
+class AppStringsScope extends InheritedWidget {
+  const AppStringsScope({super.key, required this.strings, required super.child});
+
+  final AppStrings strings;
+
+  static AppStrings of(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<AppStringsScope>();
+    return scope?.strings ?? AppStrings(LanguageCode.en);
+  }
+
+  @override
+  bool updateShouldNotify(AppStringsScope oldWidget) =>
+      oldWidget.strings.language != strings.language;
+}
+
+extension AppStringsContext on BuildContext {
+  AppStrings get tr => AppStringsScope.of(this);
 }
 
 const _bundles = <LanguageCode, StringMap>{
@@ -416,5 +596,5 @@ const _bundles = <LanguageCode, StringMap>{
 
 final stringsProvider = Provider<AppStrings>((ref) {
   final language = ref.watch(localeProvider);
-  return AppStrings(language);
+  return AppStrings.current = AppStrings(language);
 });

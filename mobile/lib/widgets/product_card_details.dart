@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/currency_provider.dart';
 
@@ -16,29 +17,36 @@ class ProductCardDetails {
     return (((was - product.price) / was) * 100).round();
   }
 
-  static String categoryLabel(Product product) {
-    return product.category.replaceAll('-', ' ').trim();
+  static String categoryLabel(Product product, AppStrings s) {
+    final id = product.category.trim();
+    if (id.isEmpty) return '';
+    return s.categoryName(id);
   }
 
-  static String? unitLabel(Product product) {
+  static String? unitLabel(Product product, AppStrings s) {
     final unit = product.unit.trim();
     if (unit.isEmpty) return null;
-    return 'Per $unit';
+    final lower = unit.toLowerCase();
+    final label = lower.startsWith('per ') || lower == 'each'
+        ? s.unit(unit)
+        : s.t('app.product.perUnit', {'unit': s.unit(unit)});
+    return label.isEmpty ? label : label[0].toUpperCase() + label.substring(1);
   }
 
-  static String? deliveryLine(Product product) {
+  static String? deliveryLine(Product product, AppStrings s) {
     if (!product.inStock) return null;
     final custom = product.delivery?.trim();
-    if (custom != null && custom.isNotEmpty) return custom;
-    if (product.prime) return 'Free Prime delivery';
-    return 'Delivery across Uganda';
+    if (custom != null && custom.isNotEmpty) return s.productDelivery(product);
+    if (product.prime) return s.get('app.product.freePrimeDelivery');
+    return s.get('app.product.deliveryUganda');
   }
 
-  static String? stockLabel(Product product) {
-    if (!product.inStock) return 'Out of stock';
+  /// Null when simply in stock.
+  static String? stockLabel(Product product, AppStrings s) {
+    if (!product.inStock) return s.get('common.outOfStock');
     final qty = product.stockQuantity;
-    if (qty != null && qty > 0 && qty <= 12) return 'Only $qty left';
-    return 'In stock';
+    if (qty != null && qty > 0 && qty <= 12) return s.t('app.product.onlyLeft', {'count': qty});
+    return null;
   }
 
   static bool isBestSeller(Product product) => product.reviewCount >= 2000;
@@ -46,9 +54,9 @@ class ProductCardDetails {
   static String formatPrice(double price) =>
       NumberFormat.currency(symbol: 'UGX ', decimalDigits: 0).format(price);
 
-  static String socialProof(Product product) {
+  static String socialProof(Product product, AppStrings s) {
     if (product.reviewCount >= 500) {
-      return '${_compactCount(product.reviewCount)}+ bought';
+      return s.t('app.product.bought', {'count': _compactCount(product.reviewCount)});
     }
     return '';
   }
@@ -103,7 +111,7 @@ class PrimeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ProductBadge(
-      label: 'Prime',
+      label: context.tr.or('common.prime', 'Prime'),
       background: AppColors.darkGreen,
       foreground: Colors.white,
       compact: compact,
@@ -121,7 +129,7 @@ class ProductDeliveryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!product.inStock) {
       return Text(
-        'Currently unavailable',
+        context.tr.get('app.product.unavailable'),
         style: TextStyle(
           fontSize: compact ? 10 : 11,
           fontWeight: FontWeight.w600,
@@ -130,7 +138,7 @@ class ProductDeliveryRow extends StatelessWidget {
       );
     }
 
-    final line = ProductCardDetails.deliveryLine(product);
+    final line = ProductCardDetails.deliveryLine(product, context.tr);
     if (line == null) return const SizedBox.shrink();
 
     return Row(
@@ -172,7 +180,7 @@ class ProductPriceBlock extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final formatPrice = ref.watch(formatPriceProvider);
     final discount = ProductCardDetails.discountPercent(product);
-    final unit = ProductCardDetails.unitLabel(product);
+    final unit = ProductCardDetails.unitLabel(product, context.tr);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +220,7 @@ class ProductPriceBlock extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Text(
-              'RRP ${formatPrice(product.originalPrice!)}',
+              '${context.tr.get('productCard.rrp')} ${formatPrice(product.originalPrice!)}',
               style: TextStyle(
                 fontSize: compact ? 10 : 11,
                 color: AppColors.textMuted,

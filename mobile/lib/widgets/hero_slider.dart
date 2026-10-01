@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/hero_slide.dart';
 
 class HeroSlider extends StatefulWidget {
@@ -156,6 +157,7 @@ class _SlideView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final slide = this.slide.localized(context.tr);
     final image = slide.image.isNotEmpty
         ? slide.image
         : HeroSlide.fallbackImages[0];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 
 int scorePassword(String password) {
   if (password.isEmpty) return 0;
@@ -24,15 +25,15 @@ int scorePassword(String password) {
 String passwordStrengthLabel(int strength) {
   switch (strength) {
     case 0:
-      return 'Use at least 6 characters.';
+      return AppStrings.current.or('app.password.minLength', 'Use at least 6 characters.');
     case 1:
-      return 'Weak — add uppercase, numbers, or symbols.';
+      return AppStrings.current.get('auth.passwordStrengthWeak');
     case 2:
-      return 'Fair — try a longer password with numbers.';
+      return AppStrings.current.get('auth.passwordStrengthFair');
     case 3:
-      return 'Good password.';
+      return AppStrings.current.get('auth.passwordStrengthGood');
     default:
-      return 'Strong password.';
+      return AppStrings.current.get('auth.passwordStrengthStrong');
   }
 }
 

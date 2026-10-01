@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/product.dart';
+import '../providers/currency_provider.dart';
 import '../utils/search_match.dart';
 import 'product_card_details.dart';
 import 'product_thumbnail.dart';
 
-final _currency = NumberFormat.currency(symbol: 'UGX ', decimalDigits: 0);
-
-class SearchResultTile extends StatelessWidget {
+class SearchResultTile extends ConsumerWidget {
   const SearchResultTile({
     super.key,
     required this.product,
@@ -23,8 +23,9 @@ class SearchResultTile extends StatelessWidget {
   final VoidCallback? onAdd;
 
   @override
-  Widget build(BuildContext context) {
-    final category = ProductCardDetails.categoryLabel(product);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final category = ProductCardDetails.categoryLabel(product, context.tr);
+    final formatPrice = ref.watch(formatPriceProvider);
 
     return Material(
       color: Colors.white,
@@ -59,10 +60,10 @@ class SearchResultTile extends StatelessWidget {
                         ),
                       ),
                     const SizedBox(height: 4),
-                    _HighlightedText(text: product.title, query: query),
+                    _HighlightedText(text: context.tr.productTitle(product), query: query),
                     const SizedBox(height: 6),
                     Text(
-                      _currency.format(product.price),
+                      formatPrice(product.price),
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 15,

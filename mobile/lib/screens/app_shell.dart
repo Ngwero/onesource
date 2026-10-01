@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../providers/cart_provider.dart';
-import '../utils/kitchen_mode.dart';
+import '../utils/shop_mode.dart';
 import '../utils/responsive.dart';
+import '../widgets/app_update_dialog.dart';
 import 'account_screen.dart';
 import 'cart_screen.dart';
 import 'categories_screen.dart';
@@ -22,37 +24,47 @@ class AppShell extends ConsumerWidget {
     if (location.startsWith('/cart')) return 4;
     if (location.startsWith('/kitchen/shop') ||
         location.startsWith('/kitchen/aisle') ||
+        location.startsWith('/cosmetics/shop') ||
+        location.startsWith('/cosmetics/aisle') ||
         location.startsWith('/shop') ||
         location.startsWith('/category')) {
       return 1;
     }
     if (location.startsWith('/kitchen/categories') ||
+        location.startsWith('/cosmetics/categories') ||
         location.startsWith('/categories')) {
       return 2;
     }
-    if (location.startsWith('/account') || location.startsWith('/orders')) {
+    if (location.startsWith('/account') ||
+        location.startsWith('/orders') ||
+        location.startsWith('/lists') ||
+        location.startsWith('/history')) {
       return 3;
     }
     return 0;
   }
 
-  void _goHome(BuildContext context, bool kitchen) {
-    context.go(kitchen ? '/kitchen' : '/home');
-  }
+  void _goHome(BuildContext context, ShopMode mode) => context.go(mode.homePath);
 
-  void _goShop(BuildContext context, bool kitchen) {
-    context.go(kitchen ? '/kitchen/shop' : '/shop');
-  }
+  void _goShop(BuildContext context, ShopMode mode) => context.go(mode.shopPath);
 
-  void _goCategories(BuildContext context, bool kitchen) {
-    context.go(kitchen ? '/kitchen/categories' : '/categories');
-  }
+  void _goCategories(BuildContext context, ShopMode mode) =>
+      context.go(mode.categoriesPath);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) maybeShowAppUpdate(context);
+    });
     final cartCount = ref.watch(cartItemCountProvider);
     final index = _indexForLocation(location);
-    final kitchen = isKitchenPath(location);
+    final kitchen = shopModeForLocation(location);
+    final s = context.tr;
+    final labelHome = s.get('common.home');
+    final labelShop = s.get('header.shopSwitcherLabel');
+    final labelCategories = s.get('nav.categoriesLabel');
+    final labelAccount = s.get('common.account');
+    final labelCart = s.get('header.basket');
     final wide = isWideLayout(context);
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
@@ -115,25 +127,25 @@ class AppShell extends ConsumerWidget {
               labelType: NavigationRailLabelType.all,
               minWidth: 88,
               destinations: [
-                const NavigationRailDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home_rounded),
-                  label: Text('Home'),
+                NavigationRailDestination(
+                  icon: const Icon(Icons.home_outlined),
+                  selectedIcon: const Icon(Icons.home_rounded),
+                  label: Text(labelHome),
                 ),
-                const NavigationRailDestination(
-                  icon: Icon(Icons.storefront_outlined),
-                  selectedIcon: Icon(Icons.storefront_rounded),
-                  label: Text('Shop'),
+                NavigationRailDestination(
+                  icon: const Icon(Icons.storefront_outlined),
+                  selectedIcon: const Icon(Icons.storefront_rounded),
+                  label: Text(labelShop),
                 ),
-                const NavigationRailDestination(
-                  icon: Icon(Icons.grid_view_outlined),
-                  selectedIcon: Icon(Icons.grid_view_rounded),
-                  label: Text('Categories'),
+                NavigationRailDestination(
+                  icon: const Icon(Icons.grid_view_outlined),
+                  selectedIcon: const Icon(Icons.grid_view_rounded),
+                  label: Text(labelCategories),
                 ),
-                const NavigationRailDestination(
-                  icon: Icon(Icons.person_outline_rounded),
-                  selectedIcon: Icon(Icons.person_rounded),
-                  label: Text('Account'),
+                NavigationRailDestination(
+                  icon: const Icon(Icons.person_outline_rounded),
+                  selectedIcon: const Icon(Icons.person_rounded),
+                  label: Text(labelAccount),
                 ),
                 NavigationRailDestination(
                   icon: Badge(
@@ -148,7 +160,7 @@ class AppShell extends ConsumerWidget {
                     backgroundColor: AppColors.amber,
                     child: const Icon(Icons.shopping_bag_rounded),
                   ),
-                  label: const Text('Cart'),
+                  label: Text(labelCart),
                 ),
               ],
             ),
@@ -209,13 +221,13 @@ class AppShell extends ConsumerWidget {
               children: [
                 _NavItem(
                   icon: Icons.home_rounded,
-                  label: 'Home',
+                  label: labelHome,
                   selected: phoneNavIndex == 0,
                   onTap: () => _goHome(context, kitchen),
                 ),
                 _NavItem(
                   icon: Icons.storefront_rounded,
-                  label: 'Shop',
+                  label: labelShop,
                   selected: phoneNavIndex == 1,
                   onTap: () => _goShop(context, kitchen),
                 ),
@@ -223,19 +235,19 @@ class AppShell extends ConsumerWidget {
                 if (location.startsWith('/cart'))
                   _NavItem(
                     icon: Icons.shopping_bag_rounded,
-                    label: 'Cart',
+                    label: labelCart,
                     selected: true,
                     onTap: () => context.go('/cart'),
                   ),
                 _NavItem(
                   icon: Icons.grid_view_rounded,
-                  label: 'Categories',
+                  label: labelCategories,
                   selected: phoneNavIndex == 2,
                   onTap: () => _goCategories(context, kitchen),
                 ),
                 _NavItem(
                   icon: Icons.person_outline_rounded,
-                  label: 'Account',
+                  label: labelAccount,
                   selected: phoneNavIndex == 3,
                   onTap: () => context.go('/account'),
                 ),
@@ -379,7 +391,7 @@ class _NavItemState extends State<_NavItem> {
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   color: color,
                 ),
-                child: Text(widget.label),
+                child: Text(widget.label, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
           ),

@@ -777,3 +777,5 @@ export function applyProductTermRules(segment, lang) {
 export function translateSegment(segment, lang) {
   return applyProductTermRules(segment, lang);
 }
+
+export { COMMON_PHRASES, WORD_RULES };

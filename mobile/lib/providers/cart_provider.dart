@@ -19,8 +19,20 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     if (raw == null) return;
     try {
       final list = jsonDecode(raw) as List<dynamic>;
-      // Items restored when products are known — store minimal state
-      _pendingRestore = list.cast<Map<String, dynamic>>();
+      final restored = <CartItem>[];
+      final pending = <Map<String, dynamic>>[];
+      for (final entry in list.cast<Map<String, dynamic>>()) {
+        final snapshot = entry['product'];
+        final qty = entry['quantity'] as int? ?? 0;
+        if (snapshot is Map<String, dynamic> && qty > 0) {
+          restored.add(CartItem(product: Product.fromJson(snapshot), quantity: qty));
+        } else {
+          // Older entries without a snapshot wait for the product to load.
+          pending.add(entry);
+        }
+      }
+      _pendingRestore = pending;
+      if (restored.isNotEmpty && state.isEmpty) state = restored;
     } catch (_) {}
   }
 
@@ -39,7 +51,10 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
       }
     }
     _pendingRestore = [];
-    if (restored.isNotEmpty) state = restored;
+    if (restored.isNotEmpty) {
+      final have = state.map((i) => i.product.id).toSet();
+      state = [...state, ...restored.where((i) => !have.contains(i.product.id))];
+    }
   }
 
   Future<void> _persist() async {

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/order.dart';
 import '../services/api_client.dart';
 import '../widgets/order_progress.dart';
@@ -24,7 +25,7 @@ class OrderDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        title: const Text('Order tracking'),
+        title: Text(context.tr.get('app.orders.tracking')),
         centerTitle: true,
         backgroundColor: AppColors.canvas,
       ),
@@ -35,7 +36,7 @@ class OrderDetailScreen extends ConsumerWidget {
             return const Center(child: CircularProgressIndicator(color: AppColors.darkGreen));
           }
           if (snapshot.hasError || !snapshot.hasData) {
-            return Center(child: Text(snapshot.error?.toString() ?? 'Order not found'));
+            return Center(child: Text(context.tr.get('app.errors.orderNotFound')));
           }
           final order = snapshot.data!;
           final shortId = order.id.length > 8 ? order.id.substring(0, 8).toUpperCase() : order.id.toUpperCase();
@@ -60,8 +61,8 @@ class OrderDetailScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Delivery progress',
+                        Text(
+                          context.tr.get('app.orders.progress'),
                           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                         ),
                         _StatusBadge(status: order.status),
@@ -74,7 +75,7 @@ class OrderDetailScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Order #$shortId',
+                context.tr.t('app.orders.number', {'id': shortId}),
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
               ),
               if (orderDate != null)
@@ -94,21 +95,21 @@ class OrderDetailScreen extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
-                    _SummaryRow('Subtotal', _currency.format(order.subtotal)),
+                    _SummaryRow(context.tr.get('cart.subtotal'), _currency.format(order.subtotal)),
                     _SummaryRow(
-                      'Shipping fee',
-                      order.deliveryFee == 0 ? 'FREE' : _currency.format(order.deliveryFee),
+                      context.tr.get('cart.delivery'),
+                      order.deliveryFee == 0 ? context.tr.get('common.free') : _currency.format(order.deliveryFee),
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
                       child: Divider(height: 1),
                     ),
-                    _SummaryRow('Total', _currency.format(order.total), bold: true),
+                    _SummaryRow(context.tr.get('cart.total'), _currency.format(order.total), bold: true),
                     if (paymentMethod != null) ...[
                       const SizedBox(height: 12),
                       _SummaryRow(
-                        'Payment',
-                        'Cash on delivery',
+                        context.tr.get('app.checkout.payment'),
+                        context.tr.get(paymentMethod == 'momo' ? 'app.checkout.payMomo' : 'app.checkout.payCash'),
                       ),
                     ],
                   ],
@@ -121,7 +122,7 @@ class OrderDetailScreen extends ConsumerWidget {
                   minimumSize: const Size.fromHeight(50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Continue shopping'),
+                child: Text(context.tr.get('basketPanel.continueShopping')),
               ),
             ],
           );
@@ -165,16 +166,18 @@ class _DeliveryPersonnelCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Delivery personnel',
+                Text(
+                  context.tr.get('app.orders.rider'),
                   style: TextStyle(fontSize: 12, color: AppColors.textMuted),
                 ),
-                const Text(
-                  'One Source rider',
+                Text(
+                  context.tr.get('app.orders.riderName'),
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                 ),
                 Text(
-                  city?.isNotEmpty == true ? 'Delivering to $city' : 'On the way to you',
+                  city?.isNotEmpty == true
+                      ? context.tr.t('app.orders.deliveringTo', {'city': city})
+                      : context.tr.get('app.orders.onTheWay'),
                   style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
                 ),
               ],
@@ -227,14 +230,14 @@ class _OrderItemCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.productTitle,
+                  context.tr.productText(item.productTitle, ProductTextKind.title),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Qty ${item.quantity}',
+                  context.tr.t('app.orders.qty', {'count': item.quantity}),
                   style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                 ),
                 const SizedBox(height: 8),
@@ -265,7 +268,7 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = _labelFor(status);
+    final label = context.tr.orderStatus(_statusKey(status));
     final color = _colorFor(status);
 
     return Container(
@@ -285,12 +288,14 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 
-  String _labelFor(String s) {
+  String _statusKey(String s) {
     final n = s.toLowerCase().replaceAll(' ', '_');
-    if (n.contains('deliver') && !n.contains('out_for')) return 'Delivered';
-    if (n.contains('out_for') || n.contains('dispatch')) return 'Out for delivery';
-    if (n.contains('confirm') || n.contains('ship')) return 'Shipped';
-    return 'Processing';
+    if (n.contains('cancel')) return 'cancelled';
+    if (n.contains('deliver') && !n.contains('out_for')) return 'delivered';
+    if (n.contains('out_for') || n.contains('dispatch')) return 'out_for_delivery';
+    if (n.contains('pack')) return 'packed';
+    if (n.contains('confirm') || n.contains('ship')) return 'confirmed';
+    return 'placed';
   }
 
   Color _colorFor(String s) {

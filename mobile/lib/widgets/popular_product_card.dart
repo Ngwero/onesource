@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/currency_provider.dart';
 import 'product_card_details.dart';
@@ -21,7 +22,7 @@ class PopularProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unit = ProductCardDetails.unitLabel(product);
+    final unit = ProductCardDetails.unitLabel(product, context.tr);
     final formatPrice = ref.watch(formatPriceProvider);
 
     return Container(
@@ -49,7 +50,7 @@ class PopularProductCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      product.title,
+                      context.tr.productTitle(product),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

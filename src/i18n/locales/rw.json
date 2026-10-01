@@ -268,7 +268,17 @@
       "emptyText": "Hitamo ibicuruzwa byoherezwa mbere yo kwemeza itegeko.",
       "browse": "Reba ibicuruzwa byoherezwa hanze",
       "confirmedTitle": "Itegeko ryo kohereza ryakiriwe",
-      "confirmedSubtitle": "Ibiro byacu by'ubucuruzi bizasuzuma kuboneka, inyandiko n'ubwikorezi, hanyuma bakaganira nawe ku kwemeza kwa nyuma."
+      "confirmedSubtitle": "Ibiro byacu by'ubucuruzi bizasuzuma kuboneka, inyandiko n'ubwikorezi, hanyuma bakaganira nawe ku kwemeza kwa nyuma.",
+      "addressPlaceholder": "Ububiko, isoko cyangwa aho imizigo yo ku kibuga cy'indege yakirirwa",
+      "buyerHint": "Uko ibiro byacu by'ubucuruzi bwo hanze bizakuvugisha.",
+      "cityPlaceholder": "Umujyi cyangwa icyambu cyinjirirwamo",
+      "companyPlaceholder": "Ikigo cy'ubucuruzi (si ngombwa)",
+      "countryPlaceholder": "urugero: Ubwongereza",
+      "destinationHint": "Aho imizigo igomba kugera.",
+      "emailPlaceholder": "umuguzi@ikigo.com",
+      "namePlaceholder": "Izina ry'umuguzi cyangwa uwo kuvugisha",
+      "phonePlaceholder": "+256 cyangwa nimero mpuzamahanga",
+      "requirementsPlaceholder": "urugero: GlobalGAP, icyemezo cy'ubuzima bw'ibimera, gukonjesha, ingano ya paleti"
     }
   },
   "auth": {
@@ -309,7 +319,20 @@
     "updatingPassword": "Birimo guhindura ijambo ry'ibanga…",
     "passwordUpdated": "Ijambo ry'ibanga ryawe ryahinduwe. Ushobora kwinjira ukoresheje ijambo ry'ibanga rishya.",
     "resetLinkInvalid": "Uyu murongo wo kongera ntushobora gukora cyangwa wararengeje igihe. Saba undi muri gukomeza.",
-    "verifyingResetLink": "Birimo kugenzura umurongo wawe…"
+    "verifyingResetLink": "Birimo kugenzura umurongo wawe…",
+    "fullNamePlaceholder": "Izina ryawe",
+    "otpHint": "Andika kode y'imibare 6–8 yaje kuri imeyili yawe. Irangira nyuma y'iminota nka 5.",
+    "otpLabel": "Kode y'inshuro imwe (OTP)",
+    "otpSubtitle": "Twohereje kode yo kwemeza kuri {{email}}. Irangira nyuma y'iminota 5.",
+    "otpTitle": "Andika kode yawe yo kwinjira",
+    "passwordStrengthWeak": "Ntirikomeye — ongeramo inyuguti nkuru, imibare cyangwa ibimenyetso.",
+    "passwordStrengthFair": "Riringaniye — gerageza ijambo ry'ibanga rirerire ririmo imibare.",
+    "passwordStrengthGood": "Ijambo ry'ibanga ryiza.",
+    "passwordStrengthStrong": "Ijambo ry'ibanga rikomeye.",
+    "passwordsMatch": "Amagambo y'ibanga arahuye.",
+    "stepCredentials": "Kwinjira",
+    "stepVerify": "Emeza kode",
+    "verifyOtp": "Emeza winjire"
   },
   "accountMenu": {
     "helloGuest": "Muraho, mushyitsi",
@@ -1822,7 +1845,10 @@
     "passwordResetFailed": "Could not send password reset email",
     "passwordUpdateFailed": "Could not update password",
     "supabaseNotConfigured": "Supabase ntiyashyizweho. Ongeraho VITE_SUPABASE_URL na VITE_SUPABASE_ANON_KEY mu dosiye .env ku rwego rw'umushinga.",
-    "updateCategoryImage": "Failed to update category image"
+    "updateCategoryImage": "Failed to update category image",
+    "emailNotRegistered": "Nta konti yanditswe kuri iyi imeyili. Genzura amakosa cyangwa wiyandikishe.",
+    "otpInvalid": "Kode yo kwinjira si yo cyangwa yarangiye",
+    "otpSessionExpired": "Kode yawe yo kwinjira yarangiye. Ongera winjire ubone indi nshya."
   },
   "shop": {
     "loading": "Birapakura iduka ryawe…",

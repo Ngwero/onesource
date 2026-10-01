@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/cart_item.dart';
 import '../providers/currency_provider.dart';
 import 'product_thumbnail.dart';
@@ -60,7 +61,7 @@ class CartLineItem extends ConsumerWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              product.title,
+                              context.tr.productTitle(product),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -90,7 +91,7 @@ class CartLineItem extends ConsumerWidget {
                       if (product.unit.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
-                          product.unit,
+                          context.tr.unit(product.unit),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

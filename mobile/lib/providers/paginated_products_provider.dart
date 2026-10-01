@@ -8,20 +8,27 @@ class ProductsQuery {
   const ProductsQuery({
     this.categoryId,
     this.shop = 'fresh',
+    this.aisle,
   });
 
   final String? categoryId;
 
-  /// `fresh` (default produce), `kitchen`, or null for unfiltered.
+  /// `fresh` (default produce), `kitchen`, `cosmetics`, or null for unfiltered.
   final String? shop;
+
+  /// Aisle within the kitchen or cosmetics shop.
+  final String? aisle;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ProductsQuery && other.categoryId == categoryId && other.shop == shop;
+      other is ProductsQuery &&
+          other.categoryId == categoryId &&
+          other.shop == shop &&
+          other.aisle == aisle;
 
   @override
-  int get hashCode => Object.hash(categoryId, shop);
+  int get hashCode => Object.hash(categoryId, shop, aisle);
 }
 
 class PaginatedProductsState {
@@ -91,6 +98,7 @@ class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, P
       final result = await apiClientProvider.fetchProductsPage(
         category: arg.categoryId,
         shop: arg.shop,
+        aisle: arg.aisle,
         page: page,
         pageSize: pageSize,
       );

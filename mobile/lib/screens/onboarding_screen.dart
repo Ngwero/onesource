@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/hero_slide.dart';
 import '../providers/hero_provider.dart';
 import '../utils/onboarding_prefs.dart';
@@ -153,7 +154,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final slides = _slidesOf(async);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final safeIndex = _index.clamp(0, slides.length - 1);
-    final page = slides[safeIndex];
+    final page = slides[safeIndex].localized(context.tr);
     final accent = _accentCycle[safeIndex % _accentCycle.length];
 
     return Scaffold(
@@ -193,9 +194,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                             vertical: 10,
                           ),
                         ),
-                        child: const Text(
-                          'Skip',
-                          style: TextStyle(
+                        child: Text(
+                          context.tr.get('app.common.skip'),
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
                             letterSpacing: -0.2,
@@ -323,6 +324,7 @@ class _ParallaxPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final slide = this.slide.localized(context.tr);
     final opacity = (1 - delta * 0.85).clamp(0.15, 1.0);
     final scale = 1 - (delta * 0.08);
     final textShift = delta * 28;
@@ -529,9 +531,9 @@ class _HeroVisual extends StatelessWidget {
                       children: [
                         Icon(Icons.bolt_rounded, size: 16, color: accent),
                         const SizedBox(width: 4),
-                        const Text(
-                          'Fast',
-                          style: TextStyle(
+                        Text(
+                          context.tr.get('app.common.fast'),
+                          style: const TextStyle(
                             fontFamily: 'Gabarito',
                             fontWeight: FontWeight.w800,
                             fontSize: 13,

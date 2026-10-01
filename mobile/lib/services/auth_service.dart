@@ -137,6 +137,12 @@ class AuthService {
     await _client.auth.signOut();
   }
 
+  /// Sets a new password for the signed-in user.
+  Future<void> updatePassword(String newPassword) async {
+    await _ensureSupabaseReady();
+    await _client.auth.updateUser(UserAttributes(password: newPassword));
+  }
+
   Future<void> signOut() => _client.auth.signOut();
 }
 

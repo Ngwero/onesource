@@ -23,7 +23,7 @@ class ProductRecommendationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unit = ProductCardDetails.unitLabel(product);
+    final unit = ProductCardDetails.unitLabel(product, context.tr);
     final formatPrice = ref.watch(formatPriceProvider);
     final strings = ref.watch(stringsProvider);
 
@@ -48,7 +48,7 @@ class ProductRecommendationCard extends ConsumerWidget {
                 Center(child: ProductThumbnail(image: product.image, size: 96)),
                 const SizedBox(height: 8),
                 Text(
-                  product.title,
+                  context.tr.productTitle(product),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

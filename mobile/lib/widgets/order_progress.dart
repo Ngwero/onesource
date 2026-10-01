@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 
 class OrderProgress extends StatelessWidget {
   const OrderProgress({
@@ -15,7 +16,7 @@ class OrderProgress extends StatelessWidget {
   final bool vertical;
 
   static const _steps = [
-    _Step('placed', 'Order processed', Icons.receipt_long_rounded),
+    _Step('placed', 'Order placed', Icons.receipt_long_rounded),
     _Step('confirmed', 'Confirmed', Icons.local_shipping_outlined),
     _Step('packed', 'Packed', Icons.inventory_2_outlined),
     _Step('out_for_delivery', 'Out for delivery', Icons.delivery_dining_rounded),
@@ -94,7 +95,7 @@ class OrderProgress extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          step.label,
+                          context.tr.orderStatus(step.key),
                           style: TextStyle(
                             fontWeight: current ? FontWeight.w800 : FontWeight.w600,
                             fontSize: 15,
@@ -103,7 +104,7 @@ class OrderProgress extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _stepSubtitle(i, active),
+                          context.tr.get(_stepSubtitleKey(i, active)),
                           style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                         ),
                       ],
@@ -142,10 +143,10 @@ class OrderProgress extends StatelessWidget {
     );
   }
 
-  String _stepSubtitle(int index, int active) {
-    if (index < active) return 'Completed';
-    if (index == active) return 'In progress';
-    return 'Pending';
+  String _stepSubtitleKey(int index, int active) {
+    if (index < active) return 'app.orders.stepDone';
+    if (index == active) return 'app.orders.stepCurrent';
+    return 'app.orders.stepPending';
   }
 }
 

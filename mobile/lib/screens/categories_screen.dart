@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../data/kitchen_ware.dart';
 import '../providers/products_provider.dart';
 import '../utils/kitchen_mode.dart';
 import '../utils/responsive.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_grid.dart';
+import '../utils/shop_mode.dart';
 import '../widgets/shop_mode_switch.dart';
 
 class CategoriesScreen extends ConsumerWidget {
@@ -22,18 +24,18 @@ class CategoriesScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        title: const Text('Categories'),
+        title: Text(context.tr.get('nav.categoriesLabel')),
         backgroundColor: AppColors.canvas,
       ),
       body: categoriesAsync.when(
-        loading: () => const LoadingView(message: 'Loading categories…'),
+        loading: () => LoadingView(message: context.tr.get('common.loading')),
         error: (e, _) => ErrorView(message: e, onRetry: () => ref.invalidate(categoriesProvider)),
         data: (categories) {
           final produceCategories = categories
               .where((c) => c.id != kitchenWareCategoryId && c.id != 'kitchen-furniture')
               .toList();
           if (produceCategories.isEmpty) {
-            return const Center(child: Text('No categories available'));
+            return Center(child: Text(context.tr.get('app.products.none')));
           }
 
           return productsAsync.when(
@@ -52,7 +54,7 @@ class CategoriesScreen extends ConsumerWidget {
                 child: ListView(
                   padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPad),
                   children: [
-                    const ShopModeSwitch(kitchenMode: false),
+                    const ShopModeSwitch(mode: ShopMode.fresh),
                     const SizedBox(height: 16),
                     Material(
                       color: Colors.white,
@@ -70,7 +72,7 @@ class CategoriesScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          child: const Row(
+                          child: Row(
                             children: [
                               Text('🍳', style: TextStyle(fontSize: 28)),
                               SizedBox(width: 12),
@@ -79,12 +81,12 @@ class CategoriesScreen extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Kitchen Ware',
+                                      context.tr.get('header.shopKitchen'),
                                       style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                                     ),
                                     SizedBox(height: 2),
                                     Text(
-                                      'Pots, pans, tabletop & more',
+                                      context.tr.get('app.kitchen.tagline'),
                                       style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                                     ),
                                   ],
@@ -97,8 +99,8 @@ class CategoriesScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      'Browse fresh produce by aisle',
+                    Text(
+                      context.tr.get('app.categories.freshIntro'),
                       style: TextStyle(
                         fontFamily: 'Gabarito',
                         fontSize: 18,
@@ -166,13 +168,13 @@ class CategoriesScreen extends ConsumerWidget {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    cat.name,
+                                    context.tr.categoryName(cat.id, cat.name),
                                     style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
                                   ),
                                 ),
                                 TextButton(
                                   onPressed: () => context.push('/category/${cat.id}'),
-                                  child: const Text('See all'),
+                                  child: Text(context.tr.get('common.seeAll')),
                                 ),
                               ],
                             ),

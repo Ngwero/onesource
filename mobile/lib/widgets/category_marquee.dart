@@ -77,12 +77,17 @@ class _CategoryMarqueeState extends State<CategoryMarquee>
   String Function(Category) get _categoryPath =>
       widget.categoryPathBuilder ?? (Category c) => '/category/${c.id}';
 
+  String _label(Category c) {
+    final s = context.tr;
+    return s.or('categories.names.${c.id}', s.or('kitchen.aisles.${c.id}', s.or('cosmetics.aisles.${c.id}', c.name)));
+  }
+
   Widget _staticStrip() {
     final items = <({String label, String icon, VoidCallback onTap})>[
-      (label: 'All', icon: '🛒', onTap: () => context.push(widget.allPath)),
+      (label: context.tr.get('app.filter.all'), icon: '🛒', onTap: () => context.push(widget.allPath)),
       for (final c in widget.categories)
         (
-          label: c.name,
+          label: _label(c),
           icon: c.icon,
           onTap: () => context.push(_categoryPath(c)),
         ),
@@ -129,7 +134,7 @@ class _CategoryMarqueeState extends State<CategoryMarquee>
       mainAxisSize: MainAxisSize.min,
       children: [
         _CategoryMarqueeItem(
-          label: 'All',
+          label: context.tr.get('app.filter.all'),
           icon: '🛒',
           animation: animation,
           phase: 0,
@@ -138,7 +143,7 @@ class _CategoryMarqueeState extends State<CategoryMarquee>
         ),
         for (var i = 0; i < widget.categories.length; i++)
           _CategoryMarqueeItem(
-            label: widget.categories[i].name,
+            label: _label(widget.categories[i]),
             icon: widget.categories[i].icon,
             animation: animation,
             phase: i + 1,

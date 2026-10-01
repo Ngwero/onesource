@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/hero_slide.dart';
 
 /// Tall featured cards carousel (Dribbble-style hero).
@@ -74,7 +75,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
         itemCount: widget.slides.length,
         onPageChanged: (i) => setState(() => _active = i),
         itemBuilder: (context, index) {
-          final slide = widget.slides[index];
+          final slide = widget.slides[index].localized(context.tr);
           final image = slide.image.isNotEmpty
               ? slide.image
               : HeroSlide.fallbackImages[index % HeroSlide.fallbackImages.length];
@@ -165,7 +166,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                                       fontSize: 12,
                                     ),
                                   ),
-                                  child: const Text('Shop now'),
+                                  child: Text(context.tr.get('common.shopNow')),
                                 ),
                               ],
                             ),

@@ -1,3 +1,5 @@
+import '../i18n/app_strings.dart';
+
 class HeroSlide {
   const HeroSlide({
     required this.id,
@@ -35,6 +37,26 @@ class HeroSlide {
       cta2: json['cta2'] as String?,
       cta2Href: json['cta2Href'] as String? ?? json['cta2_href'] as String?,
       sortOrder: json['sortOrder'] as int? ?? json['sort_order'] as int? ?? 0,
+    );
+  }
+
+  /// Mirrors the website's `mergeHeroSlideWithI18n`: copy comes from the
+  /// active locale when the slide id has an entry; image and links stay.
+  HeroSlide localized(AppStrings s) {
+    final prefix = id.startsWith('hero-') ? 'home.slidesById.$id' : 'app.slides.$id';
+    if (!s.has('$prefix.title')) return this;
+    String pick(String field, String value) => s.or('$prefix.$field', value);
+    return HeroSlide(
+      id: id,
+      image: image,
+      badge: pick('badge', badge),
+      title: pick('title', title),
+      subtitle: pick('subtitle', subtitle),
+      cta: pick('cta', cta),
+      ctaHref: ctaHref,
+      cta2: cta2 == null ? null : pick('cta2', cta2!),
+      cta2Href: cta2Href,
+      sortOrder: sortOrder,
     );
   }
 

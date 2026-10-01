@@ -11,6 +11,7 @@ import { listCategories } from "../lib/categoriesService.js";
 import { categoryMatchAliases } from "../data/categories.js";
 import { withLocalProductFallback } from "../lib/localSeed.js";
 import { enrichProductsWithSuppliers } from "../lib/suppliersService.js";
+import { nestedAislePrefixes } from "../lib/aisles.js";
 import { productMatchesSearch, rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
 
 const router = Router();
@@ -69,6 +70,9 @@ router.get("/", async (req, res) => {
             .not("category", "in", "(kitchen-ware,cosmetics)");
         } else if (aisleId) {
           query = query.like("id", `${shopPrefix}-${aisleId}-%`);
+          for (const nested of nestedAislePrefixes(shopPrefix, aisleId)) {
+            query = query.not("id", "like", `${nested}%`);
+          }
         } else if (cosmeticsOnly && !category) {
           query = query.or("id.like.cosmetics-%,category.eq.cosmetics");
         } else if (kitchenOnly && !category) {

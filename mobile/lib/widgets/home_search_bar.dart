@@ -4,22 +4,21 @@ import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
+import '../utils/shop_mode.dart';
 
 class HomeSearchBar extends ConsumerWidget {
   const HomeSearchBar({
     super.key,
     this.onDark = false,
-    this.kitchenMode = false,
+    this.mode = ShopMode.fresh,
   });
 
   final bool onDark;
-  final bool kitchenMode;
+  final ShopMode mode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hint = kitchenMode
-        ? 'Search pots, pans, utensils…'
-        : ref.watch(stringsProvider).searchHint;
+    final hint = ref.watch(stringsProvider).get(mode.searchHintKey);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -46,7 +45,7 @@ class HomeSearchBar extends ConsumerWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(22),
-          onTap: () => context.push(kitchenMode ? '/kitchen/search' : '/search'),
+          onTap: () => context.push(mode.searchPath),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 15, 12, 15),
             child: Row(
@@ -69,6 +68,8 @@ class HomeSearchBar extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     hint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: AppColors.textMuted,
                       fontSize: 15,

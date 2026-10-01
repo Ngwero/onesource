@@ -15,6 +15,7 @@ class CartItem {
   Map<String, dynamic> toJson() => {
         'productId': product.id,
         'quantity': quantity,
+        'product': product.toJson(),
       };
 
   static CartItem? fromJson(Map<String, dynamic> json, Product product) {

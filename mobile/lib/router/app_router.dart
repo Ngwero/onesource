@@ -1,12 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../data/kitchen_ware.dart';
 import '../screens/account_screen.dart';
 import '../screens/app_shell.dart';
 import '../screens/auth_screens.dart';
+import '../screens/change_password_screen.dart';
 import '../screens/checkout_screen.dart';
+import '../screens/cosmetics_aisle_screen.dart';
+import '../screens/cosmetics_home_screen.dart';
+import '../screens/exports_screens.dart';
+import '../screens/lists_screens.dart';
+import '../screens/order_confirmation_screen.dart';
+import '../screens/privacy_screen.dart';
 import '../screens/kitchen_aisle_screen.dart';
 import '../screens/kitchen_categories_screen.dart';
 import '../screens/kitchen_home_screen.dart';
@@ -17,6 +26,7 @@ import '../screens/product_detail_screen.dart';
 import '../screens/category_screen.dart';
 import '../screens/search_screen.dart';
 import '../screens/splash_screen.dart';
+import '../utils/shop_mode.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -28,7 +38,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            state.error?.toString() ?? 'Page not found',
+            context.tr.get('app.errors.notFound'),
             textAlign: TextAlign.center,
           ),
         ),
@@ -60,8 +70,50 @@ final routerProvider = Provider<GoRouter>((ref) {
               return SafeArea(child: KitchenProductsScreen(dealsOnly: deals));
             },
           ),
+          GoRoute(path: '/cosmetics', builder: (_, __) => const CosmeticsHomeScreen()),
+          GoRoute(
+            path: '/cosmetics/categories',
+            builder: (_, __) => const SafeArea(child: CosmeticsCategoriesScreen()),
+          ),
+          GoRoute(
+            path: '/cosmetics/shop',
+            builder: (context, state) => SafeArea(
+              child: CosmeticsAisleScreen(
+                dealsOnly: state.uri.queryParameters['deals'] == '1',
+              ),
+            ),
+          ),
+          GoRoute(path: '/lists', builder: (_, __) => const SafeArea(child: SavedItemsScreen())),
+          GoRoute(path: '/history', builder: (_, __) => const SafeArea(child: BrowsingHistoryScreen())),
         ],
       ),
+      GoRoute(
+        path: '/cosmetics/aisle/:aisleId',
+        builder: (context, state) => CosmeticsAisleScreen(
+          aisleId: state.pathParameters['aisleId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/cosmetics/search',
+        builder: (context, state) => SearchScreen(
+          initialQuery: state.uri.queryParameters['q'],
+          mode: ShopMode.cosmetics,
+        ),
+      ),
+      GoRoute(path: '/exports', builder: (_, __) => const ExportsScreen()),
+      GoRoute(path: '/exports/confirmation', builder: (_, __) => const ExportOrderScreen()),
+      GoRoute(
+        path: '/checkout/confirmation/:id',
+        builder: (context, state) => OrderConfirmationScreen(
+          orderId: state.pathParameters['id']!,
+          isExport: state.uri.queryParameters['type'] == 'export',
+          paymentKey: state.uri.queryParameters['pay'] == 'momo'
+              ? 'checkout.mobileMoney'
+              : 'checkout.payOnDelivery',
+        ),
+      ),
+      GoRoute(path: '/privacy', builder: (_, __) => const PrivacyScreen()),
+      GoRoute(path: '/change-password', builder: (_, __) => const ChangePasswordScreen()),
       GoRoute(
         path: '/kitchen/aisle/:aisleId',
         builder: (context, state) => KitchenAisleScreen(
@@ -72,7 +124,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/kitchen/search',
         builder: (context, state) => SearchScreen(
           initialQuery: state.uri.queryParameters['q'],
-          kitchenOnly: true,
+          mode: ShopMode.kitchen,
         ),
       ),
       GoRoute(
@@ -86,6 +138,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (id == kitchenWareCategoryId || id == 'kitchen-furniture') {
             return '/kitchen';
           }
+          if (id == 'cosmetics') return '/cosmetics';
           return null;
         },
         builder: (context, state) => CategoryScreen(categoryId: state.pathParameters['id']!),

@@ -9,7 +9,6 @@ import '../models/order.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../utils/responsive.dart';
-import '../utils/open_url.dart';
 import '../utils/user_facing_error.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/order_progress.dart';
@@ -25,54 +24,91 @@ class AccountScreen extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
     final user = auth.value?.session?.user;
 
+    final s = context.tr;
     if (user == null) {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         appBar: AppBar(
-          title: const Text('Account'),
+          title: Text(s.get('common.account')),
           backgroundColor: AppColors.canvas,
         ),
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + shellBottomPadding(context)),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 48 - shellBottomPadding(context),
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Spacer(),
                 const Center(child: BrandLogoMark(size: 72, showWordmark: true)),
                 const SizedBox(height: 28),
-                const Text(
-                  'Sign in when you\'re ready',
+                Text(
+                  s.get('app.account.guestTitle'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Browse and shop without an account. Sign in to track orders and save your details.',
+                Text(
+                  s.get('accountMenu.signInPrompt'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textMuted, height: 1.45),
+                  style: const TextStyle(color: AppColors.textMuted, height: 1.45),
                 ),
                 const SizedBox(height: 28),
-                ElevatedButton(onPressed: () => context.push('/login'), child: const Text('Sign in')),
+                ElevatedButton(onPressed: () => context.push('/login'), child: Text(s.get('auth.signIn'))),
                 const SizedBox(height: 10),
-                OutlinedButton(onPressed: () => context.push('/signup'), child: const Text('Create account')),
+                OutlinedButton(onPressed: () => context.push('/signup'), child: Text(s.get('auth.signUp'))),
+                const SizedBox(height: 18),
+                const Card(
+                  child: Padding(padding: EdgeInsets.all(16), child: LocaleCurrencyBar()),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ActionChip(
+                      avatar: const Icon(Icons.favorite_border_rounded, size: 18),
+                      label: Text(s.get('accountMenu.savedItems')),
+                      onPressed: () => context.go('/lists'),
+                    ),
+                    ActionChip(
+                      avatar: const Icon(Icons.history_rounded, size: 18),
+                      label: Text(s.get('accountMenu.browsingHistory')),
+                      onPressed: () => context.go('/history'),
+                    ),
+                    ActionChip(
+                      avatar: const Icon(Icons.flight_takeoff_rounded, size: 18),
+                      label: Text(s.get('nav.exports')),
+                      onPressed: () => context.push('/exports'),
+                    ),
+                  ],
+                ),
                 const Spacer(flex: 2),
                 TextButton(
-                  onPressed: () => openPrivacyPolicy(),
-                  child: const Text('Privacy Policy'),
+                  onPressed: () => context.push('/privacy'),
+                  child: Text(s.get('app.privacy.title')),
                 ),
                 TextButton(
                   onPressed: () => context.go('/home'),
-                  child: const Text('Continue browsing'),
+                  child: Text(s.get('app.account.continueBrowsing')),
                 ),
               ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),
       );
     }
 
-    final name = profileAsync.value?.fullName ?? user.email ?? 'Customer';
+    final name = profileAsync.value?.fullName ?? user.email ?? s.get('app.account.customer');
     final initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
     final strings = ref.watch(stringsProvider);
     final bottomPad = shellBottomPadding(context);
@@ -80,7 +116,7 @@ class AccountScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        title: const Text('Account'),
+        title: Text(s.get('accountPage.title')),
         backgroundColor: AppColors.canvas,
       ),
       body: ListView(
@@ -101,7 +137,10 @@ class AccountScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Hello, $name', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                        Text(
+                          s.t('accountMenu.helloUser', {'name': name}),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                        ),
                         const SizedBox(height: 4),
                         Text(user.email ?? '', style: const TextStyle(color: AppColors.textMuted)),
                       ],
@@ -121,38 +160,81 @@ class AccountScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text('Shop', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.textMuted)),
-          const SizedBox(height: 8),
+          _SectionLabel(s.get('accountPage.sections.activity.title')),
           _HubGrid(children: [
-            _HubCard(icon: Icons.storefront_outlined, label: 'Browse shop', onTap: () => context.go('/shop')),
-            _HubCard(icon: Icons.grid_view_rounded, label: 'Categories', onTap: () => context.go('/categories')),
-            _HubCard(icon: Icons.search, label: 'Search', onTap: () => context.push('/search')),
-            _HubCard(icon: Icons.shopping_cart_outlined, label: 'Basket', onTap: () => context.go('/cart')),
+            _HubCard(
+              icon: Icons.receipt_long,
+              label: s.get('accountPage.cards.orders.title'),
+              onTap: () => context.push('/orders'),
+            ),
+            _HubCard(
+              icon: Icons.favorite_border_rounded,
+              label: s.get('accountMenu.savedItems'),
+              onTap: () => context.go('/lists'),
+            ),
+            _HubCard(
+              icon: Icons.history_rounded,
+              label: s.get('accountMenu.browsingHistory'),
+              onTap: () => context.go('/history'),
+            ),
+            _HubCard(
+              icon: Icons.shopping_cart_outlined,
+              label: s.get('accountPage.cards.basket.title'),
+              onTap: () => context.go('/cart'),
+            ),
           ]),
           const SizedBox(height: 20),
-          const Text('Activity', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.textMuted)),
-          const SizedBox(height: 8),
+          _SectionLabel(s.get('accountPage.sections.shop.title')),
           _HubGrid(children: [
-            _HubCard(icon: Icons.receipt_long, label: 'Orders', onTap: () => context.push('/orders')),
-            _HubCard(icon: Icons.payment_outlined, label: 'Checkout', onTap: () => context.push('/checkout')),
+            _HubCard(icon: Icons.eco_outlined, label: s.get('header.shopFresh'), onTap: () => context.go('/home')),
+            _HubCard(icon: Icons.kitchen_outlined, label: s.get('header.shopKitchen'), onTap: () => context.go('/kitchen')),
+            _HubCard(icon: Icons.spa_outlined, label: s.get('header.shopCosmetics'), onTap: () => context.go('/cosmetics')),
+            _HubCard(icon: Icons.flight_takeoff_rounded, label: s.get('nav.exports'), onTap: () => context.push('/exports')),
+            _HubCard(icon: Icons.grid_view_rounded, label: s.get('accountPage.sections.shop.links.categories'), onTap: () => context.go('/categories')),
+            _HubCard(icon: Icons.search, label: s.get('common.search'), onTap: () => context.push('/search')),
           ]),
+          const SizedBox(height: 20),
+          _SectionLabel(s.get('accountPage.sections.account.title')),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.lock_reset_rounded, color: AppColors.accent),
+                  title: Text(s.get('accountPage.cards.security.title')),
+                  subtitle: Text(s.get('accountPage.cards.security.description')),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/change-password'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.notifications_none_rounded, color: AppColors.accent),
+                  title: Text(s.get('app.notifications.title')),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/notifications'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined, color: AppColors.accent),
+                  title: Text(s.get('app.privacy.title')),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/privacy'),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
           OutlinedButton(
             onPressed: () async {
               await ref.read(authServiceProvider).signOut();
               if (context.mounted) context.go('/home');
             },
-            child: const Text('Sign out'),
+            child: Text(s.get('auth.signOut')),
           ),
           const SizedBox(height: 12),
           TextButton(
             onPressed: () => _confirmDeleteAccount(context, ref),
             style: TextButton.styleFrom(foregroundColor: const Color(0xFFB42318)),
-            child: const Text('Delete account'),
-          ),
-          TextButton(
-            onPressed: () => openPrivacyPolicy(),
-            child: const Text('Privacy Policy'),
+            child: Text(s.get('app.account.delete')),
           ),
         ],
       ),
@@ -161,21 +243,18 @@ class AccountScreen extends ConsumerWidget {
 }
 
 Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+  final s = context.tr;
   final proceed = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Delete account?'),
-      content: const Text(
-        'This permanently deletes your account and personal details. '
-        'You will not be able to sign in again with this email. '
-        'Order history kept for business records will be anonymized.',
-      ),
+      title: Text(s.get('app.account.deleteTitle')),
+      content: Text(s.get('app.account.deleteBody')),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(s.get('app.common.cancel'))),
         TextButton(
           onPressed: () => Navigator.pop(ctx, true),
           style: TextButton.styleFrom(foregroundColor: const Color(0xFFB42318)),
-          child: const Text('Continue'),
+          child: Text(s.get('app.common.continue')),
         ),
       ],
     ),
@@ -185,19 +264,17 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Confirm deletion'),
-      content: const Text(
-        'Are you sure you want to permanently delete your account? This cannot be undone.',
-      ),
+      title: Text(s.get('app.account.confirmDeleteTitle')),
+      content: Text(s.get('app.account.confirmDeleteBody')),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(s.get('app.common.cancel'))),
         FilledButton(
           onPressed: () => Navigator.pop(ctx, true),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFFB42318),
             foregroundColor: Colors.white,
           ),
-          child: const Text('Delete permanently'),
+          child: Text(s.get('app.account.deletePermanently')),
         ),
       ],
     ),
@@ -207,14 +284,14 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
   showDialog<void>(
     context: context,
     barrierDismissible: false,
-    builder: (ctx) => const PopScope(
+    builder: (ctx) => PopScope(
       canPop: false,
       child: AlertDialog(
         content: Row(
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 20),
-            Expanded(child: Text('Deleting account…')),
+            const CircularProgressIndicator(),
+            const SizedBox(width: 20),
+            Expanded(child: Text(s.get('app.account.deleting'))),
           ],
         ),
       ),
@@ -227,7 +304,7 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
     if (context.mounted) {
       Navigator.of(context, rootNavigator: true).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your account has been deleted.')),
+        SnackBar(content: Text(s.get('app.account.deleted'))),
       );
       context.go('/home');
     }
@@ -238,6 +315,23 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
         SnackBar(content: Text(formatUserFacingError(e))),
       );
     }
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.textMuted),
+      ),
+    );
   }
 }
 
@@ -282,7 +376,12 @@ class _HubCard extends StatelessWidget {
             children: [
               Icon(icon, color: AppColors.accent),
               const SizedBox(height: 8),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
             ],
           ),
         ),
@@ -321,18 +420,19 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider).value?.session?.user;
+    final s = context.tr;
 
     if (user == null) {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         appBar: AppBar(
-          title: const Text('My orders'),
+          title: Text(s.get('orders.title')),
           backgroundColor: AppColors.canvas,
         ),
         body: Center(
           child: FilledButton(
             onPressed: () => context.push('/login'),
-            child: const Text('Sign in to view orders'),
+            child: Text(s.get('app.orders.signIn')),
           ),
         ),
       );
@@ -341,7 +441,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
     return Scaffold(
       backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        title: const Text('My orders'),
+        title: Text(s.get('orders.title')),
         centerTitle: true,
         backgroundColor: AppColors.canvas,
         bottom: TabBar(
@@ -350,9 +450,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
           unselectedLabelColor: AppColors.textMuted,
           indicatorColor: AppColors.darkGreen,
           indicatorWeight: 3,
-          tabs: const [
-            Tab(text: 'In progress'),
-            Tab(text: 'Completed'),
+          tabs: [
+            Tab(text: s.get('app.orders.inProgress')),
+            Tab(text: s.get('app.orders.completed')),
           ],
         ),
       ),
@@ -377,11 +477,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
             children: [
               _OrderList(
                 orders: orders.where((o) => !_isCompleted(o.status)).toList(),
-                emptyMessage: 'No orders in progress',
+                emptyMessage: s.get('app.orders.noneInProgress'),
               ),
               _OrderList(
                 orders: orders.where((o) => _isCompleted(o.status)).toList(),
-                emptyMessage: 'No completed orders yet',
+                emptyMessage: s.get('app.orders.noneCompleted'),
               ),
             ],
           );
@@ -406,7 +506,7 @@ class _OrderList extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(emptyMessage, style: const TextStyle(color: AppColors.textMuted)),
-            TextButton(onPressed: () => context.go('/shop'), child: const Text('Start shopping')),
+            TextButton(onPressed: () => context.go('/shop'), child: Text(context.tr.get('common.shopNow'))),
           ],
         ),
       );
@@ -449,7 +549,7 @@ class _OrderList extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    order.status.replaceAll('_', ' '),
+                    context.tr.orderStatus(order.status),
                     style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                   ),
                   const SizedBox(height: 10),
@@ -465,7 +565,10 @@ class _OrderList extends ConsumerWidget {
                         side: const BorderSide(color: AppColors.darkGreen),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Track order', style: TextStyle(fontWeight: FontWeight.w700)),
+                      child: Text(
+                        context.tr.get('orders.trackOrder'),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ),
                 ],

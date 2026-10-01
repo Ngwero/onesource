@@ -4,212 +4,90 @@ import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../data/kitchen_ware.dart';
+import '../i18n/app_strings.dart';
 import '../models/product.dart';
-import '../providers/cart_provider.dart';
-import '../providers/kitchen_catalog_provider.dart';
+import '../providers/paginated_products_provider.dart';
+import '../utils/cart_feedback.dart';
 import '../utils/kitchen_mode.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_grid.dart';
+import '../widgets/products_load_more.dart';
 
 enum _KitchenFilter { all, deals, prime, inStock }
 
 enum _KitchenSort { featured, priceLow, priceHigh, name, rating }
 
-class KitchenAisleScreen extends ConsumerStatefulWidget {
+/// One kitchen aisle, paged straight from the server.
+class KitchenAisleScreen extends StatelessWidget {
   const KitchenAisleScreen({super.key, required this.aisleId});
 
   final String aisleId;
 
   @override
-  ConsumerState<KitchenAisleScreen> createState() => _KitchenAisleScreenState();
-}
-
-class _KitchenAisleScreenState extends ConsumerState<KitchenAisleScreen> {
-  _KitchenFilter _filter = _KitchenFilter.all;
-  _KitchenSort _sort = _KitchenSort.featured;
-
-  List<Product> _applyFilter(List<Product> products) {
-    return switch (_filter) {
-      _KitchenFilter.all => products,
-      _KitchenFilter.deals =>
-        products.where((p) => p.originalPrice != null && p.originalPrice! > p.price).toList(),
-      _KitchenFilter.prime => products.where((p) => p.prime).toList(),
-      _KitchenFilter.inStock => products.where((p) => p.inStock).toList(),
-    };
-  }
-
-  List<Product> _applySort(List<Product> products) {
-    final list = [...products];
-    switch (_sort) {
-      case _KitchenSort.priceLow:
-        list.sort((a, b) => a.price.compareTo(b.price));
-      case _KitchenSort.priceHigh:
-        list.sort((a, b) => b.price.compareTo(a.price));
-      case _KitchenSort.name:
-        list.sort((a, b) => a.title.compareTo(b.title));
-      case _KitchenSort.rating:
-        list.sort((a, b) => b.rating.compareTo(a.rating));
-      case _KitchenSort.featured:
-        return sortKitchenWithSaucepansFirst(list);
-    }
-    return list;
-  }
-
-  void _addToCart(Product product) {
-    ref.read(cartProvider.notifier).add(product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.title} added to basket'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.darkGreen,
-        action: SnackBarAction(
-          label: 'View',
-          textColor: AppColors.lemonGreen,
-          onPressed: () => context.go('/cart'),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final aisle = kitchenAisleById(widget.aisleId);
-    final productsAsync = ref.watch(kitchenAisleProductsProvider(widget.aisleId));
-    final title = aisle?.title ?? 'Kitchen aisle';
-    final icon = aisle?.icon ?? '🍳';
-    final accent = Color(aisle?.accentArgb ?? 0xFF2E5E4A);
-
-    return Scaffold(
-      backgroundColor: AppColors.canvas,
-      body: productsAsync.when(
-        loading: () => const LoadingView(message: 'Loading aisle…'),
-        error: (e, _) => ErrorView(
-          message: e.toString(),
-          onRetry: () => ref.read(kitchenCatalogNotifierProvider.notifier).refresh(),
-        ),
-        data: (raw) {
-          final products = _applySort(_applyFilter(raw));
-          return RefreshIndicator(
-            onRefresh: () async => ref.read(kitchenCatalogNotifierProvider.notifier).refresh(),
-            child: CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  pinned: true,
-                  expandedHeight: 140,
-                  backgroundColor: accent,
-                  foregroundColor: Colors.white,
-                  flexibleSpace: FlexibleSpaceBar(
-                    title: Text('$icon $title', style: const TextStyle(fontWeight: FontWeight.w800)),
-                    background: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [accent, accent.withValues(alpha: 0.75)],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${products.length} of ${raw.length} items',
-                          style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final f in _KitchenFilter.values)
-                              ChoiceChip(
-                                label: Text(switch (f) {
-                                  _KitchenFilter.all => 'All',
-                                  _KitchenFilter.deals => 'Deals',
-                                  _KitchenFilter.prime => 'Prime',
-                                  _KitchenFilter.inStock => 'In stock',
-                                }),
-                                selected: _filter == f,
-                                onSelected: (_) => setState(() => _filter = f),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonHideUnderline(
-                          child: DropdownButton<_KitchenSort>(
-                            value: _sort,
-                            items: const [
-                              DropdownMenuItem(value: _KitchenSort.featured, child: Text('Featured')),
-                              DropdownMenuItem(value: _KitchenSort.priceLow, child: Text('Price: low to high')),
-                              DropdownMenuItem(value: _KitchenSort.priceHigh, child: Text('Price: high to low')),
-                              DropdownMenuItem(value: _KitchenSort.name, child: Text('Name')),
-                              DropdownMenuItem(value: _KitchenSort.rating, child: Text('Rating')),
-                            ],
-                            onChanged: (v) {
-                              if (v != null) setState(() => _sort = v);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (products.isEmpty)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: Text('No products in this aisle')),
-                  )
-                else
-                  ProductSliverGrid(
-                    products: products,
-                    onAdd: _addToCart,
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                  ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _KitchenFeed(aisleId: aisleId);
 }
 
 /// Full kitchen catalog (all aisles), optional deals-only.
-class KitchenProductsScreen extends ConsumerStatefulWidget {
+class KitchenProductsScreen extends StatelessWidget {
   const KitchenProductsScreen({super.key, this.dealsOnly = false});
 
   final bool dealsOnly;
 
   @override
-  ConsumerState<KitchenProductsScreen> createState() => _KitchenProductsScreenState();
+  Widget build(BuildContext context) => _KitchenFeed(dealsOnly: dealsOnly);
 }
 
-class _KitchenProductsScreenState extends ConsumerState<KitchenProductsScreen> {
-  late _KitchenFilter _filter =
-      widget.dealsOnly ? _KitchenFilter.deals : _KitchenFilter.all;
+class _KitchenFeed extends ConsumerStatefulWidget {
+  const _KitchenFeed({this.aisleId, this.dealsOnly = false});
+
+  final String? aisleId;
+  final bool dealsOnly;
+
+  @override
+  ConsumerState<_KitchenFeed> createState() => _KitchenFeedState();
+}
+
+class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
+  final _scrollController = ScrollController();
+  InfiniteScrollListener? _scrollListener;
+  late _KitchenFilter _filter = widget.dealsOnly ? _KitchenFilter.deals : _KitchenFilter.all;
   _KitchenSort _sort = _KitchenSort.featured;
 
-  List<Product> _apply(List<Product> products) {
+  ProductsQuery get _query => ProductsQuery(shop: 'kitchen', aisle: widget.aisleId);
+
+  PaginatedProductsNotifier get _notifier => ref.read(paginatedProductsProvider(_query).notifier);
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollListener = InfiniteScrollListener(
+      controller: _scrollController,
+      onLoadMore: () => _notifier.loadMore(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollListener?.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  List<Product> _apply(List<Product> products, AppStrings s) {
     var list = switch (_filter) {
-      _KitchenFilter.all => products,
+      _KitchenFilter.all => [...products],
       _KitchenFilter.deals =>
         products.where((p) => p.originalPrice != null && p.originalPrice! > p.price).toList(),
       _KitchenFilter.prime => products.where((p) => p.prime).toList(),
       _KitchenFilter.inStock => products.where((p) => p.inStock).toList(),
     };
-    list = [...list];
     switch (_sort) {
       case _KitchenSort.priceLow:
         list.sort((a, b) => a.price.compareTo(b.price));
       case _KitchenSort.priceHigh:
         list.sort((a, b) => b.price.compareTo(a.price));
       case _KitchenSort.name:
-        list.sort((a, b) => a.title.compareTo(b.title));
+        list.sort((a, b) => s.productTitle(a).compareTo(s.productTitle(b)));
       case _KitchenSort.rating:
         list.sort((a, b) => b.rating.compareTo(a.rating));
       case _KitchenSort.featured:
@@ -218,104 +96,157 @@ class _KitchenProductsScreenState extends ConsumerState<KitchenProductsScreen> {
     return list;
   }
 
-  void _addToCart(Product product) {
-    ref.read(cartProvider.notifier).add(product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.title} added'),
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(label: 'Basket', onPressed: () => context.go('/cart')),
-      ),
-    );
+  /// Filters can leave too few items to scroll, so the scroll trigger never fires.
+  void _topUpIfShort(PaginatedProductsState state, int visible) {
+    if (visible >= 12 || !state.hasMore || state.isLoadingMore || state.isInitialLoading) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _notifier.loadMore();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final catalogAsync = ref.watch(kitchenCatalogProvider);
+    final s = context.tr;
+    final state = ref.watch(paginatedProductsProvider(_query));
+    final aisle = widget.aisleId == null ? null : kitchenAisleById(widget.aisleId!);
+    final accent = Color(aisle?.accentArgb ?? 0xFF2E5E4A);
+
+    final Widget header = widget.aisleId != null
+        ? SliverAppBar(
+            pinned: true,
+            expandedHeight: 140,
+            backgroundColor: accent,
+            foregroundColor: Colors.white,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                '${aisle?.icon ?? '🍳'} ${aisle != null ? s.kitchenAisle(aisle.id, aisle.title) : s.get('kitchen.aisleOf')}',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              background: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [accent, accent.withValues(alpha: 0.75)],
+                  ),
+                ),
+              ),
+            ),
+          )
+        : SliverAppBar(
+            pinned: true,
+            backgroundColor: AppColors.canvas,
+            title: Text(s.get(widget.dealsOnly ? 'kitchen.kicker' : 'kitchen.home.allCategories')),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search_rounded),
+                onPressed: () => context.push('/kitchen/search'),
+              ),
+            ],
+          );
+
+    if (state.isInitialLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.canvas,
+        body: CustomScrollView(
+          slivers: [
+            header,
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: LoadingView(message: s.get('common.loading')),
+            ),
+          ],
+        ),
+      );
+    }
+    if (state.error != null && state.items.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.canvas,
+        appBar: AppBar(),
+        body: ErrorView(message: state.error!, onRetry: () => _notifier.refresh()),
+      );
+    }
+
+    final products = _apply(state.items, s);
+    _topUpIfShort(state, products.length);
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
-      appBar: AppBar(
-        title: Text(widget.dealsOnly ? 'Kitchen deals' : 'All kitchen ware'),
-        backgroundColor: AppColors.canvas,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () => context.push('/kitchen/search'),
-          ),
-        ],
-      ),
-      body: catalogAsync.when(
-        loading: () => const LoadingView(message: 'Loading kitchen ware…'),
-        error: (e, _) => ErrorView(
-          message: e.toString(),
-          onRetry: () => ref.read(kitchenCatalogNotifierProvider.notifier).refresh(),
-        ),
-        data: (raw) {
-          final products = _apply(raw);
-          return RefreshIndicator(
-            onRefresh: () async => ref.read(kitchenCatalogNotifierProvider.notifier).refresh(),
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      body: RefreshIndicator(
+        onRefresh: () => _notifier.refresh(),
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            header,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.t('kitchen.categoryCount', {'count': state.total}),
+                      style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        Text(
-                          '${products.length} items',
-                          style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            for (final f in _KitchenFilter.values)
-                              ChoiceChip(
-                                label: Text(switch (f) {
-                                  _KitchenFilter.all => 'All',
-                                  _KitchenFilter.deals => 'Deals',
-                                  _KitchenFilter.prime => 'Prime',
-                                  _KitchenFilter.inStock => 'In stock',
-                                }),
-                                selected: _filter == f,
-                                onSelected: (_) => setState(() => _filter = f),
-                              ),
-                          ],
-                        ),
-                        DropdownButton<_KitchenSort>(
-                          value: _sort,
-                          items: const [
-                            DropdownMenuItem(value: _KitchenSort.featured, child: Text('Featured')),
-                            DropdownMenuItem(value: _KitchenSort.priceLow, child: Text('Price: low to high')),
-                            DropdownMenuItem(value: _KitchenSort.priceHigh, child: Text('Price: high to low')),
-                            DropdownMenuItem(value: _KitchenSort.name, child: Text('Name')),
-                            DropdownMenuItem(value: _KitchenSort.rating, child: Text('Rating')),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) setState(() => _sort = v);
-                          },
-                        ),
+                        for (final f in _KitchenFilter.values)
+                          ChoiceChip(
+                            label: Text(s.get(switch (f) {
+                              _KitchenFilter.all => 'app.filter.all',
+                              _KitchenFilter.deals => 'app.filter.deals',
+                              _KitchenFilter.prime => 'app.filter.prime',
+                              _KitchenFilter.inStock => 'app.filter.inStock',
+                            })),
+                            selected: _filter == f,
+                            onSelected: (_) => setState(() => _filter = f),
+                          ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<_KitchenSort>(
+                        value: _sort,
+                        items: [
+                          DropdownMenuItem(value: _KitchenSort.featured, child: Text(s.get('kitchen.sortTop'))),
+                          DropdownMenuItem(value: _KitchenSort.priceLow, child: Text(s.get('kitchen.sortPriceAsc'))),
+                          DropdownMenuItem(value: _KitchenSort.priceHigh, child: Text(s.get('kitchen.sortPriceDesc'))),
+                          DropdownMenuItem(value: _KitchenSort.name, child: Text(s.get('kitchen.sortName'))),
+                          DropdownMenuItem(value: _KitchenSort.rating, child: Text(s.get('app.sort.rating'))),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) setState(() => _sort = v);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-                if (products.isEmpty)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: Text('No kitchen products found')),
-                  )
-                else
-                  ProductSliverGrid(
-                    products: products,
-                    onAdd: _addToCart,
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                  ),
-              ],
+              ),
             ),
-          );
-        },
+            if (products.isEmpty && !state.hasMore)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Text(s.get(state.items.isEmpty ? 'kitchen.empty' : 'kitchen.noFilterResults')),
+                ),
+              )
+            else
+              ProductSliverGrid(
+                products: products,
+                onAdd: (p) => addToCartWithFeedback(context, ref, p),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              ),
+            ProductsLoadMoreSliver(
+              isLoadingMore: state.isLoadingMore,
+              hasMore: state.hasMore,
+              itemCount: state.items.length,
+              total: state.total,
+            ),
+          ],
+        ),
       ),
     );
   }

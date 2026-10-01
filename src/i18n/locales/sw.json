@@ -268,7 +268,17 @@
       "emptyText": "Chagua mazao ya daraja la kuuza nje kabla ya kuthibitisha oda.",
       "browse": "Vinjari mazao ya kuuza nje",
       "confirmedTitle": "Oda ya usafirishaji imepokelewa",
-      "confirmedSubtitle": "Dawati letu la usafirishaji litakagua upatikanaji, nyaraka na usafirishaji, kisha litawasiliana nawe kwa uthibitisho wa mwisho."
+      "confirmedSubtitle": "Dawati letu la usafirishaji litakagua upatikanaji, nyaraka na usafirishaji, kisha litawasiliana nawe kwa uthibitisho wa mwisho.",
+      "addressPlaceholder": "Ghala, soko au kituo cha mizigo cha uwanja wa ndege",
+      "buyerHint": "Jinsi ofisi yetu ya mauzo ya nje itakavyowasiliana nawe.",
+      "cityPlaceholder": "Jiji au bandari ya kuingia",
+      "companyPlaceholder": "Kampuni ya biashara (si lazima)",
+      "countryPlaceholder": "mf. Uingereza",
+      "destinationHint": "Mahali mzigo unapaswa kufika.",
+      "emailPlaceholder": "mnunuzi@kampuni.com",
+      "namePlaceholder": "Jina la mnunuzi au mtu wa mawasiliano",
+      "phonePlaceholder": "+256 au namba ya kimataifa",
+      "requirementsPlaceholder": "mf. GlobalGAP, cheti cha afya ya mimea, mnyororo wa baridi, ukubwa wa paleti"
     }
   },
   "auth": {
@@ -309,7 +319,20 @@
     "updatingPassword": "Inasasisha nenosiri…",
     "passwordUpdated": "Nenosiri lako limesasishwa. Unaweza kuingia kwa nenosiri lako jipya.",
     "resetLinkInvalid": "Kiungo hiki cha kuweka upya si sahihi au kimeisha muda. Omba kipya ili kuendelea.",
-    "verifyingResetLink": "Inathibitisha kiungo chako…"
+    "verifyingResetLink": "Inathibitisha kiungo chako…",
+    "fullNamePlaceholder": "Jina lako",
+    "otpHint": "Weka msimbo wa tarakimu 6–8 kutoka kwenye barua pepe yako. Unaisha baada ya takriban dakika 5.",
+    "otpLabel": "Msimbo wa mara moja (OTP)",
+    "otpSubtitle": "Tumetuma msimbo wa uthibitisho kwa {{email}}. Unaisha baada ya dakika 5.",
+    "otpTitle": "Weka msimbo wako wa kuingia",
+    "passwordStrengthWeak": "Dhaifu — ongeza herufi kubwa, namba au alama.",
+    "passwordStrengthFair": "Wastani — jaribu nenosiri refu zaidi lenye namba.",
+    "passwordStrengthGood": "Nenosiri zuri.",
+    "passwordStrengthStrong": "Nenosiri imara.",
+    "passwordsMatch": "Nenosiri zinalingana.",
+    "stepCredentials": "Ingia",
+    "stepVerify": "Thibitisha msimbo",
+    "verifyOtp": "Thibitisha na uingie"
   },
   "accountMenu": {
     "helloGuest": "Habari, mgeni",
@@ -1822,7 +1845,10 @@
     "passwordResetFailed": "Could not send password reset email",
     "passwordUpdateFailed": "Could not update password",
     "supabaseNotConfigured": "Supabase haijasanidiwa. Ongeza VITE_SUPABASE_URL na VITE_SUPABASE_ANON_KEY kwenye faili .env kwenye mzizi wa mradi.",
-    "updateCategoryImage": "Failed to update category image"
+    "updateCategoryImage": "Failed to update category image",
+    "emailNotRegistered": "Hakuna akaunti iliyosajiliwa kwa barua pepe hii. Kagua makosa ya tahajia au jisajili upya.",
+    "otpInvalid": "Msimbo wa kuingia si sahihi au umeisha muda",
+    "otpSessionExpired": "Msimbo wako wa kuingia umeisha muda. Ingia tena kupata msimbo mpya."
   },
   "shop": {
     "loading": "Inapakia duka lako…",

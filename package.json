@@ -15,7 +15,8 @@
     "seed:bulk": "npm run seed:bulk --prefix server",
     "check:env": "npm run check:env --prefix server",
     "i18n:terms": "node scripts/generate-product-terms.mjs",
-    "i18n:build": "node scripts/generate-product-terms.mjs && node scripts/build-locales.mjs"
+    "i18n:build": "node scripts/generate-product-terms.mjs && node scripts/build-locales.mjs && node scripts/sync-mobile-locales.mjs",
+    "i18n:mobile": "node scripts/sync-mobile-locales.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",

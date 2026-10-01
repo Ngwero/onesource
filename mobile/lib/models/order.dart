@@ -119,6 +119,7 @@ class CreateOrderPayload {
     this.addressLine2,
     this.district,
     this.notes,
+    this.orderType,
   });
 
   final String? userId;
@@ -135,6 +136,9 @@ class CreateOrderPayload {
   final String? district;
   final String? notes;
 
+  /// `export` for export orders; omitted for regular deliveries.
+  final String? orderType;
+
   Map<String, dynamic> toJson() => {
         if (userId != null) 'userId': userId,
         'email': email,
@@ -149,5 +153,6 @@ class CreateOrderPayload {
         if (addressLine2 != null) 'addressLine2': addressLine2,
         if (district != null) 'district': district,
         if (notes != null) 'notes': notes,
+        if (orderType != null) 'orderType': orderType,
       };
 }

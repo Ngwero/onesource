@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../utils/cart_feedback.dart';
 import '../data/home_rows.dart';
 import '../i18n/app_strings.dart';
 import '../models/hero_slide.dart';
@@ -57,21 +58,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
-  void _addToCart(Product product) {
-    ref.read(cartProvider.notifier).add(product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.title} added to basket'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.darkGreen,
-        action: SnackBarAction(
-          label: 'View',
-          textColor: AppColors.lemonGreen,
-          onPressed: () => context.go('/cart'),
-        ),
-      ),
-    );
-  }
+  void _addToCart(Product product) => addToCartWithFeedback(context, ref, product);
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +77,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(authStateProvider).value?.session?.user;
     final greetingName = profile?.fullName?.split(' ').first ??
         user?.email?.split('@').first ??
-        'Guest';
+        context.tr.get('app.common.guest');
     final strings = ref.watch(stringsProvider);
 
     if (productsState.isInitialLoading) {
@@ -104,13 +91,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               SliverToBoxAdapter(
                 child: HomeHeader(
                   name: greetingName,
-                  kitchenMode: false,
                   onAccount: () => context.go('/account'),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 48)),
-              const SliverToBoxAdapter(
-                child: LoadingView(message: 'Loading fresh produce…'),
+              SliverToBoxAdapter(
+                child: LoadingView(message: context.tr.get('common.loading')),
               ),
             ],
           ),
@@ -168,7 +154,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               SliverToBoxAdapter(
                 child: HomeHeader(
                   name: greetingName,
-                  kitchenMode: false,
                   onAccount: () => context.go('/account'),
                 ),
               ),
@@ -192,6 +177,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ? const SizedBox.shrink()
                             : FeaturedCarousel(slides: slides),
                       ),
+                      const SizedBox(height: 16),
+                      _ExportsBanner(onTap: () => context.push('/exports')),
                     ],
                   ),
                 ),
@@ -231,9 +218,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               if (popularProducts.isEmpty && themedRows.isEmpty)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: Text('No products available')),
+                  child: Center(child: Text(context.tr.get('app.products.none'))),
                 )
               else if (popularProducts.isNotEmpty)
                 PopularProductSliverGrid(
@@ -272,6 +259,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 itemCount: productsState.items.length,
                 total: productsState.total,
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExportsBanner extends StatelessWidget {
+  const _ExportsBanner({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.tr;
+    return Material(
+      color: const Color(0xFF064E3B),
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+          child: Row(
+            children: [
+              const Text('✈️', style: TextStyle(fontSize: 28)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.get('exports.hero.kicker').toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xFFA7F3D0),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      s.get('exports.hero.title'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.white),
             ],
           ),
         ),

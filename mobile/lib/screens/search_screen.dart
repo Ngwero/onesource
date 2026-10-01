@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
-import '../providers/cart_provider.dart';
+import '../data/cosmetics.dart';
+import '../i18n/app_strings.dart';
+import '../utils/cart_feedback.dart';
 import '../providers/products_provider.dart';
 import '../providers/search_catalog_provider.dart';
 import '../providers/search_provider.dart';
 import '../utils/kitchen_mode.dart';
 import '../utils/responsive.dart';
+import '../utils/shop_mode.dart';
 import '../utils/user_facing_error.dart';
 import '../widgets/search_result_tile.dart';
 
@@ -16,11 +19,11 @@ class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({
     super.key,
     this.initialQuery,
-    this.kitchenOnly = false,
+    this.mode = ShopMode.fresh,
   });
 
   final String? initialQuery;
-  final bool kitchenOnly;
+  final ShopMode mode;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -36,9 +39,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _controller = TextEditingController(text: widget.initialQuery ?? '');
     _focusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(searchShopProvider.notifier).state =
-          widget.kitchenOnly ? 'kitchen' : 'fresh';
-      ref.read(searchCatalogProvider(widget.kitchenOnly ? 'kitchen' : 'fresh').future);
+      ref.read(searchShopProvider.notifier).state = widget.mode.name;
+      ref.read(searchCatalogProvider(widget.mode.name).future);
       ref.read(searchProvider.notifier).setQuery(_controller.text);
       _focusNode.requestFocus();
     });
@@ -65,9 +67,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final search = ref.watch(searchProvider);
-    final results = widget.kitchenOnly
-        ? search.results.where(isKitchenProduct).toList()
-        : search.results.where((p) => !isKitchenProduct(p)).toList();
+    final results = search.results.where((p) {
+      return switch (widget.mode) {
+        ShopMode.kitchen => isKitchenProduct(p),
+        ShopMode.cosmetics => isCosmeticsProduct(p),
+        ShopMode.fresh => !isKitchenProduct(p) && !isCosmeticsProduct(p),
+      };
+    }).toList();
+    final s = context.tr;
     final scoped = SearchState(
       query: search.query,
       results: results,
@@ -101,9 +108,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             onChanged: _onQueryChanged,
             onSubmitted: _onQueryChanged,
             decoration: InputDecoration(
-              hintText: widget.kitchenOnly
-                  ? 'Search pots, pans, utensils…'
-                  : 'Search fresh produce…',
+              hintText: s.get(widget.mode.searchHintKey),
               hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 15),
               prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 22),
               suffixIcon: _controller.text.isNotEmpty
@@ -127,6 +132,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildBody(SearchState search) {
+    final s = context.tr;
     if (search.isLoading && search.results.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.darkGreen),
@@ -158,12 +164,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             children: [
               const Icon(Icons.search_off_rounded, size: 48, color: AppColors.textMuted),
               const SizedBox(height: 12),
-              Text('No results for "${search.query}"', textAlign: TextAlign.center),
+              Text(s.t('search.noResults', {'query': search.query}), textAlign: TextAlign.center),
               const SizedBox(height: 8),
               Text(
-                widget.kitchenOnly
-                    ? 'Try pan, spatula, knife, or bowl'
-                    : 'Try chicken, mango, tomatoes, or organic',
+                switch (widget.mode) {
+                  ShopMode.kitchen => s.get('kitchen.searchHint'),
+                  ShopMode.cosmetics => s.get('cosmetics.searchHint'),
+                  ShopMode.fresh => s.get('search.tryDifferent'),
+                },
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: AppColors.textMuted),
               ),
@@ -179,7 +187,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
           child: Text(
-            '${search.total} result${search.total == 1 ? '' : 's'} for "${search.query}"',
+            '${s.t(search.total == 1 ? 'search.results' : 'search.results_plural', {'count': search.total})} ${s.t('search.forQuery', {'query': search.query})}',
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textMuted),
           ),
         ),
@@ -213,16 +221,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               return SearchResultTile(
                 product: product,
                 query: search.query,
-                onAdd: () {
-                  ref.read(cartProvider.notifier).add(product);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${product.title} added'),
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: AppColors.darkGreen,
-                    ),
-                  );
-                },
+                onAdd: () => addToCartWithFeedback(context, ref, product),
               );
             },
           ),
@@ -240,12 +239,13 @@ class _SuggestionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.tr;
     return ListView(
       padding: EdgeInsets.fromLTRB(20, 8, 20, shellBottomPadding(context)),
       children: [
-        const Text(
-          'Popular searches',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        Text(
+          s.get('app.search.popular'),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         const SizedBox(height: 14),
         Wrap(
@@ -263,9 +263,9 @@ class _SuggestionsView extends StatelessWidget {
           }).toList(),
         ),
         const SizedBox(height: 28),
-        const Text(
-          'Browse by category',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        Text(
+          s.get('app.search.browseByCategory'),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         const SizedBox(height: 12),
         _CategoryShortcuts(onTap: onTap),
@@ -291,7 +291,10 @@ class _CategoryShortcuts extends ConsumerWidget {
           return ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Text(c.icon, style: const TextStyle(fontSize: 24)),
-            title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+            title: Text(
+              context.tr.categoryName(c.id, c.name),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             trailing: const Icon(Icons.north_east_rounded, size: 18, color: AppColors.textMuted),
             onTap: () => context.push('/category/${c.id}'),
           );

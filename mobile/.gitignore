@@ -50,3 +50,6 @@ app.*.map.json
 /android/*.jks
 /android/*.keystore
 /android/PLAY_SIGNING_BACKUP.txt
+
+# Local JDK used for Android builds
+.jdk/

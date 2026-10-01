@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../utils/cart_feedback.dart';
 import '../data/kitchen_ware.dart';
 import '../i18n/app_strings.dart';
 import '../models/hero_slide.dart';
@@ -13,6 +14,7 @@ import '../providers/kitchen_catalog_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../services/auth_service.dart';
 import '../utils/kitchen_mode.dart';
+import '../utils/shop_mode.dart';
 import '../widgets/category_marquee.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/home_header.dart';
@@ -59,21 +61,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
     super.dispose();
   }
 
-  void _addToCart(Product product) {
-    ref.read(cartProvider.notifier).add(product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.title} added to basket'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.darkGreen,
-        action: SnackBarAction(
-          label: 'View',
-          textColor: AppColors.lemonGreen,
-          onPressed: () => context.go('/cart'),
-        ),
-      ),
-    );
-  }
+  void _addToCart(Product product) => addToCartWithFeedback(context, ref, product);
 
   List<Category> get _kitchenCategories => [
         for (final aisle in kitchenWareAisles)
@@ -92,7 +80,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
     final user = ref.watch(authStateProvider).value?.session?.user;
     final greetingName = profile?.fullName?.split(' ').first ??
         user?.email?.split('@').first ??
-        'Guest';
+        context.tr.get('app.common.guest');
 
     ref.listen(paginatedProductsProvider(query), (_, next) {
       if (next.items.isNotEmpty) {
@@ -114,13 +102,13 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
               SliverToBoxAdapter(
                 child: HomeHeader(
                   name: greetingName,
-                  kitchenMode: true,
+                  mode: ShopMode.kitchen,
                   onAccount: () => context.go('/account'),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 48)),
-              const SliverToBoxAdapter(
-                child: LoadingView(message: 'Loading kitchen ware…'),
+              SliverToBoxAdapter(
+                child: LoadingView(message: context.tr.get('common.loading')),
               ),
             ],
           ),
@@ -181,7 +169,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
               SliverToBoxAdapter(
                 child: HomeHeader(
                   name: greetingName,
-                  kitchenMode: true,
+                  mode: ShopMode.kitchen,
                   onAccount: () => context.go('/account'),
                 ),
               ),
@@ -257,9 +245,9 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                 ),
               ),
               if (popularProducts.isEmpty && themedRows.isEmpty)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: Text('No kitchen products available')),
+                  child: Center(child: Text(context.tr.get('kitchen.empty'))),
                 )
               else if (popularProducts.isNotEmpty)
                 PopularProductSliverGrid(

@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../utils/auth_errors.dart';
-import '../utils/open_url.dart';
 import '../widgets/auth_shell.dart';
 import '../widgets/auth_step_indicator.dart';
 import '../widgets/password_strength_meter.dart';
@@ -75,11 +75,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.tr;
     return AuthShell(
-      title: _otpStep ? 'Verify your code' : 'Welcome back',
+      title: _otpStep ? s.get('auth.otpTitle') : s.get('auth.loginTitle'),
       subtitle: _otpStep
-          ? 'Enter the code we sent to ${_email.text}'
-          : 'Sign in to track orders and checkout faster.',
+          ? s.t('auth.otpSubtitle', {'email': _email.text})
+          : s.get('auth.loginSubtitle'),
       onBack: _otpStep
           ? () => setState(() {
                 _otpStep = false;
@@ -94,8 +95,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               }
             },
       footer: AuthFooterLink(
-        prompt: "Don't have an account? ",
-        action: 'Sign up',
+        prompt: '${s.get('auth.noAccount')} ',
+        action: s.get('app.auth.signUp'),
         onTap: () => context.push('/signup'),
       ),
       child: Column(
@@ -105,7 +106,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 24),
           if (!_otpStep) ...[
             AuthFormField(
-              label: 'Email address',
+              label: s.get('app.auth.emailAddress'),
               controller: _email,
               hint: 'example@gmail.com',
               keyboardType: TextInputType.emailAddress,
@@ -113,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             const SizedBox(height: 18),
             AuthFormField(
-              label: 'Password',
+              label: s.get('auth.password'),
               controller: _password,
               obscureText: !_showPassword,
               autofillHints: const [AutofillHints.password],
@@ -136,7 +137,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text('Remember me', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                Text(s.get('app.auth.rememberMe'), style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
                 const Spacer(),
                 TextButton(
                   onPressed: () => context.push('/forgot-password'),
@@ -145,13 +146,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text('Forgot password?', style: TextStyle(fontWeight: FontWeight.w600)),
+                  child: Text(s.get('auth.forgotPassword'), style: const TextStyle(fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
           ] else ...[
             AuthFormField(
-              label: 'Verification code',
+              label: s.get('auth.otpLabel'),
               controller: _otp,
               hint: '000000',
               keyboardType: TextInputType.number,
@@ -170,10 +171,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               style: const TextStyle(fontSize: 22, letterSpacing: 6, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Enter the 6-digit code from your email. It expires in about 5 minutes.',
+            Text(
+              s.get('auth.otpHint'),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppColors.textMuted, height: 1.4),
+              style: const TextStyle(fontSize: 12, color: AppColors.textMuted, height: 1.4),
             ),
           ],
           if (_error != null) ...[
@@ -182,9 +183,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ],
           const SizedBox(height: 24),
           AuthPrimaryButton(
-            label: _otpStep
-                ? 'Verify & sign in'
-                : 'Log in',
+            label: _otpStep ? s.get('auth.verifyOtp') : s.get('app.auth.logIn'),
             loading: _submitting,
             onPressed: _otpStep
                 ? (_otp.text.length == 6 ? _submitOtp : null)
@@ -224,11 +223,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   Future<void> _submit() async {
     if (_password.text != _confirm.text) {
-      setState(() => _error = 'Passwords do not match');
+      setState(() => _error = context.tr.get('auth.passwordMismatch'));
       return;
     }
     if (_password.text.length < 6) {
-      setState(() => _error = 'Password must be at least 6 characters');
+      setState(() => _error = context.tr.get('auth.passwordTooShort'));
       return;
     }
 
@@ -245,7 +244,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             fullName: _name.text,
           );
       if (needsSignIn) {
-        setState(() => _success = 'Account created. Please log in to continue.');
+        setState(() => _success = context.tr.get('app.auth.accountCreated'));
       } else if (mounted) {
         context.go('/account');
       }
@@ -258,9 +257,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.tr;
     return AuthShell(
-      title: 'Create your account',
-      subtitle: 'Join One Source for fresh produce delivered across Uganda.',
+      title: s.get('auth.signupTitle'),
+      subtitle: s.get('auth.signupSubtitle'),
       onBack: () {
         if (context.canPop()) {
           context.pop();
@@ -269,28 +269,28 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         }
       },
       footer: AuthFooterLink(
-        prompt: 'Already have an account? ',
-        action: 'Log in',
+        prompt: '${s.get('auth.hasAccount')} ',
+        action: s.get('app.auth.logIn'),
         onTap: () => context.push('/login'),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AuthFormField(
-            label: 'Full name',
+            label: s.get('auth.fullName'),
             controller: _name,
-            hint: 'Your name',
+            hint: s.get('auth.fullNamePlaceholder'),
           ),
           const SizedBox(height: 18),
           AuthFormField(
-            label: 'Email address',
+            label: s.get('app.auth.emailAddress'),
             controller: _email,
             hint: 'example@gmail.com',
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 18),
           AuthFormField(
-            label: 'Password',
+            label: s.get('auth.password'),
             controller: _password,
             obscureText: !_showPassword,
             onChanged: (_) => setState(() {}),
@@ -302,16 +302,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           PasswordStrengthMeter(password: _password.text),
           const SizedBox(height: 18),
           AuthFormField(
-            label: 'Confirm password',
+            label: s.get('auth.confirmPassword'),
             controller: _confirm,
             obscureText: !_showPassword,
             onChanged: (_) => setState(() {}),
           ),
           if (_confirm.text.isNotEmpty && _password.text == _confirm.text) ...[
             const SizedBox(height: 8),
-            const Text(
-              'Passwords match.',
-              style: TextStyle(fontSize: 12, color: AppColors.darkGreen, fontWeight: FontWeight.w600),
+            Text(
+              s.get('auth.passwordsMatch'),
+              style: const TextStyle(fontSize: 12, color: AppColors.darkGreen, fontWeight: FontWeight.w600),
             ),
           ],
           if (_error != null) ...[
@@ -324,14 +324,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           ],
           const SizedBox(height: 24),
           AuthPrimaryButton(
-            label: 'Create account',
+            label: s.get('auth.signUp'),
             loading: _submitting,
             onPressed: _submit,
           ),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: () => openPrivacyPolicy(),
-            child: const Text('Privacy Policy'),
+            onPressed: () => context.push('/privacy'),
+            child: Text(s.get('app.privacy.title')),
           ),
         ],
       ),
@@ -367,8 +367,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     try {
       await ref.read(authServiceProvider).requestPasswordReset(_email.text);
       setState(() {
-        _message =
-            'We\'ve sent a password reset link to your email. Check your inbox and spam folder.';
+        _message = context.tr.get('auth.resetEmailSent');
         _isError = false;
       });
     } on ApiException catch (e) {
@@ -388,20 +387,21 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.tr;
     return AuthShell(
-      title: 'Forgot password?',
-      subtitle: 'Enter your email and we\'ll send you a reset link.',
+      title: s.get('auth.forgotPasswordTitle'),
+      subtitle: s.get('auth.forgotPasswordSubtitle'),
       onBack: () => context.pop(),
       footer: AuthFooterLink(
-        prompt: 'Remember your password? ',
-        action: 'Log in',
+        prompt: '${s.get('app.auth.rememberPassword')} ',
+        action: s.get('app.auth.logIn'),
         onTap: () => context.push('/login'),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AuthFormField(
-            label: 'Email address',
+            label: s.get('app.auth.emailAddress'),
             controller: _email,
             hint: 'example@gmail.com',
             keyboardType: TextInputType.emailAddress,
@@ -419,7 +419,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ],
           const SizedBox(height: 24),
           AuthPrimaryButton(
-            label: 'Send reset link',
+            label: s.get('auth.sendResetLink'),
             loading: _submitting,
             onPressed: _submit,
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../providers/currency_provider.dart';
 import '../services/checkout.dart';
 
@@ -26,13 +27,13 @@ class FreeDeliveryBar extends ConsumerWidget {
           ),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.bolt_rounded, color: AppColors.darkGreen, size: 20),
             SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Free delivery unlocked',
+                context.tr.get('basketPanel.freeDeliveryUnlocked'),
                 style: TextStyle(
                   fontFamily: 'Gabarito',
                   fontWeight: FontWeight.w800,
@@ -69,7 +70,7 @@ class FreeDeliveryBar extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Add ${formatPrice(remainingUgx)} for free delivery',
+                  context.tr.t('cart.addMoreForFree', {'amount': formatPrice(remainingUgx)}),
                   style: const TextStyle(
                     fontFamily: 'Gabarito',
                     fontSize: 13,

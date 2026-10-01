@@ -325,3 +325,10 @@ final kitchenSaucepansProvider = Provider<AsyncValue<List<Product>>>((ref) {
 });
 
 KitchenAisle? aisleMeta(String aisleId) => kitchenAisleById(aisleId);
+
+/// First few products and the server total for one aisle — one small request,
+/// so category grids paint without waiting for the full catalogue.
+final kitchenAislePreviewProvider =
+    FutureProvider.family<ProductsPageResult, String>((ref, aisleId) {
+  return apiClientProvider.fetchProductsPage(shop: 'kitchen', aisle: aisleId, pageSize: 8);
+});

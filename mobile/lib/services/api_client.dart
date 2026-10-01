@@ -8,6 +8,9 @@ import '../models/app_notification.dart';
 import '../models/hero_slide.dart';
 import '../models/order.dart';
 import '../models/product.dart';
+import '../i18n/app_strings.dart';
+
+String _t(String key, String en) => AppStrings.current.or('app.errors.$key', en);
 
 class ProductsPageResult {
   const ProductsPageResult({
@@ -24,6 +27,11 @@ class ProductsPageResult {
 
   bool get hasMore => (page + 1) * pageSize < total;
 }
+
+/// Aisles whose id starts with another aisle's id (`cookware` vs `cookware-accessories`).
+const _nestedAisles = <String, List<String>>{
+  'cookware': ['cookware-accessories'],
+};
 
 class ApiClient {
   ApiClient({http.Client? client}) : _client = client ?? http.Client();
@@ -43,6 +51,12 @@ class ApiClient {
 
   static bool _isKitchenSku(Product p) =>
       p.id.startsWith('kitchen-') || p.category == 'kitchen-ware';
+
+  static bool _isCosmeticsSku(Product p) =>
+      p.id.startsWith('cosmetics-') || p.category == 'cosmetics';
+
+  /// Kitchen or Cosmetics item — never shown in the Fresh shop.
+  static bool _isOtherShopSku(Product p) => _isKitchenSku(p) || _isCosmeticsSku(p);
 
   Future<bool> checkHealth() async {
     try {
@@ -112,7 +126,7 @@ class ApiClient {
       pageSize: pageSize,
       allowServerErrorAsEmpty: true,
     );
-    final fresh = mapped.products.where((p) => !_isKitchenSku(p)).toList();
+    final fresh = mapped.products.where((p) => !_isOtherShopSku(p)).toList();
     final total = fresh.isEmpty
         ? logicalPage * pageSize
         : (logicalPage + 2) * pageSize;
@@ -129,9 +143,9 @@ class ApiClient {
     String? query,
     int page = 0,
     int pageSize = 24,
-    /// `fresh` excludes kitchen SKUs; `kitchen` returns kitchen-only.
+    /// `fresh` excludes kitchen/cosmetics SKUs; `kitchen` / `cosmetics` return that shop only.
     String? shop,
-    /// Kitchen aisle id (`cookware`, `tabletop`, …) — filters `kitchen-{aisle}-%`.
+    /// Aisle id within the kitchen (default) or cosmetics shop — filters `{shop}-{aisle}-%`.
     String? aisle,
   }) async {
     final scopedShop = shop?.trim().toLowerCase();
@@ -163,17 +177,30 @@ class ApiClient {
       query: query,
       page: page,
       pageSize: pageSize,
-      shop: hasAisle ? 'kitchen' : scopedShop,
+      shop: hasAisle && scopedShop != 'cosmetics' ? 'kitchen' : scopedShop,
       aisle: scopedAisle,
     );
 
     if (hasAisle) {
+      final prefix = scopedShop == 'cosmetics' ? 'cosmetics' : 'kitchen';
+      final nested = _nestedAisles[scopedAisle] ?? const <String>[];
       final matched = raw.products
-          .where((p) => p.id.startsWith('kitchen-$scopedAisle-'))
+          .where((p) =>
+              p.id.startsWith('$prefix-$scopedAisle-') &&
+              !nested.any((n) => p.id.startsWith('$prefix-$n-')))
           .toList();
       return ProductsPageResult(
         products: matched,
-        total: matched.isEmpty ? 0 : (raw.total > 0 ? raw.total : matched.length),
+        total: matched.isEmpty && page == 0 ? 0 : (raw.total > 0 ? raw.total : matched.length),
+        page: page,
+        pageSize: pageSize,
+      );
+    }
+
+    if (scopedShop == 'cosmetics' && !hasCategory) {
+      return ProductsPageResult(
+        products: raw.products.where(_isCosmeticsSku).toList(),
+        total: raw.total,
         page: page,
         pageSize: pageSize,
       );
@@ -197,11 +224,11 @@ class ApiClient {
     // Fresh feed: if API applied shop filter, keep response (strip stragglers).
     if (scopedShop == 'fresh' && !hasCategory && !hasQuery) {
       final allKitchen =
-          raw.products.isNotEmpty && raw.products.every(_isKitchenSku);
+          raw.products.isNotEmpty && raw.products.every(_isOtherShopSku);
       if (!allKitchen) {
         _shopFilterSupported = true;
         return ProductsPageResult(
-          products: raw.products.where((p) => !_isKitchenSku(p)).toList(),
+          products: raw.products.where((p) => !_isOtherShopSku(p)).toList(),
           total: raw.total,
           page: page,
           pageSize: pageSize,
@@ -220,7 +247,7 @@ class ApiClient {
 
     if (scopedShop == 'fresh') {
       return ProductsPageResult(
-        products: raw.products.where((p) => !_isKitchenSku(p)).toList(),
+        products: raw.products.where((p) => !_isOtherShopSku(p)).toList(),
         total: raw.total,
         page: page,
         pageSize: pageSize,
@@ -354,7 +381,7 @@ class ApiClient {
     final params = userId != null ? {'userId': userId} : null;
     final res = await _client.get(_uri('/orders/$id', params));
     if (res.statusCode == 404) {
-      throw ApiException('Order not found');
+      throw ApiException(_t('orderNotFound', 'Order not found'));
     }
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
@@ -386,10 +413,10 @@ class ApiClient {
         .timeout(const Duration(seconds: 45));
 
     if (res.statusCode == 401) {
-      throw ApiException('Invalid email or password.');
+      throw ApiException(_t('wrongPassword', 'Incorrect email or password. Please try again.'));
     }
     if (res.statusCode == 429) {
-      throw ApiException('Too many login attempts. Please wait a few minutes.');
+      throw ApiException(_t('tooMany', 'Too many attempts. Please wait a few minutes and try again.'));
     }
     if (res.statusCode == 503) {
       throw ApiException(_errorMessage(res));
@@ -436,7 +463,7 @@ class ApiClient {
     final accessToken = data['accessToken'] as String?;
     final refreshToken = data['refreshToken'] as String?;
     if (accessToken == null || refreshToken == null) {
-      throw ApiException('Invalid login response from server.');
+      throw ApiException(_t('generic', 'Something went wrong. Please try again.'));
     }
     return (accessToken: accessToken, refreshToken: refreshToken);
   }
@@ -471,7 +498,7 @@ class ApiClient {
         .timeout(const Duration(seconds: 45));
 
     if (res.statusCode == 401) {
-      throw ApiException('Please sign in again to delete your account.');
+      throw ApiException(_t('signInAgain', 'Please sign in again to continue.'));
     }
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
@@ -529,18 +556,18 @@ class ApiClient {
     } catch (_) {}
 
     if (res.statusCode >= 500) {
-      return 'Our servers are temporarily unavailable. Please try again shortly.';
+      return _t('server', 'Our servers are temporarily unavailable. Please try again shortly.');
     }
     if (res.statusCode == 404) {
-      return 'We could not find what you were looking for.';
+      return _t('notFound', 'We could not find what you were looking for.');
     }
     if (res.statusCode == 401 || res.statusCode == 403) {
-      return 'Please sign in again to continue.';
+      return _t('signInAgain', 'Please sign in again to continue.');
     }
     if (res.statusCode == 429) {
-      return 'Too many attempts. Please wait a few minutes and try again.';
+      return _t('tooMany', 'Too many attempts. Please wait a few minutes and try again.');
     }
-    return 'Something went wrong. Please try again.';
+    return _t('generic', 'Something went wrong. Please try again.');
   }
 }
 

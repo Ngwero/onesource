@@ -2,14 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../config/env.dart';
 import '../config/theme.dart';
+import '../data/cosmetics.dart';
+import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../providers/currency_provider.dart';
 import '../providers/products_provider.dart';
 import '../providers/search_catalog_provider.dart';
+import '../providers/user_lists_provider.dart';
+import '../utils/cart_feedback.dart';
 import '../utils/categories.dart';
 import '../utils/kitchen_mode.dart';
+import '../utils/open_url.dart';
 import '../utils/product_recommendations.dart';
 import '../utils/responsive.dart';
 import '../utils/user_facing_error.dart';
@@ -40,10 +46,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
     _tabs = TabController(length: 3, vsync: this);
     _tabs.addListener(() => setState(() {}));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final shop = widget.productId.startsWith('kitchen-') ? 'kitchen' : 'fresh';
-      ref.read(searchCatalogProvider(shop).future);
+      ref.read(searchCatalogProvider(_shop).future);
     });
   }
+
+  bool _recorded = false;
+
+  String get _shop => widget.productId.startsWith('kitchen-')
+      ? 'kitchen'
+      : widget.productId.startsWith('cosmetics-')
+          ? 'cosmetics'
+          : 'fresh';
 
   @override
   void dispose() {
@@ -54,8 +67,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
   @override
   Widget build(BuildContext context) {
     final productAsync = ref.watch(productProvider(widget.productId));
-    final kitchenSku = widget.productId.startsWith('kitchen-');
-    final catalogAsync = ref.watch(searchCatalogProvider(kitchenSku ? 'kitchen' : 'fresh'));
+    final s = context.tr;
+    final catalogAsync = ref.watch(searchCatalogProvider(_shop));
     final categoriesAsync = ref.watch(categoriesProvider);
     final cartQty = ref
         .watch(cartProvider)
@@ -75,9 +88,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       ),
       data: (product) {
         if (product == null) {
-          return Scaffold(appBar: AppBar(), body: const Center(child: Text('Product not found')));
+          return Scaffold(appBar: AppBar(), body: Center(child: Text(s.get('product.notFound'))));
         }
 
+        if (!_recorded) {
+          _recorded = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) ref.read(browsingHistoryProvider.notifier).push(product);
+          });
+        }
         final catalog = catalogAsync.valueOrNull ?? [];
         final related = pickRelatedProducts(product, catalog);
         final alsoLike = pickYouMightAlsoLike(
@@ -86,29 +105,37 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
           excludeIds: related.map((p) => p.id),
         );
         final kitchen = isKitchenProduct(product);
+        final cosmetics = isCosmeticsProduct(product);
         final aisleId = aisleIdFromProductId(product.id);
+        final cosmeticsAisleId = cosmeticsAisleIdFromProductId(product.id);
         final categoryId = normalizeCategoryId(product.category);
-        final categoryName = kitchen
-            ? (kitchenAisleById(aisleId)?.title ?? 'Kitchen Ware')
-            : categoriesAsync.valueOrNull
+        final String categoryName;
+        if (cosmetics) {
+          final aisle = cosmeticsAisleId == null ? null : cosmeticsAisleById(cosmeticsAisleId);
+          categoryName = aisle != null
+              ? s.cosmeticsAisle(aisle.id, aisle.title)
+              : s.get('header.shopCosmetics');
+        } else if (kitchen) {
+          final aisle = kitchenAisleById(aisleId);
+          categoryName = aisle != null
+              ? s.kitchenAisle(aisle.id, aisle.title)
+              : s.get('header.shopKitchen');
+        } else {
+          categoryName = s.categoryName(
+            categoryId,
+            categoriesAsync.valueOrNull
                     ?.where((c) => c.id == categoryId)
                     .map((c) => c.name)
                     .firstOrNull ??
-                categoryDisplayName(product.category);
+                categoryDisplayName(product.category),
+          );
+        }
         final discount = ProductCardDetails.discountPercent(product);
         final maxQty = product.stockQuantity ?? 99;
         final formatPrice = ref.watch(formatPriceProvider);
 
-        void addToCart(Product p, {int quantity = 1}) {
-          ref.read(cartProvider.notifier).add(p, quantity: quantity);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${p.title} added'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.darkGreen,
-            ),
-          );
-        }
+        void addToCart(Product p, {int quantity = 1}) =>
+            addToCartWithFeedback(context, ref, p, quantity: quantity);
 
         return Scaffold(
           backgroundColor: AppColors.canvas,
@@ -118,16 +145,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             maxQty: maxQty,
             formatPrice: formatPrice,
             onQuantityChanged: (q) => setState(() => _qty = q),
-            onAdd: () {
-              ref.read(cartProvider.notifier).add(product, quantity: _qty);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('$_qty × ${product.title} added'),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: AppColors.darkGreen,
-                ),
-              );
-            },
+            onAdd: () => addToCart(product, quantity: _qty),
           ),
           body: LayoutBuilder(
             builder: (context, constraints) {
@@ -138,7 +156,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      product.title,
+                      s.productTitle(product),
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2),
                     ),
                     const SizedBox(height: 12),
@@ -161,7 +179,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                                 Padding(
                                   padding: const EdgeInsets.only(top: 2),
                                   child: Text(
-                                    '${formatPrice(product.price)} / ${product.unit}',
+                                    s.t('product.pricePerUnit', {'price': formatPrice(product.price), 'unit': s.unit(product.unit)}),
                                     style: const TextStyle(
                                       color: AppColors.textMuted,
                                       fontSize: 13,
@@ -211,18 +229,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                     if (related.isNotEmpty) ...[
                       const SizedBox(height: 28),
                       ProductRecommendationRow(
-                        title: 'Related products',
-                        subtitle: kitchen
-                            ? 'More from $categoryName'
-                            : 'More fresh picks in $categoryName',
+                        title: s.get('product.relatedProducts'),
+                        subtitle: s.t('product.moreIn', {'category': categoryName}),
                         products: related,
-                        viewAllLabel: 'See all',
+                        viewAllLabel: s.get('common.seeAll'),
                         onViewAll: () => context.push(
-                          kitchen && aisleId != null
-                              ? kitchenAislePath(aisleId)
-                              : kitchen
-                                  ? '/kitchen/shop'
-                                  : '/category/$categoryId',
+                          cosmetics
+                              ? (cosmeticsAisleId != null
+                                  ? cosmeticsAislePath(cosmeticsAisleId)
+                                  : '/cosmetics/shop')
+                              : kitchen && aisleId != null
+                                  ? kitchenAislePath(aisleId)
+                                  : kitchen
+                                      ? '/kitchen/shop'
+                                      : '/category/$categoryId',
                         ),
                         onAdd: addToCart,
                       ),
@@ -230,13 +250,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                     if (alsoLike.isNotEmpty) ...[
                       const SizedBox(height: 28),
                       ProductRecommendationRow(
-                        title: 'You might also like',
-                        subtitle: kitchen
-                            ? 'Popular picks from other kitchen aisles'
-                            : 'Popular items from other categories',
+                        title: s.get('product.customersAlsoViewed'),
+                        subtitle: s.get('product.customersAlsoViewedSubtitle'),
                         products: alsoLike,
-                        viewAllLabel: 'Browse all',
-                        onViewAll: () => context.go(kitchen ? '/kitchen/shop' : '/shop'),
+                        viewAllLabel: s.get('common.browseAll'),
+                        onViewAll: () => context.go(
+                          cosmetics ? '/cosmetics/shop' : kitchen ? '/kitchen/shop' : '/shop',
+                        ),
                         onAdd: addToCart,
                       ),
                     ],
@@ -304,7 +324,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
   }
 }
 
-class _HeroImage extends StatelessWidget {
+class _HeroImage extends ConsumerWidget {
   const _HeroImage({
     required this.product,
     this.discount,
@@ -316,8 +336,9 @@ class _HeroImage extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final top = MediaQuery.paddingOf(context).top;
+    final saved = ref.watch(isSavedProvider(product.id));
     final imageSize = compact ? 320.0 : 280.0;
 
     return Stack(
@@ -363,15 +384,27 @@ class _HeroImage extends StatelessWidget {
           top: compact ? 12 : top + 8,
           right: 12,
           child: _CircleBtn(
-            icon: Icons.favorite_border_rounded,
+            icon: saved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            color: saved ? AppColors.deal : null,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Saved for later'),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: AppColors.darkGreen,
-                ),
-              );
+              final nowSaved = ref.read(savedItemsProvider.notifier).toggle(product);
+              final s = context.tr;
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text(s.get(nowSaved ? 'app.lists.saved' : 'app.lists.removed')),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: AppColors.darkGreen,
+                    action: nowSaved
+                        ? SnackBarAction(
+                            label: s.get('common.view'),
+                            textColor: Colors.white,
+                            onPressed: () => context.push('/lists'),
+                          )
+                        : null,
+                  ),
+                );
             },
           ),
         ),
@@ -381,9 +414,10 @@ class _HeroImage extends StatelessWidget {
 }
 
 class _CircleBtn extends StatelessWidget {
-  const _CircleBtn({required this.icon, required this.onTap});
+  const _CircleBtn({required this.icon, required this.onTap, this.color});
 
   final IconData icon;
+  final Color? color;
   final VoidCallback onTap;
 
   @override
@@ -399,7 +433,7 @@ class _CircleBtn extends StatelessWidget {
         child: SizedBox(
           width: 40,
           height: 40,
-          child: Icon(icon, size: 18, color: AppColors.text),
+          child: Icon(icon, size: 18, color: color ?? AppColors.text),
         ),
       ),
     );
@@ -414,36 +448,37 @@ class _ProductFacts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.tr;
     final rows = <({IconData icon, String label, String value})>[
-      (icon: Icons.grid_view_rounded, label: 'Category', value: categoryName),
+      (icon: Icons.grid_view_rounded, label: s.get('product.detailCategory'), value: categoryName),
       if (product.supplierName?.isNotEmpty == true)
         (
           icon: Icons.public_rounded,
-          label: 'Origin / seller',
+          label: s.get('product.soldBy'),
           value: product.supplierName!,
         ),
       if (product.unit.isNotEmpty)
-        (icon: Icons.scale_rounded, label: 'Unit', value: product.unit),
+        (icon: Icons.scale_rounded, label: s.get('product.detailUnit'), value: s.unit(product.unit)),
       (
         icon: Icons.inventory_2_outlined,
-        label: 'Availability',
+        label: s.get('app.product.availability'),
         value: product.inStock
             ? (product.stockQuantity != null
-                ? '${product.stockQuantity} in stock'
-                : 'In stock')
-            : 'Out of stock',
+                ? s.t('app.product.inStockCount', {'count': product.stockQuantity})
+                : s.get('common.inStock'))
+            : s.get('common.outOfStock'),
       ),
       if (product.delivery?.isNotEmpty == true)
         (
           icon: Icons.local_shipping_outlined,
-          label: 'Delivery',
-          value: product.delivery!,
+          label: s.get('product.deliveryBlock'),
+          value: s.productDelivery(product),
         ),
       if (product.prime)
         (
           icon: Icons.bolt_rounded,
-          label: 'Prime',
-          value: 'Faster fulfilment',
+          label: s.get('app.filter.prime'),
+          value: s.get('app.product.fasterFulfilment'),
         ),
     ];
 
@@ -500,14 +535,15 @@ class _HighlightStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.tr;
     final items = <({String value, String label})>[
-      (value: product.rating.toStringAsFixed(1), label: 'Rating'),
-      (value: '${product.reviewCount}', label: 'Reviews'),
+      (value: product.rating.toStringAsFixed(1), label: s.get('app.product.rating')),
+      (value: '${product.reviewCount}', label: s.get('common.reviews')),
       (
         value: product.stockQuantity != null ? '${product.stockQuantity}' : '—',
-        label: 'Stock',
+        label: s.get('app.product.stock'),
       ),
-      (value: product.prime ? 'Yes' : 'Std', label: 'Prime'),
+      (value: product.prime ? s.get('app.common.yes') : '—', label: s.get('app.filter.prime')),
     ];
 
     return Row(
@@ -576,10 +612,10 @@ class _TabSelector extends StatelessWidget {
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-        tabs: const [
-          Tab(text: 'Details'),
-          Tab(text: 'Support'),
-          Tab(text: 'Ratings'),
+        tabs: [
+          Tab(text: context.tr.get('app.product.tabDetails')),
+          Tab(text: context.tr.get('app.product.tabSupport')),
+          Tab(text: context.tr.get('app.product.tabRatings')),
         ],
       ),
     );
@@ -594,6 +630,7 @@ class _TabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.tr;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -606,19 +643,19 @@ class _TabContent extends StatelessWidget {
         1 => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Need help?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              Text(s.get('app.product.needHelp'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
               const SizedBox(height: 8),
               Text(
                 product.delivery?.trim().isNotEmpty == true
-                    ? product.delivery!.trim()
-                    : 'Contact One Source support for delivery questions, refunds, or product issues.',
+                    ? s.productDelivery(product).trim()
+                    : s.get('app.product.supportText'),
                 style: const TextStyle(height: 1.55, color: AppColors.textMuted, fontSize: 14),
               ),
               const SizedBox(height: 14),
               OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: () => openExternalUrl(Env.shopUrl),
                 icon: const Icon(Icons.support_agent_outlined, size: 18),
-                label: const Text('Chat with support'),
+                label: Text(s.get('app.product.chatSupport')),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.darkGreen,
                   side: const BorderSide(color: AppColors.darkGreen),
@@ -634,16 +671,16 @@ class _TabContent extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 product.reviewCount > 0
-                    ? '${product.reviewCount} customers rated this product.'
-                    : 'No reviews yet — be the first to rate this item.',
+                    ? s.t('app.product.ratedBy', {'count': product.reviewCount})
+                    : s.get('app.product.noReviews'),
                 style: const TextStyle(color: AppColors.textMuted, height: 1.5, fontSize: 14),
               ),
             ],
           ),
         _ => Text(
             product.description.isNotEmpty
-                ? product.description
-                : 'Fresh quality produce from One Source — carefully selected and delivered across Uganda.',
+                ? s.productDescription(product)
+                : s.get('app.product.defaultDescription'),
             style: const TextStyle(height: 1.55, color: AppColors.textMuted, fontSize: 14),
           ),
       },
@@ -699,8 +736,8 @@ class _StickyBuyBar extends StatelessWidget {
                 ),
                 child: Text(
                   product.inStock
-                      ? 'Add to cart · ${formatPrice(product.price * quantity)}'
-                      : 'Out of stock',
+                      ? '${context.tr.get('common.addToBasket')} · ${formatPrice(product.price * quantity)}'
+                      : context.tr.get('common.outOfStock'),
                   style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                 ),
               ),

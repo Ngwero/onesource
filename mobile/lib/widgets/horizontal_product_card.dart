@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import 'product_card_details.dart';
 import 'product_thumbnail.dart';
@@ -24,13 +25,13 @@ class HorizontalProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final category = ProductCardDetails.categoryLabel(product);
-    final desc = product.description.trim();
+    final category = ProductCardDetails.categoryLabel(product, context.tr);
+    final desc = context.tr.productDescription(product).trim();
     final subtitle = desc.isNotEmpty
         ? desc
-        : 'Fresh quality produce from One Source.';
-    final social = ProductCardDetails.socialProof(product);
-    final stock = ProductCardDetails.stockLabel(product);
+        : context.tr.get('app.product.defaultDescription');
+    final social = ProductCardDetails.socialProof(product, context.tr);
+    final stock = ProductCardDetails.stockLabel(product, context.tr);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -77,7 +78,7 @@ class HorizontalProductCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        product.title,
+                        context.tr.productTitle(product),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, height: 1.25),
@@ -98,8 +99,8 @@ class HorizontalProductCard extends StatelessWidget {
                           runSpacing: 4,
                           children: [
                             if (ProductCardDetails.isBestSeller(product))
-                              const ProductBadge(
-                                label: 'Best seller',
+                              ProductBadge(
+                                label: context.tr.get('productCard.bestSeller'),
                                 background: AppColors.amber,
                                 foreground: AppColors.text,
                                 compact: true,
@@ -143,7 +144,7 @@ class HorizontalProductCard extends StatelessWidget {
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
                                   icon: const Icon(Icons.add_shopping_cart_outlined, size: 18),
-                                  label: Text(product.inStock ? 'Add to basket' : 'Unavailable'),
+                                  label: Text(context.tr.get(product.inStock ? 'common.addToBasket' : 'app.product.unavailableShort')),
                                 ),
                               ),
                             ),

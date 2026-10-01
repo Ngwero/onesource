@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../utils/user_facing_error.dart';
 
 class LoadingView extends StatelessWidget {
@@ -50,7 +51,7 @@ class ErrorView extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+              OutlinedButton(onPressed: onRetry, child: Text(context.tr.get('common.retry'))),
             ],
           ],
         ),

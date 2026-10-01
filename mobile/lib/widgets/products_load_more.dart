@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../utils/responsive.dart';
 
 /// Footer shown while loading the next page of products.
@@ -42,7 +43,9 @@ class ProductsLoadMoreSliver extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.fromLTRB(20, 16, 20, bottom),
           child: Text(
-            total > 0 ? 'Showing all $total products' : 'End of list',
+            total > 0
+                ? context.tr.t('products.showing', {'count': total})
+                : context.tr.get('app.common.endOfList'),
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),

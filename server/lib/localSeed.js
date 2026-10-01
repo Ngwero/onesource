@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { rowToProduct, seedRowFromJson } from "../db.js";
 import { categoryMatchAliases } from "../data/categories.js";
 import { isSupabaseConnectionError, supabaseConnectionHint } from "./supabaseErrors.js";
+import { nestedAislePrefixes } from "./aisles.js";
 import { productMatchesSearch, rankSearchResults } from "./productSearchMatch.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,7 +64,11 @@ export function filterLocalProducts({
     });
   } else if (aisleId) {
     const prefix = `${shopPrefix}-${aisleId}-`;
-    filtered = filtered.filter((r) => String(r.id).startsWith(prefix));
+    const nested = nestedAislePrefixes(shopPrefix, aisleId);
+    filtered = filtered.filter((r) => {
+      const id = String(r.id);
+      return id.startsWith(prefix) && !nested.some((n) => id.startsWith(n));
+    });
   } else if ((shop === "kitchen" || shop === "cosmetics") && !category) {
     filtered = filtered.filter(
       (r) => String(r.id).startsWith(`${shopPrefix}-`) || r.category === shopCategory

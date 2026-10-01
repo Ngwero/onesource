@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../providers/cart_provider.dart';
 import '../providers/currency_provider.dart';
 import '../services/checkout.dart';
 import '../utils/responsive.dart';
 import '../widgets/cart_line_item.dart';
 import '../widgets/free_delivery_bar.dart';
+import 'exports_screens.dart' show isExportProduct;
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -93,7 +95,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   bottomInset: bottomNavClearance,
                   onCheckout: () {
                     HapticFeedback.mediumImpact();
-                    context.push('/checkout');
+                    final exportOnly = items.every((i) => isExportProduct(i.product));
+                    context.push(exportOnly ? '/exports/confirmation' : '/checkout');
                   },
                 ),
               ],
@@ -114,10 +117,10 @@ class _CartHeader extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(20, top + 8, 20, 12),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Text(
-              'Your cart',
-              style: TextStyle(
+              context.tr.get('cart.title'),
+              style: const TextStyle(
                 fontFamily: 'Gabarito',
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
@@ -134,7 +137,7 @@ class _CartHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                '$count ${count == 1 ? 'item' : 'items'}',
+                '$count ${context.tr.get(count == 1 ? 'common.item' : 'common.items')}',
                 style: const TextStyle(
                   fontFamily: 'Gabarito',
                   fontSize: 12,
@@ -159,6 +162,7 @@ class _EmptyCart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.tr;
     return Center(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(32, 12, 32, 32),
@@ -217,9 +221,10 @@ class _EmptyCart extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 28),
-            const Text(
-              'Nothing here yet',
-              style: TextStyle(
+            Text(
+              s.get('cart.emptyTitle'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
                 fontFamily: 'Gabarito',
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
@@ -228,7 +233,7 @@ class _EmptyCart extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Add fresh produce and kitchen ware —\none basket, one delivery.',
+              s.get('app.cart.emptyText'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Gabarito',
@@ -249,9 +254,9 @@ class _EmptyCart extends StatelessWidget {
                     borderRadius: BorderRadius.circular(28),
                   ),
                 ),
-                child: const Text(
-                  'Start shopping',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                child: Text(
+                  s.get('common.shopNow'),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                 ),
               ),
             ),
@@ -281,6 +286,7 @@ class _StickyCheckoutBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final formatPrice = ref.watch(formatPriceProvider);
     final free = delivery == 0;
+    final s = context.tr;
 
     return Container(
       width: double.infinity,
@@ -306,7 +312,9 @@ class _StickyCheckoutBar extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      free ? 'Free delivery' : 'Delivery ${formatPrice(delivery.toDouble())}',
+                      free
+                          ? s.get('cart.freeSameDay')
+                          : '${s.get('cart.delivery')} ${formatPrice(delivery.toDouble())}',
                       style: TextStyle(
                         fontFamily: 'Gabarito',
                         fontSize: 12,
@@ -326,7 +334,7 @@ class _StickyCheckoutBar extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      'Subtotal ${formatPrice(subtotal)}',
+                      '${s.get('cart.subtotal')} ${formatPrice(subtotal)}',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -351,19 +359,19 @@ class _StickyCheckoutBar extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Checkout',
-                      style: TextStyle(
+                      s.get('checkout.title'),
+                      style: const TextStyle(
                         fontFamily: 'Gabarito',
                         fontWeight: FontWeight.w800,
                         fontSize: 15,
                       ),
                     ),
-                    SizedBox(width: 6),
-                    Icon(Icons.arrow_forward_rounded, size: 18),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.arrow_forward_rounded, size: 18),
                   ],
                 ),
               ),

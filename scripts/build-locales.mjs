@@ -9,6 +9,7 @@ import { fr } from "./i18n/bundles/fr.mjs";
 import { sw } from "./i18n/bundles/sw.mjs";
 import { ln } from "./i18n/bundles/ln.mjs";
 import { rw } from "./i18n/bundles/rw.mjs";
+import { supplement } from "./i18n/bundles/supplement.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const localesDir = path.join(__dirname, "../src/i18n/locales");
@@ -50,7 +51,7 @@ for (const [code, bundle] of [
   ["ln", ln],
   ["rw", rw],
 ]) {
-  const out = deepMerge(JSON.parse(JSON.stringify(en)), bundle);
+  const out = deepMerge(deepMerge(JSON.parse(JSON.stringify(en)), bundle), supplement[code]);
   mergeProductTerms(out, code);
   fs.writeFileSync(path.join(localesDir, `${code}.json`), `${JSON.stringify(out, null, 2)}\n`);
   console.log(`Wrote ${code}.json`);

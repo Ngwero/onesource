@@ -52,6 +52,24 @@ class Product {
       supplierName: json['supplierName'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'price': price,
+        if (originalPrice != null) 'originalPrice': originalPrice,
+        'rating': rating,
+        'reviewCount': reviewCount,
+        'image': image,
+        'category': category,
+        'unit': unit,
+        'prime': prime,
+        'description': description,
+        'inStock': inStock,
+        if (stockQuantity != null) 'stockQuantity': stockQuantity,
+        if (delivery != null) 'delivery': delivery,
+        if (supplierName != null) 'supplierName': supplierName,
+      };
 }
 
 class Category {

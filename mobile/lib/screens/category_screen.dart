@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
+import '../utils/cart_feedback.dart';
 import '../models/product.dart';
-import '../providers/cart_provider.dart';
+import '../providers/currency_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../providers/products_provider.dart';
 import '../widgets/horizontal_product_card.dart';
@@ -78,7 +79,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
       case _CategorySort.priceHigh:
         list.sort((a, b) => b.price.compareTo(a.price));
       case _CategorySort.name:
-        list.sort((a, b) => a.title.compareTo(b.title));
+        list.sort((a, b) => AppStrings.current.productTitle(a).compareTo(AppStrings.current.productTitle(b)));
       case _CategorySort.rating:
         list.sort((a, b) => b.rating.compareTo(a.rating));
       case _CategorySort.featured:
@@ -87,21 +88,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
     return list;
   }
 
-  void _addToCart(Product product) {
-    ref.read(cartProvider.notifier).add(product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.title} added to basket'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.darkGreen,
-        action: SnackBarAction(
-          label: 'View',
-          textColor: AppColors.lemonGreen,
-          onPressed: () => context.go('/cart'),
-        ),
-      ),
-    );
-  }
+  void _addToCart(Product product) => addToCartWithFeedback(context, ref, product);
 
   Product? _spotlightProduct(List<Product> products) {
     if (products.isEmpty) return null;
@@ -120,16 +107,16 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
     final productsState = ref.watch(paginatedProductsProvider(query));
     final categoriesAsync = ref.watch(categoriesProvider);
     final category = categoriesAsync.value?.where((c) => c.id == widget.categoryId).firstOrNull;
-    final categoryName = category?.name ?? widget.categoryId.replaceAll('-', ' ');
+    final categoryName = context.tr.categoryName(widget.categoryId, category?.name);
     final categoryIcon = category?.icon ?? '🥬';
     final allProducts = productsState.items;
     final filtered = _applySort(_applyFilter(allProducts));
     final spotlight = _spotlightProduct(allProducts);
 
     if (productsState.isInitialLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.canvas,
-        body: LoadingView(message: 'Loading category…'),
+        body: LoadingView(message: context.tr.get('common.loading')),
       );
     }
 
@@ -212,7 +199,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Fresh produce delivered across Uganda',
+                                  context.tr.get('app.product.deliveryUganda'),
                                   style: TextStyle(
                                     color: Colors.white.withValues(alpha: 0.88),
                                     fontSize: 13,
@@ -237,7 +224,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                     ScrollSlideIn(
                       index: 0,
                       child: Text(
-                        'Fresh ${categoryName.toLowerCase()} sourced for quality and fast delivery across Uganda.',
+                        context.tr.t('app.categories.intro', {'category': categoryName}),
                         style: const TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 14,
@@ -274,8 +261,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Browse more',
+                            Text(
+                              context.tr.get('common.browseAll'),
                               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                             ),
                             const SizedBox(height: 10),
@@ -289,7 +276,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                       padding: const EdgeInsets.only(right: 8),
                                       child: ActionChip(
                                         avatar: Text(cat.icon, style: const TextStyle(fontSize: 14)),
-                                        label: Text(cat.name),
+                                        label: Text(context.tr.categoryName(cat.id, cat.name)),
                                         onPressed: () => context.pushReplacement('/category/${cat.id}'),
                                         backgroundColor: Colors.white,
                                         side: const BorderSide(color: AppColors.border),
@@ -321,19 +308,19 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: [
-                            _FilterChip('All', _filter == _CategoryFilter.all, () => setState(() => _filter = _CategoryFilter.all)),
-                            _FilterChip('Deals', _filter == _CategoryFilter.deals, () => setState(() => _filter = _CategoryFilter.deals)),
-                            _FilterChip('Prime', _filter == _CategoryFilter.prime, () => setState(() => _filter = _CategoryFilter.prime)),
-                            _FilterChip('In stock', _filter == _CategoryFilter.inStock, () => setState(() => _filter = _CategoryFilter.inStock)),
-                            _FilterChip('Top rated', _sort == _CategorySort.rating, () => setState(() => _sort = _CategorySort.rating)),
+                            _FilterChip(context.tr.get('app.filter.all'), _filter == _CategoryFilter.all, () => setState(() => _filter = _CategoryFilter.all)),
+                            _FilterChip(context.tr.get('app.filter.deals'), _filter == _CategoryFilter.deals, () => setState(() => _filter = _CategoryFilter.deals)),
+                            _FilterChip(context.tr.get('app.filter.prime'), _filter == _CategoryFilter.prime, () => setState(() => _filter = _CategoryFilter.prime)),
+                            _FilterChip(context.tr.get('app.filter.inStock'), _filter == _CategoryFilter.inStock, () => setState(() => _filter = _CategoryFilter.inStock)),
+                            _FilterChip(context.tr.get('app.sort.rating'), _sort == _CategorySort.rating, () => setState(() => _sort = _CategorySort.rating)),
                           ],
                         ),
                       ),
                     ),
                     if (filtered.isEmpty) ...[
                       const SizedBox(height: 10),
-                      const Text(
-                        'No products match your filters',
+                      Text(
+                        context.tr.get('kitchen.noFilterResults'),
                         style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                       ),
                     ],
@@ -343,9 +330,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
               ),
             ),
             if (filtered.isEmpty)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 hasScrollBody: false,
-                child: Center(child: Text('No products match your filters')),
+                child: Center(child: Text(context.tr.get('kitchen.noFilterResults'))),
               )
             else if (_gridView)
               SliverPadding(
@@ -396,7 +383,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
   }
 }
 
-class _SpotlightCard extends StatelessWidget {
+class _SpotlightCard extends ConsumerWidget {
   const _SpotlightCard({
     required this.product,
     required this.onTap,
@@ -407,10 +394,9 @@ class _SpotlightCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onAdd;
 
-  static final _currency = NumberFormat.currency(symbol: 'UGX ', decimalDigits: 0);
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formatPrice = ref.watch(formatPriceProvider);
     final discount = ProductCardDetails.discountPercent(product);
 
     return Material(
@@ -436,7 +422,7 @@ class _SpotlightCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const ProductBadge(label: 'Top pick', compact: true),
+                        ProductBadge(label: context.tr.get('app.product.topPick'), compact: true),
                         if (discount != null) ...[
                           const SizedBox(width: 6),
                           ProductBadge(
@@ -450,7 +436,7 @@ class _SpotlightCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      product.title,
+                      context.tr.productTitle(product),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, height: 1.25),
@@ -461,7 +447,7 @@ class _SpotlightCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          _currency.format(product.price),
+                          formatPrice(product.price),
                           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                         ),
                         const Spacer(),
@@ -472,7 +458,7 @@ class _SpotlightCard extends StatelessWidget {
                             minimumSize: const Size(0, 36),
                             textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                           ),
-                          child: const Text('Add'),
+                          child: Text(context.tr.get('common.add')),
                         ),
                       ],
                     ),
@@ -504,7 +490,7 @@ class _Toolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Text('Products', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+        Text(context.tr.get('common.products'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
         const Spacer(),
         Container(
           decoration: BoxDecoration(
@@ -541,12 +527,12 @@ class _Toolbar extends StatelessWidget {
             ),
             child: const Icon(Icons.sort_rounded, size: 20),
           ),
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: _CategorySort.featured, child: Text('Featured')),
-            PopupMenuItem(value: _CategorySort.rating, child: Text('Top rated')),
-            PopupMenuItem(value: _CategorySort.priceLow, child: Text('Price: low to high')),
-            PopupMenuItem(value: _CategorySort.priceHigh, child: Text('Price: high to low')),
-            PopupMenuItem(value: _CategorySort.name, child: Text('Name A–Z')),
+          itemBuilder: (_) => [
+            PopupMenuItem(value: _CategorySort.featured, child: Text(context.tr.get('app.sort.featured'))),
+            PopupMenuItem(value: _CategorySort.rating, child: Text(context.tr.get('app.sort.rating'))),
+            PopupMenuItem(value: _CategorySort.priceLow, child: Text(context.tr.get('kitchen.sortPriceAsc'))),
+            PopupMenuItem(value: _CategorySort.priceHigh, child: Text(context.tr.get('kitchen.sortPriceDesc'))),
+            PopupMenuItem(value: _CategorySort.name, child: Text(context.tr.get('app.sort.name'))),
           ],
         ),
       ],

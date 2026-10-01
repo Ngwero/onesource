@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import 'product_card_details.dart';
 import 'product_thumbnail.dart';
@@ -19,9 +20,9 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final category = ProductCardDetails.categoryLabel(product);
-    final social = ProductCardDetails.socialProof(product);
-    final stock = ProductCardDetails.stockLabel(product);
+    final category = ProductCardDetails.categoryLabel(product, context.tr);
+    final social = ProductCardDetails.socialProof(product, context.tr);
+    final stock = ProductCardDetails.stockLabel(product, context.tr);
     final isBestSeller = ProductCardDetails.isBestSeller(product);
 
     return Container(
@@ -85,8 +86,8 @@ class ProductCard extends StatelessWidget {
                           runSpacing: 4,
                           children: [
                             if (isBestSeller)
-                              const ProductBadge(
-                                label: 'Best seller',
+                              ProductBadge(
+                                label: context.tr.get('productCard.bestSeller'),
                                 background: AppColors.amber,
                                 foreground: AppColors.text,
                                 compact: true,
@@ -100,7 +101,7 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     Text(
-                      product.title,
+                      context.tr.productTitle(product),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -116,7 +117,7 @@ class ProductCard extends StatelessWidget {
                     ProductPriceBlock(product: product, compact: true),
                     const SizedBox(height: 6),
                     ProductDeliveryRow(product: product, compact: true),
-                    if (stock != null && stock != 'In stock') ...[
+                    if (stock != null) ...[
                       const SizedBox(height: 4),
                       Text(
                         stock,
@@ -142,7 +143,7 @@ class ProductCard extends StatelessWidget {
                             textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
                           ),
                           icon: const Icon(Icons.add_shopping_cart_outlined, size: 16),
-                          label: Text(product.inStock ? 'Add to basket' : 'Unavailable'),
+                          label: Text(context.tr.get(product.inStock ? 'common.addToBasket' : 'app.product.unavailableShort')),
                         ),
                       ),
                     ],

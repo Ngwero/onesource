@@ -268,7 +268,17 @@
       "emptyText": "Choisissez des produits d'export avant de confirmer votre commande.",
       "browse": "Voir les produits d'export",
       "confirmedTitle": "Commande export reçue",
-      "confirmedSubtitle": "Notre bureau export examinera la disponibilité, la documentation et le fret, puis vous contactera pour confirmation finale."
+      "confirmedSubtitle": "Notre bureau export examinera la disponibilité, la documentation et le fret, puis vous contactera pour confirmation finale.",
+      "addressPlaceholder": "Entrepôt, marché ou terminal de fret aérien",
+      "buyerHint": "Comment notre service export doit vous contacter.",
+      "cityPlaceholder": "Ville ou port d'entrée",
+      "companyPlaceholder": "Société de négoce (facultatif)",
+      "countryPlaceholder": "ex. Royaume-Uni",
+      "destinationHint": "Où l'envoi doit arriver.",
+      "emailPlaceholder": "acheteur@entreprise.com",
+      "namePlaceholder": "Nom de l'acheteur ou du contact",
+      "phonePlaceholder": "+256 ou numéro international",
+      "requirementsPlaceholder": "ex. GlobalGAP, certificat phytosanitaire, chaîne du froid, taille des palettes"
     }
   },
   "auth": {
@@ -309,7 +319,20 @@
     "updatingPassword": "Mise à jour du mot de passe…",
     "passwordUpdated": "Votre mot de passe a été mis à jour. Vous pouvez vous connecter avec votre nouveau mot de passe.",
     "resetLinkInvalid": "Ce lien de réinitialisation est invalide ou a expiré. Demandez-en un nouveau pour continuer.",
-    "verifyingResetLink": "Vérification de votre lien…"
+    "verifyingResetLink": "Vérification de votre lien…",
+    "fullNamePlaceholder": "Votre nom",
+    "otpHint": "Saisissez le code à 6–8 chiffres reçu par e-mail. Il expire dans environ 5 minutes.",
+    "otpLabel": "Code à usage unique (OTP)",
+    "otpSubtitle": "Nous avons envoyé un code de vérification à {{email}}. Il expire dans 5 minutes.",
+    "otpTitle": "Saisissez votre code de connexion",
+    "passwordStrengthWeak": "Faible — ajoutez des majuscules, des chiffres ou des symboles.",
+    "passwordStrengthFair": "Moyen — essayez un mot de passe plus long avec des chiffres.",
+    "passwordStrengthGood": "Bon mot de passe.",
+    "passwordStrengthStrong": "Mot de passe robuste.",
+    "passwordsMatch": "Les mots de passe correspondent.",
+    "stepCredentials": "Connexion",
+    "stepVerify": "Vérifier le code",
+    "verifyOtp": "Vérifier et se connecter"
   },
   "accountMenu": {
     "helloGuest": "Bonjour, invité",
@@ -1822,7 +1845,10 @@
     "passwordResetFailed": "Could not send password reset email",
     "passwordUpdateFailed": "Could not update password",
     "supabaseNotConfigured": "Supabase n'est pas configuré. Ajoutez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans un fichier .env à la racine du projet.",
-    "updateCategoryImage": "Échec de la mise à jour de l'image de catégorie"
+    "updateCategoryImage": "Échec de la mise à jour de l'image de catégorie",
+    "emailNotRegistered": "Aucun compte n'est enregistré avec cet e-mail. Vérifiez l'orthographe ou créez un compte.",
+    "otpInvalid": "Code de connexion invalide ou expiré",
+    "otpSessionExpired": "Votre code de connexion a expiré. Reconnectez-vous pour en recevoir un nouveau."
   },
   "shop": {
     "loading": "Chargement de votre boutique…",

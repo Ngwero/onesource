@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 
 /// Two-step login: credentials → OTP (matches web).
 class AuthStepIndicator extends StatelessWidget {
@@ -12,7 +13,7 @@ class AuthStepIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _StepChip(label: 'Sign in', active: !otpStep, complete: otpStep),
+        _StepChip(label: AppStrings.current.get('auth.stepCredentials'), active: !otpStep, complete: otpStep),
         Expanded(
           child: Container(
             height: 2,
@@ -23,7 +24,7 @@ class AuthStepIndicator extends StatelessWidget {
             ),
           ),
         ),
-        _StepChip(label: 'Verify code', active: otpStep, complete: false),
+        _StepChip(label: AppStrings.current.get('auth.stepVerify'), active: otpStep, complete: false),
       ],
     );
   }

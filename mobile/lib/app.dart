@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'config/theme.dart';
+import 'i18n/app_strings.dart';
 import 'i18n/languages.dart';
 import 'providers/locale_provider.dart';
 import 'providers/notifications_provider.dart';
@@ -81,6 +82,7 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final language = ref.watch(localeProvider);
+    final strings = ref.watch(stringsProvider);
 
     return MaterialApp.router(
       title: 'One Source',
@@ -89,6 +91,10 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
       themeMode: ThemeMode.light,
       locale: Locale(languageCodeLabel(language)),
       routerConfig: router,
+      builder: (context, child) => AppStringsScope(
+        strings: strings,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

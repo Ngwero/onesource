@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../providers/notifications_provider.dart';
 
 class NotificationsScreen extends ConsumerWidget {
@@ -26,13 +27,13 @@ class NotificationsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(context.tr.get('app.notifications.title')),
         actions: [
           if (state.unreadCount > 0)
             TextButton(
               onPressed: () =>
                   ref.read(notificationsProvider.notifier).markAllRead(),
-              child: const Text('Mark all read'),
+              child: Text(context.tr.get('app.notifications.markAllRead')),
             ),
         ],
       ),
@@ -57,8 +58,8 @@ class NotificationsScreen extends ConsumerWidget {
                         color: AppColors.textMuted.withValues(alpha: 0.5),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'No notifications yet',
+                      Text(
+                        context.tr.get('app.notifications.empty'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 17,
@@ -67,10 +68,10 @@ class NotificationsScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 40),
                         child: Text(
-                          'Offers and updates from One Source will show up here.',
+                          context.tr.get('app.notifications.emptyText'),
                           textAlign: TextAlign.center,
                           style: TextStyle(color: AppColors.textMuted),
                         ),

@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../i18n/app_strings.dart';
 import '../data/kitchen_ware.dart';
 import '../providers/kitchen_catalog_provider.dart';
-import '../utils/kitchen_mode.dart';
 import '../utils/responsive.dart';
-import '../widgets/loading_view.dart';
 import '../widgets/product_grid.dart';
+import '../utils/shop_mode.dart';
 import '../widgets/shop_mode_switch.dart';
 
 class KitchenCategoriesScreen extends ConsumerWidget {
@@ -16,37 +16,31 @@ class KitchenCategoriesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final catalogAsync = ref.watch(kitchenCatalogProvider);
-    final catalogState = ref.watch(kitchenCatalogNotifierProvider);
+    final previews = {
+      for (final aisle in kitchenWareAisles) aisle.id: ref.watch(kitchenAislePreviewProvider(aisle.id)),
+    };
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        title: const Text('Kitchen aisles'),
+        title: Text(context.tr.get('kitchen.zonesTitle')),
         backgroundColor: AppColors.canvas,
       ),
-      body: catalogAsync.when(
-        loading: () => const LoadingView(message: 'Loading kitchen aisles…'),
-        error: (e, _) => ErrorView(
-          message: e.toString(),
-          onRetry: () => ref.read(kitchenCatalogNotifierProvider.notifier).refresh(),
-        ),
-        data: (products) {
-          final groups = groupKitchenByAisle(products);
-          final counts = {
-            for (final g in groups) g.aisle.id: g.products.length,
-          };
-
+      body: Builder(
+        builder: (context) {
           return RefreshIndicator(
-            onRefresh: () async =>
-                ref.read(kitchenCatalogNotifierProvider.notifier).refresh(),
+            onRefresh: () async {
+              for (final aisle in kitchenWareAisles) {
+                ref.invalidate(kitchenAislePreviewProvider(aisle.id));
+              }
+            },
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               children: [
-                const ShopModeSwitch(kitchenMode: true),
+                const ShopModeSwitch(mode: ShopMode.kitchen),
                 const SizedBox(height: 16),
-                const Text(
-                  'Browse cookware by aisle',
+                Text(
+                  context.tr.get('kitchen.zoneHint'),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 16),
@@ -56,7 +50,7 @@ class KitchenCategoriesScreen extends ConsumerWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: categoryGridCount(context),
-                    mainAxisExtent: 108,
+                    mainAxisExtent: 118,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -64,7 +58,7 @@ class KitchenCategoriesScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final aisle = kitchenWareAisles[index];
                     final accent = Color(aisle.accentArgb);
-                    final count = counts[aisle.id] ?? 0;
+                    final preview = previews[aisle.id]!;
                     return Card(
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
@@ -87,9 +81,7 @@ class KitchenCategoriesScreen extends ConsumerWidget {
                                   Text(aisle.icon, style: const TextStyle(fontSize: 26)),
                                   const Spacer(),
                                   Text(
-                                    catalogState.isLoadingMore && count == 0
-                                        ? '…'
-                                        : '$count',
+                                    preview.whenOrNull(data: (r) => '${r.total}') ?? '…',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w700,
                                       color: accent,
@@ -100,7 +92,7 @@ class KitchenCategoriesScreen extends ConsumerWidget {
                               ),
                               const Spacer(),
                               Text(
-                                aisle.title,
+                                context.tr.kitchenAisle(aisle.id, aisle.title),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -116,40 +108,34 @@ class KitchenCategoriesScreen extends ConsumerWidget {
                   },
                 ),
                 const SizedBox(height: 24),
-                ...groups.map((group) {
-                  final items = group.products.take(4).toList();
-                  if (items.isEmpty) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(group.aisle.icon, style: const TextStyle(fontSize: 20)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                group.aisle.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 17,
+                for (final aisle in kitchenWareAisles)
+                  if (previews[aisle.id]!.valueOrNull?.products case final items? when items.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(aisle.icon, style: const TextStyle(fontSize: 20)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  context.tr.kitchenAisle(aisle.id, aisle.title),
+                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
                                 ),
                               ),
-                            ),
-                            TextButton(
-                              onPressed: () =>
-                                  context.push(kitchenAislePath(group.aisle.id)),
-                              child: const Text('See all'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ProductGrid(products: items),
-                      ],
+                              TextButton(
+                                onPressed: () => context.push(kitchenAislePath(aisle.id)),
+                                child: Text(context.tr.get('common.seeAll')),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ProductGrid(products: items.take(4).toList()),
+                        ],
+                      ),
                     ),
-                  );
-                }),
               ],
             ),
           );
