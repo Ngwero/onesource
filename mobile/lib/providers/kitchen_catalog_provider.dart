@@ -56,6 +56,7 @@ class KitchenCatalogNotifier extends Notifier<KitchenCatalogState> {
     'cast-iron': 'cast iron',
     'non-stick': 'non-stick',
     'cookware-accessories': 'spatula',
+    'small-appliances': 'blender',
     'tabletop': 'dinner plate',
     'small-furniture': 'wall shelf',
     'extractor-hoods': 'extractor hood',

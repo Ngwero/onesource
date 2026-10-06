@@ -39,6 +39,12 @@ export const KITCHEN_WARE_AISLES = [
     color: "#6d7a68",
   },
   {
+    id: "small-appliances",
+    title: "Small appliances",
+    icon: "🔌",
+    color: "#a0522d",
+  },
+  {
     id: "tabletop",
     title: "Tabletop",
     icon: "🍽️",

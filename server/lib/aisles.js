@@ -7,6 +7,7 @@ const AISLE_IDS = {
     "cast-iron",
     "non-stick",
     "cookware-accessories",
+    "small-appliances",
     "tabletop",
     "small-furniture",
     "extractor-hoods",

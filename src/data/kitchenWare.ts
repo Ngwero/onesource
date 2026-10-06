@@ -34,6 +34,12 @@ export const KITCHEN_WARE_AISLES = [
     accent: "#6d7a68",
   },
   {
+    id: "small-appliances",
+    title: "Small appliances",
+    icon: "🔌",
+    accent: "#a0522d",
+  },
+  {
     id: "tabletop",
     title: "Tabletop",
     icon: "🍽️",

@@ -18,6 +18,7 @@ const AISLE_IDS = [
   "tabletop",
   "cookware",
   "organization",
+  "small-appliances",
 ].sort((a, b) => b.length - a.length);
 
 /** Default UGX min/max by aisle when the title does not name a product type. */
@@ -33,6 +34,7 @@ export const KITCHEN_AISLE_PRICE_RANGE = {
   "small-furniture": [35000, 145000],
   "extractor-hoods": [180000, 380000],
   "countertops-sinks": [45000, 185000],
+  "small-appliances": [120000, 600000],
 };
 
 /** More specific first. Prices in UGX. */
