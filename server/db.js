@@ -24,6 +24,8 @@ export function rowToProduct(row) {
     stockQuantity: row.stock_quantity,
     delivery: row.delivery,
     supplierId: row.supplier_id ?? undefined,
+    details: row.details && typeof row.details === "object" ? row.details : {},
+    published: row.published !== false,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -60,6 +62,8 @@ export function parseBody(body, { id } = {}) {
       body.supplierId?.trim() ||
       body.supplier_id?.trim() ||
       null,
+    ...(body.details && typeof body.details === "object" ? { details: body.details } : {}),
+    ...(typeof body.published === "boolean" ? { published: body.published } : {}),
   };
 }
 
@@ -80,6 +84,8 @@ export function seedRowFromJson(p) {
     stock_quantity: p.stockQuantity ?? 100,
     delivery: p.delivery,
     supplier_id: p.supplierId ?? null,
+    ...(p.details ? { details: p.details } : {}),
+    ...(typeof p.published === "boolean" ? { published: p.published } : {}),
   };
 }
 

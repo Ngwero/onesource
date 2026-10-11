@@ -3339,6 +3339,46 @@ window.deleteProduct = (id) => {
   confirmProductDeletion([id]);
 };
 
+let editingDetails = {};
+
+function fillProductInfo(p) {
+  const d = p?.details && typeof p.details === "object" ? p.details : {};
+  editingDetails = d;
+  $("published").checked = p ? p.published !== false : true;
+  const hint = $("hiddenReasonHint");
+  const reasons = Array.isArray(d.hiddenReason) ? d.hiddenReason : [];
+  hint.hidden = !reasons.length;
+  hint.textContent = reasons.length ? `Hidden because: ${reasons.join(", ")}` : "";
+  $("infoBrand").value = d.brand || "";
+  $("infoOrigin").value = d.origin || "";
+  $("infoIngredients").value = d.ingredients || "";
+  $("infoAllergens").value = (d.allergens || []).join(", ");
+  $("infoAllergenStatement").value = d.allergenStatement || "";
+  $("infoHowToUse").value = d.howToUse || "";
+  $("infoStorage").value = d.storage || "";
+  $("infoCare").value = d.care || "";
+  $("infoWarnings").value = (d.warnings || []).join("\n");
+}
+
+function readProductInfo() {
+  const text = (id) => $(id).value.trim() || undefined;
+  const list = (id, sep) => $(id).value.split(sep).map((s) => s.trim()).filter(Boolean);
+  const details = {
+    ...editingDetails,
+    brand: text("infoBrand"),
+    origin: text("infoOrigin"),
+    ingredients: text("infoIngredients"),
+    allergens: list("infoAllergens", ","),
+    allergenStatement: text("infoAllergenStatement"),
+    howToUse: text("infoHowToUse"),
+    storage: text("infoStorage"),
+    care: text("infoCare"),
+    warnings: list("infoWarnings", "\n"),
+  };
+  if ($("published").checked) delete details.hiddenReason;
+  return JSON.parse(JSON.stringify(details));
+}
+
 window.editProduct = (id) => {
   const p = products.find((x) => x.id === id);
   if (!p) return;
@@ -3361,6 +3401,7 @@ window.editProduct = (id) => {
   $("prime").checked = p.prime;
   $("description").value = p.description;
   $("delivery").value = p.delivery;
+  fillProductInfo(p);
   $("deleteBtn").style.display = "inline-flex";
   $("submitBtn").textContent = "Save changes";
   updatePreview();
@@ -3389,6 +3430,7 @@ window.duplicateProduct = (id) => {
   $("prime").checked = p.prime;
   $("description").value = p.description;
   $("delivery").value = p.delivery;
+  fillProductInfo(p);
   $("deleteBtn").style.display = "none";
   $("submitBtn").textContent = "Create duplicate";
   updatePreview();
@@ -3398,6 +3440,7 @@ window.duplicateProduct = (id) => {
 function resetForm() {
   editingId = null;
   $("productForm").reset();
+  fillProductInfo(null);
   $("drawerTitle").textContent = "Add product";
   $("drawerSubtitle").textContent = "New listing appears on the shop when stock > 0";
   $("editId").value = "";
@@ -3885,6 +3928,8 @@ $("productForm").addEventListener("submit", async (e) => {
     delivery: $("delivery").value,
     supplierId: $("supplierId").value.trim() || undefined,
     inStock: Number($("stockQuantity").value) > 0,
+    published: $("published").checked,
+    details: readProductInfo(),
   };
 
   setLoading(true);

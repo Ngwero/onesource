@@ -1737,8 +1737,16 @@
       "itemDetails": "Détails de l'article",
       "measurements": "Mesures",
       "warranty": "Garantie et retours",
-      "specifications": "Spécifications produit"
-    }
+      "specifications": "Spécifications produit",
+      "safety": "Sécurité et allergènes",
+      "allergens": "Informations sur les allergènes",
+      "warnings": "Avertissements et conseils de sécurité",
+      "howToUse": "Mode d'emploi",
+      "storage": "Conservation",
+      "care": "Conseils d'entretien"
+    },
+    "safetyNote": "Lisez toujours l'étiquette du produit avant utilisation. Contactez-nous pour plus d'informations sur les allergènes ou l'utilisation en toute sécurité.",
+    "safetyNoteManufacturer": "Informations fournies par le fabricant. L'emballage peut changer — lisez toujours l'étiquette du produit avant utilisation."
   },
   "basketPanel": {
     "title": "Votre panier",
@@ -1882,7 +1890,15 @@
       "storage": "Conservation",
       "delivery": "Livraison",
       "primeEligible": "Éligible Prime",
-      "condition": "État"
+      "condition": "État",
+      "suitableFor": "Convient aux",
+      "material": "Matériau",
+      "colour": "Couleur",
+      "capacity": "Capacité",
+      "diameter": "Diamètre",
+      "dimensions": "Dimensions",
+      "pieces": "Pièces",
+      "ean": "EAN / code-barres"
     },
     "values": {
       "yes": "Oui",
@@ -1902,7 +1918,8 @@
       "kilograms": "Kilogrammes",
       "approxWeight": "{{weight}} (env.)",
       "soldUnit": "Vendu {{unit}}",
-      "rankInCategory": "{{rank}} dans {{category}}"
+      "rankInCategory": "{{rank}} dans {{category}}",
+      "suitableForList": "Convient aux : {{list}}"
     },
     "origin": {
       "uganda": "Ouganda",

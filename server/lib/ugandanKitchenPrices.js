@@ -21,6 +21,9 @@ const AISLE_IDS = [
   "small-appliances",
 ].sort((a, b) => b.length - a.length);
 
+/** Bands track Jumia UG list prices; Jumia deals run ~10% under them (Oct 2026). */
+export const KITCHEN_UNDERCUT = 0.9;
+
 /** Default UGX min/max by aisle when the title does not name a product type. */
 export const KITCHEN_AISLE_PRICE_RANGE = {
   "cookware-accessories": [8000, 38000],
@@ -149,7 +152,7 @@ export function ugandanKitchenPrice(product = {}) {
 
   if (max < min) max = min;
   const raw = min + (hashStr(id) % (max - min + 1));
-  return roundUgx(raw);
+  return roundUgx(raw * KITCHEN_UNDERCUT);
 }
 
 /** Map a UK GBP sticker to a Ugandan shelf price (not FX). */

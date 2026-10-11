@@ -13,13 +13,14 @@
  *   cd server && npm run import:lookfantastic -- --hidden   (import with in_stock=false)
  *   cd server && npm run import:lookfantastic -- --refresh  (re-fetch product details)
  *
- * Price: GBP × BOOTS_GBP_TO_UGX (default 4700) × 1.5, rounded to USh 500.
+ * Price: gbpToUgandanCosmeticsPrice (server/lib/cosmeticsPrices.js).
  * Product id: cosmetics-{aisleId}-{lf|cb}-{productId}
  */
 import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
+import { gbpToUgandanCosmeticsPrice } from "../lib/cosmeticsPrices.js";
 import { seedRowFromJson } from "../db.js";
 
 const SITES = {
@@ -47,8 +48,6 @@ const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
 const IMAGES_DIR = process.env.PRODUCT_IMAGES?.trim() || SITE.images;
 const CACHE_JSON = path.join(path.dirname(IMAGES_DIR), "products.json");
 const COSMETICS_CATEGORY_ID = "cosmetics";
-const GBP_TO_UGX = Number(process.env.BOOTS_GBP_TO_UGX || 4700);
-const MARKUP = 1.5;
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128 Safari/537.36";
 
@@ -88,7 +87,7 @@ function cleanText(text) {
 }
 
 function priceUgx(gbp) {
-  return Math.max(500, Math.round((gbp * GBP_TO_UGX * MARKUP) / 500) * 500);
+  return gbpToUgandanCosmeticsPrice(gbp);
 }
 
 function unitFromTitle(title) {
@@ -237,7 +236,7 @@ function buildProductRow(item, image) {
 
 async function main() {
   console.log(`Site: ${SITE.origin} | Images: ${IMAGES_DIR}`);
-  console.log(`Mode: ${dryRun ? "dry-run" : "import"} | £1 = USh ${GBP_TO_UGX} × ${MARKUP}${hidden ? " | hidden" : ""}`);
+  console.log(`Mode: ${dryRun ? "dry-run" : "import"}${hidden ? " | hidden" : ""}`);
 
   const photos = await listProductPhotos();
   const details = await loadDetails([...photos.keys()]);

@@ -1737,8 +1737,16 @@
       "itemDetails": "Makambo ya biloko",
       "measurements": "Ba mesure",
       "warranty": "Garantie mpe retour",
-      "specifications": "Spécification ya produit"
-    }
+      "specifications": "Spécification ya produit",
+      "safety": "Libateli mpe allergie",
+      "allergens": "Bansango ya allergie",
+      "warnings": "Bokebisi mpe toli ya libateli",
+      "howToUse": "Ndenge ya kosalela",
+      "storage": "Kobomba",
+      "care": "Ndenge ya kobatela"
+    },
+    "safetyNote": "Tángá ntango nyonso etiketi ya eloko liboso ya kosalela yango. Benga biso soki osengeli koyeba makambo mosusu na ntina ya allergie to bosaleli malamu.",
+    "safetyNoteManufacturer": "Bansango oyo euti epai ya mosali ya eloko. Emballage ekoki kobongwana — tángá ntango nyonso etiketi liboso ya kosalela."
   },
   "basketPanel": {
     "title": "Panier na yo",
@@ -1882,7 +1890,15 @@
       "storage": "Kobomba",
       "delivery": "Livraison",
       "primeEligible": "Ekoki na Prime",
-      "condition": "État"
+      "condition": "État",
+      "suitableFor": "Ebongi mpo na",
+      "material": "Eloko esalemi na yango",
+      "colour": "Langi",
+      "capacity": "Bonene ya kotondisa",
+      "diameter": "Diamètre",
+      "dimensions": "Bomeko",
+      "pieces": "Biteni",
+      "ean": "EAN / code-barre"
     },
     "values": {
       "yes": "Ɛɛ",
@@ -1902,7 +1918,8 @@
       "kilograms": "Kilogramme",
       "approxWeight": "{{weight}} (pene)",
       "soldUnit": "Etɛkami {{unit}}",
-      "rankInCategory": "{{rank}} na {{category}}"
+      "rankInCategory": "{{rank}} na {{category}}",
+      "suitableForList": "Ebongi mpo na: {{list}}"
     },
     "origin": {
       "uganda": "Ouganda",

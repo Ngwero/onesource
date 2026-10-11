@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import type { ProductPageContent, DetailRow } from "../../utils/productDetails";
+import type { ProductPageContent, DetailRow, ProductSafety } from "../../utils/productDetails";
 import {
   ITEM_DETAIL_LABEL_KEYS,
   MEASUREMENT_LABEL_KEYS,
@@ -11,14 +11,82 @@ function SpecTable({ rows }: { rows: DetailRow[] }) {
   return (
     <table className="pdp-spec-table w-full text-sm">
       <tbody>
-        {rows.map((row) => (
-          <tr key={row.labelKey}>
-            <th scope="row">{t(row.labelKey)}</th>
+        {rows.map((row, i) => (
+          <tr key={`${row.labelKey}-${i}`}>
+            <th scope="row">{row.label ?? t(row.labelKey)}</th>
             <td>{row.value}</td>
           </tr>
         ))}
       </tbody>
     </table>
+  );
+}
+
+function TextBlock({ text }: { text: string }) {
+  const lines = text
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const blocks: (string | string[])[] = [];
+  for (const line of lines) {
+    if (/^[•\-–]\s/.test(line)) {
+      const item = line.replace(/^[•\-–]\s*/, "");
+      const last = blocks[blocks.length - 1];
+      if (Array.isArray(last)) last.push(item);
+      else blocks.push([item]);
+    } else {
+      blocks.push(line);
+    }
+  }
+  return (
+    <div className="space-y-2 text-sm text-text leading-relaxed">
+      {blocks.map((b, i) =>
+        Array.isArray(b) ? (
+          <ul key={i} className="list-disc pl-5 space-y-1">
+            {b.map((item, j) => (
+              <li key={j}>{item}</li>
+            ))}
+          </ul>
+        ) : (
+          <p key={i}>{b}</p>
+        )
+      )}
+    </div>
+  );
+}
+
+/** Allergy and safety warnings — always visible, never collapsed. */
+export function ProductSafetyPanel({ safety }: { safety: ProductSafety }) {
+  const { t } = useTranslation();
+  if (!safety.allergenStatement && !safety.warnings.length) return null;
+  return (
+    <section className="pdp-safety-panel" aria-labelledby="pdp-safety-heading">
+      <h2 id="pdp-safety-heading" className="pdp-safety-heading">
+        <svg className="pdp-safety-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        </svg>
+        {t("product.sections.safety")}
+      </h2>
+      {safety.allergenStatement && (
+        <div className="pdp-safety-allergens">
+          <h3 className="pdp-safety-subheading">{t("product.sections.allergens")}</h3>
+          <p>{safety.allergenStatement}</p>
+        </div>
+      )}
+      {safety.warnings.length > 0 && (
+        <div>
+          <h3 className="pdp-safety-subheading">{t("product.sections.warnings")}</h3>
+          <ul className="pdp-safety-list">
+            {safety.warnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="pdp-safety-note">
+        {safety.fromManufacturer ? t("product.safetyNoteManufacturer") : t("product.safetyNote")}
+      </p>
+    </section>
   );
 }
 
@@ -68,8 +136,11 @@ type Props = {
 
 export function ProductDetailsBlock({ content, onSeeAllSpecs }: Props) {
   const { t } = useTranslation();
+  const { safety } = content;
   const [aboutExpanded, setAboutExpanded] = useState(false);
-  const [openAccordion, setOpenAccordion] = useState<string | null>("item-details");
+  const [openAccordion, setOpenAccordion] = useState<string | null>(
+    safety.howToUse ? "how-to-use" : "item-details"
+  );
 
   const aboutVisible = aboutExpanded
     ? content.aboutBullets
@@ -81,14 +152,19 @@ export function ProductDetailsBlock({ content, onSeeAllSpecs }: Props) {
 
   return (
     <div className="pdp-details-block">
-      <section className="pdp-details-section" aria-labelledby="pdp-ingredients-heading">
-        <h2 id="pdp-ingredients-heading" className="pdp-details-heading">
-          {t("product.sections.ingredients")}
-        </h2>
-        <p className="pdp-ingredients-text">{content.ingredients}</p>
-      </section>
+      <ProductSafetyPanel safety={safety} />
 
-      <hr className="pdp-hr" />
+      {content.ingredients && (
+        <>
+          <section className="pdp-details-section" aria-labelledby="pdp-ingredients-heading">
+            <h2 id="pdp-ingredients-heading" className="pdp-details-heading">
+              {t("product.sections.ingredients")}
+            </h2>
+            <p className="pdp-ingredients-text">{content.ingredients}</p>
+          </section>
+          <hr className="pdp-hr" />
+        </>
+      )}
 
       <section className="pdp-details-section" aria-labelledby="pdp-product-details-heading">
         <h2 id="pdp-product-details-heading" className="pdp-details-heading-lg">
@@ -116,6 +192,39 @@ export function ProductDetailsBlock({ content, onSeeAllSpecs }: Props) {
           >
             {aboutExpanded ? t("product.showLess") : t("product.showMore")}
           </button>
+        )}
+
+        {safety.howToUse && (
+          <DetailAccordion
+            id="how-to-use"
+            title={t("product.sections.howToUse")}
+            open={openAccordion === "how-to-use"}
+            onToggle={() => toggleAccordion("how-to-use")}
+          >
+            <TextBlock text={safety.howToUse} />
+          </DetailAccordion>
+        )}
+
+        {safety.storage && (
+          <DetailAccordion
+            id="storage"
+            title={t("product.sections.storage")}
+            open={openAccordion === "storage"}
+            onToggle={() => toggleAccordion("storage")}
+          >
+            <TextBlock text={safety.storage} />
+          </DetailAccordion>
+        )}
+
+        {safety.care && (
+          <DetailAccordion
+            id="care"
+            title={t("product.sections.care")}
+            open={openAccordion === "care"}
+            onToggle={() => toggleAccordion("care")}
+          >
+            <TextBlock text={safety.care} />
+          </DetailAccordion>
         )}
 
         <DetailAccordion
@@ -205,13 +314,47 @@ export function ProductSpecificationsFull({
   );
 }
 
-export function ProductImportantInfo({ ingredients }: { ingredients: string }) {
+export function ProductImportantInfo({
+  ingredients,
+  safety,
+}: {
+  ingredients: string;
+  safety: ProductSafety;
+}) {
   const { t } = useTranslation();
   return (
     <section className="pdp-important-info">
       <h2 className="pdp-details-heading-lg">{t("product.importantInformation")}</h2>
-      <h3 className="pdp-details-subheading">{t("product.sections.ingredients")}:</h3>
-      <p className="text-sm text-text mb-4">{ingredients}</p>
+      {safety.allergenStatement && (
+        <>
+          <h3 className="pdp-details-subheading">{t("product.sections.allergens")}:</h3>
+          <p className="text-sm text-text mb-4">{safety.allergenStatement}</p>
+        </>
+      )}
+      {ingredients && (
+        <>
+          <h3 className="pdp-details-subheading">{t("product.sections.ingredients")}:</h3>
+          <p className="text-sm text-text mb-4">{ingredients}</p>
+        </>
+      )}
+      {safety.warnings.length > 0 && (
+        <>
+          <h3 className="pdp-details-subheading">{t("product.sections.warnings")}:</h3>
+          <ul className="list-disc pl-5 text-sm text-text mb-4 space-y-1">
+            {safety.warnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {safety.howToUse && (
+        <>
+          <h3 className="pdp-details-subheading">{t("product.sections.howToUse")}:</h3>
+          <div className="mb-4">
+            <TextBlock text={safety.howToUse} />
+          </div>
+        </>
+      )}
       <h3 className="pdp-details-subheading">{t("product.legalDisclaimer")}</h3>
       <p className="text-xs text-text-muted leading-relaxed">{t("product.legalDisclaimerText")}</p>
       <p className="text-xs text-text-muted leading-relaxed mt-3">{t("product.disclaimerText")}</p>
@@ -231,13 +374,13 @@ export function ProductDescriptionSection({
     <section id="pdp-description" className="pdp-description-section scroll-mt-24">
       <h2 className="pdp-details-heading-lg">{t("product.productDescription")}</h2>
       <h3 className="pdp-details-subheading">{t("product.descriptionSubheading")}</h3>
-      <div className="space-y-3 text-sm text-text leading-relaxed">
-        {paragraphs.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-      </div>
-      <h3 className="pdp-details-subheading mt-6">{t("product.sections.ingredients")}</h3>
-      <p className="text-sm text-text">{ingredients}</p>
+      <TextBlock text={paragraphs.join("\n")} />
+      {ingredients && (
+        <>
+          <h3 className="pdp-details-subheading mt-6">{t("product.sections.ingredients")}</h3>
+          <p className="text-sm text-text">{ingredients}</p>
+        </>
+      )}
     </section>
   );
 }

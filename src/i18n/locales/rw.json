@@ -1737,8 +1737,16 @@
       "itemDetails": "Ibisobanuro by'ikintu",
       "measurements": "Ibipimo",
       "warranty": "Garanti n'kugarura",
-      "specifications": "Ibisobanuro by'igicuruzwa"
-    }
+      "specifications": "Ibisobanuro by'igicuruzwa",
+      "safety": "Umutekano n'ibitera aleruji",
+      "allergens": "Amakuru ku bitera aleruji",
+      "warnings": "Iburira n'inama z'umutekano",
+      "howToUse": "Uko bikoreshwa",
+      "storage": "Kubika",
+      "care": "Amabwiriza yo kwita ku gicuruzwa"
+    },
+    "safetyNote": "Buri gihe soma ikirango cy'igicuruzwa mbere yo kugikoresha. Twandikire niba ukeneye amakuru arambuye ku bitera aleruji cyangwa ku mikoreshereze itekanye.",
+    "safetyNoteManufacturer": "Amakuru yatanzwe n'uwakoze igicuruzwa. Ipaki ishobora guhinduka — buri gihe soma ikirango mbere yo gukoresha."
   },
   "basketPanel": {
     "title": "Agafuka kawe",
@@ -1882,7 +1890,15 @@
       "storage": "Kubika",
       "delivery": "Gutanga",
       "primeEligible": "Bifite Prime",
-      "condition": "Imiterere"
+      "condition": "Imiterere",
+      "suitableFor": "Bikwiriye",
+      "material": "Ibikoresho",
+      "colour": "Ibara",
+      "capacity": "Ubushobozi",
+      "diameter": "Umurambararo",
+      "dimensions": "Ingano",
+      "pieces": "Ibice",
+      "ean": "EAN / kode y'imirongo"
     },
     "values": {
       "yes": "Yego",
@@ -1902,7 +1918,8 @@
       "kilograms": "Kilogarama",
       "approxWeight": "{{weight}} (hafi)",
       "soldUnit": "Byagurishwa {{unit}}",
-      "rankInCategory": "{{rank}} muri {{category}}"
+      "rankInCategory": "{{rank}} muri {{category}}",
+      "suitableForList": "Bikwiriye: {{list}}"
     },
     "origin": {
       "uganda": "Ubugande",

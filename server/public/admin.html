@@ -793,6 +793,22 @@
         <div class="field"><label class="field-label" for="description">Description *</label><textarea id="description" required></textarea></div>
       </div>
       <div class="form-section">
+        <h3>Product information &amp; safety</h3>
+        <label class="checkbox-field"><input type="checkbox" id="published" checked /> Published (visible on the shop)</label>
+        <p class="upload-hint" id="hiddenReasonHint" hidden></p>
+        <div class="field-row">
+          <div class="field"><label class="field-label" for="infoBrand">Brand</label><input type="text" id="infoBrand" /></div>
+          <div class="field"><label class="field-label" for="infoOrigin">Country of origin</label><input type="text" id="infoOrigin" /></div>
+        </div>
+        <div class="field"><label class="field-label" for="infoIngredients">Ingredients (from the label)</label><textarea id="infoIngredients" rows="3"></textarea></div>
+        <div class="field"><label class="field-label" for="infoAllergens">Allergens (comma separated)</label><input type="text" id="infoAllergens" placeholder="e.g. milk, peanuts, gluten" /></div>
+        <div class="field"><label class="field-label" for="infoAllergenStatement">Allergy statement</label><input type="text" id="infoAllergenStatement" placeholder="e.g. Contains milk. May contain nuts." /></div>
+        <div class="field"><label class="field-label" for="infoHowToUse">How to use / prepare</label><textarea id="infoHowToUse" rows="3"></textarea></div>
+        <div class="field"><label class="field-label" for="infoStorage">Storage</label><textarea id="infoStorage" rows="2"></textarea></div>
+        <div class="field"><label class="field-label" for="infoCare">Care / cleaning</label><textarea id="infoCare" rows="2"></textarea></div>
+        <div class="field"><label class="field-label" for="infoWarnings">Warnings &amp; health advice (one per line)</label><textarea id="infoWarnings" rows="3"></textarea></div>
+      </div>
+      <div class="form-section">
         <h3>Pricing</h3>
         <div class="field-row">
           <div class="field"><label class="field-label" for="price">Price (USh) *</label><input type="number" id="price" step="0.01" min="0" required /></div>

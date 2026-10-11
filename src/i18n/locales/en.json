@@ -967,7 +967,15 @@
     "verifiedPurchase": "Verified Purchase",
     "sampleReview3Title": "Good delivery",
     "sampleReview3Body": "Arrived on time with solid packaging. Product matched the listing.",
+    "safetyNote": "Always read the product label before use. Contact us if you need more information about allergens or safe use.",
+    "safetyNoteManufacturer": "Information supplied by the manufacturer. Packaging may change — always read the label on the product before use.",
     "sections": {
+      "safety": "Safety & allergy information",
+      "allergens": "Allergy information",
+      "warnings": "Warnings & safety advice",
+      "howToUse": "How to use",
+      "storage": "Storage",
+      "care": "Care instructions",
       "ingredients": "Ingredients",
       "highlights": "Top highlights",
       "itemDetails": "Item details",
@@ -1126,7 +1134,15 @@
       "storage": "Storage",
       "delivery": "Delivery",
       "primeEligible": "Prime eligible",
-      "condition": "Condition"
+      "condition": "Condition",
+      "suitableFor": "Suitable for",
+      "material": "Material",
+      "colour": "Colour",
+      "capacity": "Capacity",
+      "diameter": "Diameter",
+      "dimensions": "Dimensions",
+      "pieces": "Pieces",
+      "ean": "EAN / barcode"
     },
     "values": {
       "yes": "Yes",
@@ -1146,6 +1162,7 @@
       "kilograms": "Kilograms",
       "approxWeight": "{{weight}} (approx)",
       "soldUnit": "Sold {{unit}}",
+      "suitableForList": "Suitable for: {{list}}",
       "rankInCategory": "{{rank}} in {{category}}"
     },
     "origin": {

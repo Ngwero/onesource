@@ -10,7 +10,7 @@
  *   cd server && npm run import:everythingkitchens -- --aisle small-appliances
  *   cd server && npm run import:everythingkitchens -- --reuse-images --limit 50
  *
- * Prices: small appliances use USD × EK_USD_TO_UGX (default 3700) × 1.2;
+ * Prices: small appliances use USD × EK_USD_TO_UGX (default 3700) × 1.1;
  * everything else uses the Kampala shelf-price bands in ugandanKitchenPrices.js.
  * Listings without a source price (discontinued / bundle-only) are skipped.
  *
@@ -31,7 +31,7 @@ const CATALOG_CSV =
 const CATALOG_ROOT = path.dirname(CATALOG_CSV);
 const USD_TO_UGX = Number(process.env.EK_USD_TO_UGX || 3700);
 const USD_TO_GBP = 0.79;
-const APPLIANCE_MARKUP = 1.2;
+const APPLIANCE_MARKUP = 1;
 
 const dryRun = process.argv.includes("--dry-run");
 const reuseImages = process.argv.includes("--reuse-images");

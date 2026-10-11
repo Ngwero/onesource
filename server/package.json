@@ -27,6 +27,7 @@
     "seed:kitchen-ware": "node scripts/seed-kitchen-ware.js",
     "import:ikea-kitchen": "node scripts/import-ikea-kitchen-catalog.js",
     "import:cookwarestore": "node scripts/import-cookwarestore-catalog.js",
+    "import:cookwarestore-csv": "node scripts/import-cookwarestore-csv.js",
     "import:clabane": "node scripts/import-clabane-cosmetics.js",
     "import:boots": "node scripts/import-boots-cosmetics.js",
     "import:everythingkitchens": "node scripts/import-everythingkitchens-catalog.js",

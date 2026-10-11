@@ -206,6 +206,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                       categoryName: categoryName,
                       product: product,
                     ),
+                    if (product.details.hasSafety) ...[
+                      const SizedBox(height: 14),
+                      _SafetyCard(info: product.details),
+                    ],
                     const SizedBox(height: 18),
                     _HighlightStats(product: product),
                     const SizedBox(height: 20),
@@ -457,6 +461,10 @@ class _ProductFacts extends StatelessWidget {
           label: s.get('product.soldBy'),
           value: product.supplierName!,
         ),
+      if (product.details.brand != null)
+        (icon: Icons.sell_outlined, label: s.get('productDetails.labels.brand'), value: product.details.brand!),
+      if (product.details.origin != null)
+        (icon: Icons.place_outlined, label: s.get('productDetails.labels.countryOfOrigin'), value: product.details.origin!),
       if (product.unit.isNotEmpty)
         (icon: Icons.scale_rounded, label: s.get('product.detailUnit'), value: s.unit(product.unit)),
       (
@@ -677,13 +685,175 @@ class _TabContent extends StatelessWidget {
               ),
             ],
           ),
-        _ => Text(
-            product.description.isNotEmpty
-                ? s.productDescription(product)
-                : s.get('app.product.defaultDescription'),
-            style: const TextStyle(height: 1.55, color: AppColors.textMuted, fontSize: 14),
-          ),
+        _ => _DetailsTab(product: product),
       },
+    );
+  }
+}
+
+const _bodyStyle = TextStyle(height: 1.55, color: AppColors.textMuted, fontSize: 14);
+const _headingStyle = TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.text);
+
+/// Renders text that may contain "•" bullet lines from manufacturer data.
+class _RichBlock extends StatelessWidget {
+  const _RichBlock(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = text.split(RegExp(r'\n+')).map((l) => l.trim()).where((l) => l.isNotEmpty);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final line in lines)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: RegExp(r'^[•\-–]\s').hasMatch(line)
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('•  ', style: _bodyStyle),
+                      Expanded(child: Text(line.replaceFirst(RegExp(r'^[•\-–]\s*'), ''), style: _bodyStyle)),
+                    ],
+                  )
+                : Text(line, style: _bodyStyle),
+          ),
+      ],
+    );
+  }
+}
+
+class _DetailsTab extends StatelessWidget {
+  const _DetailsTab({required this.product});
+
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.tr;
+    final d = product.details;
+    final sections = <(String, Widget)>[
+      if (d.highlights.isNotEmpty)
+        (s.get('product.sections.highlights'), _RichBlock(d.highlights.map((h) => '• $h').join('\n'))),
+      if (d.howToUse != null) (s.get('product.sections.howToUse'), _RichBlock(d.howToUse!)),
+      if (d.ingredients != null) (s.get('product.sections.ingredients'), Text(d.ingredients!, style: _bodyStyle)),
+      if (d.storage != null) (s.get('product.sections.storage'), _RichBlock(d.storage!)),
+      if (d.care != null) (s.get('product.sections.care'), _RichBlock(d.care!)),
+      if (d.suitableFor.isNotEmpty)
+        (s.get('productDetails.labels.suitableFor'), Text(d.suitableFor.join(', '), style: _bodyStyle)),
+      if (d.specs.isNotEmpty) (s.get('product.sections.specifications'), _SpecsTable(specs: d.specs)),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (product.description.isNotEmpty)
+          d.source == 'manufacturer'
+              ? _RichBlock(product.description)
+              : Text(s.productDescription(product), style: _bodyStyle)
+        else
+          Text(s.get('app.product.defaultDescription'), style: _bodyStyle),
+        for (final (title, body) in sections) ...[
+          const SizedBox(height: 18),
+          Text(title, style: _headingStyle),
+          const SizedBox(height: 6),
+          body,
+        ],
+      ],
+    );
+  }
+}
+
+class _SpecsTable extends StatelessWidget {
+  const _SpecsTable({required this.specs});
+
+  final List<ProductSpec> specs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final spec in specs)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Text(spec.label, style: const TextStyle(fontSize: 13, color: AppColors.textMuted, fontWeight: FontWeight.w600)),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(spec.value, style: const TextStyle(fontSize: 13, color: AppColors.text, fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Allergy and safety warnings — always visible above the tabs.
+class _SafetyCard extends StatelessWidget {
+  const _SafetyCard({required this.info});
+
+  final ProductInfo info;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.tr;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFAF0),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFF0C36D)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFB45309), size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text(s.get('product.sections.safety'), style: _headingStyle)),
+            ],
+          ),
+          if (info.allergenStatement != null) ...[
+            const SizedBox(height: 10),
+            Text(s.get('product.sections.allergens'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+            const SizedBox(height: 2),
+            Text(
+              info.allergenStatement!,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, height: 1.45, color: AppColors.text),
+            ),
+          ],
+          if (info.warnings.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(s.get('product.sections.warnings'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+            const SizedBox(height: 4),
+            for (final w in info.warnings)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('•  ', style: TextStyle(fontSize: 13, height: 1.45)),
+                    Expanded(child: Text(w, style: const TextStyle(fontSize: 13, height: 1.45, color: AppColors.text))),
+                  ],
+                ),
+              ),
+          ],
+          const SizedBox(height: 6),
+          Text(
+            s.get(info.fromManufacturer ? 'product.safetyNoteManufacturer' : 'product.safetyNote'),
+            style: const TextStyle(fontSize: 11.5, color: AppColors.textMuted, height: 1.4),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -253,12 +253,17 @@ export function ProductPage() {
 
           <div className="pdp-center-col">
             <header className="pdp-header">
-              <p className="pdp-brand-line">
-                {t("product.brandLabel")}{" "}
-                <Link to="/" className="pdp-brand-link">
-                  {t("product.brandValue")}
-                </Link>
-              </p>
+              {pageContent.brand && (
+                <p className="pdp-brand-line">
+                  {t("product.brandLabel")}{" "}
+                  <Link
+                    to={`/search?q=${encodeURIComponent(pageContent.brand)}`}
+                    className="pdp-brand-link"
+                  >
+                    {pageContent.brand}
+                  </Link>
+                </p>
+              )}
               <h1 className="pdp-title">{localized.localizedTitle}</h1>
 
               <div className="pdp-rating-row">
@@ -344,7 +349,7 @@ export function ProductPage() {
         </div>
 
         <div className="pdp-lower-content">
-          <ProductImportantInfo ingredients={pageContent.ingredients} />
+          <ProductImportantInfo ingredients={pageContent.ingredients} safety={pageContent.safety} />
           <ProductDescriptionSection
             paragraphs={pageContent.descriptionParagraphs}
             ingredients={pageContent.ingredients}

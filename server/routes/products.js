@@ -13,6 +13,7 @@ import { withLocalProductFallback } from "../lib/localSeed.js";
 import { enrichProductsWithSuppliers } from "../lib/suppliersService.js";
 import { nestedAislePrefixes } from "../lib/aisles.js";
 import { productMatchesSearch, rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
+import { hasPublishedColumn } from "../lib/productColumns.js";
 
 const router = Router();
 
@@ -55,6 +56,7 @@ router.get("/", async (req, res) => {
 
         if (!admin && !previewCosmetics) {
           query = query.eq("in_stock", true).gt("stock_quantity", 0);
+          if (await hasPublishedColumn(db)) query = query.eq("published", true);
         }
         if (category) {
           query = query.in("category", categoryMatchAliases(category));
@@ -143,6 +145,12 @@ router.get("/", async (req, res) => {
   }
 });
 
+async function withoutMissingColumns(db, data) {
+  if (await hasPublishedColumn(db)) return data;
+  const { details: _details, published: _published, ...rest } = data;
+  return rest;
+}
+
 router.get("/categories", async (_req, res) => {
   try {
     const db = requireSupabase();
@@ -165,7 +173,7 @@ router.get("/:id", async (req, res) => {
           .maybeSingle();
 
         if (error) throw error;
-        if (!row) {
+        if (!row || (row.published === false && req.query.admin !== "true")) {
           const err = new Error("Product not found");
           err.status = 404;
           throw err;
@@ -189,7 +197,7 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const db = requireSupabase();
-    const data = parseBody(req.body);
+    const data = await withoutMissingColumns(db, parseBody(req.body));
     data.id = data.id || uuidv4();
 
     const errors = validateProduct(data);
@@ -232,7 +240,7 @@ router.put("/:id", async (req, res) => {
     if (fetchErr) throw fetchErr;
     if (!existing) return res.status(404).json({ error: "Product not found" });
 
-    const data = parseBody(req.body, { id: req.params.id });
+    const data = await withoutMissingColumns(db, parseBody(req.body, { id: req.params.id }));
     const errors = validateProduct(data, true);
     if (errors.length) {
       return res.status(400).json({ error: "Validation failed", details: errors });

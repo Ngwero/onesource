@@ -4,6 +4,33 @@
  * main bundle by scripts/build-locales.mjs.
  */
 const rows = {
+  "product.safetyNote": [
+    "Lisez toujours l'étiquette du produit avant utilisation. Contactez-nous pour plus d'informations sur les allergènes ou l'utilisation en toute sécurité.",
+    "Soma lebo ya bidhaa kila wakati kabla ya kutumia. Wasiliana nasi ukihitaji maelezo zaidi kuhusu vizio au matumizi salama.",
+    "Tángá ntango nyonso etiketi ya eloko liboso ya kosalela yango. Benga biso soki osengeli koyeba makambo mosusu na ntina ya allergie to bosaleli malamu.",
+    "Buri gihe soma ikirango cy'igicuruzwa mbere yo kugikoresha. Twandikire niba ukeneye amakuru arambuye ku bitera aleruji cyangwa ku mikoreshereze itekanye.",
+  ],
+  "product.safetyNoteManufacturer": [
+    "Informations fournies par le fabricant. L'emballage peut changer — lisez toujours l'étiquette du produit avant utilisation.",
+    "Taarifa zimetolewa na mtengenezaji. Kifungashio kinaweza kubadilika — soma lebo ya bidhaa kila wakati kabla ya kutumia.",
+    "Bansango oyo euti epai ya mosali ya eloko. Emballage ekoki kobongwana — tángá ntango nyonso etiketi liboso ya kosalela.",
+    "Amakuru yatanzwe n'uwakoze igicuruzwa. Ipaki ishobora guhinduka — buri gihe soma ikirango mbere yo gukoresha.",
+  ],
+  "product.sections.safety": ["Sécurité et allergènes", "Usalama na vizio", "Libateli mpe allergie", "Umutekano n'ibitera aleruji"],
+  "product.sections.allergens": ["Informations sur les allergènes", "Taarifa za vizio", "Bansango ya allergie", "Amakuru ku bitera aleruji"],
+  "product.sections.warnings": ["Avertissements et conseils de sécurité", "Tahadhari na ushauri wa usalama", "Bokebisi mpe toli ya libateli", "Iburira n'inama z'umutekano"],
+  "product.sections.howToUse": ["Mode d'emploi", "Jinsi ya kutumia", "Ndenge ya kosalela", "Uko bikoreshwa"],
+  "product.sections.storage": ["Conservation", "Uhifadhi", "Kobomba", "Kubika"],
+  "product.sections.care": ["Conseils d'entretien", "Maelekezo ya utunzaji", "Ndenge ya kobatela", "Amabwiriza yo kwita ku gicuruzwa"],
+  "productDetails.labels.suitableFor": ["Convient aux", "Inafaa kwa", "Ebongi mpo na", "Bikwiriye"],
+  "productDetails.labels.material": ["Matériau", "Malighafi", "Eloko esalemi na yango", "Ibikoresho"],
+  "productDetails.labels.colour": ["Couleur", "Rangi", "Langi", "Ibara"],
+  "productDetails.labels.capacity": ["Capacité", "Ujazo", "Bonene ya kotondisa", "Ubushobozi"],
+  "productDetails.labels.diameter": ["Diamètre", "Kipenyo", "Diamètre", "Umurambararo"],
+  "productDetails.labels.dimensions": ["Dimensions", "Vipimo", "Bomeko", "Ingano"],
+  "productDetails.labels.pieces": ["Pièces", "Vipande", "Biteni", "Ibice"],
+  "productDetails.labels.ean": ["EAN / code-barres", "EAN / msimbo pau", "EAN / code-barre", "EAN / kode y'imirongo"],
+  "productDetails.values.suitableForList": ["Convient aux : {{list}}", "Inafaa kwa: {{list}}", "Ebongi mpo na: {{list}}", "Bikwiriye: {{list}}"],
   "auth.fullNamePlaceholder": ["Votre nom", "Jina lako", "Nkombo na yo", "Izina ryawe"],
   "auth.otpHint": [
     "Saisissez le code à 6–8 chiffres reçu par e-mail. Il expire dans environ 5 minutes.",

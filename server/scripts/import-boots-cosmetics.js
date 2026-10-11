@@ -10,13 +10,14 @@
  *   cd server && npm run import:boots -- --hidden        (import with in_stock=false)
  *   cd server && npm run import:boots -- --reuse-images --limit 50
  *
- * Price: GBP × BOOTS_GBP_TO_UGX (default 4700) × 1.5, rounded to USh 500.
+ * Price: gbpToUgandanCosmeticsPrice (server/lib/cosmeticsPrices.js).
  * Product id: cosmetics-{aisleId}-boots-{bootsId}
  */
 import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
+import { gbpToUgandanCosmeticsPrice } from "../lib/cosmeticsPrices.js";
 import { seedRowFromJson } from "../db.js";
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
@@ -25,8 +26,6 @@ const CATALOG_JSON =
   "/Users/user/Desktop/boots-luxury-skincare/products.json";
 const CATALOG_ROOT = path.dirname(CATALOG_JSON);
 const COSMETICS_CATEGORY_ID = "cosmetics";
-const GBP_TO_UGX = Number(process.env.BOOTS_GBP_TO_UGX || 4700);
-const MARKUP = 1.5;
 
 const dryRun = process.argv.includes("--dry-run");
 const hidden = process.argv.includes("--hidden");
@@ -112,7 +111,7 @@ function cleanTitle(title) {
 }
 
 function priceUgx(gbp) {
-  return Math.max(500, Math.round((gbp * GBP_TO_UGX * MARKUP) / 500) * 500);
+  return gbpToUgandanCosmeticsPrice(gbp);
 }
 
 function unitFor(size) {
@@ -278,7 +277,7 @@ async function runPool(items, concurrency, worker) {
 async function main() {
   console.log(`Catalog: ${CATALOG_JSON}`);
   console.log(
-    `Mode: ${dryRun ? "dry-run" : "import"} | £1 = USh ${GBP_TO_UGX} × ${MARKUP}` +
+    `Mode: ${dryRun ? "dry-run" : "import"}` +
       (hidden ? " | hidden" : "") +
       (reuseImages ? " | reuse-images" : "")
   );

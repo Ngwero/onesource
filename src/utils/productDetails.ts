@@ -1,9 +1,9 @@
 import type { TFunction } from "i18next";
 import i18n from "../i18n";
-import type { Product } from "../types/product";
+import type { Product, ProductInfo, ProductSpec } from "../types/product";
 import { getCategoryById } from "../data/categories";
 
-export type DetailRow = { labelKey: string; value: string };
+export type DetailRow = { labelKey: string; label?: string; value: string };
 
 export type DetailSection = {
   id: string;
@@ -14,8 +14,21 @@ export type DetailSection = {
   paragraphs?: string[];
 };
 
+export type ProductSafety = {
+  allergenStatement?: string;
+  allergens: string[];
+  warnings: string[];
+  howToUse?: string;
+  storage?: string;
+  care?: string;
+  suitableFor: string[];
+  fromManufacturer: boolean;
+};
+
 export type ProductPageContent = {
+  brand: string | null;
   ingredients: string;
+  safety: ProductSafety;
   highlightsTable: DetailRow[];
   aboutBullets: string[];
   descriptionParagraphs: string[];
@@ -37,10 +50,8 @@ const L = {
   numberOfItems: "productDetails.labels.numberOfItems",
   unitCount: "productDetails.labels.unitCount",
   temperatureCondition: "productDetails.labels.temperatureCondition",
-  specialty: "productDetails.labels.specialty",
-  cuisine: "productDetails.labels.cuisine",
+  suitableFor: "productDetails.labels.suitableFor",
   bestSellersRank: "productDetails.labels.bestSellersRank",
-  produceSoldAs: "productDetails.labels.produceSoldAs",
   productId: "productDetails.labels.productId",
   customerReviews: "productDetails.labels.customerReviews",
   unitOfSale: "productDetails.labels.unitOfSale",
@@ -52,15 +63,36 @@ const L = {
   delivery: "productDetails.labels.delivery",
   primeEligible: "productDetails.labels.primeEligible",
   condition: "productDetails.labels.condition",
+  material: "productDetails.labels.material",
+  colour: "productDetails.labels.colour",
+  capacity: "productDetails.labels.capacity",
+  diameter: "productDetails.labels.diameter",
+  dimensions: "productDetails.labels.dimensions",
+  pieces: "productDetails.labels.pieces",
+  ean: "productDetails.labels.ean",
 } as const;
+
+/** Spec keys shown with a translated label; others keep the manufacturer's label. */
+const SPEC_LABELS: Record<string, string> = {
+  brand: L.brand,
+  material: L.material,
+  colour: L.colour,
+  color: L.colour,
+  size: L.size,
+  capacity: L.capacity,
+  diameter: L.diameter,
+  dimensions: L.dimensions,
+  pieces: L.pieces,
+  ean: L.ean,
+};
+
+const MEASUREMENT_SPEC_KEYS = new Set(["size", "capacity", "diameter", "dimensions", "pieces", "height", "length", "width", "weight", "volume"]);
 
 export const ITEM_DETAIL_LABEL_KEYS: string[] = [
   L.itemForm,
   L.brandName,
-  L.produceSoldAs,
   L.temperatureCondition,
-  L.specialty,
-  L.cuisine,
+  L.suitableFor,
   L.countryOfOrigin,
   L.productId,
   L.customerReviews,
@@ -72,6 +104,10 @@ export const MEASUREMENT_LABEL_KEYS: string[] = [
   L.numberOfItems,
   L.itemWeight,
   L.size,
+  L.capacity,
+  L.diameter,
+  L.dimensions,
+  L.pieces,
   L.stock,
 ];
 
@@ -79,40 +115,26 @@ function titleBase(title: string): string {
   return title.replace(/\s*–\s*One Source$/i, "").trim();
 }
 
-function inferOrigin(title: string, t: TFunction): string {
-  if (/export/i.test(title)) return t("productDetails.origin.ugandaExport");
-  if (/ghana|west africa/i.test(title)) return t("productDetails.origin.ghana");
-  return t("productDetails.origin.uganda");
+const isKitchenId = (id: string) => id.startsWith("kitchen-");
+const isCosmeticsId = (id: string) => id.startsWith("cosmetics-");
+
+function details(product: Product): ProductInfo {
+  return product.details && typeof product.details === "object" ? product.details : {};
 }
 
-export function inferIngredients(product: Product, t: TFunction = i18n.t.bind(i18n)): string {
-  const base = titleBase(product.title);
-  const origin = inferOrigin(product.title, t);
-  const name = base.toLowerCase();
-  if (/sauce|paste|powder|flakes/i.test(base)) {
-    return t("productDetails.ingredients.sauce", { name: base });
+/** Brand shown on the page — only when it is actually known. */
+export function productBrand(product: Product, t: TFunction = i18n.t.bind(i18n)): string | null {
+  const d = details(product);
+  if (d.brand) return d.brand === "One Source" ? t("productDetails.values.oneSource") : d.brand;
+  if (!isKitchenId(product.id) && !isCosmeticsId(product.id) && /–\s*One Source$/i.test(product.title)) {
+    return t("productDetails.values.oneSource");
   }
-  if (/yam/i.test(base)) return t("productDetails.ingredients.yam", { name: base, origin });
-  if (/cassava|potato|tuber|root/i.test(base) || /roots-and-tubers/i.test(product.category)) {
-    return t("productDetails.ingredients.tuber", { name, origin });
-  }
-  if (/chilli|pepper|habanero|bonnet/i.test(base)) {
-    return t("productDetails.ingredients.chilli", { name, origin });
-  }
-  return t("productDetails.ingredients.default", { name, origin });
+  return null;
 }
 
-function inferStorage(category: string, t: TFunction): string {
-  if (/chillies|pepper|herbs|vegetable|fruit/i.test(category)) {
-    return t("productDetails.storage.coolDry");
-  }
-  if (/roots-and-tubers/i.test(category)) {
-    return t("productDetails.storage.roots");
-  }
-  if (/fish|poultry|livestock|dairy/i.test(category)) {
-    return t("productDetails.storage.chilled");
-  }
-  return t("productDetails.storage.default");
+/** Full ingredients list, or "" when not known. Never inferred from the title. */
+export function inferIngredients(product: Product): string {
+  return details(product).ingredients?.trim() ?? "";
 }
 
 function parseWeightFromTitle(title: string, t: TFunction): string | null {
@@ -122,98 +144,61 @@ function parseWeightFromTitle(title: string, t: TFunction): string | null {
   return `${m[1]} ${unit}`;
 }
 
-function formatWeightShort(weight: string): string {
-  return weight.replace(/Kilograms/i, "kg");
+function specRow(spec: ProductSpec): DetailRow {
+  const key = SPEC_LABELS[spec.key];
+  return key ? { labelKey: key, value: spec.value } : { labelKey: `spec.${spec.key}`, label: spec.label, value: spec.value };
 }
 
-function inferItemForm(title: string, category: string, t: TFunction): string {
-  if (/yam/i.test(title)) return t("productDetails.forms.yam");
-  if (/nakati/i.test(title)) {
-    return t("productDetails.forms.leafyGreens");
-  }
-  if (/bitter green/i.test(title)) {
-    return t("productDetails.forms.bitterGreens");
-  }
-  if (/amaranth|bugga|\bdodo\b/i.test(title)) {
-    return t("productDetails.forms.leafyGreens");
-  }
-  if (/malakwang/i.test(title)) {
-    return t("productDetails.forms.leafyGreens");
-  }
-  if (/chilli|pepper/i.test(title)) return t("productDetails.forms.chilliPepper");
-  if (/fish|tilapia/i.test(title)) return t("productDetails.forms.fish");
-  if (/chicken|egg/i.test(title)) return t("productDetails.forms.poultry");
-  const cat = getCategoryById(category);
-  if (cat?.name) return cat.name.replace(/s$/, "");
-  return t("productDetails.forms.freshProduce");
+function itemForm(product: Product, t: TFunction): string | null {
+  const d = details(product);
+  if (isKitchenId(product.id) || isCosmeticsId(product.id)) return null;
+  if (d.form) return d.form;
+  const cat = getCategoryById(product.category);
+  return cat?.name ? cat.name.replace(/s$/, "") : t("productDetails.forms.freshProduce");
+}
+
+export function buildProductSafety(product: Product): ProductSafety {
+  const d = details(product);
+  return {
+    allergenStatement: d.allergenStatement,
+    allergens: d.allergens ?? [],
+    warnings: d.warnings ?? [],
+    howToUse: d.howToUse,
+    storage: d.storage,
+    care: d.care,
+    suitableFor: d.suitableFor ?? [],
+    fromManufacturer: d.source === "manufacturer",
+  };
 }
 
 export function buildAboutItemBullets(
   product: Product,
-  categoryName: string,
+  _categoryName: string,
   t: TFunction = i18n.t.bind(i18n)
 ): string[] {
-  const base = titleBase(product.title);
-  const origin = inferOrigin(product.title, t);
-  const weight = parseWeightFromTitle(product.title, t);
-  const bullets: string[] = [
-    t("productDetails.about.productOf", { name: base, origin }),
-  ];
-
-  if (weight) bullets.push(t("productDetails.values.approxWeight", { weight: formatWeightShort(weight) }));
-  else if (product.unit) bullets.push(t("productDetails.values.soldUnit", { unit: product.unit }));
-
-  if (/yam/i.test(product.title)) {
-    bullets.push(t("productDetails.about.yam1"), t("productDetails.about.yam2"), t("productDetails.about.yam3"));
-  } else if (/chilli|pepper|habanero|bonnet/i.test(product.title)) {
-    bullets.push(
-      t("productDetails.about.chilli1"),
-      t("productDetails.about.chilli2"),
-      t("productDetails.about.chilli3")
-    );
-  } else {
-    const desc = product.description?.trim();
-    if (desc) bullets.push(desc.split(/[.!?]/)[0] + ".");
-    bullets.push(
-      t("productDetails.about.freshCategory", { category: categoryName.toLowerCase() })
-    );
-    bullets.push(t("productDetails.about.report24h"));
+  const d = details(product);
+  const bullets: string[] = [...(d.highlights ?? [])];
+  if (!bullets.length) {
+    const sentences = (product.description ?? "")
+      .split(/\n+|(?<=[.!?])\s+/)
+      .map((s) => s.replace(/^[•\-–]\s*/, "").trim())
+      .filter((s) => s.length > 3);
+    bullets.push(...sentences.slice(0, 4));
   }
-
-  if (product.prime) {
-    bullets.push(t("productDetails.about.primeEligible"));
+  if (!isKitchenId(product.id) && !isCosmeticsId(product.id) && product.unit) {
+    bullets.push(t("productDetails.values.soldUnit", { unit: product.unit }));
   }
-
-  return bullets.slice(0, 6);
+  if (d.suitableFor?.length) {
+    bullets.push(t("productDetails.values.suitableForList", { list: d.suitableFor.join(", ") }));
+  }
+  return bullets.slice(0, 8);
 }
 
-export function buildDescriptionParagraphs(
-  product: Product,
-  t: TFunction = i18n.t.bind(i18n)
-): string[] {
-  const base = titleBase(product.title);
-  const origin = inferOrigin(product.title, t);
-  const paras: string[] = [t("productDetails.description.intro", { name: base, origin })];
-
-  const weight = parseWeightFromTitle(product.title, t);
-  if (weight) paras.push(t("productDetails.values.approxWeight", { weight: formatWeightShort(weight) }));
-
-  if (product.description && product.description.length > 20) {
-    paras.push(product.description);
-  } else if (/yam/i.test(product.title)) {
-    paras.push(
-      t("productDetails.description.yam1"),
-      t("productDetails.description.yam2"),
-      t("productDetails.description.yam3", { origin })
-    );
-  } else {
-    paras.push(
-      t("productDetails.description.farmFresh", { name: base.toLowerCase() }),
-      inferStorage(product.category, t)
-    );
-  }
-
-  return paras;
+export function buildDescriptionParagraphs(product: Product): string[] {
+  return (product.description ?? "")
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 }
 
 export function getSocialProof(product: Product, t: TFunction = i18n.t.bind(i18n)): string | null {
@@ -314,32 +299,33 @@ function inferBestSellersRank(
   });
 }
 
+
 export function buildHighlightsTable(
   product: Product,
   categoryName: string,
   t: TFunction = i18n.t.bind(i18n)
 ): DetailRow[] {
+  const d = details(product);
+  const rows: DetailRow[] = [];
+  const form = itemForm(product, t);
+  if (form) rows.push({ labelKey: L.itemForm, value: form });
+  const brand = productBrand(product, t);
+  if (brand) rows.push({ labelKey: L.brand, value: brand });
+  rows.push({ labelKey: L.category, value: categoryName });
+  if (d.origin) rows.push({ labelKey: L.countryOfOrigin, value: d.origin });
   const weight = parseWeightFromTitle(product.title, t);
-  const rows: DetailRow[] = [
-    { labelKey: L.itemForm, value: inferItemForm(product.title, product.category, t) },
-    { labelKey: L.brand, value: t("productDetails.values.oneSource") },
-    { labelKey: L.category, value: categoryName },
-    { labelKey: L.countryOfOrigin, value: inferOrigin(product.title, t) },
-  ];
-  if (weight) rows.push({ labelKey: L.itemWeight, value: weight });
-  rows.push({ labelKey: L.numberOfItems, value: "1" });
-  rows.push({
-    labelKey: L.unitCount,
-    value: product.unit.replace(/^per\s+/i, "") || t("productDetails.values.oneUnit"),
-  });
-  rows.push({
-    labelKey: L.temperatureCondition,
-    value: /fish|poultry|livestock|dairy/i.test(product.category)
-      ? t("productDetails.values.chilled")
-      : t("productDetails.values.fresh"),
-  });
-  rows.push({ labelKey: L.specialty, value: t("productDetails.values.vegetarian") });
-  rows.push({ labelKey: L.cuisine, value: t("productDetails.values.african") });
+  if (weight && !isKitchenId(product.id)) rows.push({ labelKey: L.itemWeight, value: weight });
+  if (!isKitchenId(product.id) && !isCosmeticsId(product.id)) {
+    rows.push({
+      labelKey: L.unitCount,
+      value: product.unit.replace(/^per\s+/i, "") || t("productDetails.values.oneUnit"),
+    });
+  }
+  if (d.temperature) rows.push({ labelKey: L.temperatureCondition, value: d.temperature });
+  if (d.suitableFor?.length) rows.push({ labelKey: L.suitableFor, value: d.suitableFor.join(", ") });
+  for (const s of (d.specs ?? []).filter((s) => s.key !== "brand" && s.key !== "ean").slice(0, 6)) {
+    rows.push(specRow(s));
+  }
   const bsr = inferBestSellersRank(product, categoryName, t);
   if (bsr) rows.push({ labelKey: L.bestSellersRank, value: bsr });
   return rows;
@@ -351,40 +337,35 @@ export function buildProductPageContent(
   formatPrice: (n: number) => string,
   t: TFunction = i18n.t.bind(i18n)
 ): ProductPageContent {
+  const d = details(product);
   const base = titleBase(product.title);
-  const origin = inferOrigin(product.title, t);
   const weight = parseWeightFromTitle(product.title, t);
+  const brand = productBrand(product, t);
+  const form = itemForm(product, t);
+  const specs = d.specs ?? [];
 
-  const itemDetails: DetailRow[] = [
-    { labelKey: L.itemForm, value: inferItemForm(product.title, product.category, t) },
-    { labelKey: L.brandName, value: t("productDetails.values.oneSource") },
-    { labelKey: L.produceSoldAs, value: t("productDetails.values.loose") },
-    { labelKey: L.temperatureCondition, value: t("productDetails.values.fresh") },
-    { labelKey: L.specialty, value: t("productDetails.values.vegetarian") },
-    { labelKey: L.cuisine, value: t("productDetails.values.african") },
-    { labelKey: L.countryOfOrigin, value: origin },
-    { labelKey: L.productId, value: product.id },
-    {
-      labelKey: L.customerReviews,
-      value: t("productDetails.values.reviewsSummary", {
-        rating: product.rating.toFixed(1),
-        count: product.reviewCount.toLocaleString(),
-      }),
-    },
-  ];
+  const itemDetails: DetailRow[] = [];
+  if (form) itemDetails.push({ labelKey: L.itemForm, value: form });
+  if (brand) itemDetails.push({ labelKey: L.brandName, value: brand });
+  if (d.temperature) itemDetails.push({ labelKey: L.temperatureCondition, value: d.temperature });
+  if (d.suitableFor?.length) itemDetails.push({ labelKey: L.suitableFor, value: d.suitableFor.join(", ") });
+  if (d.origin) itemDetails.push({ labelKey: L.countryOfOrigin, value: d.origin });
+  itemDetails.push({ labelKey: L.productId, value: product.id });
+  itemDetails.push({
+    labelKey: L.customerReviews,
+    value: t("productDetails.values.reviewsSummary", {
+      rating: product.rating.toFixed(1),
+      count: product.reviewCount.toLocaleString(),
+    }),
+  });
 
   const measurements: DetailRow[] = [
     { labelKey: L.unitOfSale, value: product.unit },
     { labelKey: L.price, value: formatPrice(product.price) },
-    { labelKey: L.numberOfItems, value: "1" },
   ];
-  if (weight) {
-    measurements.push({ labelKey: L.itemWeight, value: weight });
-    measurements.push({
-      labelKey: L.size,
-      value: t("productDetails.values.packOfOne", { weight: formatWeightShort(weight) }),
-    });
-  }
+  const measureSpecs = specs.filter((s) => MEASUREMENT_SPEC_KEYS.has(s.key));
+  measurements.push(...measureSpecs.map(specRow));
+  if (weight && !measureSpecs.length) measurements.push({ labelKey: L.itemWeight, value: weight });
   if (product.stockQuantity != null) {
     measurements.push({
       labelKey: L.stock,
@@ -392,11 +373,14 @@ export function buildProductPageContent(
     });
   }
 
+  const otherSpecs = specs.filter((s) => !MEASUREMENT_SPEC_KEYS.has(s.key) && s.key !== "brand").map(specRow);
+
   const allSpecifications: DetailRow[] = [
     ...itemDetails,
     ...measurements,
+    ...otherSpecs,
     { labelKey: L.productName, value: base },
-    { labelKey: L.storage, value: inferStorage(product.category, t) },
+    ...(d.storage ? [{ labelKey: L.storage, value: d.storage }] : []),
     {
       labelKey: L.delivery,
       value: product.delivery || t("productDetails.values.standardDelivery"),
@@ -409,10 +393,12 @@ export function buildProductPageContent(
   ];
 
   return {
-    ingredients: inferIngredients(product, t),
+    brand,
+    ingredients: inferIngredients(product),
+    safety: buildProductSafety(product),
     highlightsTable: buildHighlightsTable(product, categoryName, t),
     aboutBullets: buildAboutItemBullets(product, categoryName, t),
-    descriptionParagraphs: buildDescriptionParagraphs(product, t),
+    descriptionParagraphs: buildDescriptionParagraphs(product),
     itemDetails,
     measurements,
     allSpecifications,

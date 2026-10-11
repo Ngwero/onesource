@@ -1737,8 +1737,16 @@
       "itemDetails": "Maelezo ya bidhaa",
       "measurements": "Vipimo",
       "warranty": "Dhamana na marejesho",
-      "specifications": "Maelezo ya bidhaa"
-    }
+      "specifications": "Maelezo ya bidhaa",
+      "safety": "Usalama na vizio",
+      "allergens": "Taarifa za vizio",
+      "warnings": "Tahadhari na ushauri wa usalama",
+      "howToUse": "Jinsi ya kutumia",
+      "storage": "Uhifadhi",
+      "care": "Maelekezo ya utunzaji"
+    },
+    "safetyNote": "Soma lebo ya bidhaa kila wakati kabla ya kutumia. Wasiliana nasi ukihitaji maelezo zaidi kuhusu vizio au matumizi salama.",
+    "safetyNoteManufacturer": "Taarifa zimetolewa na mtengenezaji. Kifungashio kinaweza kubadilika — soma lebo ya bidhaa kila wakati kabla ya kutumia."
   },
   "basketPanel": {
     "title": "Kikapu chako",
@@ -1882,7 +1890,15 @@
       "storage": "Uhifadhi",
       "delivery": "Uwasilishaji",
       "primeEligible": "Inastahili Prime",
-      "condition": "Hali"
+      "condition": "Hali",
+      "suitableFor": "Inafaa kwa",
+      "material": "Malighafi",
+      "colour": "Rangi",
+      "capacity": "Ujazo",
+      "diameter": "Kipenyo",
+      "dimensions": "Vipimo",
+      "pieces": "Vipande",
+      "ean": "EAN / msimbo pau"
     },
     "values": {
       "yes": "Ndiyo",
@@ -1902,7 +1918,8 @@
       "kilograms": "Kilogramu",
       "approxWeight": "{{weight}} (takriban)",
       "soldUnit": "Inauzwa {{unit}}",
-      "rankInCategory": "{{rank}} katika {{category}}"
+      "rankInCategory": "{{rank}} katika {{category}}",
+      "suitableForList": "Inafaa kwa: {{list}}"
     },
     "origin": {
       "uganda": "Uganda",
