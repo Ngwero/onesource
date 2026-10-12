@@ -17,6 +17,7 @@ import authRouter from "./routes/auth.js";
 import imgRouter from "./routes/img.js";
 import notificationsRouter from "./routes/notifications.js";
 import appVersionRouter from "./routes/appVersion.js";
+import geoRouter from "./routes/geo.js";
 import { requireSupabase } from "./lib/supabase.js";
 import { isSupabaseConnectionError } from "./lib/supabaseErrors.js";
 import { localProductCount } from "./lib/localSeed.js";
@@ -74,6 +75,7 @@ app.use("/api/packaging", packagingRouter);
 app.use("/api/notifications", notificationsRouter);
 app.use("/api/img", imgRouter);
 app.use("/api/app-version", appVersionRouter);
+app.use("/api/geo", geoRouter);
 
 const uploadsDir = path.join(__dirname, "uploads");
 const storageBucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";

@@ -15,6 +15,35 @@ import { COSMETICS_AISLES } from "../data/cosmetics";
 import { kitchenAislePath } from "../utils/kitchenMode";
 import { cosmeticsAislePath } from "../utils/cosmeticsMode";
 import { shopModeForPath, SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
+import { DELIVERY_COUNTRIES, useDeliveryCountry } from "../hooks/useDeliveryCountry";
+
+function DeliverToPicker() {
+  const { t, i18n } = useTranslation();
+  const { code, name, countryName, chooseCountry } = useDeliveryCountry();
+  const options = [...DELIVERY_COUNTRIES]
+    .map((c) => ({ c, label: countryName(c) }))
+    .sort((a, b) => a.label.localeCompare(b.label, i18n.language));
+  return (
+    <label className="relative hidden xl:flex flex-col items-end px-3 py-2 rounded-xl hover:bg-muted transition-colors text-right cursor-pointer">
+      <span className="text-[10px] text-text-muted uppercase tracking-wide">
+        {t("header.deliverTo")}
+      </span>
+      <span className="text-xs font-semibold">📍 {name}</span>
+      <select
+        aria-label={t("header.deliverTo")}
+        className="absolute inset-0 opacity-0 cursor-pointer"
+        value={code}
+        onChange={(e) => chooseCountry(e.target.value)}
+      >
+        {options.map(({ c, label }) => (
+          <option key={c} value={c}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
 
 function NavCategoryLink({ id, icon }: { id: string; icon: string }) {
   const location = useLocation();
@@ -333,18 +362,7 @@ export function Header() {
               <CurrencySwitcher />
               <LanguageSwitcher />
 
-              <Link
-                to={user ? "/account" : "/login"}
-                state={user ? undefined : { from: "/account" }}
-                className="hidden xl:flex flex-col items-end px-3 py-2 rounded-xl hover:bg-muted transition-colors text-right"
-              >
-                <span className="text-[10px] text-text-muted uppercase tracking-wide">
-                  {t("header.deliverTo")}
-                </span>
-                <span className="text-xs font-semibold">
-                  {t("header.unitedKingdom")}
-                </span>
-              </Link>
+              <DeliverToPicker />
 
               <AccountMenu />
 

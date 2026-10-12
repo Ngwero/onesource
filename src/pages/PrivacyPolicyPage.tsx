@@ -82,6 +82,12 @@ export function PrivacyPolicyPage() {
               keep the service secure and reliable.
             </li>
             <li>
+              <strong className="text-text">Approximate country:</strong> when you visit the
+              website we look up the country of your IP address (using the country.is
+              service) to pre-fill &ldquo;Deliver to&rdquo;. We only keep the country, not
+              your precise location, and you can change it at any time.
+            </li>
+            <li>
               <strong className="text-text">Communications:</strong> messages you send to
               support, and transactional emails we send (for example login codes, password
               reset links, and order updates).
@@ -100,7 +106,7 @@ export function PrivacyPolicyPage() {
             cookies and local storage to:
           </p>
           <ul className="list-disc pl-5 space-y-2 text-text-muted">
-            <li>Keep you signed in and remember language or currency preferences</li>
+            <li>Keep you signed in and remember language, currency or delivery-country preferences</li>
             <li>Save your basket and shopping session</li>
             <li>Measure basic site performance and fix errors</li>
             <li>Improve how the shop works for returning customers</li>
