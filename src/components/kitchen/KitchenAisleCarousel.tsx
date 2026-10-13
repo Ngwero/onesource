@@ -12,6 +12,8 @@ type Props = {
   seeMoreHref: string;
   seeMoreLabel?: string;
   products: Product[];
+  /** Hide the Best sellers / Offers switch (e.g. a deals-only row). */
+  hideTabs?: boolean;
 };
 
 const ROW_LIMIT = 24;
@@ -27,6 +29,7 @@ export function KitchenAisleCarousel({
   seeMoreHref,
   seeMoreLabel,
   products,
+  hideTabs = false,
 }: Props) {
   const { t } = useTranslation();
   const hoverRef = useRef<HTMLElement>(null);
@@ -114,23 +117,25 @@ export function KitchenAisleCarousel({
         </Link>
       </div>
 
-      <nav className="kitchen-ikea-row-tabs" aria-label={t("kitchen.home.feedLabel")}>
-        <button
-          type="button"
-          className={`kitchen-ikea-row-tab${feedTab === "bestsellers" ? " is-active" : ""}`}
-          onClick={() => setFeedTab("bestsellers")}
-        >
-          {t("kitchen.home.feedBest")}
-        </button>
-        <button
-          type="button"
-          className={`kitchen-ikea-row-tab${feedTab === "offers" ? " is-active" : ""}`}
-          onClick={() => setFeedTab("offers")}
-          disabled={!hasOffers}
-        >
-          {t("kitchen.home.feedOffers")}
-        </button>
-      </nav>
+      {hideTabs ? null : (
+        <nav className="kitchen-ikea-row-tabs" aria-label={t("kitchen.home.feedLabel")}>
+          <button
+            type="button"
+            className={`kitchen-ikea-row-tab${feedTab === "bestsellers" ? " is-active" : ""}`}
+            onClick={() => setFeedTab("bestsellers")}
+          >
+            {t("kitchen.home.feedBest")}
+          </button>
+          <button
+            type="button"
+            className={`kitchen-ikea-row-tab${feedTab === "offers" ? " is-active" : ""}`}
+            onClick={() => setFeedTab("offers")}
+            disabled={!hasOffers}
+          >
+            {t("kitchen.home.feedOffers")}
+          </button>
+        </nav>
+      )}
 
       {feedProducts.length === 0 ? (
         <p className="kitchen-ikea-empty">{t("kitchen.noFilterResults")}</p>

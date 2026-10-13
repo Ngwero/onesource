@@ -105,7 +105,7 @@
     "shopCategory": "Gura iki cyiciro",
     "catalogKicker": "Reba ku cyiciro",
     "catalogTitle": "Ibyiciro byo mu gikoni, kimwe cya kimwe",
-    "catalogSub": "Ibikoresho {{count}} mu byiciro birindwi byo mu gikoni gusa.",
+    "catalogSub": "Ibikoresho ibihumbi mu byiciro byo mu gikoni.",
     "aisleOf": "Icyiciro cy'igikoni",
     "itemsTab": "Ibicuruzwa",
     "sortBy": "Tondeka hakurikijwe:",
@@ -152,7 +152,9 @@
       "catalogsTitle": "Katalogi z'igikoni",
       "catalogsBody": "Shakisha ibice {{count}} — ibikoresho, icyuma, amakabati, ameza n'ububiko — iduka rimwe ry'igikoni, ibyiciro byinshi.",
       "welcomeTitle": "Murakaza neza mu gikoni cy'ikinyejana cya 21",
-      "welcomeBody": "Kuva ku bikoresho n'amakabati kugera ku mahood, amasinki n'ububiko — igikoni ni iduka ryacyo. Hitamo icyiciro, hanyuma wongere mu gitebo kimwe n'ibiribwa byawe."
+      "welcomeBody": "Kuva ku bikoresho n'amakabati kugera ku mahood, amasinki n'ububiko — igikoni ni iduka ryacyo. Hitamo icyiciro, hanyuma wongere mu gitebo kimwe n'ibiribwa byawe.",
+      "dealsTitle": "Amafere y’igikoni mu byiciro byose",
+      "dealsSeeAll": "Reba amafere yose"
     },
     "moreOptions": "Hariho ubundi buryo",
     "searchTitle": "Shakisha ibikoresho by'igikoni",
@@ -2001,7 +2003,7 @@
     "navCategories": "Ibyiciro byose",
     "navLabel": "Ibice by'ibirungo by'ubwiza",
     "zonesTitle": "Gura ukurikije icyiciro cyo kwita ku ruhu",
-    "catalogSub": "Ibicuruzwa {{count}} mu byiciro byo kwita ku ruhu.",
+    "catalogSub": "Ibicuruzwa ibihumbi mu byiciro byo kwita ku ruhu.",
     "aisleOf": "Icyiciro cy'ubwiza",
     "empty": "Ibirungo by'ubwiza biri kongerwamo — garuka vuba.",
     "searchTitle": "Shakisha ibirungo by'ubwiza",

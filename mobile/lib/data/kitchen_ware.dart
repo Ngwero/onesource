@@ -32,13 +32,6 @@ const kitchenWareAisles = <KitchenAisle>[
   KitchenAisle(id: 'small-appliances', title: 'Small appliances', icon: '🔌', accentArgb: 0xFFA0522D),
   KitchenAisle(id: 'tabletop', title: 'Tabletop', icon: '🍽️', accentArgb: 0xFFB7A99A),
   KitchenAisle(
-    id: 'small-furniture',
-    title: 'Kitchen small furniture',
-    icon: '🛒',
-    accentArgb: 0xFF4A6FA5,
-  ),
-  KitchenAisle(id: 'extractor-hoods', title: 'Extractor hoods', icon: '💨', accentArgb: 0xFF6B7280),
-  KitchenAisle(
     id: 'countertops-sinks',
     title: 'Countertops, faucets and sinks',
     icon: '🚰',

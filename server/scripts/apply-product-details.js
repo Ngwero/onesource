@@ -212,12 +212,15 @@ async function planKitchen(rows) {
     const { details, description } = kitchenProductDetails(input);
     const hidden = [];
     if (!row.image || STOCK_IMAGE.test(row.image)) hidden.push("placeholder-photo");
+    // Products from retired aisles stay unpublished regardless of --hide-incomplete.
+    const aisleRemoved = row.details?.hiddenReason?.includes?.("aisle-removed");
+    if (aisleRemoved) hidden.push("aisle-removed");
     return {
       id: row.id,
       title: row.title,
       description,
       details: { ...details, ...(hidden.length ? { hiddenReason: hidden } : {}) },
-      published: !HIDE_INCOMPLETE || hidden.length === 0,
+      published: !aisleRemoved && (!HIDE_INCOMPLETE || hidden.length === 0),
     };
   });
   console.log(`Kitchen: ${cached} rows with cached Cookware Store manufacturer data`);

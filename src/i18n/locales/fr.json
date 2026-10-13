@@ -105,7 +105,7 @@
     "shopCategory": "Voir cette catégorie",
     "catalogKicker": "Parcourir par rayon",
     "catalogTitle": "Catégories cuisine, article par article",
-    "catalogSub": "{{count}} pièces dans sept catégories cuisine uniquement.",
+    "catalogSub": "Des milliers de pièces dans nos catégories cuisine.",
     "aisleOf": "Catégorie cuisine",
     "itemsTab": "Articles",
     "sortBy": "Trier par :",
@@ -152,7 +152,9 @@
       "catalogsTitle": "Catalogues cuisine",
       "catalogsBody": "Parcourez {{count}} pièces — batterie, inox, fonte, table, meubles et rangement — une boutique cuisine, plusieurs catégories.",
       "welcomeTitle": "Bienvenue dans la cuisine du XXIe siècle",
-      "welcomeBody": "De la batterie de cuisine aux meubles modulaires, hottes, éviers et rangement : la boutique cuisine est un espace à part. Choisissez une catégorie, puis ajoutez au même panier que vos produits frais."
+      "welcomeBody": "De la batterie de cuisine aux meubles modulaires, hottes, éviers et rangement : la boutique cuisine est un espace à part. Choisissez une catégorie, puis ajoutez au même panier que vos produits frais.",
+      "dealsTitle": "Promos cuisine dans tous les rayons",
+      "dealsSeeAll": "Voir toutes les promos"
     },
     "moreOptions": "Plus d'options disponibles",
     "searchTitle": "Rechercher dans la cuisine",
@@ -2001,7 +2003,7 @@
     "navCategories": "Toutes les catégories",
     "navLabel": "Rubriques cosmétiques",
     "zonesTitle": "Acheter par catégorie de soin",
-    "catalogSub": "{{count}} produits dans les catégories de soin.",
+    "catalogSub": "Des milliers de produits dans les catégories de soin.",
     "aisleOf": "Catégorie cosmétiques",
     "empty": "Les cosmétiques sont en réapprovisionnement — revenez bientôt.",
     "searchTitle": "Rechercher des cosmétiques",

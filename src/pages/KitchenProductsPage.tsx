@@ -65,7 +65,7 @@ export function KitchenProductsPage() {
               : t("kitchen.home.catalogsTitle")}
           </h1>
           <p>
-            {t("kitchen.catalogSub", { count: filtered.length })}
+            {t("kitchen.catalogSub")}
           </p>
         </header>
 
@@ -93,9 +93,6 @@ export function KitchenProductsPage() {
               ? t("kitchen.navAll")
               : t("kitchen.home.feedOffers")}
           </Link>
-          <span className="kitchen-ikea-toolbar-count">
-            {t("kitchen.categoryCount", { count: filtered.length })}
-          </span>
         </div>
 
         {loading && kitchenProducts.length === 0 ? (

@@ -137,6 +137,19 @@ export async function fetchProducts(params?: {
   return products;
 }
 
+/** One page of a single Kitchen Ware aisle (newest first) — for home-page shelves. */
+export async function fetchKitchenAislePage(
+  aisleId: string,
+  pageSize = 24
+): Promise<{ products: Product[]; total: number }> {
+  const search = new URLSearchParams({
+    shop: "kitchen",
+    aisle: aisleId,
+    pageSize: String(pageSize),
+  });
+  return fetchProductsPageRaw(search, 0);
+}
+
 export async function fetchProductById(id: string): Promise<Product | undefined> {
   const res = await fetch(`${API_BASE}/products/${id}`);
   if (res.status === 404) return undefined;

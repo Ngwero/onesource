@@ -105,7 +105,7 @@
     "shopCategory": "Nunua kategoria hii",
     "catalogKicker": "Vinjari kwa eneo",
     "catalogTitle": "Kategoria za jikoni, kipande kwa kipande",
-    "catalogSub": "Vipande {{count}} katika kategoria saba za jikoni pekee.",
+    "catalogSub": "Maelfu ya vipande katika kategoria za jikoni.",
     "aisleOf": "Kategoria ya jikoni",
     "itemsTab": "Bidhaa",
     "sortBy": "Panga kwa:",
@@ -152,7 +152,9 @@
       "catalogsTitle": "Katalogi za jikoni",
       "catalogsBody": "Vinjari vipande {{count}} — vyombo, chuma, kabati, meza na uhifadhi — duka moja la jikoni, kategoria nyingi.",
       "welcomeTitle": "Karibu kwenye jikoni ya karne ya 21",
-      "welcomeBody": "Kutoka vyombo na kabati hadi hood, sinki na uhifadhi — jikoni ni duka lake. Chagua kategoria, kisha ongeza kwenye kikapu kimoja na mazao yako."
+      "welcomeBody": "Kutoka vyombo na kabati hadi hood, sinki na uhifadhi — jikoni ni duka lake. Chagua kategoria, kisha ongeza kwenye kikapu kimoja na mazao yako.",
+      "dealsTitle": "Ofa za jikoni katika kila kundi",
+      "dealsSeeAll": "Tazama ofa zote"
     },
     "moreOptions": "Chaguo zaidi zinapatikana",
     "searchTitle": "Tafuta vifaa vya jikoni",
@@ -2001,7 +2003,7 @@
     "navCategories": "Makundi yote",
     "navLabel": "Sehemu za vipodozi",
     "zonesTitle": "Nunua kwa kundi la utunzaji wa ngozi",
-    "catalogSub": "Bidhaa {{count}} katika makundi ya utunzaji wa ngozi.",
+    "catalogSub": "Maelfu ya bidhaa katika makundi ya utunzaji wa ngozi.",
     "aisleOf": "Kundi la vipodozi",
     "empty": "Vipodozi vinaongezwa tena — rudi baadaye kidogo.",
     "searchTitle": "Tafuta vipodozi",

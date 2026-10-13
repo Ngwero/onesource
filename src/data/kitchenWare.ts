@@ -46,18 +46,6 @@ export const KITCHEN_WARE_AISLES = [
     accent: "#b7a99a",
   },
   {
-    id: "small-furniture",
-    title: "Kitchen small furniture",
-    icon: "🛒",
-    accent: "#4a6fa5",
-  },
-  {
-    id: "extractor-hoods",
-    title: "Extractor hoods",
-    icon: "💨",
-    accent: "#6b7280",
-  },
-  {
     id: "countertops-sinks",
     title: "Countertops, faucets and sinks",
     icon: "🚰",

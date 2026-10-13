@@ -32,11 +32,7 @@ export function CosmeticsAislePage() {
 
         <header className="cos-page-head">
           <h1>{aisleTitle}</h1>
-          <p>
-            {loading && products.length === 0
-              ? t("common.loading")
-              : t("kitchen.categoryCount", { count: products.length })}
-          </p>
+          {loading && products.length === 0 && <p>{t("common.loading")}</p>}
         </header>
 
         {loading && products.length === 0 ? null : products.length === 0 ? (

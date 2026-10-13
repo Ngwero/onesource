@@ -40,9 +40,7 @@ export function KitchenSearchPage() {
                 : t("search.forQuery", { query })
               : t("kitchen.searchTitle")}
           </h1>
-          {query ? (
-            <p>{t("kitchen.categoryCount", { count: results.length })}</p>
-          ) : (
+          {!query && (
             <p>{t("kitchen.searchHint")}</p>
           )}
         </header>

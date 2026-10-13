@@ -1,45 +1,110 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { KitchenAisleCarousel } from "../components/kitchen/KitchenAisleCarousel";
 import { KitchenInspirationCollage } from "../components/kitchen/KitchenInspirationCollage";
+import { KitchenShelfSkeleton } from "../components/kitchen/KitchenShelfSkeleton";
 import { getKitchenAisleTitle } from "../i18n/useLocalizedProduct";
-import { useKitchenCatalog } from "../hooks/useKitchenCatalog";
+import {
+  useKitchenAisleShelves,
+  useNearViewport,
+} from "../hooks/useKitchenAisleShelf";
+import { KITCHEN_WARE_AISLES } from "../data/kitchenWare";
 import { kitchenAislePath } from "../utils/kitchenMode";
 import type { Product } from "../types/product";
 
-function sortBestSellers(products: Product[]) {
-  return [...products].sort(
-    (a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount
+/** Aisle shelves fetched straight away; the rest load as they near the viewport. */
+const EAGER_SHELVES = 2;
+/** The cross-aisle deals row sits after this many aisle shelves. */
+const DEALS_AFTER = 2;
+const DEALS_LIMIT = 24;
+
+const ALL_AISLE_IDS = KITCHEN_WARE_AISLES.map((aisle) => aisle.id);
+
+function isOnOffer(product: Product) {
+  return product.originalPrice != null && product.originalPrice > product.price;
+}
+
+/** Round-robin across aisles so one big aisle doesn't fill the whole row. */
+function interleaveOffers(shelves: Product[][], limit: number): Product[] {
+  const pools = shelves.map((shelf) => shelf.filter(isOnOffer));
+  const out: Product[] = [];
+  for (let i = 0; out.length < limit; i += 1) {
+    let added = false;
+    for (const pool of pools) {
+      if (i < pool.length) {
+        out.push(pool[i]);
+        added = true;
+        if (out.length >= limit) break;
+      }
+    }
+    if (!added) break;
+  }
+  return out;
+}
+
+function KitchenAisleShelf({
+  aisleId,
+  fallbackTitle,
+  eager,
+}: {
+  aisleId: string;
+  fallbackTitle: string;
+  eager: boolean;
+}) {
+  const { t } = useTranslation();
+  const { ref, near } = useNearViewport<HTMLDivElement>();
+  const { shelves, loading } = useKitchenAisleShelves([aisleId], eager || near);
+  const products = shelves[0] ?? [];
+  const title = getKitchenAisleTitle(aisleId, t, fallbackTitle);
+
+  if (!loading && products.length === 0) return null;
+
+  return (
+    <div ref={ref}>
+      {loading ? (
+        <KitchenShelfSkeleton title={title} />
+      ) : (
+        <KitchenAisleCarousel
+          title={title}
+          seeMoreHref={kitchenAislePath(aisleId)}
+          seeMoreLabel={t("categories.fresh.seeCategory", { category: title })}
+          products={products}
+        />
+      )}
+    </div>
+  );
+}
+
+function KitchenDealsShelf() {
+  const { t } = useTranslation();
+  const { ref, near } = useNearViewport<HTMLDivElement>();
+  const { shelves, loading } = useKitchenAisleShelves(ALL_AISLE_IDS, near);
+  const deals = useMemo(() => interleaveOffers(shelves, DEALS_LIMIT), [shelves]);
+  const title = t("kitchen.home.dealsTitle");
+
+  if (!loading && deals.length === 0) return null;
+
+  return (
+    <div ref={ref}>
+      {loading ? (
+        <KitchenShelfSkeleton title={title} />
+      ) : (
+        <KitchenAisleCarousel
+          title={title}
+          seeMoreHref="/kitchen/products?sale=1"
+          seeMoreLabel={t("kitchen.home.dealsSeeAll")}
+          products={deals}
+          hideTabs
+        />
+      )}
+    </div>
   );
 }
 
 export function KitchenShopPage() {
   const { t } = useTranslation();
-  const { aisles, kitchenProducts, loading } = useKitchenCatalog();
-
-  /** Every aisle with stock, largest catalogs first. */
-  const aisleCarousels = useMemo(
-    () =>
-      aisles
-        .map((aisle) => {
-          const title = getKitchenAisleTitle(aisle.id, t, aisle.title);
-          return {
-            key: aisle.id,
-            title,
-            count: aisle.products.length,
-            seeMoreHref: kitchenAislePath(aisle.id),
-            seeMoreLabel: t("categories.fresh.seeCategory", {
-              category: title,
-            }),
-            products: sortBestSellers(aisle.products),
-          };
-        })
-        .filter((row) => row.count > 0)
-        .sort((a, b) => b.count - a.count || a.title.localeCompare(b.title)),
-    [aisles, t]
-  );
 
   return (
     <div className="categories-fresh-page kitchen-fresh-layout">
@@ -49,29 +114,22 @@ export function KitchenShopPage() {
             <KitchenInspirationCollage />
 
             <div className="categories-fresh-carousels kitchen-ikea-rows">
-              {loading && kitchenProducts.length === 0 ? (
-                <p className="kitchen-home-empty">{t("common.loading")}</p>
-              ) : aisleCarousels.length === 0 ? (
-                <div className="categories-fresh-empty card p-8 text-center">
-                  <p className="text-text-muted">{t("kitchen.empty")}</p>
-                  <Link
-                    to="/kitchen/products"
-                    className="btn-primary mt-4 inline-flex"
-                  >
-                    {t("kitchen.navAll")}
-                  </Link>
-                </div>
-              ) : (
-                aisleCarousels.map((row) => (
-                  <KitchenAisleCarousel
-                    key={row.key}
-                    title={row.title}
-                    seeMoreHref={row.seeMoreHref}
-                    seeMoreLabel={row.seeMoreLabel}
-                    products={row.products}
+              {KITCHEN_WARE_AISLES.map((aisle, index) => (
+                <Fragment key={aisle.id}>
+                  {index === DEALS_AFTER ? <KitchenDealsShelf /> : null}
+                  <KitchenAisleShelf
+                    aisleId={aisle.id}
+                    fallbackTitle={aisle.title}
+                    eager={index < EAGER_SHELVES}
                   />
-                ))
-              )}
+                </Fragment>
+              ))}
+            </div>
+
+            <div className="kitchen-ikea-more-wrap">
+              <Link to="/kitchen/products" className="kitchen-ikea-more">
+                {t("kitchen.navAll")}
+              </Link>
             </div>
           </PageContainer>
         </main>

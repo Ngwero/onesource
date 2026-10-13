@@ -51,18 +51,6 @@ export const KITCHEN_WARE_AISLES = [
     color: "#b7a99a",
   },
   {
-    id: "small-furniture",
-    title: "Kitchen small furniture",
-    icon: "🛒",
-    color: "#4a6fa5",
-  },
-  {
-    id: "extractor-hoods",
-    title: "Extractor hoods",
-    icon: "💨",
-    color: "#6b7280",
-  },
-  {
     id: "countertops-sinks",
     title: "Countertops, faucets and sinks",
     icon: "🚰",
@@ -114,59 +102,9 @@ export const KITCHEN_WARE_PRODUCTS = [
 
   // Cabinets, fronts and interiors — removed from catalogue
 
-  // Kitchen small furniture
-  {
-    id: "kitchen-small-furniture-01",
-    aisleId: "small-furniture",
-    name: "3-Tier Rolling Mesh Utility Cart",
-    unit: "each",
-    price: 95000,
-    color: "#4a6fa5",
-    description:
-      "Powder-coated steel cart with locking castors (50×35×76 cm). Move prep tools and produce around the kitchen.",
-  },
-  {
-    id: "kitchen-small-furniture-02",
-    aisleId: "small-furniture",
-    name: "Bamboo Prep Cart On Castors",
-    unit: "each",
-    price: 145000,
-    color: "#c4a574",
-    description:
-      "Solid bamboo prep top with lower storage (70×45×85 cm). Rolls from kitchen to outdoor table.",
-  },
-  {
-    id: "kitchen-small-furniture-03",
-    aisleId: "small-furniture",
-    name: "2-Step Kitchen Stool With Handrail",
-    unit: "each",
-    price: 48000,
-    color: "#5c6b73",
-    description:
-      "Stable folding stool for high cabinets. Non-slip treads; stores flat behind a door.",
-  },
+  // Kitchen small furniture — removed from catalogue
 
-  // Extractor hoods
-  {
-    id: "kitchen-extractor-hoods-01",
-    aisleId: "extractor-hoods",
-    name: "Wall-Mount Stainless Extractor Hood 60cm",
-    unit: "each",
-    price: 280000,
-    color: "#6b7280",
-    description:
-      "60cm stainless extractor with LED light and washable grease filters. Clears steam from charcoal and gas cooking.",
-  },
-  {
-    id: "kitchen-extractor-hoods-02",
-    aisleId: "extractor-hoods",
-    name: "Slim Recirculating Hood 90cm",
-    unit: "each",
-    price: 350000,
-    color: "#4b5563",
-    description:
-      "90cm recirculating hood for flats without an outdoor vent. Carbon filter pack included.",
-  },
+  // Extractor hoods — removed from catalogue
 
   // Countertops, faucets and sinks
   {

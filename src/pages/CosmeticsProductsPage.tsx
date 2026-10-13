@@ -25,7 +25,6 @@ export function CosmeticsProductsPage() {
 
         <header className="cos-page-head">
           <h1>{title}</h1>
-          <p>{t("kitchen.categoryCount", { count: products.length })}</p>
         </header>
 
         {loading && cosmeticsProducts.length === 0 ? (

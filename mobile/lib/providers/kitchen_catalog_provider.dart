@@ -58,8 +58,6 @@ class KitchenCatalogNotifier extends Notifier<KitchenCatalogState> {
     'cookware-accessories': 'spatula',
     'small-appliances': 'blender',
     'tabletop': 'dinner plate',
-    'small-furniture': 'wall shelf',
-    'extractor-hoods': 'extractor hood',
     'countertops-sinks': 'kitchen faucet',
     'organization': 'spice',
   };

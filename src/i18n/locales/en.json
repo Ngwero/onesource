@@ -105,7 +105,7 @@
     "shopCategory": "Shop this category",
     "catalogKicker": "Browse by aisle",
     "catalogTitle": "Kitchen categories, item by item",
-    "catalogSub": "{{count}} pieces across kitchen-only categories.",
+    "catalogSub": "Thousands of pieces across kitchen-only categories.",
     "aisleOf": "Kitchen category",
     "itemsTab": "Items",
     "sortBy": "Sort by:",
@@ -139,7 +139,9 @@
       "catalogsTitle": "Kitchen Ware catalogs",
       "catalogsBody": "Browse {{count}} pieces across cookware, stainless clad, cast iron, tabletop, cabinets and organisation — one kitchen shop, many categories.",
       "welcomeTitle": "Welcome to the 21st century kitchen",
-      "welcomeBody": "From cookware and modular cabinets to extractors, sinks and organisation, Kitchen Ware is set up like a room shop of its own. Pick a category above, then add pieces to the same basket as your fresh produce for one delivery."
+      "welcomeBody": "From cookware and modular cabinets to extractors, sinks and organisation, Kitchen Ware is set up like a room shop of its own. Pick a category above, then add pieces to the same basket as your fresh produce for one delivery.",
+      "dealsTitle": "Kitchen deals across every aisle",
+      "dealsSeeAll": "See all deals"
     },
     "pdp": {
       "regularPrice": "Regular price",
@@ -1245,7 +1247,7 @@
     "navCategories": "All categories",
     "navLabel": "Cosmetics sections",
     "zonesTitle": "Shop by skincare category",
-    "catalogSub": "{{count}} products across skincare categories.",
+    "catalogSub": "Thousands of products across skincare categories.",
     "aisleOf": "Cosmetics category",
     "empty": "Cosmetics are being restocked — check back shortly.",
     "searchTitle": "Search Cosmetics",

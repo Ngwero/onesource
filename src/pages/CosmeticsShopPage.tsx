@@ -114,7 +114,6 @@ export function CosmeticsShopPage() {
                 title={aisle.label}
                 href={cosmeticsAislePath(aisle.id)}
                 products={aisle.ranked.slice(0, ROW_LIMIT)}
-                total={aisle.products.length}
               />
             ))}
           </>
@@ -128,19 +127,16 @@ function ProductRow({
   title,
   href,
   products,
-  total,
 }: {
   title: string;
   href: string;
   products: Product[];
-  total?: number;
 }) {
   const { t } = useTranslation();
   return (
     <section className="cos-section cos-section--grid">
       <h2 className="cos-grid-title">
         {title}
-        {total != null && <span>{t("kitchen.categoryCount", { count: total })}</span>}
       </h2>
       <div className="cos-row">
         {products.map((product) => (

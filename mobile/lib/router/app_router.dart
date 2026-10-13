@@ -116,6 +116,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/change-password', builder: (_, __) => const ChangePasswordScreen()),
       GoRoute(
         path: '/kitchen/aisle/:aisleId',
+        redirect: (context, state) =>
+            isValidKitchenAisleId(state.pathParameters['aisleId']) ? null : '/kitchen/categories',
         builder: (context, state) => KitchenAisleScreen(
           aisleId: state.pathParameters['aisleId']!,
         ),

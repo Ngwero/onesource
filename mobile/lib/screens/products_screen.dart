@@ -170,19 +170,13 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      filtered.isEmpty
-                          ? context.tr.get('kitchen.noFilterResults')
-                          : productsState.total > 0
-                              ? context.tr.t('app.products.shownLoaded', {
-                                  'shown': filtered.length,
-                                  'loaded': productsState.items.length,
-                                  'total': productsState.total,
-                                })
-                              : context.tr.t('app.products.count', {'count': filtered.length}),
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                    ),
-                    const SizedBox(height: 8),
+                    if (filtered.isEmpty) ...[
+                      Text(
+                        context.tr.get('kitchen.noFilterResults'),
+                        style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ],
                 ),
               ),

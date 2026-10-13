@@ -20,7 +20,7 @@ export function CosmeticsCategoriesPage() {
 
         <header className="cos-page-head">
           <h1>{t("cosmetics.zonesTitle")}</h1>
-          <p>{t("cosmetics.catalogSub", { count: cosmeticsProducts.length })}</p>
+          <p>{t("cosmetics.catalogSub")}</p>
         </header>
 
         {loading && cosmeticsProducts.length === 0 ? (
@@ -44,7 +44,7 @@ export function CosmeticsCategoriesPage() {
                       {aisle.icon}{" "}
                       {t(`cosmetics.aisles.${aisle.id}`, { defaultValue: aisle.title })}
                     </strong>
-                    <span>{t("kitchen.categoryCount", { count: aisle.products.length })}</span>
+                    <span>{t("kitchen.shopCategory")}</span>
                   </span>
                 </Link>
               ))}

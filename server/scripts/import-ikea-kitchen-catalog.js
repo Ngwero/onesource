@@ -38,16 +38,8 @@ const FOLDER_AISLES = [
   { folder: "Cookware", aisleId: "cookware", title: "Cookware" },
   // KNOXHULT / Modular kitchen units intentionally omitted (category removed)
   // Cabinets,_fronts_and_interiors intentionally omitted (category removed)
-  {
-    folder: "Kitchen_small_funiture",
-    aisleId: "small-furniture",
-    title: "Kitchen small furniture",
-  },
-  {
-    folder: "Extractor_hoods",
-    aisleId: "extractor-hoods",
-    title: "Extractor hoods",
-  },
+  // Kitchen_small_funiture intentionally omitted (category removed)
+  // Extractor_hoods intentionally omitted (category removed)
   {
     folder: "Countertops,_faucets_and_sinks",
     aisleId: "countertops-sinks",

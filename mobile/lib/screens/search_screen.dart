@@ -187,7 +187,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
           child: Text(
-            '${s.t(search.total == 1 ? 'search.results' : 'search.results_plural', {'count': search.total})} ${s.t('search.forQuery', {'query': search.query})}',
+            s.t('search.forQuery', {'query': search.query}),
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textMuted),
           ),
         ),

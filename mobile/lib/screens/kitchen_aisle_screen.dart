@@ -184,11 +184,6 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      s.t('kitchen.categoryCount', {'count': state.total}),
-                      style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,

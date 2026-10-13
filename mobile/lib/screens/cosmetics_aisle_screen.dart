@@ -121,11 +121,6 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
                           const ShopModeSwitch(mode: ShopMode.cosmetics),
                           const SizedBox(height: 12),
                         ],
-                        Text(
-                          s.t('kitchen.categoryCount', {'count': state.total}),
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                        ),
-                        const SizedBox(height: 8),
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(

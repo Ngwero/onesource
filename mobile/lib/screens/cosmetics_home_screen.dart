@@ -100,7 +100,7 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                       if (total != null && total > 0) ...[
                         const SizedBox(height: 4),
                         Text(
-                          s.t('cosmetics.catalogSub', {'count': total}),
+                          s.get('cosmetics.catalogSub'),
                           style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                         ),
                       ],
@@ -216,7 +216,6 @@ class _AisleRow extends ConsumerWidget {
     final s = context.tr;
     return _ProductRow(
       title: '${aisle.icon} ${s.cosmeticsAisle(aisle.id, aisle.title)}',
-      subtitle: s.t('kitchen.categoryCount', {'count': page.total}),
       products: page.products,
       onAdd: onAdd,
       onSeeAll: () => context.push(cosmeticsAislePath(aisle.id)),
@@ -230,11 +229,9 @@ class _ProductRow extends StatelessWidget {
     required this.products,
     required this.onAdd,
     required this.onSeeAll,
-    this.subtitle,
   });
 
   final String title;
-  final String? subtitle;
   final List<Product> products;
   final void Function(Product) onAdd;
   final VoidCallback onSeeAll;
@@ -251,21 +248,9 @@ class _ProductRow extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle!,
-                          style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
-                        ),
-                      ],
-                    ],
+                  child: Text(
+                    title,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                   ),
                 ),
                 TextButton(

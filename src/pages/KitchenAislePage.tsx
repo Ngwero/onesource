@@ -38,11 +38,7 @@ export function KitchenAislePage() {
           <div>
             <p className="kitchen-aisle-kicker">{t("kitchen.aisleOf")}</p>
             <h1>{aisleTitle}</h1>
-            <p>
-              {loading
-                ? t("common.loading")
-                : t("kitchen.categoryCount", { count: products.length })}
-            </p>
+            {loading && <p>{t("common.loading")}</p>}
           </div>
         </header>
 

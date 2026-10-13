@@ -127,7 +127,6 @@ export function CosmeticsListing({ products, pageSize = 40 }: Props) {
           </button>
         )}
 
-        <span className="cos-count">{t("kitchen.categoryCount", { count: filtered.length })}</span>
       </div>
 
       {shown.length === 0 ? (

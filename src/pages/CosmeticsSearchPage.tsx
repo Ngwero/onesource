@@ -34,11 +34,7 @@ export function CosmeticsSearchPage() {
                 : t("search.forQuery", { query })
               : t("cosmetics.searchTitle")}
           </h1>
-          <p>
-            {query
-              ? t("kitchen.categoryCount", { count: results.length })
-              : t("cosmetics.searchHint")}
-          </p>
+          {!query && <p>{t("cosmetics.searchHint")}</p>}
         </header>
 
         {query && loading && cosmeticsProducts.length === 0 ? (

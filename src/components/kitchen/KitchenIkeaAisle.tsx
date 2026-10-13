@@ -108,9 +108,6 @@ export function KitchenIkeaAisle({
           </button>
         )}
 
-        <span className="kitchen-ikea-toolbar-count">
-          {t("kitchen.categoryCount", { count: filtered.length })}
-        </span>
       </div>
 
       {shown.length === 0 ? (

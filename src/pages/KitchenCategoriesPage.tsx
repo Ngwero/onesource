@@ -22,7 +22,7 @@ export function KitchenCategoriesPage() {
         <header className="kitchen-sub-hero">
           <h1>{t("kitchen.zonesTitle")}</h1>
           <p>
-            {t("kitchen.catalogSub", { count: kitchenProducts.length })}
+            {t("kitchen.catalogSub")}
           </p>
           <div className="kitchen-sub-hero-actions">
             <Link to="/kitchen/products" className="kitchen-sub-btn kitchen-sub-btn--primary">
@@ -67,9 +67,7 @@ export function KitchenCategoriesPage() {
                     </strong>
                     <span>
                       {aisle.products.length > 0
-                        ? t("kitchen.categoryCount", {
-                            count: aisle.products.length,
-                          })
+                        ? t("kitchen.shopCategory")
                         : t("kitchen.categorySoon")}
                     </span>
                   </div>

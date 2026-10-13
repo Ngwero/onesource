@@ -105,7 +105,7 @@
     "shopCategory": "Somba catégorie oyo",
     "catalogKicker": "Tala na aisle",
     "catalogTitle": "Ba catégorie ya cuisine, article na article",
-    "catalogSub": "{{count}} biloko na ba catégorie sambo ya cuisine kaka.",
+    "catalogSub": "Biloko ebele na ba catégorie ya cuisine.",
     "aisleOf": "Catégorie ya cuisine",
     "itemsTab": "Ba article",
     "sortBy": "Trier na:",
@@ -152,7 +152,9 @@
       "catalogsTitle": "Ba catalogues ya cuisine",
       "catalogsBody": "Tala ba pièces {{count}} — batterie, inox, fonte, table, meubles mpe rangement — boutique moko ya cuisine.",
       "welcomeTitle": "Boyei malamu na cuisine ya siècle 21",
-      "welcomeBody": "Uta batterie tii na ba meubles, hottes, éviers mpe rangement : cuisine ezali boutique na yango. Pona catégorie, sima bakisa na panier moko na biloko ya sika."
+      "welcomeBody": "Uta batterie tii na ba meubles, hottes, éviers mpe rangement : cuisine ezali boutique na yango. Pona catégorie, sima bakisa na panier moko na biloko ya sika.",
+      "dealsTitle": "Ba offres ya cuisine na ba catégorie nyonso",
+      "dealsSeeAll": "Tala ba offres nyonso"
     },
     "moreOptions": "Ba options mingi ezali",
     "searchTitle": "Luka na cuisine",
@@ -2001,7 +2003,7 @@
     "navCategories": "Bacatégorie nyonso",
     "navLabel": "Biteni ya cosmétiques",
     "zonesTitle": "Somba na catégorie ya soins",
-    "catalogSub": "Biloko {{count}} na bacatégorie ya soins ya loposo.",
+    "catalogSub": "Biloko ebele na bacatégorie ya soins ya loposo.",
     "aisleOf": "Catégorie ya cosmétiques",
     "empty": "Cosmétiques ezali kobakisama — zonga mwa moke.",
     "searchTitle": "Luka cosmétiques",

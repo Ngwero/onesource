@@ -43,9 +43,7 @@ class ProductsLoadMoreSliver extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.fromLTRB(20, 16, 20, bottom),
           child: Text(
-            total > 0
-                ? context.tr.t('products.showing', {'count': total})
-                : context.tr.get('app.common.endOfList'),
+            context.tr.get('app.common.endOfList'),
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),

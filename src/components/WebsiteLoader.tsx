@@ -20,6 +20,8 @@ function shopsNeededFor(pathname: string): ProductShop[] {
     if (id.startsWith("cosmetics-")) return ["cosmetics"];
     return ["fresh", "kitchen", "cosmetics"];
   }
+  // The Kitchen home fetches its own per-aisle shelves.
+  if (pathname === "/kitchen" || pathname === "/kitchen/") return [];
   return [shopModeForPath(pathname)];
 }
 

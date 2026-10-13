@@ -6806,6 +6806,57 @@ body {
   }
 }
 
+@keyframes kitchen-shelf-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.kitchen-shelf-skeleton-track {
+  overflow: hidden;
+}
+
+.kitchen-shelf-skeleton-media,
+.kitchen-shelf-skeleton-line {
+  display: block;
+  border-radius: 0.35rem;
+  background: linear-gradient(90deg, #f1f1ee 25%, #e6e6e2 50%, #f1f1ee 75%);
+  background-size: 200% 100%;
+  animation: kitchen-shelf-shimmer 1.4s ease-in-out infinite;
+}
+
+.kitchen-shelf-skeleton-media {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.kitchen-shelf-skeleton-line {
+  height: 0.8rem;
+  width: 85%;
+  margin-bottom: 0.45rem;
+}
+
+.kitchen-shelf-skeleton-line--short {
+  width: 45%;
+}
+
+.kitchen-shelf-skeleton-line--title {
+  height: 1.3rem;
+  width: min(14rem, 60%);
+  margin-bottom: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kitchen-shelf-skeleton-media,
+  .kitchen-shelf-skeleton-line {
+    animation: none;
+  }
+}
+
 .kitchen-ikea-more-wrap {
   display: flex;
   justify-content: center;

@@ -9,8 +9,6 @@ const AISLE_IDS = {
     "cookware-accessories",
     "small-appliances",
     "tabletop",
-    "small-furniture",
-    "extractor-hoods",
     "countertops-sinks",
     "organization",
   ],
