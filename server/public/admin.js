@@ -3348,7 +3348,7 @@ function fillProductInfo(p) {
   const hint = $("hiddenReasonHint");
   const reasons = Array.isArray(d.hiddenReason) ? d.hiddenReason : [];
   hint.hidden = !reasons.length;
-  hint.textContent = reasons.length ? `Hidden because: ${reasons.join(", ")}` : "";
+  hint.textContent = reasons.length ? `Needs attention: ${reasons.join(", ")}` : "";
   $("infoBrand").value = d.brand || "";
   $("infoOrigin").value = d.origin || "";
   $("infoIngredients").value = d.ingredients || "";

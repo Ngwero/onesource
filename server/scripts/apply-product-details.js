@@ -3,9 +3,12 @@
  * Writes structured product information (details jsonb), shop descriptions and the
  * published flag for Fresh and Kitchen products.
  *
- *   node scripts/apply-product-details.js --shop fresh|kitchen|all [--dry] [--limit N]
+ *   node scripts/apply-product-details.js --shop fresh|kitchen|cosmetics|all [--dry] [--limit N] [--images] [--hide-incomplete]
  *
- * Fresh:   unpublished when safety information needs the physical label, when the
+ * Every product stays published unless --hide-incomplete is passed. The reasons below
+ * are always recorded in details.hiddenReason so the admin can see what needs fixing.
+ *
+ * Fresh:   flagged when safety information needs the physical label, when the
  *          listing still uses a placeholder/stock photo, or when the photo failed the
  *          manual image review (data/fresh-image-review.json).
  * Kitchen: manufacturer data from the Cookware Store page cache
@@ -39,6 +42,8 @@ const HOME = path.join(os.homedir(), "onesource-details");
 const CWS_DIR = path.join(HOME, "cws");
 const LF_DIR = path.join(HOME, "lf");
 const IMAGES = flag("images");
+// Everything stays published unless --hide-incomplete; hiddenReason is still recorded.
+const HIDE_INCOMPLETE = flag("hide-incomplete");
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
 const EK_CSV = path.join(os.homedir(), "everythingkitchens-scraper/products/products.csv");
 const CWS_CSV = path.join(os.homedir(), "cookwarestore-scraper/products/products.csv");
@@ -167,7 +172,7 @@ function planFresh(rows) {
       title,
       description,
       details: { ...info.details, ...(hidden.length ? { hiddenReason: hidden } : {}) },
-      published: hidden.length === 0,
+      published: !HIDE_INCOMPLETE || hidden.length === 0,
     };
   });
 }
@@ -212,7 +217,7 @@ async function planKitchen(rows) {
       title: row.title,
       description,
       details: { ...details, ...(hidden.length ? { hiddenReason: hidden } : {}) },
-      published: hidden.length === 0,
+      published: !HIDE_INCOMPLETE || hidden.length === 0,
     };
   });
   console.log(`Kitchen: ${cached} rows with cached Cookware Store manufacturer data`);
@@ -238,7 +243,7 @@ function planCosmetics(rows) {
       title: row.title,
       description: info.complete || (lf && !lf.gone) ? info.description : row.description,
       details: { ...info.details, ...(hidden.length ? { hiddenReason: hidden } : {}) },
-      published: hidden.length === 0,
+      published: !HIDE_INCOMPLETE || hidden.length === 0,
       hdImage: lf && !lf.gone && m.exact && lf.image ? lf.image : null,
       aisle: row.id.replace(/^cosmetics-/, "").replace(/-(boots|lf|cb|bap)-.*$/, ""),
     };
@@ -290,10 +295,14 @@ async function apply(db, shop, rows, plans, columns) {
       (columns && (JSON.stringify(r.details ?? {}) !== JSON.stringify(p.details) || (r.published ?? true) !== p.published))
     );
   });
+  const flagged = plans.filter((p) => p.details.hiddenReason?.length);
   const hidden = plans.filter((p) => !p.published);
   const reasons = {};
-  for (const p of hidden) for (const r of p.details.hiddenReason || []) reasons[r] = (reasons[r] || 0) + 1;
-  console.log(`${shop}: ${plans.length} rows, ${changed.length} to update, ${hidden.length} unpublished`, reasons);
+  for (const p of flagged) for (const r of p.details.hiddenReason) reasons[r] = (reasons[r] || 0) + 1;
+  console.log(
+    `${shop}: ${plans.length} rows, ${changed.length} to update, ${flagged.length} need attention, ${hidden.length} unpublished`,
+    reasons
+  );
   if (DRY) {
     fs.writeFileSync(`/tmp/plan-${shop}.json`, JSON.stringify(plans, null, 1));
     console.log(`  dry run → /tmp/plan-${shop}.json`);
