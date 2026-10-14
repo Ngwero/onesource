@@ -60,7 +60,7 @@ export function KitchenCategoriesPage() {
                         alt=""
                         size="card"
                         className="kitchen-cat-tile-image"
-                        priority={index < 6}
+                        priority={index < 4}
                       />
                     ) : (
                       <span className="kitchen-cat-tile-fallback" aria-hidden>

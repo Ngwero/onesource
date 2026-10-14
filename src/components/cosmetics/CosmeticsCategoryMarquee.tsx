@@ -106,7 +106,7 @@ export function CosmeticsCategoryMarquee({ tiles }: { tiles: CosmeticsCategoryTi
             draggable={false}
           >
             <span className="cos-circle-media">
-              <ProductImage src={tile.image} alt="" size="thumb" priority={!hidden && index < 8} />
+              <ProductImage src={tile.image} alt="" size="thumb" priority={!hidden && index < 4} />
             </span>
             <span className="cos-circle-label">{tile.label}</span>
           </Link>

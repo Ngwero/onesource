@@ -36,7 +36,7 @@ export function CosmeticsCategoriesPage() {
                       src={aisle.products[0].image}
                       alt=""
                       size="card"
-                      priority={index < 8}
+                      priority={index < 4}
                     />
                   </span>
                   <span className="cos-cat-body">

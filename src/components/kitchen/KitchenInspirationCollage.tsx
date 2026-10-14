@@ -376,7 +376,7 @@ function CollageCell({
       alt={alt}
       loading={priority ? "eager" : "lazy"}
       decoding="async"
-      fetchPriority={priority ? "high" : "auto"}
+      fetchPriority={priority ? "high" : "low"}
       referrerPolicy="no-referrer"
       sizes="(max-width: 639px) 50vw, (max-width: 899px) 33vw, 25vw"
     />

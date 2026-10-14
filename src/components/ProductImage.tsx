@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { IMAGE_WIDTH, resolveImageUrl } from "../utils/imageUrl";
+import { IMAGE_WIDTH, imageSrcSet, resolveImageUrl } from "../utils/imageUrl";
 
 type Props = {
   src: string;
@@ -19,23 +19,34 @@ const sizeClasses = {
   basket: "aspect-square w-full max-w-full min-h-0 p-1 sm:p-1.5",
 };
 
-const sizeWidths: Record<NonNullable<Props["size"]>, { w: number; w2x?: number; sizes: string }> = {
+const sizeWidths: Record<
+  NonNullable<Props["size"]>,
+  { w: number; w2x?: number; height: number; sizes: string; quality: number }
+> = {
   card: {
     w: IMAGE_WIDTH.card,
     w2x: IMAGE_WIDTH.card2x,
+    height: 400,
     sizes: "(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 200px",
+    quality: 70,
   },
   detail: {
     w: IMAGE_WIDTH.detail,
+    height: 1250,
     sizes: "(max-width: 640px) 90vw, 480px",
+    quality: 78,
   },
   thumb: {
     w: IMAGE_WIDTH.thumb,
+    height: 300,
     sizes: "100px",
+    quality: 70,
   },
   basket: {
     w: IMAGE_WIDTH.basket,
+    height: 160,
     sizes: "72px",
+    quality: 70,
   },
 };
 
@@ -58,10 +69,21 @@ export function ProductImage({
   priority = false,
 }: Props) {
   const dims = sizeWidths[size];
-  const resolved = resolveImageUrl(src, { width: dims.w });
-  const resolved2x = dims.w2x ? resolveImageUrl(src, { width: dims.w2x }) : "";
+  const direct = resolveImageUrl(src);
+  const resolved = resolveImageUrl(src, { width: dims.w, quality: dims.quality });
+  const srcSet = imageSrcSet(
+    src,
+    dims.w2x
+      ? [
+          { width: dims.w, quality: dims.quality },
+          { width: dims.w2x, quality: dims.quality },
+        ]
+      : [{ width: dims.w, quality: dims.quality }]
+  );
   const [failed, setFailed] = useState(false);
-  const imageSrc = !resolved || failed ? FALLBACK_SRC : resolved;
+  const [useDirect, setUseDirect] = useState(false);
+  const sizedSrc = useDirect ? direct : resolved;
+  const imageSrc = !sizedSrc || failed ? FALLBACK_SRC : sizedSrc;
 
   return (
     <div
@@ -69,16 +91,20 @@ export function ProductImage({
     >
       <img
         src={imageSrc}
-        srcSet={
-          !failed && resolved2x ? `${resolved} ${dims.w}w, ${resolved2x} ${dims.w2x}w` : undefined
-        }
-        sizes={dims.sizes}
+        srcSet={!failed && !useDirect ? srcSet : undefined}
+        sizes={!failed && !useDirect && srcSet ? dims.sizes : undefined}
+        width={dims.w}
+        height={dims.height}
         alt={alt}
         className="max-w-full max-h-full w-auto h-auto object-contain object-center"
         loading={priority ? "eager" : "lazy"}
         decoding="async"
-        fetchPriority={priority ? "high" : "auto"}
+        fetchPriority={priority ? "high" : "low"}
         onError={() => {
+          if (!useDirect && direct && direct !== resolved) {
+            setUseDirect(true);
+            return;
+          }
           if (!failed) setFailed(true);
         }}
       />

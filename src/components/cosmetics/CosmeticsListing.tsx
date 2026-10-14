@@ -158,7 +158,7 @@ export function CosmeticsListing({ baseQuery, emptyState }: Props) {
         <>
           <div className="cos-grid">
             {products.map((product, index) => (
-              <CosmeticsProductCard key={product.id} product={product} priority={index < 10} />
+              <CosmeticsProductCard key={product.id} product={product} priority={index < 4} />
             ))}
           </div>
           <InfiniteScrollFooter

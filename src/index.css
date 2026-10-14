@@ -6762,6 +6762,8 @@ body {
 
 .kitchen-latest-feed {
   margin-top: 0.5rem;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3200px;
 }
 
 .kitchen-latest-feed-sub {
@@ -9136,6 +9138,11 @@ body {
   text-align: center;
   text-transform: uppercase;
   color: #111;
+}
+
+.cos-latest-feed {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3200px;
 }
 
 .cos-latest-feed-sub {

@@ -58,7 +58,7 @@ export function KitchenSearchPage() {
                 <KitchenIkeaProductCard
                   key={product.id}
                   product={product}
-                  priority={index < 8}
+                  priority={index < 4}
                 />
               ))}
             </div>

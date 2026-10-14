@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchHeroSlides } from "../api/client";
 import type { HeroSlide } from "../types/hero";
-import { IMAGE_WIDTH, resolveImageUrl } from "../utils/imageUrl";
+import { IMAGE_WIDTH, imageSrcSet, resolveImageUrl } from "../utils/imageUrl";
 
 const AUTOPLAY_MS = 6500;
 
@@ -161,19 +161,16 @@ export function ExportHeroCarousel({ children }: Props) {
                 width: IMAGE_WIDTH.hero,
                 quality: 72,
               })}
-              srcSet={`${resolveImageUrl(slide.image, {
-                width: IMAGE_WIDTH.hero,
-                quality: 72,
-              })} ${IMAGE_WIDTH.hero}w, ${resolveImageUrl(slide.image, {
-                width: IMAGE_WIDTH.hero2x,
-                quality: 72,
-              })} ${IMAGE_WIDTH.hero2x}w`}
+              srcSet={imageSrcSet(slide.image, [
+                { width: IMAGE_WIDTH.hero, quality: 72 },
+                { width: IMAGE_WIDTH.hero2x, quality: 72 },
+              ])}
               sizes="100vw"
               alt=""
               className="relative h-full w-full object-contain object-top sm:object-cover sm:object-center"
               loading={index === 0 ? "eager" : "lazy"}
               decoding="async"
-              fetchPriority={index === active ? "high" : "auto"}
+              fetchPriority={index === active ? "high" : "low"}
             />
             <div
               className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-emerald-950/90 via-emerald-900/55 to-transparent sm:w-[62%]"

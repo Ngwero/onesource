@@ -167,7 +167,7 @@ export function KitchenAisleCarousel({
               >
                 <KitchenIkeaProductCard
                   product={product}
-                  priority={index < 6}
+                  priority={index < 4}
                 />
               </div>
             ))}
