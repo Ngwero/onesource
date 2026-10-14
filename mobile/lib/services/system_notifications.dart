@@ -45,6 +45,15 @@ class SystemNotifications {
   }
 
   static Future<bool> requestPermission() async {
+    try {
+      return await _requestPermission().timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint('[OneSource] notification permission skipped: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> _requestPermission() async {
     if (Platform.isAndroid) {
       final android = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();

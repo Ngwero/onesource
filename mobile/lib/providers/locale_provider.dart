@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,13 +20,17 @@ class LocaleNotifier extends Notifier<LanguageCode> {
   }
 
   Future<void> _loadSaved() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(languageStorageKey);
-    // Values saved before sources were tracked could only come from the switcher.
-    if (prefs.getString(_languageSourceKey) == null && saved != null) {
-      await prefs.setString(_languageSourceKey, 'user');
+    try {
+      final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 2));
+      final saved = prefs.getString(languageStorageKey);
+      // Values saved before sources were tracked could only come from the switcher.
+      if (prefs.getString(_languageSourceKey) == null && saved != null) {
+        await prefs.setString(_languageSourceKey, 'user').timeout(const Duration(seconds: 2));
+      }
+      state = languageCodeFromString(saved);
+    } catch (e) {
+      debugPrint('[OneSource] locale prefs skipped: $e');
     }
-    state = languageCodeFromString(saved);
   }
 
   Future<void> setLanguage(LanguageCode code, {bool byUser = true}) async {

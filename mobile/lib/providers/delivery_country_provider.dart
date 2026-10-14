@@ -1,5 +1,6 @@
-import 'dart:ui' show PlatformDispatcher;
+import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,26 +25,33 @@ class DeliveryCountryNotifier extends Notifier<String> {
   }
 
   Future<void> _init() async {
-    final prefs = await SharedPreferences.getInstance();
-    final chosen = _read(prefs, _chosenKey);
-    final detected = _read(prefs, _detectedKey);
-    final stored = chosen ?? detected;
-    if (stored != null) state = stored;
-    if (chosen != null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 2));
+      final chosen = _read(prefs, _chosenKey);
+      final detected = _read(prefs, _detectedKey);
+      final stored = chosen ?? detected;
+      if (stored != null) state = stored;
+      if (chosen != null) return;
 
-    final detectedAt = DateTime.tryParse(prefs.getString(_detectedAtKey) ?? '');
-    if (detected != null &&
-        detectedAt != null &&
-        DateTime.now().difference(detectedAt) < _redetectAfter) {
-      return;
+      final detectedAt = DateTime.tryParse(prefs.getString(_detectedAtKey) ?? '');
+      if (detected != null &&
+          detectedAt != null &&
+          DateTime.now().difference(detectedAt) < _redetectAfter) {
+        return;
+      }
+
+      final country = await apiClientProvider.fetchGeoCountry().timeout(const Duration(seconds: 4)) ??
+          _deviceRegion();
+      if (country == null || _read(prefs, _chosenKey) != null) return;
+      await prefs.setString(_detectedKey, country).timeout(const Duration(seconds: 2));
+      await prefs.setString(_detectedAtKey, DateTime.now().toIso8601String()).timeout(
+            const Duration(seconds: 2),
+          );
+      state = country;
+      await _applyDefaults(country, keepUserChoice: true).timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('[OneSource] delivery country init skipped: $e');
     }
-
-    final country = await apiClientProvider.fetchGeoCountry() ?? _deviceRegion();
-    if (country == null || _read(prefs, _chosenKey) != null) return;
-    await prefs.setString(_detectedKey, country);
-    await prefs.setString(_detectedAtKey, DateTime.now().toIso8601String());
-    state = country;
-    await _applyDefaults(country, keepUserChoice: true);
   }
 
   Future<void> choose(String code) async {

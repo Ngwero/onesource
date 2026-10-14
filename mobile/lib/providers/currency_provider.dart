@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -68,14 +69,19 @@ class CurrencyNotifier extends Notifier<CurrencyState> {
   }
 
   Future<void> _loadSaved() async {
-    final prefs = await SharedPreferences.getInstance();
-    // Values saved before sources were tracked could only come from the switcher.
-    if (prefs.getString(_currencySourceKey) == null && prefs.getString(currencyStorageKey) != null) {
-      await prefs.setString(_currencySourceKey, 'user');
+    try {
+      final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 2));
+      // Values saved before sources were tracked could only come from the switcher.
+      if (prefs.getString(_currencySourceKey) == null && prefs.getString(currencyStorageKey) != null) {
+        await prefs.setString(_currencySourceKey, 'user').timeout(const Duration(seconds: 2));
+      }
+      final saved = await loadSavedCurrency().timeout(const Duration(seconds: 2));
+      state = state.copyWith(currency: saved, clearError: true);
+      unawaited(refreshRates());
+    } catch (e) {
+      debugPrint('[OneSource] currency prefs skipped: $e');
+      state = state.copyWith(loading: false);
     }
-    final saved = await loadSavedCurrency();
-    state = state.copyWith(currency: saved, clearError: true);
-    unawaited(refreshRates());
   }
 
   Future<void> setCurrency(CurrencyCode code, {bool byUser = true}) async {

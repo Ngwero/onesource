@@ -29,7 +29,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Timer? _auto;
   Timer? _fallback;
   bool _left = false;
-  int _attempts = 0;
   GoRouter? _router;
 
   @override
@@ -80,7 +79,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // leave the user on this route. Geo detection is started in OneSourceApp
     // and is intentionally not awaited here.
     _fallback = Timer(const Duration(seconds: 3), () {
-      unawaited(_leave(forceHome: true));
+      unawaited(_leave(forceHome: true, fromHard: true));
     });
   }
 
@@ -122,17 +121,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     return path.isEmpty || path == '/splash';
   }
 
-  Future<void> _leave({bool forceHome = false}) async {
+  Future<void> _leave({bool forceHome = false, bool fromHard = false}) async {
     final router = _nav;
     if (_left) return;
     if (router == null) {
-      _scheduleRetry();
+      // The 1.5s attempt must not touch the hard deadline. On a physical
+      // device the first frame can land after 1.5s; cancelling here is what
+      // left the splash with no timer.
+      if (fromHard) _rearmHard();
       return;
     }
     if (!_stillOnSplash(router)) {
-      _left = true;
-      _auto?.cancel();
-      _fallback?.cancel();
+      _markLeft();
       return;
     }
 
@@ -142,19 +142,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         home = await isOnboardingDone().timeout(const Duration(milliseconds: 800));
       } catch (e) {
         debugPrint('[OneSource] onboarding prefs failed: $e');
-        home = false;
+        home = true;
       }
     }
     final latest = _nav;
     if (_left) return;
     if (latest == null) {
-      _scheduleRetry();
+      if (fromHard) _rearmHard();
       return;
     }
     if (!_stillOnSplash(latest)) {
-      _left = true;
-      _auto?.cancel();
-      _fallback?.cancel();
+      _markLeft();
       return;
     }
     if (forceHome) home = true;
@@ -163,17 +161,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     debugPrint('[OneSource] splash → $target');
     if (_go(latest, target)) return;
     if (target != '/home' && _go(latest, '/home')) return;
-    _scheduleRetry();
+    if (fromHard) _rearmHard();
+  }
+
+  void _markLeft() {
+    _left = true;
+    _auto?.cancel();
+    _fallback?.cancel();
   }
 
   bool _go(GoRouter router, String target) {
     try {
       router.go(target);
       final path = router.routeInformationProvider.value.uri.path;
-      if (path == '/splash') return false;
-      _left = true;
-      _auto?.cancel();
-      _fallback?.cancel();
+      debugPrint('[OneSource] splash location $path');
+      if (path.isEmpty || path == '/splash') return false;
+      _markLeft();
       return true;
     } catch (e) {
       debugPrint('[OneSource] splash navigate failed: $e');
@@ -181,12 +184,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
   }
 
-  void _scheduleRetry() {
-    if (_left || _attempts >= 6) return;
-    _attempts++;
-    _fallback?.cancel();
+  /// Only after the hard timer has fired. Does not cancel a pending deadline
+  /// and does not give up while the route is still /splash.
+  void _rearmHard() {
+    if (_left) return;
     _fallback = Timer(const Duration(milliseconds: 400), () {
-      unawaited(_leave(forceHome: true));
+      unawaited(_leave(forceHome: true, fromHard: true));
     });
   }
 

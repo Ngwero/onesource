@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,8 +51,15 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
   NotificationsState build() {
     ref.onDispose(() => _poll?.cancel());
     Future.microtask(() async {
-      await SystemNotifications.init();
-      await refresh(surfaceBanners: true);
+      try {
+        await SystemNotifications.init().timeout(const Duration(seconds: 3));
+        // Banners ask iOS for notification permission. That sheet pauses the
+        // engine; the app-level refresh after the splash deadline is what
+        // surfaces them.
+        await refresh(surfaceBanners: false).timeout(const Duration(seconds: 6));
+      } catch (e) {
+        debugPrint('[OneSource] notifications startup skipped: $e');
+      }
       _poll?.cancel();
       _poll = Timer.periodic(const Duration(seconds: 20), (_) {
         unawaited(refresh(surfaceBanners: true, quiet: true));

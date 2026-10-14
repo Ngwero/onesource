@@ -20,7 +20,15 @@ Future<void> main() async {
     return true;
   };
 
-  await I18nCatalog.load();
+  // Asset reads go through a platform channel. On a physical iPhone that
+  // channel can stall (debug asset server, a plugin that never answers).
+  // A short timeout keeps the native launch screen from sitting there forever.
+  try {
+    await I18nCatalog.load().timeout(const Duration(milliseconds: 800));
+    debugPrint('[OneSource] i18n ready');
+  } catch (e) {
+    debugPrint('[OneSource] i18n not ready before first frame: $e');
+  }
 
   debugPrint('[OneSource] main() — launching app');
   runApp(const ProviderScope(child: OneSourceApp()));
