@@ -2,16 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
-import { ProductImage } from "../components/ProductImage";
 import { CosmeticsProductCard } from "../components/cosmetics/CosmeticsProductCard";
 import { CosmeticsHeroCarousel } from "../components/cosmetics/CosmeticsHeroCarousel";
+import { CosmeticsCategoryMarquee } from "../components/cosmetics/CosmeticsCategoryMarquee";
 import { InfiniteScrollFooter, ProductGridSkeleton } from "../components/InfiniteScrollFooter";
 import { useCosmeticsCatalog } from "../hooks/useCosmeticsCatalog";
 import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
 import { useInfiniteRow } from "../hooks/useInfiniteRow";
 import { useNearViewport } from "../hooks/useKitchenAisleShelf";
 import type { ProductListQuery } from "../api/client";
-import { cosmeticsAislePath } from "../utils/cosmeticsMode";
 import { splitCosmeticTitle } from "../data/cosmeticBrands";
 import type { Product } from "../types/product";
 
@@ -33,6 +32,12 @@ export function CosmeticsShopPage() {
           label: t(`cosmetics.aisles.${aisle.id}`, { defaultValue: aisle.title }),
         })),
     [aisles, t]
+  );
+
+  const categoryTiles = useMemo(
+    () =>
+      stocked.map((aisle) => ({ id: aisle.id, label: aisle.label, image: aisle.products[0].image })),
+    [stocked]
   );
 
   /** Brands behind the best sellers on this page (the full catalogue is too big to scan here). */
@@ -61,21 +66,7 @@ export function CosmeticsShopPage() {
           <>
             <section className="cos-section">
               <h2 className="cos-section-title">{t("cosmetics.shopByCategory")}</h2>
-              <div className="cos-circles">
-                {stocked.map((aisle, index) => (
-                  <Link key={aisle.id} to={cosmeticsAislePath(aisle.id)} className="cos-circle">
-                    <span className="cos-circle-media">
-                      <ProductImage
-                        src={aisle.products[0].image}
-                        alt=""
-                        size="thumb"
-                        priority={index < 8}
-                      />
-                    </span>
-                    <span className="cos-circle-label">{aisle.label}</span>
-                  </Link>
-                ))}
-              </div>
+              <CosmeticsCategoryMarquee tiles={categoryTiles} />
             </section>
 
             {topBrands.length > 0 && (

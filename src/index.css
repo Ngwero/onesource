@@ -12,6 +12,7 @@
   --color-accent-light: #edf3e0;
   --color-highlight: #f0c947;
   --color-highlight-hover: #e5bc3d;
+  --color-star: #ffa41c;
   --color-lemon: #b4cf5a;
   --color-deal: #c9920f;
   --color-prime: #2e5e4a;
@@ -1441,23 +1442,6 @@ body {
     overflow: hidden;
   }
 
-  .fresh-aisle-card-rating {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem 0.375rem;
-    font-size: 0.75rem;
-  }
-
-  .fresh-aisle-card-rating-num {
-    font-weight: 600;
-    color: var(--color-text);
-  }
-
-  .fresh-aisle-card-reviews {
-    color: #007185;
-  }
-
   .fresh-basket-sidebar {
     display: none;
     width: 13.5rem;
@@ -2092,22 +2076,47 @@ body {
     overflow: hidden;
   }
 
-  .product-card-ratings {
+  .star-rating {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    line-height: 1;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .star-rating-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    overflow: hidden;
+  }
+
+  /* One fixed-height line on every card so grids and rows stay aligned. */
+  .card-rating {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    flex-wrap: wrap;
-  }
-
-  .product-card-review-count {
-    font-size: 0.8125rem;
-    color: var(--color-accent);
+    gap: 0.3rem;
+    min-width: 0;
+    height: 1rem;
+    font-size: 0.75rem;
     line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
-  .product-card-link:hover .product-card-review-count {
-    color: var(--color-accent-hover);
-    text-decoration: underline;
+  .card-rating-avg {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .card-rating-count {
+    color: #007185;
+  }
+
+  .card-rating-none {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--color-text-muted);
   }
 
   .product-card-social {
@@ -6579,6 +6588,10 @@ body {
   text-transform: none;
 }
 
+.kitchen-ikea-card-rating {
+  margin-top: 0.3rem;
+}
+
 .kitchen-ikea-card-pricing {
   margin-top: 0.2rem;
 }
@@ -8816,6 +8829,59 @@ body {
   display: none;
 }
 
+.cos-circles-track {
+  display: flex;
+  width: max-content;
+}
+
+.cos-circles-group {
+  display: flex;
+  flex-shrink: 0;
+  gap: 1rem;
+}
+
+.cos-circles--marquee {
+  padding-top: 0.25rem;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent);
+}
+
+/* Trailing padding keeps the gap between copies equal to the gap inside one. */
+.cos-circles--marquee .cos-circles-group {
+  padding-right: 1rem;
+}
+
+.cos-circles--marquee .cos-circles-track {
+  animation: cos-circles-marquee var(--cos-marquee-duration, 45s) linear infinite;
+  will-change: transform;
+}
+
+.cos-circles--marquee:focus-within .cos-circles-track,
+.cos-circles--marquee.is-paused .cos-circles-track {
+  animation-play-state: paused;
+}
+
+@media (hover: hover) {
+  .cos-circles--marquee:hover .cos-circles-track {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes cos-circles-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-1 * var(--cos-marquee-shift, 50%)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cos-circles--marquee .cos-circles-track {
+    animation: none;
+  }
+}
+
 .cos-circle {
   flex: 0 0 auto;
   width: 6.5rem;
@@ -9176,6 +9242,10 @@ body {
 
 .cos-card-name:hover {
   text-decoration: underline;
+}
+
+.cos-card-rating {
+  margin-top: 0.35rem;
 }
 
 .cos-card-price {

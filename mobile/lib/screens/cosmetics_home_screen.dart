@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -185,39 +187,120 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
   }
 }
 
-class _AisleChips extends StatelessWidget {
+/// Aisle chips that drift sideways in an endless loop. Touching (or hovering)
+/// the strip holds it so it can be dragged and tapped; it resumes shortly after.
+/// Stays a plain scroller when the system asks for reduced motion.
+class _AisleChips extends StatefulWidget {
   const _AisleChips();
+
+  @override
+  State<_AisleChips> createState() => _AisleChipsState();
+}
+
+class _AisleChipsState extends State<_AisleChips> with SingleTickerProviderStateMixin {
+  /// Logical pixels per second.
+  static const _speed = 32.0;
+  static const _resumeDelay = Duration(milliseconds: 2500);
+
+  final _controller = ScrollController();
+  late final Ticker _ticker = createTicker(_tick);
+  Duration _lastTick = Duration.zero;
+  Timer? _resumeTimer;
+  bool _held = false;
+  bool _animate = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final animate = !MediaQuery.disableAnimationsOf(context);
+    if (animate == _animate) return;
+    _animate = animate;
+    if (animate) {
+      _lastTick = Duration.zero;
+      _ticker.start();
+    } else {
+      _ticker.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _resumeTimer?.cancel();
+    _ticker.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _tick(Duration elapsed) {
+    // Capped so an un-muted ticker (route shown again) doesn't leap ahead.
+    final dt = math.min(
+      (elapsed - _lastTick).inMicroseconds / Duration.microsecondsPerSecond,
+      0.1,
+    );
+    _lastTick = elapsed;
+    if (_held || !_controller.hasClients) return;
+    final position = _controller.position;
+    // Let a fling from the user's swipe finish before drifting again.
+    if (position.isScrollingNotifier.value) return;
+    _controller.jumpTo(position.pixels + _speed * dt);
+  }
+
+  void _hold() {
+    _resumeTimer?.cancel();
+    _held = true;
+  }
+
+  void _release() {
+    _resumeTimer?.cancel();
+    _resumeTimer = Timer(_resumeDelay, () => _held = false);
+  }
 
   @override
   Widget build(BuildContext context) {
     final s = context.tr;
-    return SizedBox(
-      height: 64,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
-        itemCount: cosmeticsAisles.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return ActionChip(
-              avatar: const Icon(Icons.grid_view_rounded, size: 16, color: cosmeticsAccent),
-              label: Text(s.get('cosmetics.navCategories')),
-              onPressed: () => context.go('/cosmetics/categories'),
-              backgroundColor: Colors.white,
-              side: const BorderSide(color: AppColors.border),
-            );
-          }
-          final aisle = cosmeticsAisles[index - 1];
-          return ActionChip(
-            avatar: Text(aisle.icon),
-            label: Text(s.cosmeticsAisle(aisle.id, aisle.title)),
-            onPressed: () => context.push(cosmeticsAislePath(aisle.id)),
-            backgroundColor: Colors.white,
-            side: const BorderSide(color: AppColors.border),
-          );
-        },
+    final count = cosmeticsAisles.length + 1;
+    return MouseRegion(
+      onEnter: (_) => _hold(),
+      onExit: (_) => _release(),
+      child: Listener(
+        onPointerDown: (_) => _hold(),
+        onPointerUp: (_) => _release(),
+        onPointerCancel: (_) => _release(),
+        child: SizedBox(
+          height: 64,
+          child: ListView.builder(
+            controller: _controller,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(20, 14, 12, 10),
+            // Unbounded while looping: chips repeat so the drift never runs out.
+            itemCount: _animate ? null : count,
+            itemBuilder: (context, i) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: _chip(context, s, i % count),
+            ),
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _chip(BuildContext context, AppStrings s, int index) {
+    if (index == 0) {
+      return ActionChip(
+        avatar: const Icon(Icons.grid_view_rounded, size: 16, color: cosmeticsAccent),
+        label: Text(s.get('cosmetics.navCategories')),
+        onPressed: () => context.go('/cosmetics/categories'),
+        backgroundColor: Colors.white,
+        side: const BorderSide(color: AppColors.border),
+      );
+    }
+    final aisle = cosmeticsAisles[index - 1];
+    return ActionChip(
+      avatar: Text(aisle.icon),
+      label: Text(s.cosmeticsAisle(aisle.id, aisle.title)),
+      onPressed: () => context.push(cosmeticsAislePath(aisle.id)),
+      backgroundColor: Colors.white,
+      side: const BorderSide(color: AppColors.border),
     );
   }
 }
