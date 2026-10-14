@@ -141,7 +141,9 @@
       "welcomeTitle": "Welcome to the 21st century kitchen",
       "welcomeBody": "From cookware and modular cabinets to extractors, sinks and organisation, Kitchen Ware is set up like a room shop of its own. Pick a category above, then add pieces to the same basket as your fresh produce for one delivery.",
       "dealsTitle": "Kitchen deals across every aisle",
-      "dealsSeeAll": "See all deals"
+      "dealsSeeAll": "See all deals",
+      "latestTitle": "Latest in Kitchen Ware",
+      "latestSub": "Newest arrivals first — keep scrolling to see every piece."
     },
     "pdp": {
       "regularPrice": "Regular price",

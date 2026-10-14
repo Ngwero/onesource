@@ -2,13 +2,17 @@ import { Fragment, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { KitchenAisleCarousel } from "../components/kitchen/KitchenAisleCarousel";
+import { KitchenIkeaProductCard } from "../components/kitchen/KitchenIkeaProductCard";
 import { KitchenInspirationCollage } from "../components/kitchen/KitchenInspirationCollage";
 import { KitchenShelfSkeleton } from "../components/kitchen/KitchenShelfSkeleton";
+import { InfiniteScrollFooter, ProductGridSkeleton } from "../components/InfiniteScrollFooter";
 import { getKitchenAisleTitle } from "../i18n/useLocalizedProduct";
 import {
   useKitchenAisleShelves,
   useNearViewport,
 } from "../hooks/useKitchenAisleShelf";
+import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
+import type { ProductListQuery } from "../api/client";
 import { KITCHEN_WARE_AISLES } from "../data/kitchenWare";
 import { kitchenAislePath } from "../utils/kitchenMode";
 import type { Product } from "../types/product";
@@ -20,6 +24,8 @@ const DEALS_AFTER = 2;
 const DEALS_LIMIT = 24;
 
 const ALL_AISLE_IDS = KITCHEN_WARE_AISLES.map((aisle) => aisle.id);
+
+const LATEST_QUERY: ProductListQuery = { shop: "kitchen", sort: "newest" };
 
 function isOnOffer(product: Product) {
   return product.originalPrice != null && product.originalPrice > product.price;
@@ -102,6 +108,50 @@ function KitchenDealsShelf() {
   );
 }
 
+/** Every kitchen product, newest first, paging in endlessly once the user scrolls down to it. */
+function KitchenLatestFeed() {
+  const { t } = useTranslation();
+  const { ref, near } = useNearViewport<HTMLElement>();
+  const list = useInfiniteProducts(near ? LATEST_QUERY : null);
+  const { products } = list;
+  const title = t("kitchen.home.latestTitle");
+
+  if (near && !list.initialLoading && products.length === 0 && !list.hasMore && !list.error) {
+    return null;
+  }
+
+  return (
+    <section ref={ref} className="kitchen-ikea-row kitchen-latest-feed" aria-labelledby="kitchen-latest-title">
+      <div className="kitchen-ikea-row-head">
+        <h2 id="kitchen-latest-title" className="kitchen-ikea-row-title">
+          {title}
+        </h2>
+      </div>
+      <p className="kitchen-latest-feed-sub">{t("kitchen.home.latestSub")}</p>
+
+      {!near || list.initialLoading ? (
+        <ProductGridSkeleton gridClassName="kitchen-home-grid" />
+      ) : (
+        <>
+          <div className="kitchen-home-grid">
+            {products.map((product) => (
+              <KitchenIkeaProductCard key={product.id} product={product} />
+            ))}
+          </div>
+          <InfiniteScrollFooter
+            sentinelRef={list.sentinelRef}
+            hasMore={list.hasMore}
+            loading={list.loading}
+            error={list.error}
+            onRetry={list.retry}
+            count={products.length}
+          />
+        </>
+      )}
+    </section>
+  );
+}
+
 export function KitchenShopPage() {
   return (
     <div className="categories-fresh-page kitchen-fresh-layout">
@@ -121,6 +171,7 @@ export function KitchenShopPage() {
                   />
                 </Fragment>
               ))}
+              <KitchenLatestFeed />
             </div>
           </PageContainer>
         </main>
