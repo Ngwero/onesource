@@ -189,6 +189,8 @@ export async function fetchProductListPage(
   const search = listQueryParams(query);
   search.set("page", String(page));
   search.set("pageSize", String(pageSize));
+  // Listings only render cards: skip descriptions and the full details JSON.
+  search.set("fields", "card");
   const res = await fetch(`${API_BASE}/products?${search.toString()}`, { signal });
   if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
   const data = await res.json();

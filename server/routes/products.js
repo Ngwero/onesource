@@ -182,6 +182,113 @@ function applyListFilters(query, ctx, { publishedColumn }) {
   return query;
 }
 
+/** Columns a product card needs; `details` is reduced to the one key cards read. */
+const CARD_COLUMNS = [
+  "id",
+  "title",
+  "price",
+  "original_price",
+  "rating",
+  "review_count",
+  "image",
+  "category",
+  "unit",
+  "prime",
+  "in_stock",
+  "stock_quantity",
+  "supplier_id",
+  "created_at",
+];
+
+function cardSelect(publishedColumn) {
+  return publishedColumn
+    ? [...CARD_COLUMNS, "published", "ratingSource:details->>ratingSource"].join(",")
+    : CARD_COLUMNS.join(",");
+}
+
+function cardRowToProduct(row) {
+  const { ratingSource, ...rest } = row;
+  const product = rowToProduct(rest);
+  product.description = "";
+  product.details = ratingSource ? { ratingSource } : {};
+  return product;
+}
+
+/**
+ * Small in-memory cache with stale-while-revalidate: past `freshMs` the old value is
+ * served while one refresh runs, until `staleMs` after that. Concurrent misses share a load.
+ */
+function createSwrCache({ freshMs, staleMs, max }) {
+  const entries = new Map();
+
+  function refresh(key, entry, load) {
+    entry.pending = Promise.resolve()
+      .then(load)
+      .then((value) => {
+        if (value?.source !== "local-seed") {
+          entry.value = value;
+          entry.freshUntil = Date.now() + freshMs;
+        } else if (entries.get(key) === entry && entry.value === undefined) {
+          entries.delete(key);
+        }
+        return value;
+      })
+      .catch((error) => {
+        if (entries.get(key) === entry && entry.value === undefined) entries.delete(key);
+        throw error;
+      })
+      .finally(() => {
+        entry.pending = undefined;
+      });
+    return entry.pending;
+  }
+
+  return {
+    get(key, load) {
+      const now = Date.now();
+      let entry = entries.get(key);
+      if (entry?.value !== undefined && entry.freshUntil + staleMs < now) entry = undefined;
+      if (entry) {
+        if (entry.value !== undefined) {
+          if (entry.freshUntil <= now && !entry.pending) refresh(key, entry, load).catch(() => {});
+          return Promise.resolve(entry.value);
+        }
+        if (entry.pending) return entry.pending;
+      }
+      entry = { value: undefined, freshUntil: 0, pending: undefined };
+      entries.delete(key);
+      if (entries.size >= max) entries.delete(entries.keys().next().value);
+      entries.set(key, entry);
+      return refresh(key, entry, load);
+    },
+    clear() {
+      entries.clear();
+    },
+  };
+}
+
+/** Exact match counts per filter set; counting ~25k rows on every page was the slow part. */
+const countCache = createSwrCache({ freshMs: 5 * 60 * 1000, staleMs: 30 * 60 * 1000, max: 300 });
+/** Whole list pages for shoppers (never admin/search), so feed pages are served from memory. */
+const listPageCache = createSwrCache({ freshMs: 30 * 1000, staleMs: 2 * 60 * 1000, max: 400 });
+
+function forgetListings() {
+  countCache.clear();
+  listPageCache.clear();
+}
+
+function listingCount(db, ctx, publishedColumn) {
+  return countCache.get(listFilterKey(ctx), async () => {
+    const { count, error } = await applyListFilters(
+      db.from("products").select("id", { count: "exact", head: true }),
+      ctx,
+      { publishedColumn }
+    );
+    if (error) throw error;
+    return count ?? 0;
+  });
+}
+
 function fallbackOptions(ctx, extra = {}) {
   return {
     admin: ctx.admin,
@@ -200,63 +307,94 @@ function fallbackOptions(ctx, extra = {}) {
   };
 }
 
-router.get("/", async (req, res) => {
-  try {
-    const ctx = parseListRequest(req.query);
-    const { admin, search, list, previewCosmetics } = ctx;
-    const page = Math.max(0, parseInt(req.query.page ?? "0", 10) || 0);
-    const pageSize = Math.min(1000, Math.max(1, parseInt(req.query.pageSize ?? "1000", 10) || 1000));
+/** PostgREST returns at most this many rows per request (Supabase default `max-rows`). */
+const MAX_ROWS = 1000;
 
-    const result = await withLocalProductFallback(
-      async () => {
-        const db = requireSupabase();
-        const publishedColumn = await hasPublishedColumn(db);
-        let query = applyListFilters(
+async function loadListPage(ctx, { page, pageSize, card }) {
+  const { admin, search, list } = ctx;
+  return withLocalProductFallback(
+    async () => {
+      const db = requireSupabase();
+      const publishedColumn = await hasPublishedColumn(db);
+
+      if (search) {
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+        const query = applyListFilters(
           applySort(db.from("products").select("*", { count: "exact" }), list.sort),
           ctx,
           { publishedColumn }
-        );
-
-        if (search) {
-          const from = page * pageSize;
-          const to = from + pageSize - 1;
-          query = query.range(from, to);
-
-          const { data: rows, error, count } = await query;
-          if (error) throw error;
-
-          let products = (rows ?? [])
-            .map(rowToProduct)
-            .filter((p) => productMatchesSearch(p, search) && matchesListParams(p, list));
-          if (list.sort === "newest") products = rankSearchResults(products, search);
-
-          return {
-            products: await enrichProductsWithSuppliers(db, products, { admin }),
-            total: count ?? products.length,
-            hasMore: from + (rows ?? []).length < (count ?? 0),
-          };
-        }
-
-        const from = page * pageSize;
-        const to = from + pageSize - 1;
-        query = query.range(from, to);
+        ).range(from, to);
 
         const { data: rows, error, count } = await query;
         if (error) throw error;
 
+        let products = (rows ?? [])
+          .map(rowToProduct)
+          .filter((p) => productMatchesSearch(p, search) && matchesListParams(p, list));
+        if (list.sort === "newest") products = rankSearchResults(products, search);
+
         return {
-          products: await enrichProductsWithSuppliers(
-            db,
-            (rows ?? []).map(rowToProduct).filter((p) => matchesListParams(p, list)),
-            { admin }
-          ),
-          total: count ?? (rows ?? []).length,
+          products: await enrichProductsWithSuppliers(db, products, { admin }),
+          total: count ?? products.length,
           hasMore: from + (rows ?? []).length < (count ?? 0),
         };
-      },
-      fallbackOptions(ctx, { page, pageSize })
-    );
+      }
 
+      // One extra row tells us whether another page exists without counting every match.
+      const from = page * pageSize;
+      const pageQuery = applyListFilters(
+        applySort(db.from("products").select(card ? cardSelect(publishedColumn) : "*"), list.sort),
+        ctx,
+        { publishedColumn }
+      ).range(from, from + pageSize);
+
+      const [{ data, error }, count] = await Promise.all([
+        pageQuery,
+        listingCount(db, ctx, publishedColumn).catch(() => null),
+      ]);
+      if (error) throw error;
+
+      const rows = data ?? [];
+      const pageRows = rows.slice(0, pageSize);
+      const truncated = rows.length === MAX_ROWS && pageSize >= MAX_ROWS;
+      const hasMore =
+        rows.length > pageSize || (truncated && count != null && from + pageRows.length < count);
+      const products = pageRows
+        .map(card ? cardRowToProduct : rowToProduct)
+        .filter((p) => matchesListParams(p, list));
+
+      return {
+        products: await enrichProductsWithSuppliers(db, products, { admin }),
+        total: count ?? from + pageRows.length + (hasMore ? 1 : 0),
+        hasMore,
+      };
+    },
+    fallbackOptions(ctx, { page, pageSize })
+  );
+}
+
+router.get("/", async (req, res) => {
+  try {
+    const ctx = parseListRequest(req.query);
+    const { admin, search, previewCosmetics } = ctx;
+    const page = Math.max(0, parseInt(req.query.page ?? "0", 10) || 0);
+    const pageSize = Math.min(1000, Math.max(1, parseInt(req.query.pageSize ?? "1000", 10) || 1000));
+    // `fields=card` (web listings) drops descriptions and the full details JSON.
+    const card = String(req.query.fields ?? "").toLowerCase() === "card";
+    const shopperList = !admin && !search && !previewCosmetics;
+
+    const load = () => loadListPage(ctx, { page, pageSize, card });
+    const result = shopperList
+      ? await listPageCache.get(
+          JSON.stringify([listFilterKey(ctx), ctx.list.sort, page, pageSize, card]),
+          load
+        )
+      : await load();
+
+    if (shopperList && result.source !== "local-seed") {
+      res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=120");
+    }
     res.json({
       products: previewCosmetics
         ? result.products.map((p) => ({ ...p, inStock: true }))
@@ -296,7 +434,8 @@ const TITLES_CACHE_MAX = 200;
 /** key -> { titles?, freshUntil, pending? } — concurrent requests share one in-flight load. */
 const titlesCache = new Map();
 
-function titlesCacheKey(ctx) {
+/** Identifies a filter set (not its sort or page) — shared by the titles, count and page caches. */
+function listFilterKey(ctx) {
   return JSON.stringify([
     ctx.admin,
     ctx.previewCosmetics,
@@ -392,7 +531,7 @@ function refreshListingTitles(key, ctx, entry) {
 }
 
 function cachedListingTitles(ctx) {
-  const key = titlesCacheKey(ctx);
+  const key = listFilterKey(ctx);
   const now = Date.now();
   let entry = titlesCache.get(key);
   if (entry?.titles && entry.freshUntil + TITLES_CACHE_STALE_MS < now) entry = undefined;
@@ -503,6 +642,7 @@ router.post("/", async (req, res) => {
       .single();
 
     if (error) throw error;
+    forgetListings();
     res.status(201).json({ product: rowToProduct(row), message: "Product created" });
   } catch (e) {
     res.status(500).json({ error: dbErrorMessage(e) });
@@ -535,6 +675,7 @@ router.put("/:id", async (req, res) => {
       .single();
 
     if (error) throw error;
+    forgetListings();
     res.json({ product: rowToProduct(row), message: "Product updated" });
   } catch (e) {
     res.status(500).json({ error: dbErrorMessage(e) });
@@ -572,6 +713,7 @@ router.patch("/:id/stock", async (req, res) => {
       .single();
 
     if (error) throw error;
+    forgetListings();
     res.json({ product: rowToProduct(row), message: "Stock updated" });
   } catch (e) {
     res.status(500).json({ error: dbErrorMessage(e) });
@@ -589,6 +731,7 @@ router.delete("/:id", async (req, res) => {
 
     if (error) throw error;
     if (!data?.length) return res.status(404).json({ error: "Product not found" });
+    forgetListings();
     res.json({ message: "Product deleted" });
   } catch (e) {
     res.status(500).json({ error: dbErrorMessage(e) });

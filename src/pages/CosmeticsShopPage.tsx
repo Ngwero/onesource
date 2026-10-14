@@ -212,20 +212,21 @@ function ProductRow({
   );
 }
 
-/** Every cosmetics product, newest first, paging in endlessly once the user scrolls down to it. */
+/**
+ * Every cosmetics product, newest first. The first page is fetched on mount so it is ready
+ * by the time the user scrolls past the rows; later pages page in endlessly.
+ */
 function CosmeticsLatestFeed() {
   const { t } = useTranslation();
-  const { ref, near } = useNearViewport<HTMLElement>();
-  const list = useInfiniteProducts(near ? LATEST_QUERY : null);
+  const list = useInfiniteProducts(LATEST_QUERY);
   const { products } = list;
 
-  if (near && !list.initialLoading && products.length === 0 && !list.hasMore && !list.error) {
+  if (!list.initialLoading && products.length === 0 && !list.hasMore && !list.error) {
     return null;
   }
 
   return (
     <section
-      ref={ref}
       className="cos-section cos-section--grid cos-latest-feed"
       aria-labelledby="cos-latest-title"
     >
@@ -234,7 +235,7 @@ function CosmeticsLatestFeed() {
       </h2>
       <p className="cos-latest-feed-sub">{t("cosmetics.home.latestSub")}</p>
 
-      {!near || list.initialLoading ? (
+      {list.initialLoading ? (
         <ProductGridSkeleton gridClassName="cos-grid" cards={10} />
       ) : (
         <>

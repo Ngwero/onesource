@@ -108,20 +108,22 @@ function KitchenDealsShelf() {
   );
 }
 
-/** Every kitchen product, newest first, paging in endlessly once the user scrolls down to it. */
+/**
+ * Every kitchen product, newest first. The first page is fetched on mount so it is ready
+ * by the time the user scrolls past the shelves; later pages page in endlessly.
+ */
 function KitchenLatestFeed() {
   const { t } = useTranslation();
-  const { ref, near } = useNearViewport<HTMLElement>();
-  const list = useInfiniteProducts(near ? LATEST_QUERY : null);
+  const list = useInfiniteProducts(LATEST_QUERY);
   const { products } = list;
   const title = t("kitchen.home.latestTitle");
 
-  if (near && !list.initialLoading && products.length === 0 && !list.hasMore && !list.error) {
+  if (!list.initialLoading && products.length === 0 && !list.hasMore && !list.error) {
     return null;
   }
 
   return (
-    <section ref={ref} className="kitchen-ikea-row kitchen-latest-feed" aria-labelledby="kitchen-latest-title">
+    <section className="kitchen-ikea-row kitchen-latest-feed" aria-labelledby="kitchen-latest-title">
       <div className="kitchen-ikea-row-head">
         <h2 id="kitchen-latest-title" className="kitchen-ikea-row-title">
           {title}
@@ -129,7 +131,7 @@ function KitchenLatestFeed() {
       </div>
       <p className="kitchen-latest-feed-sub">{t("kitchen.home.latestSub")}</p>
 
-      {!near || list.initialLoading ? (
+      {list.initialLoading ? (
         <ProductGridSkeleton gridClassName="kitchen-home-grid" />
       ) : (
         <>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigationType } from "react-router-dom";
 import {
   fetchProductListPage,
+  type ProductListPage,
   type ProductListQuery,
 } from "../api/client";
 import type { Product } from "../types/product";
@@ -41,6 +42,38 @@ function rememberList(key: string, state: ListState) {
     if (oldest === undefined) break;
     listCache.delete(oldest);
   }
+}
+
+const MAX_PREFETCHED_PAGES = 8;
+
+/** Next pages requested ahead of the scroll, keyed by list key + page. */
+const prefetchedPages = new Map<string, Promise<ProductListPage>>();
+
+function parseListKey(key: string) {
+  return JSON.parse(key) as { query: ProductListQuery; pageSize: number };
+}
+
+function prefetchPage(key: string, page: number) {
+  const id = `${key}#${page}`;
+  if (prefetchedPages.has(id)) return;
+  const { query, pageSize } = parseListKey(key);
+  const request = fetchProductListPage(query, page, pageSize);
+  request.catch(() => {
+    if (prefetchedPages.get(id) === request) prefetchedPages.delete(id);
+  });
+  prefetchedPages.set(id, request);
+  while (prefetchedPages.size > MAX_PREFETCHED_PAGES) {
+    const oldest = prefetchedPages.keys().next().value;
+    if (oldest === undefined) break;
+    prefetchedPages.delete(oldest);
+  }
+}
+
+function takePrefetchedPage(key: string, page: number) {
+  const id = `${key}#${page}`;
+  const request = prefetchedPages.get(id);
+  prefetchedPages.delete(id);
+  return request;
 }
 
 function listKey(query: ProductListQuery, pageSize: number): string {
@@ -148,14 +181,12 @@ export function useInfiniteProducts(
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
-      const { query: q, pageSize: size } = JSON.parse(key) as {
-        query: ProductListQuery;
-        pageSize: number;
-      };
+      const { query: q, pageSize: size } = parseListKey(key);
 
-      fetchProductListPage(q, page, size, controller.signal)
+      (takePrefetchedPage(key, page) ?? fetchProductListPage(q, page, size, controller.signal))
         .then((res) => {
           if (controller.signal.aborted) return;
+          if (res.hasMore) prefetchPage(key, page + 1);
           setState((prev) => {
             const base = prev.key === key ? prev : initialState(key);
             const next: ListState = {
@@ -189,7 +220,9 @@ export function useInfiniteProducts(
 
   useEffect(() => {
     if (!key) return;
-    if (!listCache.has(key)) startFetch(0);
+    const cached = listCache.get(key);
+    if (!cached) startFetch(0);
+    else if (cached.hasMore) prefetchPage(key, cached.nextPage);
     return () => abortRef.current?.abort();
   }, [key, startFetch]);
 
