@@ -4,6 +4,7 @@ import type { Product } from "../../types/product";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useCart } from "../../context/CartContext";
 import { ProductImage } from "../ProductImage";
+import { CardRating } from "../CardRating";
 import { useLocalizedProduct } from "../../i18n/useLocalizedProduct";
 import { parseKitchenListingTitle } from "../../data/kitchenWare";
 
@@ -124,6 +125,8 @@ export function KitchenIkeaProductCard({ product, priority = false }: Props) {
           </span>
           {facts ? <span className="kitchen-ikea-card-facts">{facts}</span> : null}
         </Link>
+
+        <CardRating product={product} className="kitchen-ikea-card-rating" />
 
         <div className="kitchen-ikea-card-pricing">
           {product.originalPrice != null &&

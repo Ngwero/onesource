@@ -4,6 +4,7 @@ import type { Product } from "../../types/product";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useCart } from "../../context/CartContext";
 import { ProductImage } from "../ProductImage";
+import { CardRating } from "../CardRating";
 import { useLocalizedProduct } from "../../i18n/useLocalizedProduct";
 
 type Props = {
@@ -58,6 +59,7 @@ export function CosmeticsProductCard({ product, priority = false }: Props) {
       <Link to={href} className="cos-card-name" title={title}>
         {title}
       </Link>
+      <CardRating product={product} className="cos-card-rating" />
       <p className="cos-card-price">
         {onSale && <s>{formatPrice(product.originalPrice!)}</s>}
         <span className={onSale ? "is-sale" : undefined}>{formatPrice(product.price)}</span>

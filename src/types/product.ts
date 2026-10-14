@@ -43,6 +43,8 @@ export type ProductInfo = {
   hiddenReason?: string[];
   /** Internal stock note, e.g. "supplier-out-of-stock"; never shown to shoppers. */
   sourcing?: string;
+  /** Where rating / reviewCount came from (e.g. "lookfantastic"); unset means no real reviews. */
+  ratingSource?: string;
 };
 
 export type Category = {

@@ -1,26 +1,34 @@
 import { useTranslation } from "react-i18next";
 
-type Props = { rating: number; size?: "sm" | "md"; variant?: "default" | "brand" };
+type Props = {
+  rating: number;
+  size?: "xs" | "sm" | "md";
+  variant?: "default" | "brand";
+  /** Hide from assistive tech when a sibling label already describes the rating. */
+  decorative?: boolean;
+};
 
-export function StarRating({ rating, size = "sm", variant = "default" }: Props) {
+const SIZE_CLS = { xs: "text-[0.8rem]", sm: "text-xs", md: "text-base" } as const;
+
+export function StarRating({ rating, size = "sm", variant = "default", decorative = false }: Props) {
   const { t } = useTranslation();
-  const full = Math.floor(rating);
-  const half = rating % 1 >= 0.5;
-  const empty = 5 - full - (half ? 1 : 0);
-  const sizeCls = size === "sm" ? "text-xs" : "text-base";
+  const halves = Math.round(Math.min(5, Math.max(0, rating)) * 2);
   const filledCls =
-    variant === "brand" ? "text-[var(--color-highlight)]" : "text-amber-400";
+    variant === "brand" ? "text-star" : "text-amber-400";
   const emptyCls =
     variant === "brand" ? "text-[var(--color-border)]" : "text-gray-200";
 
   return (
     <span
-      className={`inline-flex leading-none ${sizeCls}`}
-      aria-label={t("product.ratingAria", { rating })}
+      className={`star-rating ${SIZE_CLS[size]}`}
+      role={decorative ? undefined : "img"}
+      aria-hidden={decorative || undefined}
+      aria-label={decorative ? undefined : t("product.ratingAria", { rating })}
     >
-      <span className={filledCls}>{"★".repeat(full)}</span>
-      {half && <span className={filledCls}>⯨</span>}
-      <span className={emptyCls}>{"★".repeat(empty)}</span>
+      <span className={emptyCls}>★★★★★</span>
+      <span className={`star-rating-fill ${filledCls}`} style={{ width: `${halves * 10}%` }}>
+        ★★★★★
+      </span>
     </span>
   );
 }

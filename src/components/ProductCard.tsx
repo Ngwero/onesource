@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import type { Product } from "../types/product";
 import { useCurrency } from "../context/CurrencyContext";
-import { StarRating } from "./StarRating";
+import { CardRating } from "./CardRating";
 import { ProductImage } from "./ProductImage";
 import { useCart } from "../context/CartContext";
 import { useLocalizedProduct } from "../i18n/useLocalizedProduct";
@@ -56,12 +56,7 @@ export function ProductCard({ product, actionLabelKey }: Props) {
         <div className="product-card-body">
           <h3 className="product-card-title">{localized.localizedTitle}</h3>
 
-          <div className="product-card-ratings">
-            <StarRating rating={product.rating} variant="brand" />
-            <span className="product-card-review-count">
-              {product.reviewCount.toLocaleString()}
-            </span>
-          </div>
+          <CardRating product={product} />
 
           {socialProof && <p className="product-card-social">{socialProof}</p>}
 

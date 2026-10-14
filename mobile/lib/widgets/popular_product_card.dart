@@ -8,6 +8,7 @@ import '../models/product.dart';
 import '../providers/currency_provider.dart';
 import 'product_card_details.dart';
 import 'product_thumbnail.dart';
+import 'rating_stars.dart';
 
 /// Compact product tile for home "Popular items" grid.
 class PopularProductCard extends ConsumerWidget {
@@ -45,7 +46,10 @@ class PopularProductCard extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Center(
-                        child: ProductThumbnail(image: product.image, size: 108),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: ProductThumbnail(image: product.image, size: 108),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -60,7 +64,9 @@ class PopularProductCard extends ConsumerWidget {
                         color: AppColors.text,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
+                    CardRating(product: product, size: 11),
+                    const SizedBox(height: 4),
                     Text(
                       formatPrice(product.price),
                       style: const TextStyle(

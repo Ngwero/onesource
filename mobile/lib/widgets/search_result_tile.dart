@@ -9,6 +9,7 @@ import '../providers/currency_provider.dart';
 import '../utils/search_match.dart';
 import 'product_card_details.dart';
 import 'product_thumbnail.dart';
+import 'rating_stars.dart';
 
 class SearchResultTile extends ConsumerWidget {
   const SearchResultTile({
@@ -61,7 +62,9 @@ class SearchResultTile extends ConsumerWidget {
                       ),
                     const SizedBox(height: 4),
                     _HighlightedText(text: context.tr.productTitle(product), query: query),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
+                    CardRating(product: product, size: 11),
+                    const SizedBox(height: 4),
                     Text(
                       formatPrice(product.price),
                       style: const TextStyle(

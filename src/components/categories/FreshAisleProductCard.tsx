@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Product } from "../../types/product";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useCart } from "../../context/CartContext";
-import { StarRating } from "../StarRating";
+import { CardRating } from "../CardRating";
 import { ProductImage } from "../ProductImage";
 import { useLocalizedProduct } from "../../i18n/useLocalizedProduct";
 import { formatCardUnitPrice } from "../../utils/productDetails";
@@ -70,13 +70,7 @@ export function FreshAisleProductCard({
 
         <h3 className="fresh-aisle-card-title">{localized.localizedTitle}</h3>
 
-        <div className="fresh-aisle-card-rating">
-          <span className="fresh-aisle-card-rating-num">{product.rating.toFixed(1)}</span>
-          <StarRating rating={product.rating} size="sm" variant="brand" />
-          <span className="fresh-aisle-card-reviews">
-            {product.reviewCount.toLocaleString()}
-          </span>
-        </div>
+        <CardRating product={product} showAverage />
       </Link>
 
       <button

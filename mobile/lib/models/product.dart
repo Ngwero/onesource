@@ -37,6 +37,9 @@ class Product {
   /// Ingredients, allergens, warnings, usage and specifications.
   final ProductInfo details;
 
+  /// True only when [rating] / [reviewCount] come from real customer reviews.
+  bool get hasVerifiedRating => details.ratingSource != null && rating > 0 && reviewCount > 0;
+
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       id: json['id'] as String,
@@ -76,6 +79,7 @@ class Product {
         if (stockQuantity != null) 'stockQuantity': stockQuantity,
         if (delivery != null) 'delivery': delivery,
         if (supplierName != null) 'supplierName': supplierName,
+        if (details.ratingSource != null) 'details': {'ratingSource': details.ratingSource},
       };
 }
 
@@ -103,6 +107,7 @@ class ProductInfo {
     this.highlights = const [],
     this.suitableFor = const [],
     this.specs = const [],
+    this.ratingSource,
   });
 
   final String? source;
@@ -119,6 +124,7 @@ class ProductInfo {
   final List<String> highlights;
   final List<String> suitableFor;
   final List<ProductSpec> specs;
+  final String? ratingSource;
 
   bool get fromManufacturer => source == 'manufacturer';
   bool get hasSafety => (allergenStatement?.isNotEmpty ?? false) || warnings.isNotEmpty;
@@ -155,6 +161,7 @@ class ProductInfo {
       highlights: _strings(json['highlights']),
       suitableFor: _strings(json['suitableFor']),
       specs: specs,
+      ratingSource: _string(json['ratingSource']),
     );
   }
 }

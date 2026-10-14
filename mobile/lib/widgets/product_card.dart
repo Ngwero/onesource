@@ -112,7 +112,7 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    RatingStars(rating: product.rating, reviewCount: product.reviewCount, size: 11),
+                    CardRating(product: product, size: 11),
                     const SizedBox(height: 8),
                     ProductPriceBlock(product: product, compact: true),
                     const SizedBox(height: 6),

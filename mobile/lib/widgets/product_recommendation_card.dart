@@ -58,7 +58,7 @@ class ProductRecommendationCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                RatingStars(rating: product.rating, reviewCount: product.reviewCount, size: 10),
+                CardRating(product: product, size: 10),
                 const SizedBox(height: 6),
                 Text(
                   formatPrice(product.price),
