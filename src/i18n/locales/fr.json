@@ -2020,7 +2020,14 @@
       "sun-protection": "Protection solaire",
       "acne-care": "Soins anti-acné",
       "body-care": "Soins du corps",
-      "hair-baby-more": "Cheveux, parfums & plus",
+      "hair-baby-more": "Ongles, bébé & plus",
+      "fragrance": "Parfums",
+      "hair-care": "Soins capillaires",
+      "mens": "Soins pour homme",
+      "home-fragrance": "Bougies & parfums d'intérieur",
+      "wellness": "Bien-être & compléments",
+      "beauty-tech-home": "Appareils beauté & maison",
+      "sexual-wellness": "Bien-être intime",
       "kits-bundles": "Coffrets & cadeaux",
       "brushes-tools": "Pinceaux & accessoires"
     },
@@ -2028,6 +2035,10 @@
     "allBrands": "Toutes les marques",
     "shopByCategory": "Acheter par catégorie",
     "topBrands": "Marques phares",
+    "home": {
+      "latestTitle": "Nouveautés Cosmétiques",
+      "latestSub": "Les derniers arrivages d'abord — continuez à défiler pour tout voir."
+    },
     "seeAll": "Tout voir",
     "hero": {
       "prev": "Diapositive précédente",

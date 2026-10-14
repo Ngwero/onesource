@@ -2020,7 +2020,14 @@
       "sun-protection": "Kinga ya jua",
       "acne-care": "Tiba ya chunusi",
       "body-care": "Utunzaji wa mwili",
-      "hair-baby-more": "Nywele, manukato & zaidi",
+      "hair-baby-more": "Kucha, watoto & zaidi",
+      "fragrance": "Manukato",
+      "hair-care": "Utunzaji wa nywele",
+      "mens": "Urembo wa wanaume",
+      "home-fragrance": "Mishumaa & manukato ya nyumbani",
+      "wellness": "Ustawi & virutubisho",
+      "beauty-tech-home": "Vifaa vya urembo & nyumbani",
+      "sexual-wellness": "Afya ya kimapenzi",
       "kits-bundles": "Seti & zawadi",
       "brushes-tools": "Brashi & vifaa"
     },
@@ -2028,6 +2035,10 @@
     "allBrands": "Chapa zote",
     "shopByCategory": "Nunua kwa kundi",
     "topBrands": "Chapa maarufu",
+    "home": {
+      "latestTitle": "Mapya katika Vipodozi",
+      "latestSub": "Bidhaa mpya kwanza — endelea kusogeza uone kila bidhaa."
+    },
     "seeAll": "Tazama zote",
     "hero": {
       "prev": "Slaidi iliyotangulia",

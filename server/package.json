@@ -67,7 +67,8 @@
     "seed:packaging": "node scripts/seed-packaging.js",
     "repair:images": "node scripts/repair-broken-images.js",
     "i18n:build": "npm run i18n:build --prefix ..",
-    "import:lookfantastic": "node scripts/import-lookfantastic-cosmetics.js"
+    "import:lookfantastic": "node scripts/import-lookfantastic-cosmetics.js",
+    "import:lookfantastic-folder": "node scripts/import-lookfantastic-folder.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",

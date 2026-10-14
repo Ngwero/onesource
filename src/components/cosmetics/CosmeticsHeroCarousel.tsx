@@ -69,7 +69,7 @@ function useDefaultSlides(): CarouselSlide[] {
         title: t("cosmetics.hero.fragranceTitle"),
         subtitle: t("cosmetics.hero.fragranceSub"),
         cta: t("cosmetics.hero.fragranceCta"),
-        ctaHref: cosmeticsAislePath("hair-baby-more"),
+        ctaHref: cosmeticsAislePath("fragrance"),
         tone: "dark",
       },
     ],

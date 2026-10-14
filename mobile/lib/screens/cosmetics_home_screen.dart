@@ -14,6 +14,7 @@ import '../providers/paginated_products_provider.dart';
 import '../services/auth_service.dart';
 import '../utils/cart_feedback.dart';
 import '../utils/shop_mode.dart';
+import '../widgets/compact_home_bar.dart';
 import '../widgets/home_header.dart';
 import '../widgets/popular_product_card.dart';
 import '../widgets/product_grid.dart';
@@ -29,7 +30,7 @@ class CosmeticsHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
-  static const _query = ProductsQuery(shop: 'cosmetics');
+  static const _query = ProductsQuery(shop: 'cosmetics', sort: 'newest');
   final _scrollController = ScrollController();
   InfiniteScrollListener? _scrollListener;
 
@@ -68,100 +69,115 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
       decoration: const BoxDecoration(gradient: AppGradients.canvas),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: RefreshIndicator(
-          color: cosmeticsAccent,
-          onRefresh: () async {
-            ref.invalidate(cosmeticsOffersProvider);
-            ref.invalidate(cosmeticsTotalProvider);
-            for (final aisle in cosmeticsAisles) {
-              ref.invalidate(cosmeticsAisleRowProvider(aisle.id));
-            }
-            await ref.read(paginatedProductsProvider(_query).notifier).refresh();
-          },
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(
-                child: HomeHeader(
-                  name: greetingName,
-                  mode: ShopMode.cosmetics,
-                  onAccount: () => context.go('/account'),
+        body: CompactHomeBarOverlay(
+          mode: ShopMode.cosmetics,
+          child: RefreshIndicator(
+            color: cosmeticsAccent,
+            onRefresh: () async {
+              ref.invalidate(cosmeticsOffersProvider);
+              ref.invalidate(cosmeticsTotalProvider);
+              for (final aisle in cosmeticsAisles) {
+                ref.invalidate(cosmeticsAisleRowProvider(aisle.id));
+              }
+              await ref.read(paginatedProductsProvider(_query).notifier).refresh();
+            },
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: HomeHeader(
+                    name: greetingName,
+                    mode: ShopMode.cosmetics,
+                    onAccount: () => context.go('/account'),
+                  ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 40, 20, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        s.get('cosmetics.title'),
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-                      ),
-                      if (total != null && total > 0) ...[
-                        const SizedBox(height: 4),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 40, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          s.get('cosmetics.catalogSub'),
+                          s.get('cosmetics.title'),
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                        ),
+                        if (total != null && total > 0) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            s.get('cosmetics.catalogSub'),
+                            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: _AisleChips()),
+                const SliverToBoxAdapter(child: CosmeticsHeroCarousel()),
+                if (offers.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _ProductRow(
+                      title: '🏷️ ${s.get('cosmetics.hero.offersCta')}',
+                      products: offers,
+                      query: const ProductsQuery(shop: 'cosmetics', sale: true),
+                      onAdd: _addToCart,
+                    ),
+                  ),
+                for (final aisle in cosmeticsAisles)
+                  SliverToBoxAdapter(
+                    child: _AisleRow(aisle: aisle, onAdd: _addToCart),
+                  ),
+                // Every cosmetics product, newest uploads first, growing endlessly as pages load.
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          s.get('cosmetics.home.latestTitle'),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          s.get('cosmetics.home.latestSub'),
                           style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                         ),
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const SliverToBoxAdapter(child: _AisleChips()),
-              const SliverToBoxAdapter(child: CosmeticsHeroCarousel()),
-              if (offers.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: _ProductRow(
-                    title: '🏷️ ${s.get('cosmetics.hero.offersCta')}',
-                    products: offers,
+                if (all.isInitialLoading)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(child: CircularProgressIndicator(color: cosmeticsAccent)),
+                    ),
+                  )
+                else if (all.items.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Text(s.get('cosmetics.empty'), textAlign: TextAlign.center),
+                    ),
+                  )
+                else
+                  PopularProductSliverGrid(
+                    products: all.items,
                     onAdd: _addToCart,
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                   ),
-                ),
-              for (final aisle in cosmeticsAisles)
-                SliverToBoxAdapter(
-                  child: _AisleRow(aisle: aisle, onAdd: _addToCart),
-                ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-                  child: Text(
-                    s.get('cosmetics.navAll'),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                if (!all.isInitialLoading)
+                  ProductsLoadMoreSliver(
+                    isLoadingMore: all.isLoadingMore,
+                    hasMore: all.hasMore,
+                    itemCount: all.items.length,
+                    total: all.total,
+                    error: all.hasLoadMoreError ? all.error : null,
+                    onRetry: ref.read(paginatedProductsProvider(_query).notifier).retry,
                   ),
-                ),
-              ),
-              if (all.isInitialLoading)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(child: CircularProgressIndicator(color: cosmeticsAccent)),
-                  ),
-                )
-              else if (all.items.isEmpty)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Text(s.get('cosmetics.empty'), textAlign: TextAlign.center),
-                  ),
-                )
-              else
-                PopularProductSliverGrid(
-                  products: all.items,
-                  onAdd: _addToCart,
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                ),
-              if (!all.isInitialLoading)
-                ProductsLoadMoreSliver(
-                  isLoadingMore: all.isLoadingMore,
-                  hasMore: all.hasMore,
-                  itemCount: all.items.length,
-                  total: all.total,
-                  error: all.hasLoadMoreError ? all.error : null,
-                  onRetry: ref.read(paginatedProductsProvider(_query).notifier).retry,
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -220,24 +236,84 @@ class _AisleRow extends ConsumerWidget {
     return _ProductRow(
       title: '${aisle.icon} ${s.cosmeticsAisle(aisle.id, aisle.title)}',
       products: page.products,
+      query: ProductsQuery(shop: 'cosmetics', aisle: aisle.id),
       onAdd: onAdd,
     );
   }
 }
 
-class _ProductRow extends StatelessWidget {
+/// Horizontal row that starts from [products] and pages in more of [query]
+/// whenever the user swipes close to its end, until every match is shown.
+class _ProductRow extends ConsumerStatefulWidget {
   const _ProductRow({
     required this.title,
     required this.products,
+    required this.query,
     required this.onAdd,
   });
 
   final String title;
   final List<Product> products;
+  final ProductsQuery query;
   final void Function(Product) onAdd;
 
   @override
+  ConsumerState<_ProductRow> createState() => _ProductRowState();
+}
+
+class _ProductRowState extends ConsumerState<_ProductRow> {
+  static const _loadAheadPx = 400.0;
+
+  final _controller = ScrollController();
+
+  /// Paging starts on the first swipe near the end (or straight away if this
+  /// row already paged earlier in the session).
+  late bool _paging = ref.exists(paginatedProductsProvider(widget.query));
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_maybeLoadMore);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _maybeLoadMore() {
+    if (!_controller.hasClients) return;
+    if (_controller.position.extentAfter > _loadAheadPx) return;
+    if (!_paging) {
+      setState(() => _paging = true);
+      return;
+    }
+    final feed = ref.read(paginatedProductsProvider(widget.query));
+    if (feed.hasMore && !feed.isInitialLoading && !feed.isLoadingMore && feed.error == null) {
+      ref.read(paginatedProductsProvider(widget.query).notifier).loadMore();
+    }
+  }
+
+  void _retry() => ref.read(paginatedProductsProvider(widget.query).notifier).retry();
+
+  @override
   Widget build(BuildContext context) {
+    final feed = _paging ? ref.watch(paginatedProductsProvider(widget.query)) : null;
+    final products = [...widget.products];
+    if (feed != null) {
+      final seen = products.map((p) => p.id).toSet();
+      products.addAll(feed.items.where((p) => seen.add(p.id)));
+    }
+    final loading = feed != null && (feed.isInitialLoading || feed.isLoadingMore);
+    final failed = feed != null && feed.error != null;
+    final trailing = loading || failed;
+    if (feed != null && !trailing && feed.hasMore) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _maybeLoadMore();
+      });
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 18, 0, 4),
       child: Column(
@@ -246,7 +322,7 @@ class _ProductRow extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 20),
             child: Text(
-              title,
+              widget.title,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
           ),
@@ -254,15 +330,37 @@ class _ProductRow extends StatelessWidget {
           SizedBox(
             height: 236,
             child: ListView.separated(
+              controller: _controller,
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(right: 20),
-              itemCount: products.length,
+              itemCount: products.length + (trailing ? 1 : 0),
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
+                if (index == products.length) {
+                  return SizedBox(
+                    width: 96,
+                    child: Center(
+                      child: failed
+                          ? IconButton(
+                              tooltip: context.tr.get('common.retry'),
+                              onPressed: _retry,
+                              icon: const Icon(Icons.refresh_rounded, color: cosmeticsAccent),
+                            )
+                          : const SizedBox(
+                              width: 26,
+                              height: 26,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: cosmeticsAccent,
+                              ),
+                            ),
+                    ),
+                  );
+                }
                 final product = products[index];
                 return SizedBox(
                   width: 156,
-                  child: PopularProductCard(product: product, onAdd: () => onAdd(product)),
+                  child: PopularProductCard(product: product, onAdd: () => widget.onAdd(product)),
                 );
               },
             ),

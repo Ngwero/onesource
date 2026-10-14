@@ -2020,7 +2020,14 @@
       "sun-protection": "Kurinda izuba",
       "acne-care": "Kuvura ibiheri",
       "body-care": "Kwita ku mubiri",
-      "hair-baby-more": "Umusatsi, parfum n'ibindi",
+      "hair-baby-more": "Inzara, abana n'ibindi",
+      "fragrance": "Parufe n'impumuro",
+      "hair-care": "Kwita ku musatsi",
+      "mens": "Ubwiza bw'abagabo",
+      "home-fragrance": "Buji n'impumuro yo mu rugo",
+      "wellness": "Ubuzima bwiza n'inyongeramirire",
+      "beauty-tech-home": "Ibikoresho by'ubwiza n'iby'urugo",
+      "sexual-wellness": "Ubuzima bw'imyororokere",
       "kits-bundles": "Amaseti n'impano",
       "brushes-tools": "Uburoso n'ibikoresho"
     },
@@ -2028,6 +2035,10 @@
     "allBrands": "Ibirango byose",
     "shopByCategory": "Gura ukurikije icyiciro",
     "topBrands": "Ibirango bikunzwe",
+    "home": {
+      "latestTitle": "Ibishya mu birungo by'ubwiza",
+      "latestSub": "Ibyageze vuba mbere — komeza umanure urebe ibicuruzwa byose."
+    },
     "seeAll": "Reba byose",
     "hero": {
       "prev": "Ibanziriza",

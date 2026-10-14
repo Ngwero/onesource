@@ -30,8 +30,21 @@ async function detectShopUrl() {
   }
 }
 
+const ADMIN_PRODUCTS = "/api/admin/products";
+
 let categories = [];
+/** Current page of the products table (slim rows from the server, not the whole catalogue). */
 let products = [];
+let productsTotal = 0;
+let productsTotalExact = true;
+let inventoryRows = [];
+let inventoryTotal = 0;
+let inventoryPage = 1;
+const INVENTORY_PAGE_SIZE = 100;
+/** Server-side aggregates (inventory counts, per-category counts, dashboard lists). */
+let adminStats = null;
+/** Every slim product row seen in any list, for lookups by id (stock +/-, delete titles). */
+const productCache = new Map();
 let heroSlides = [];
 let orders = [];
 let suppliers = [];
@@ -90,14 +103,8 @@ function destroyDashboardCharts() {
 
 function buildCategoryPieSlices() {
   const counts = new Map();
-  for (const p of products) {
-    const id = normalizeCategoryId(p.category);
-    const name = catName(id);
-    const icon = catIcon(id);
-    const key = id;
-    const prev = counts.get(key) || { label: `${icon} ${name}`, count: 0 };
-    prev.count += 1;
-    counts.set(key, prev);
+  for (const [id, n] of Object.entries(categoryCounts())) {
+    counts.set(id, { label: `${catIcon(id)} ${catName(id)}`, count: n });
   }
   const sorted = [...counts.values()].sort((a, b) => b.count - a.count);
   const topN = 7;
@@ -196,15 +203,8 @@ function renderDashboardPieChart(canvasId, emptyId, labels, data, extra = {}) {
 }
 
 function computeStockPieBuckets() {
-  let healthy = 0;
-  let low = 0;
-  let out = 0;
-  for (const p of products) {
-    if (!p.inStock || p.stockQuantity <= 0) out += 1;
-    else if (p.stockQuantity <= 10) low += 1;
-    else healthy += 1;
-  }
-  return { healthy, low, out };
+  const s = computeStats();
+  return { healthy: s.healthy, low: Math.max(0, s.live - s.healthy), out: s.out };
 }
 
 function renderDashboardCharts(stats, orderStats) {
@@ -476,7 +476,9 @@ function buildDailyBuckets(days = 14) {
 
 function buildCategoryRevenue() {
   const byCat = new Map();
-  const productCat = new Map(products.map((p) => [p.id, normalizeCategoryId(p.category)]));
+  const productCat = new Map(
+    [...productCache.values()].map((p) => [p.id, normalizeCategoryId(p.category)])
+  );
   for (const o of orders) {
     if (o.status === "cancelled") continue;
     for (const item of o.order_items || []) {
@@ -840,95 +842,219 @@ function catIcon(id) {
   return categories.find((c) => c.id === id)?.icon ?? "📦";
 }
 
-async function api(path, opts = {}) {
-  const res = await fetch(API + path, {
-    headers: { "Content-Type": "application/json" },
-    ...opts,
-  });
+const DB_TIMEOUT_MESSAGE =
+  "The database took too long to answer — try again, or narrow your search/filters.";
+
+/** Turn a failed response into an Error with a message that's fine to show the admin. */
+function apiError(res, data) {
+  let msg =
+    data?.error ||
+    (Array.isArray(data?.details) ? data.details.join(", ") : "") ||
+    res.statusText ||
+    `Request failed (${res.status})`;
+  if (data?.code === "DB_TIMEOUT" || /statement timeout|canceling statement/i.test(msg)) {
+    msg = DB_TIMEOUT_MESSAGE;
+  }
+  const err = new Error(msg);
+  err.status = res.status;
+  return err;
+}
+
+/** fetch() + JSON; network failures are flagged so only they get the "start the server" hint. */
+async function fetchJson(url, opts = {}) {
+  let res;
+  try {
+    res = await fetch(url, { headers: { "Content-Type": "application/json" }, ...opts });
+  } catch (e) {
+    const err = new Error("Cannot reach the API server");
+    err.network = true;
+    err.cause = e;
+    throw err;
+  }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok)
-    throw new Error(
-      data.error || (Array.isArray(data.details) ? data.details.join(", ") : "") || res.statusText
-    );
+  if (!res.ok) throw apiError(res, data);
   return data;
 }
 
-async function checkHealth() {
+function describeLoadError(e) {
+  const msg = e?.message || "Cannot reach the API server";
+  const local = ["localhost", "127.0.0.1"].includes(location.hostname);
+  return e?.network && local ? `${msg} — Run: cd server && npm run dev` : msg;
+}
+
+async function api(path, opts = {}) {
+  return fetchJson(API + path, opts);
+}
+
+function slimProduct(p) {
+  if (!p) return p;
+  const { details: _details, description: _description, ...rest } = p;
+  return rest;
+}
+
+function cacheProducts(list) {
+  for (const p of list ?? []) productCache.set(p.id, slimProduct(p));
+}
+
+function productFilterParams() {
+  return {
+    q: $("searchProducts")?.value?.trim() ?? "",
+    category: $("filterCategory")?.value ?? "",
+    stock: $("filterStock")?.value ?? "",
+    prime: $("filterPrime")?.value ?? "",
+    sale: $("filterSale")?.value ?? "",
+    supplier: $("filterSupplier")?.value ?? "",
+    sort: productsSort.key,
+    dir: productsSort.dir,
+  };
+}
+
+async function fetchAdminProducts(params) {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== "" && v != null) qs.set(k, String(v));
+  }
+  const data = await fetchJson(`${ADMIN_PRODUCTS}?${qs}`);
+  cacheProducts(data.products);
+  return data;
+}
+
+/** Walk every page of a filtered list (for CSV export). Each request stays small. */
+async function fetchAllAdminProducts(filters, onProgress) {
+  const pageSize = 500;
+  const all = [];
+  for (let page = 1; ; page++) {
+    const data = await fetchAdminProducts({ ...filters, sort: "id", dir: "asc", page, pageSize });
+    all.push(...data.products);
+    onProgress?.(all.length, data.total);
+    if (data.products.length < pageSize) break;
+  }
+  return all;
+}
+
+let productsRequestSeq = 0;
+async function refreshProductsTable() {
+  const seq = ++productsRequestSeq;
+  productsPageSize = Number($("productsPageSize")?.value || 50);
+  const meta = $("productsTableMeta");
+  if (meta) meta.textContent = "Loading…";
   try {
-    const res = await fetch(ADMIN_STATS);
-    const data = await res.json();
-    const pill = $("apiStatus");
-    const text = $("apiStatusText");
-    if (res.ok && data.ok) {
-      pill.className = "status-pill ok";
-      text.textContent = `Live · ${data.products} products · ${data.orders} orders · ${formatMoney(data.ordersSummary?.revenue ?? 0)} revenue`;
-    } else {
-      const fallback = await fetch(HEALTH).then((r) => r.json()).catch(() => ({}));
-      if (fallback.ok) {
-        pill.className = "status-pill ok";
-        text.textContent = `API live · ${fallback.products} products`;
-      } else {
-        pill.className = "status-pill err";
-        text.textContent = data.error || fallback.error || "API unavailable";
-      }
+    const data = await fetchAdminProducts({
+      ...productFilterParams(),
+      page: productsPage,
+      pageSize: productsPageSize,
+    });
+    if (seq !== productsRequestSeq) return;
+    products = data.products;
+    productsTotal = data.total;
+    productsTotalExact = data.totalExact !== false;
+    const pages = Math.max(1, Math.ceil(productsTotal / productsPageSize));
+    if (productsPage > pages && productsTotal > 0) {
+      productsPage = pages;
+      return refreshProductsTable();
     }
-  } catch {
-    $("apiStatus").className = "status-pill err";
-    $("apiStatusText").textContent = "Cannot reach API";
+    renderProductsTable();
+  } catch (e) {
+    if (seq !== productsRequestSeq) return;
+    products = [];
+    productsTotal = 0;
+    renderProductsTable(describeLoadError(e));
+    throw e;
   }
 }
 
-function getFilteredProducts(opts = {}) {
-  const q = (opts.search ?? "").toLowerCase();
-  const cat = opts.category ?? "";
-  const stock = opts.stock ?? "";
-  const prime = opts.prime ?? "";
-  const sale = opts.sale ?? "";
-  const supplier = opts.supplier ?? "";
+let inventoryRequestSeq = 0;
+async function refreshInventory() {
+  const seq = ++inventoryRequestSeq;
+  const stockSel = $("filterInvStock")?.value;
+  try {
+    const data = await fetchAdminProducts({
+      q: $("searchInventory")?.value?.trim() ?? "",
+      stock: stockSel === "low" || stockSel === "out" ? stockSel : "",
+      sort: "stockQuantity",
+      dir: "asc",
+      page: inventoryPage,
+      pageSize: INVENTORY_PAGE_SIZE,
+    });
+    if (seq !== inventoryRequestSeq) return;
+    inventoryRows = data.products;
+    inventoryTotal = data.total;
+    renderInventory();
+  } catch (e) {
+    if (seq !== inventoryRequestSeq) return;
+    inventoryRows = [];
+    inventoryTotal = 0;
+    renderInventory(describeLoadError(e));
+    throw e;
+  }
+}
 
-  let list = products.filter((p) => {
-    if (q && !`${p.title} ${p.id} ${p.category} ${p.description} ${supplierName(p.supplierId)}`.toLowerCase().includes(q))
-      return false;
-    if (cat && !productMatchesCategory(p.category, cat)) return false;
-    if (supplier === "platform" && p.supplierId) return false;
-    if (supplier && supplier !== "platform" && p.supplierId !== supplier) return false;
-    if (stock === "in" && (!p.inStock || p.stockQuantity <= 0)) return false;
-    if (stock === "low" && (p.stockQuantity <= 0 || p.stockQuantity > 10)) return false;
-    if (stock === "out" && p.inStock && p.stockQuantity > 0) return false;
-    if (prime === "yes" && !p.prime) return false;
-    if (prime === "no" && p.prime) return false;
-    if (sale === "yes" && !(p.originalPrice && p.originalPrice > p.price)) return false;
-    return true;
-  });
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
 
-  const key = opts.sortKey ?? productsSort.key;
-  const dir = opts.sortDir ?? productsSort.dir;
-  const mult = dir === "asc" ? 1 : -1;
-  list = [...list].sort((a, b) => {
-    let av = a[key];
-    let bv = b[key];
-    if (key === "category") {
-      av = catName(a.category);
-      bv = catName(b.category);
+async function loadAdminStats({ fresh = false } = {}) {
+  const pill = $("apiStatus");
+  const text = $("apiStatusText");
+  try {
+    const data = await fetchJson(fresh ? `${ADMIN_STATS}?fresh=1` : ADMIN_STATS);
+    adminStats = data;
+    cacheProducts(data.attention);
+    cacheProducts(data.recentProducts);
+    pill.className = "status-pill ok";
+    text.textContent = `Live · ${Number(data.products ?? 0).toLocaleString()} products · ${data.orders} orders · ${formatMoney(data.ordersSummary?.revenue ?? 0)} revenue`;
+    return data;
+  } catch (e) {
+    pill.className = "status-pill err";
+    text.textContent = e.network ? "Cannot reach API" : e.message;
+    throw e;
+  }
+}
+
+async function checkHealth() {
+  await loadAdminStats().catch(() => {});
+}
+
+/** Categories of products that appear in orders (for revenue-by-category charts). */
+async function cacheOrderedProducts() {
+  const ids = new Set();
+  for (const o of orders) {
+    for (const item of o.order_items || []) {
+      if (item.product_id && !productCache.has(item.product_id)) ids.add(item.product_id);
     }
-    if (key === "updatedAt") {
-      av = new Date(a.updatedAt || 0).getTime();
-      bv = new Date(b.updatedAt || 0).getTime();
-    }
-    if (typeof av === "string") return mult * av.localeCompare(bv);
-    return mult * ((av ?? 0) - (bv ?? 0));
-  });
-  return list;
+  }
+  const list = [...ids];
+  for (let i = 0; i < list.length; i += 100) {
+    const chunk = list.slice(i, i + 100);
+    await fetchAdminProducts({ ids: chunk.join(","), page: 1, pageSize: chunk.length });
+  }
+}
+
+/** Product counts keyed by the admin's normalized category id. */
+function categoryCounts() {
+  const out = {};
+  for (const [raw, n] of Object.entries(adminStats?.categoryCounts ?? {})) {
+    const id = normalizeCategoryId(raw);
+    out[id] = (out[id] ?? 0) + n;
+  }
+  return out;
 }
 
 function computeStats() {
-  const total = DISPLAY_PRODUCT_COUNT;
-  const live = products.filter((p) => p.inStock && p.stockQuantity > 0).length;
-  const out = products.filter((p) => !p.inStock || p.stockQuantity <= 0).length;
-  const low = products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= 10).length;
-  const value = products.reduce((s, p) => s + p.price * p.stockQuantity, 0);
-  const units = products.reduce((s, p) => s + p.stockQuantity, 0);
-  return { total, live, out, low, value, units };
+  const inv = adminStats?.inventory ?? {};
+  return {
+    total: DISPLAY_PRODUCT_COUNT,
+    live: inv.live ?? 0,
+    out: inv.out ?? 0,
+    low: inv.low ?? 0,
+    healthy: inv.healthy ?? 0,
+    value: inv.stockValue ?? 0,
+    units: inv.units ?? 0,
+  };
 }
 
 function renderStatsHtml(stats, prefix = "") {
@@ -1406,11 +1532,7 @@ function renderDashboard() {
 
   const byCat = {};
   categories.forEach((c) => (byCat[c.id] = 0));
-  products.forEach((p) => {
-    const id = normalizeCategoryId(p.category);
-    if (byCat[id] != null) byCat[id]++;
-    else byCat[id] = (byCat[id] ?? 0) + 1;
-  });
+  Object.assign(byCat, categoryCounts());
   const max = Math.max(1, ...Object.values(byCat));
   $("categoryChart").innerHTML = categories
     .map((c) => {
@@ -1425,10 +1547,7 @@ function renderDashboard() {
     })
     .join("");
 
-  const attention = products
-    .filter((p) => !p.inStock || p.stockQuantity <= 0 || p.stockQuantity <= 10)
-    .sort((a, b) => a.stockQuantity - b.stockQuantity)
-    .slice(0, 8);
+  const attention = adminStats?.attention ?? [];
 
   $("attentionList").innerHTML =
     attention.length === 0
@@ -1445,9 +1564,7 @@ function renderDashboard() {
           )
           .join("")}</tbody></table></div>`;
 
-  const recent = [...products]
-    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
-    .slice(0, 6);
+  const recent = adminStats?.recentProducts ?? [];
   $("recentTable").innerHTML =
     recent.length === 0
       ? '<tr><td colspan="4" class="empty">No products yet</td></tr>'
@@ -1486,28 +1603,24 @@ function renderDashboard() {
   renderDashboardCharts(stats, os);
 }
 
-function renderProductsTable() {
-  const filtered = getFilteredProducts({
-    search: $("searchProducts")?.value,
-    category: $("filterCategory")?.value,
-    stock: $("filterStock")?.value,
-    prime: $("filterPrime")?.value,
-    sale: $("filterSale")?.value,
-    supplier: $("filterSupplier")?.value,
-    sortKey: productsSort.key,
-    sortDir: productsSort.dir,
-  });
-  productsPageSize = Number($("productsPageSize")?.value || 50);
-  const { items, page, pages, total } = paginate(filtered, productsPage, productsPageSize);
-  productsPage = page;
-  $("productsTable").innerHTML =
-    items.length === 0
+function renderProductsTable(errorMessage) {
+  const items = products;
+  const total = productsTotal;
+  const pages = Math.max(1, Math.ceil(total / productsPageSize));
+  const page = Math.min(Math.max(1, productsPage), pages);
+  $("productsTable").innerHTML = errorMessage
+    ? `<tr><td colspan="10"><div class="empty">${escapeHtml(errorMessage)}</div></td></tr>`
+    : items.length === 0
       ? `<tr><td colspan="10"><div class="empty">No products match your filters</div></td></tr>`
       : items.map((p) => productRow(p)).join("");
   renderPagination("productsPagination", "productsTableMeta", { page, pages, total }, (p) => {
     productsPage = p;
-    renderProductsTable();
+    refreshProductsTable().catch((e) => toast(e.message, true));
   });
+  if (!productsTotalExact) {
+    const meta = $("productsTableMeta");
+    if (meta) meta.textContent = `≈ ${meta.textContent}`;
+  }
   const bulk = $("bulkBar");
   if (bulk) bulk.classList.toggle("show", selectedProductIds.size > 0);
   const bc = $("bulkCount");
@@ -1533,7 +1646,7 @@ function renderProductsTable() {
   updateSortHeaders();
 }
 
-function renderInventory() {
+function renderInventory(errorMessage) {
   const stats = computeStats();
   $("invStats").innerHTML = `
     <div class="stat-card"><div class="label">Total units</div><div class="value">${stats.units.toLocaleString()}</div></div>
@@ -1541,15 +1654,22 @@ function renderInventory() {
     <div class="stat-card danger"><div class="label">Out of stock SKUs</div><div class="value">${stats.out}</div></div>
   `;
 
-  const filtered = getFilteredProducts({
-    search: $("searchInventory").value,
-    stock: $("filterInvStock").value === "low" ? "low" : $("filterInvStock").value === "out" ? "out" : "",
-  });
+  const pages = Math.max(1, Math.ceil(inventoryTotal / INVENTORY_PAGE_SIZE));
+  renderPagination(
+    "inventoryPagination",
+    "inventoryTableMeta",
+    { page: Math.min(inventoryPage, pages), pages, total: inventoryTotal },
+    (p) => {
+      inventoryPage = p;
+      refreshInventory().catch((e) => toast(e.message, true));
+    }
+  );
 
-  $("inventoryTable").innerHTML =
-    filtered.length === 0
+  $("inventoryTable").innerHTML = errorMessage
+    ? `<tr><td colspan="6"><div class="empty">${escapeHtml(errorMessage)}</div></td></tr>`
+    : inventoryRows.length === 0
       ? `<tr><td colspan="6"><div class="empty">No inventory records</div></td></tr>`
-      : filtered
+      : inventoryRows
           .map(
             (p) => `
     <tr>
@@ -1577,12 +1697,15 @@ function renderInventory() {
 }
 
 function countProductsInCategory(catId) {
-  return products.filter((p) => productMatchesCategory(p.category, catId)).length;
+  let n = 0;
+  for (const [raw, count] of Object.entries(adminStats?.categoryCounts ?? {})) {
+    if (productMatchesCategory(raw, catId)) n += count;
+  }
+  return n;
 }
 
 function productPreviewForCategory(catId) {
-  const p = products.find((x) => productMatchesCategory(x.category, catId));
-  return p?.image;
+  return adminStats?.categoryPreviews?.[catId];
 }
 
 function renderCategoryBannerCards(targetId) {
@@ -2594,10 +2717,7 @@ function renderAnalytics() {
 
   const byCat = {};
   categories.forEach((c) => (byCat[c.id] = 0));
-  products.forEach((p) => {
-    const id = normalizeCategoryId(p.category);
-    byCat[id] = (byCat[id] ?? 0) + 1;
-  });
+  Object.assign(byCat, categoryCounts());
   const maxC = Math.max(1, ...Object.values(byCat));
   $("analyticsCategoryChart").innerHTML = categories
     .map((c) => {
@@ -3128,7 +3248,7 @@ function renderSettings() {
   const setup = $("setupChecklist");
   if (setup) {
     const checks = [
-      { ok: products.length > 0, label: "Products loaded", hint: "cd server && npm run dev" },
+      { ok: productsTotal > 0 || (adminStats?.products ?? 0) > 0, label: "Products loaded", hint: "cd server && npm run dev" },
       { ok: categoriesTableReady, label: "Categories table", hint: "server/supabase/categories.sql" },
       { ok: heroSlides.length > 0, label: "Hero slides", hint: "server/supabase/hero-slides.sql + npm run seed:hero" },
       { ok: orders.length >= 0, label: "Orders table", hint: "server/supabase/orders.sql" },
@@ -3147,8 +3267,17 @@ function renderSettings() {
   }
 }
 
-function exportProductsCsv(list) {
-  const rows = list || products;
+async function exportProductsCsv(filters) {
+  setLoading(true);
+  let rows;
+  try {
+    rows = await fetchAllAdminProducts(filters);
+  } catch (e) {
+    toast(e.message, true);
+    return;
+  } finally {
+    setLoading(false);
+  }
   const headers = ["id", "title", "category", "supplierId", "price", "originalPrice", "stockQuantity", "inStock", "unit", "rating", "reviewCount", "prime", "image"];
   const lines = [headers.join(",")];
   for (const p of rows) {
@@ -3191,13 +3320,15 @@ function renderAll() {
 window.filterByCategory = (id) => {
   switchView("products");
   $("filterCategory").value = id;
-  renderProductsTable();
+  productsPage = 1;
+  refreshProductsTable().catch((e) => toast(e.message, true));
 };
 
 window.filterBySupplier = (id) => {
   switchView("products");
   $("filterSupplier").value = id;
-  renderProductsTable();
+  productsPage = 1;
+  refreshProductsTable().catch((e) => toast(e.message, true));
 };
 
 function switchView(name) {
@@ -3278,31 +3409,43 @@ function closeConfirm() {
   confirmCallback = null;
 }
 
+/** Patch one product in the visible lists without reloading the catalogue. */
+function applyProductUpdate(updated) {
+  if (!updated) return;
+  const slim = slimProduct(updated);
+  productCache.set(slim.id, slim);
+  products = products.map((p) => (p.id === slim.id ? { ...p, ...slim } : p));
+  inventoryRows = inventoryRows.map((p) => (p.id === slim.id ? { ...p, ...slim } : p));
+  renderProductsTable();
+  renderInventory();
+}
+
 window.quickStock = async (id, qty) => {
   try {
-    await api(`/${id}/stock`, {
+    const data = await api(`/${encodeURIComponent(id)}/stock`, {
       method: "PATCH",
       body: JSON.stringify({ stockQuantity: Number(qty) }),
     });
     toast("Stock updated");
-    await loadProducts(false);
+    applyProductUpdate(data.product);
+    loadAdminStats().then(() => renderDashboard()).catch(() => {});
   } catch (e) {
     toast(e.message, true);
   }
 };
 
 window.adjustStock = async (id, delta) => {
-  const p = products.find((x) => x.id === id);
+  const p = productCache.get(id);
   if (!p) return;
   const next = Math.max(0, p.stockQuantity + delta);
   await quickStock(id, next);
 };
 
 function confirmProductDeletion(ids, { closeEditor = false } = {}) {
-  const validIds = [...new Set(ids)].filter((id) => products.some((p) => p.id === id));
+  const validIds = [...new Set(ids)].filter(Boolean);
   if (!validIds.length) return;
   const count = validIds.length;
-  const first = products.find((p) => p.id === validIds[0]);
+  const first = productCache.get(validIds[0]);
   const title = count === 1 ? "Delete product" : `Delete ${count} products`;
   const message =
     count === 1
@@ -3317,6 +3460,7 @@ function confirmProductDeletion(ids, { closeEditor = false } = {}) {
       for (const id of validIds) {
         await api(`/${encodeURIComponent(id)}`, { method: "DELETE" });
         selectedProductIds.delete(id);
+        productCache.delete(id);
         deleted++;
       }
       if (closeEditor) {
@@ -3379,8 +3523,22 @@ function readProductInfo() {
   return JSON.parse(JSON.stringify(details));
 }
 
-window.editProduct = (id) => {
-  const p = products.find((x) => x.id === id);
+/** List rows are slim (no description/details); the editor needs the full product. */
+async function fetchFullProduct(id) {
+  setLoading(true);
+  try {
+    const data = await api(`/${encodeURIComponent(id)}?admin=true`);
+    return data.product;
+  } catch (e) {
+    toast(e.message, true);
+    return null;
+  } finally {
+    setLoading(false);
+  }
+}
+
+window.editProduct = async (id) => {
+  const p = await fetchFullProduct(id);
   if (!p) return;
   editingId = id;
   $("drawerTitle").textContent = "Edit product";
@@ -3408,8 +3566,8 @@ window.editProduct = (id) => {
   openDrawer("edit");
 };
 
-window.duplicateProduct = (id) => {
-  const p = products.find((x) => x.id === id);
+window.duplicateProduct = async (id) => {
+  const p = await fetchFullProduct(id);
   if (!p) return;
   editingId = null;
   $("drawerTitle").textContent = "Duplicate product";
@@ -3508,17 +3666,22 @@ async function loadCategories() {
   populateSupplierSelects();
 }
 
+/** Refresh the paged product tables and the server-side catalogue stats. */
 async function loadProducts(showLoader = true) {
   if (showLoader) setLoading(true);
   try {
-    const data = await api("?admin=true");
-    products = data.products;
+    const results = await Promise.allSettled([
+      refreshProductsTable(),
+      refreshInventory(),
+      loadAdminStats(),
+    ]);
     lastRefresh = new Date();
-    showError(null);
     renderAll();
-    await checkHealth();
+    const failed = results.find((r) => r.status === "rejected");
+    if (failed) throw failed.reason;
+    showError(null);
   } catch (e) {
-    showError(e.message + " — Run: cd server && npm run dev");
+    showError(describeLoadError(e));
     toast(e.message, true);
   } finally {
     if (showLoader) setLoading(false);
@@ -3590,7 +3753,8 @@ $("globalSearch")?.addEventListener("keydown", (e) => {
     } else {
       switchView("products");
       $("searchProducts").value = q;
-      renderProductsTable();
+      productsPage = 1;
+      refreshProductsTable().catch((e) => toast(e.message, true));
     }
   }
 });
@@ -3788,17 +3952,10 @@ $("showInactiveHero")?.addEventListener("change", (e) => {
   renderHeroSlides();
 });
 $("exportCsvBtn")?.addEventListener("click", () => {
-  exportProductsCsv(
-    getFilteredProducts({
-      search: $("searchProducts")?.value,
-      category: $("filterCategory")?.value,
-      stock: $("filterStock")?.value,
-      prime: $("filterPrime")?.value,
-      sale: $("filterSale")?.value,
-    })
-  );
+  const { sort: _sort, dir: _dir, ...filters } = productFilterParams();
+  exportProductsCsv(filters);
 });
-$("exportAllCsvBtn")?.addEventListener("click", () => exportProductsCsv(products));
+$("exportAllCsvBtn")?.addEventListener("click", () => exportProductsCsv({}));
 $("refreshAllBtn")?.addEventListener("click", () => $("refreshBtn")?.click());
 $("bulkSetStockBtn")?.addEventListener("click", async () => {
   const qty = Number($("bulkStockValue")?.value ?? 0);
@@ -3845,34 +4002,16 @@ document.querySelectorAll("[data-catalog-tab]").forEach((btn) => {
   });
 });
 
-$("searchProducts")?.addEventListener("input", () => {
+function reloadProductsFromFirstPage() {
   productsPage = 1;
-  renderProductsTable();
-});
-$("filterCategory")?.addEventListener("change", () => {
-  productsPage = 1;
-  renderProductsTable();
-});
-$("filterSupplier")?.addEventListener("change", () => {
-  productsPage = 1;
-  renderProductsTable();
-});
-$("filterStock")?.addEventListener("change", () => {
-  productsPage = 1;
-  renderProductsTable();
-});
-$("filterPrime")?.addEventListener("change", () => {
-  productsPage = 1;
-  renderProductsTable();
-});
-$("filterSale")?.addEventListener("change", () => {
-  productsPage = 1;
-  renderProductsTable();
-});
-$("productsPageSize")?.addEventListener("change", () => {
-  productsPage = 1;
-  renderProductsTable();
-});
+  refreshProductsTable().catch((e) => toast(e.message, true));
+}
+const reloadProductsDebounced = debounce(reloadProductsFromFirstPage, 350);
+
+$("searchProducts")?.addEventListener("input", reloadProductsDebounced);
+for (const id of ["filterCategory", "filterSupplier", "filterStock", "filterPrime", "filterSale", "productsPageSize"]) {
+  $(id)?.addEventListener("change", reloadProductsFromFirstPage);
+}
 document.querySelectorAll("th.sortable").forEach((th) => {
   th.addEventListener("click", () => {
     const key = th.dataset.sort;
@@ -3881,11 +4020,15 @@ document.querySelectorAll("th.sortable").forEach((th) => {
     } else {
       productsSort = { key, dir: "asc" };
     }
-    renderProductsTable();
+    reloadProductsFromFirstPage();
   });
 });
-$("searchInventory").addEventListener("input", renderInventory);
-$("filterInvStock").addEventListener("change", renderInventory);
+function reloadInventoryFromFirstPage() {
+  inventoryPage = 1;
+  refreshInventory().catch((e) => toast(e.message, true));
+}
+$("searchInventory").addEventListener("input", debounce(reloadInventoryFromFirstPage, 350));
+$("filterInvStock").addEventListener("change", reloadInventoryFromFirstPage);
 
 $("image").addEventListener("input", updatePreview);
 $("uploadProductImageBtn").addEventListener("click", async () => {
@@ -4251,11 +4394,14 @@ document.addEventListener("keydown", (e) => {
       );
     });
     await loadProducts(false);
-    await checkHealth();
+    cacheOrderedProducts()
+      .then(() => {
+        if (currentView === "dashboard") renderDashboard();
+        if (currentView === "analytics") renderAnalytics();
+      })
+      .catch(() => {});
   } catch (e) {
-    showError(
-      (e?.message || "Cannot reach API") + " — Run: cd server && npm run dev"
-    );
+    showError(describeLoadError(e));
   } finally {
     setLoading(false);
   }

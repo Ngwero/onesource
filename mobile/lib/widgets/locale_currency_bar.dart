@@ -13,10 +13,14 @@ class LocaleCurrencyBar extends ConsumerWidget {
     super.key,
     this.onDark = false,
     this.compact = false,
+    this.flagsOnly = false,
   });
 
   final bool onDark;
   final bool compact;
+
+  /// Smallest form (pinned compact header): flag pills without labels.
+  final bool flagsOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,6 +29,28 @@ class LocaleCurrencyBar extends ConsumerWidget {
     final currency = ref.watch(currencyProvider);
     final lang = languageInfo(language);
     final curr = currencyInfo(currency.currency);
+
+    if (flagsOnly) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _FlagButton(
+            onDark: onDark,
+            flag: curr.flag,
+            tooltip: strings.currencySelect,
+            loading: currency.loading,
+            onTap: () => _showCurrencySheet(context, ref, strings),
+          ),
+          const SizedBox(width: 6),
+          _FlagButton(
+            onDark: onDark,
+            flag: lang.flag,
+            tooltip: strings.langSelect,
+            onTap: () => _showLanguageSheet(context, ref, strings),
+          ),
+        ],
+      );
+    }
 
     if (compact) {
       return Row(
@@ -150,6 +176,59 @@ class LocaleCurrencyBar extends ConsumerWidget {
                 child: Text(strings.refreshRates),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FlagButton extends StatelessWidget {
+  const _FlagButton({
+    required this.onDark,
+    required this.flag,
+    required this.tooltip,
+    required this.onTap,
+    this.loading = false,
+  });
+
+  final bool onDark;
+  final String flag;
+  final String tooltip;
+  final VoidCallback onTap;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: onDark ? Colors.white.withValues(alpha: 0.12) : Colors.white,
+        shape: CircleBorder(
+          side: BorderSide(
+            color: onDark
+                ? Colors.white.withValues(alpha: 0.18)
+                : AppColors.border.withValues(alpha: 0.6),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Center(
+              child: loading
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.8,
+                        color: AppColors.lemonGreen,
+                      ),
+                    )
+                  : Text(flag, style: const TextStyle(fontSize: 18)),
+            ),
           ),
         ),
       ),

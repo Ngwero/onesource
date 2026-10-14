@@ -2020,7 +2020,14 @@
       "sun-protection": "Kobatela na moi",
       "acne-care": "Soins ya bouton",
       "body-care": "Soins ya nzoto",
-      "hair-baby-more": "Nsuki, malasi & bisusu",
+      "hair-baby-more": "Manzaka, bana & bisusu",
+      "fragrance": "Malasi (parfum)",
+      "hair-care": "Bobateli ya nsuki",
+      "mens": "Bobateli ya mibali",
+      "home-fragrance": "Babuji & malasi ya ndako",
+      "wellness": "Bolamu & bilei ya kobakisa",
+      "beauty-tech-home": "Bisaleli ya kitoko & ndako",
+      "sexual-wellness": "Bolamu ya bolingo",
       "kits-bundles": "Ba coffrets & makabo",
       "brushes-tools": "Ba pinceaux & bisaleli"
     },
@@ -2028,6 +2035,10 @@
     "allBrands": "Ba marques nyonso",
     "shopByCategory": "Somba na catégorie",
     "topBrands": "Ba marques ya liboso",
+    "home": {
+      "latestTitle": "Ya sika na Cosmétiques",
+      "latestSub": "Biloko ya sika liboso — kende se na nse mpo na komona nyonso."
+    },
     "seeAll": "Tala nyonso",
     "hero": {
       "prev": "Oyo ya liboso",

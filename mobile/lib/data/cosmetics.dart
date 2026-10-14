@@ -10,6 +10,13 @@ class CosmeticsAisle {
 
 /// Same aisles as the website (`src/data/cosmetics.ts`); ids match `cosmetics-{aisle}-…` SKUs.
 const cosmeticsAisles = <CosmeticsAisle>[
+  CosmeticsAisle(id: 'fragrance', title: 'Perfume & fragrance', icon: '🌸'),
+  CosmeticsAisle(id: 'hair-care', title: 'Hair care', icon: '💇'),
+  CosmeticsAisle(id: 'mens', title: "Men's grooming", icon: '🧔'),
+  CosmeticsAisle(id: 'home-fragrance', title: 'Candles & home fragrance', icon: '🕯️'),
+  CosmeticsAisle(id: 'wellness', title: 'Wellness & supplements', icon: '🌿'),
+  CosmeticsAisle(id: 'beauty-tech-home', title: 'Beauty tech & home', icon: '🛏️'),
+  CosmeticsAisle(id: 'sexual-wellness', title: 'Sexual wellness', icon: '💗'),
   CosmeticsAisle(id: 'face-makeup', title: 'Face makeup', icon: '💄'),
   CosmeticsAisle(id: 'eye-makeup', title: 'Eye makeup', icon: '👁️'),
   CosmeticsAisle(id: 'lips', title: 'Lips', icon: '💋'),
@@ -19,7 +26,7 @@ const cosmeticsAisles = <CosmeticsAisle>[
   CosmeticsAisle(id: 'sun-protection', title: 'Sun protection', icon: '☀️'),
   CosmeticsAisle(id: 'acne-care', title: 'Acne care', icon: '✨'),
   CosmeticsAisle(id: 'body-care', title: 'Body care', icon: '🧴'),
-  CosmeticsAisle(id: 'hair-baby-more', title: 'Hair, fragrance & more', icon: '🌸'),
+  CosmeticsAisle(id: 'hair-baby-more', title: 'Nails, baby & more', icon: '💅'),
   CosmeticsAisle(id: 'kits-bundles', title: 'Kits & gift sets', icon: '🎁'),
   CosmeticsAisle(id: 'brushes-tools', title: 'Brushes & tools', icon: '🖌️'),
 ];
@@ -71,5 +78,5 @@ const cosmeticsHeroSlides = <({String key, String image, String href, String? hr
     href: '/cosmetics/aisle/serums-oils',
     href2: '/cosmetics/aisle/sun-protection',
   ),
-  (key: 'fragrance', image: '$_heroBase/fragrance.webp', href: '/cosmetics/aisle/hair-baby-more', href2: null),
+  (key: 'fragrance', image: '$_heroBase/fragrance.webp', href: '/cosmetics/aisle/fragrance', href2: null),
 ];

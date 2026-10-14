@@ -41,6 +41,8 @@ export type ProductInfo = {
   unit?: string;
   specs?: ProductSpec[];
   hiddenReason?: string[];
+  /** Internal stock note, e.g. "supplier-out-of-stock"; never shown to shoppers. */
+  sourcing?: string;
 };
 
 export type Category = {

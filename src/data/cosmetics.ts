@@ -2,6 +2,13 @@
 export const COSMETICS_CATEGORY_ID = "cosmetics";
 
 export const COSMETICS_AISLES = [
+  { id: "fragrance", title: "Perfume & fragrance", icon: "🌸" },
+  { id: "hair-care", title: "Hair care", icon: "💇" },
+  { id: "mens", title: "Men's grooming", icon: "🧔" },
+  { id: "home-fragrance", title: "Candles & home fragrance", icon: "🕯️" },
+  { id: "wellness", title: "Wellness & supplements", icon: "🌿" },
+  { id: "beauty-tech-home", title: "Beauty tech & home", icon: "🛏️" },
+  { id: "sexual-wellness", title: "Sexual wellness", icon: "💗" },
   { id: "face-makeup", title: "Face makeup", icon: "💄" },
   { id: "eye-makeup", title: "Eye makeup", icon: "👁️" },
   { id: "lips", title: "Lips", icon: "💋" },
@@ -11,7 +18,7 @@ export const COSMETICS_AISLES = [
   { id: "sun-protection", title: "Sun protection", icon: "☀️" },
   { id: "acne-care", title: "Acne care", icon: "✨" },
   { id: "body-care", title: "Body care", icon: "🧴" },
-  { id: "hair-baby-more", title: "Hair, fragrance & more", icon: "🌸" },
+  { id: "hair-baby-more", title: "Nails, baby & more", icon: "💅" },
   { id: "kits-bundles", title: "Kits & gift sets", icon: "🎁" },
   { id: "brushes-tools", title: "Brushes & tools", icon: "🖌️" },
 ] as const;

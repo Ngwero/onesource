@@ -16,6 +16,7 @@ import { kitchenAislePath } from "../utils/kitchenMode";
 import { cosmeticsAislePath } from "../utils/cosmeticsMode";
 import { shopModeForPath, SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
 import { DELIVERY_COUNTRIES, useDeliveryCountry } from "../hooks/useDeliveryCountry";
+import { CountryFlag } from "./CountryFlag";
 
 function DeliverToPicker() {
   const { t, i18n } = useTranslation();
@@ -28,7 +29,10 @@ function DeliverToPicker() {
       <span className="text-[10px] text-text-muted uppercase tracking-wide">
         {t("header.deliverTo")}
       </span>
-      <span className="text-xs font-semibold">📍 {name}</span>
+      <span className="flex items-center gap-1.5 text-xs font-semibold">
+        <CountryFlag code={code} size={18} />
+        {name}
+      </span>
       <select
         aria-label={t("header.deliverTo")}
         className="absolute inset-0 opacity-0 cursor-pointer"
@@ -114,7 +118,9 @@ export function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const [spacerHeight, setSpacerHeight] = useState(120);
   const [scrolled, setScrolled] = useState(false);
+  const [compact, setCompact] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const settleUntilRef = useRef(0);
 
   const openCartOrExport = () => {
     if (isExportOnlyCart(items)) {
@@ -132,21 +138,29 @@ export function Header() {
     const el = headerRef.current;
     if (!el) return;
 
+    // The spacer keeps the resting (top-of-page) height so content never
+    // jumps while the header shrinks/grows; sticky offsets use the live height.
     const update = () => {
       const h = Math.ceil(el.getBoundingClientRect().height);
-      setSpacerHeight(h);
       document.documentElement.style.setProperty("--site-header-height", `${h}px`);
+      const settled = performance.now() >= settleUntilRef.current;
+      if (!compact && !scrolled && settled) setSpacerHeight(h);
     };
 
     update();
+    const settleTimer = window.setTimeout(
+      update,
+      Math.max(0, settleUntilRef.current - performance.now()) + 20
+    );
     const ro = new ResizeObserver(update);
     ro.observe(el);
     window.addEventListener("resize", update);
     return () => {
+      window.clearTimeout(settleTimer);
       ro.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [categories.length, user, itemCount, scrolled, shopMode]);
+  }, [categories.length, user, itemCount, scrolled, compact, shopMode]);
 
   useEffect(() => {
     let ticking = false;
@@ -157,6 +171,12 @@ export function Header() {
       requestAnimationFrame(() => {
         const y = window.scrollY;
         setScrolled(y > 12);
+        // Hysteresis: collapse past 72px, only expand again near the very top.
+        setCompact((prev) => {
+          const next = prev ? y > 24 : y > 72;
+          if (next !== prev) settleUntilRef.current = performance.now() + 450;
+          return next;
+        });
         const max = document.documentElement.scrollHeight - window.innerHeight;
         setScrollProgress(max > 0 ? Math.min(1, y / max) : 0);
         ticking = false;
@@ -180,7 +200,7 @@ export function Header() {
     <>
       <header
         ref={headerRef}
-        className={`site-header border-b border-border${scrolled ? " site-header--scrolled" : ""} site-header--${shopMode}`}
+        className={`site-header border-b border-border${scrolled ? " site-header--scrolled" : ""}${compact ? " site-header--compact" : ""} site-header--${shopMode}`}
       >
         <div className="site-header-progress" aria-hidden>
           <div
@@ -254,6 +274,7 @@ export function Header() {
                 variant="horizontal"
                 className="site-header-brand-icon md:hidden h-8 max-w-[150px]"
               />
+              <BrandLogo variant="icon" className="site-header-brand-mark" />
               <BrandLogo
                 variant="horizontal"
                 className="hidden md:block h-9 sm:h-10 md:h-11 max-w-[min(220px,48vw)]"

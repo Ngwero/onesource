@@ -11,6 +11,12 @@ import 'locale_currency_bar.dart';
 import 'shop_mode_switch.dart';
 import '../utils/shop_mode.dart';
 
+Color homeHeaderColor(ShopMode mode) => switch (mode) {
+      ShopMode.kitchen => const Color(0xFF243D32),
+      ShopMode.cosmetics => const Color(0xFF3B2A33),
+      ShopMode.fresh => AppColors.darkGreen,
+    };
+
 /// Brand-first home header with a short staggered entrance.
 class HomeHeader extends ConsumerStatefulWidget {
   const HomeHeader({
@@ -81,11 +87,7 @@ class _HomeHeaderState extends ConsumerState<HomeHeader>
           width: double.infinity,
           padding: EdgeInsets.fromLTRB(20, topPad + 12, 20, 34),
           decoration: BoxDecoration(
-            color: switch (mode) {
-              ShopMode.kitchen => const Color(0xFF243D32),
-              ShopMode.cosmetics => const Color(0xFF3B2A33),
-              ShopMode.fresh => AppColors.darkGreen,
-            },
+            color: homeHeaderColor(mode),
             borderRadius:
                 const BorderRadius.vertical(bottom: Radius.circular(24)),
           ),

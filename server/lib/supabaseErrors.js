@@ -13,6 +13,21 @@ export function isSupabaseConnectionError(error) {
   );
 }
 
+export function isStatementTimeoutError(error) {
+  return (
+    error?.code === "57014" ||
+    /statement timeout|canceling statement/i.test(String(error?.message ?? ""))
+  );
+}
+
+/** Message safe to show users; Postgres timeouts get a plain-language explanation. */
+export function dbErrorMessage(error) {
+  if (isStatementTimeoutError(error)) {
+    return "The database took too long to answer — try again, or narrow your search/filters.";
+  }
+  return error?.message || String(error);
+}
+
 export function supabaseConnectionHint() {
   let host = "your-project";
   try {

@@ -13,6 +13,13 @@ const AISLE_IDS = {
     "organization",
   ],
   cosmetics: [
+    "fragrance",
+    "hair-care",
+    "mens",
+    "home-fragrance",
+    "wellness",
+    "beauty-tech-home",
+    "sexual-wellness",
     "face-makeup",
     "eye-makeup",
     "lips",
@@ -27,6 +34,14 @@ const AISLE_IDS = {
     "brushes-tools",
   ],
 };
+
+/** `cosmetics-fragrance-boots-123` → `boots-123` (the part that survives an aisle move). */
+export function productIdWithoutAisle(shopPrefix, id) {
+  const aisle = [...(AISLE_IDS[shopPrefix] ?? [])]
+    .sort((a, b) => b.length - a.length)
+    .find((a) => id.startsWith(`${shopPrefix}-${a}-`));
+  return aisle ? id.slice(`${shopPrefix}-${aisle}-`.length) : id;
+}
 
 /**
  * Id prefixes of other aisles that a `{shop}-{aisle}-%` match would also catch,

@@ -70,18 +70,19 @@ function validateSupplier(data, isUpdate = false) {
 
 async function attachProductCounts(db, rows) {
   if (!rows?.length) return [];
-  const ids = rows.map((r) => r.id);
-  const { data: counts, error } = await db
-    .from("products")
-    .select("supplier_id")
-    .in("supplier_id", ids);
-
-  if (error && !isMissingTable(error)) throw error;
-
   const tally = new Map();
-  for (const row of counts ?? []) {
-    if (!row.supplier_id) continue;
-    tally.set(row.supplier_id, (tally.get(row.supplier_id) ?? 0) + 1);
+  const results = await Promise.all(
+    rows.map((r) =>
+      db
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("supplier_id", r.id)
+        .then(({ count, error }) => ({ id: r.id, count, error }))
+    )
+  );
+  for (const { id, count, error } of results) {
+    if (error && !isMissingTable(error)) throw error;
+    tally.set(id, count ?? 0);
   }
 
   return rows.map((row) => rowToSupplier(row, tally.get(row.id) ?? 0));

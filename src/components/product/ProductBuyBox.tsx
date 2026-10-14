@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import type { Product } from "../../types/product";
 import type { LocalizedProduct } from "../../i18n/useLocalizedProduct";
 import { useDeliveryCountry } from "../../hooks/useDeliveryCountry";
+import { CountryFlag } from "../CountryFlag";
 
 type Props = {
   product: Product;
@@ -36,7 +37,7 @@ export function ProductBuyBox({
 }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { name: deliveryCountry } = useDeliveryCountry();
+  const { code: deliveryCode, name: deliveryCountry } = useDeliveryCountry();
   const compact = variant === "compact";
   const returnsTo = user ? "/orders" : "/login";
   const returnsState = user ? undefined : { from: "/orders" };
@@ -67,7 +68,10 @@ export function ProductBuyBox({
           <p className="text-sm text-text-muted mt-1">{localized.localizedDelivery}</p>
           <p className="text-sm text-text-muted mt-1">
             {t("product.deliveryTo")}{" "}
-            <span className="font-semibold text-text">{deliveryCountry}</span>
+            <span className="inline-flex items-center gap-1 align-middle font-semibold text-text">
+              <CountryFlag code={deliveryCode} size={16} />
+              {deliveryCountry}
+            </span>
           </p>
           {product.prime && (
             <p className="text-xs text-text-muted mt-2">

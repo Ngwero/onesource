@@ -85,9 +85,31 @@ const W = {
   sponge: "Wash after every use and replace every 1–3 months.",
   heatedTool: "Electrical item: keep away from water, unplug after use and let it cool before storing.",
   eyeProduct: "Do not use if you have an eye infection; discard if irritation occurs. Replace mascara and liquid eyeliner 3 months after opening.",
+  supplementDose: "Food supplement: do not exceed the recommended daily dose stated on the label.",
+  supplementDiet: "Food supplements should not be used as a substitute for a varied, balanced diet and a healthy lifestyle.",
+  supplementAdvice: "Consult a doctor or pharmacist before use if you are pregnant, breastfeeding, taking medication or under medical supervision.",
+  supplementAllergens: "Check the label for allergens (e.g. soy, milk, fish, shellfish, nuts, gluten) before use.",
+  intimate: "For intended (external/intimate) use only, as described by the manufacturer. Strictly for adults aged 18 and over.",
+  intimateStop: "Discontinue use if irritation, burning or discomfort occurs; seek medical advice if it persists.",
+  intimateCompat: "Check compatibility before use: oil- and silicone-based lubricants can damage latex condoms and silicone toys — use water-based lubricant with these.",
+  deviceClean: "Clean before and after every use with warm soapy water or a suitable toy cleaner, and store dry.",
+  candle: "Never leave a burning candle unattended. Burn on a stable, heat-resistant surface, away from draughts, curtains and anything flammable, and out of reach of children and pets.",
+  candleWick: "Trim the wick to about 5 mm before each use and do not burn for more than 3–4 hours at a time. Stop using when 1 cm of wax remains.",
+  homeScent: "Keep out of reach of children and pets. Avoid contact with skin and eyes, do not swallow, and protect furniture and fabrics from spills.",
+  homeScentFlammable: "Contains fragrance oils and alcohol: flammable — keep away from heat, sparks and naked flames.",
+  ukPlug: "UK plug, 220–240 V — suitable for Uganda's 240 V supply and UK-style (Type G) sockets.",
+  electrical: "Electrical item: read the manufacturer's safety instructions before use, keep away from water, unplug after use and before cleaning, and keep the cable out of reach of children.",
 };
 
+/** Mains-powered or rechargeable beauty appliances (UK models). */
+const ELECTRICAL = /hair ?dryer|straightener|\bstyler\b|air ?styler|air ?wrap|multi-?styler|curl(ing)? (iron|wand|tong)|\btongs?\b|waver|hot brush|\bled\b|light therapy|microcurrent|\bdevice\b|epilator|\bipl\b|shaver|trimmer|clipper|sonic|electric|rechargeable|cordless|\bfridge\b|nail lamp|\buv lamp|facial steamer|\b\d{3,4}\s?w\b/i;
+
 const KIND = [
+  ["supplement", /gumm(y|ies)|softgels?|\btablets\b|\d+\s*(x\s*)?(capsules|vegicaps|sachets)|\((\d+ )?capsules\)|vegicaps|\bsachets?\b|nootropic|adaptogen|myvitamins|myprotein|the nue co|dirtea|vida glow|kiki health|revive collagen|dose & co|protein (powder|bar|shake)|marine collagen|collagen (powder|shot|drink|bovine)|superfood powder|greens powder|ashwagandha|supplement(?!.*(serum|shampoo|conditioner|treatment))|multivitamin(?! (cream|serum|masque|power))|vitamin (d3?|b complex|b12)\b(?!.*(cream|serum))|chlorophyll|mushroom (extract|powder|blend)|probiotic (capsules|supplement)|\bbiotics\b|magnesium|maca\b|digestion|immunity|hormone balance|cod liver/i],
+  ["intimate", /vibrator|\blelo\b|smile makers|so divine|lubricant|\blube\b|erotic|massage wand|\bwand\b.*(various|vibrat)|pleasure|condom|intimate (wash|gel|moisturi)/i],
+  ["candle", /candle/i],
+  ["homeScent", /diffuser(?! .*(dryer|hair))|room (spray|mist)|home (fragrance|spray|scent|scenting)|wax melts?|incense|linen (spray|mist)|pillow (spray|mist)|air freshener|car (diffuser|fragrance)|scented (sachet|stone|pearls)|\bpearls\b(?=.*baobab)|baobab collection/i],
+  ["textile", /pillow ?case|pillowcase|scrunchie|sleep mask(?!.*(cream|gel|\d+\s?ml))|eye mask(?=.*silk)|\b(mulberry )?silk (scrunchies?|hair ties?|bonnet|turban|wrap)\b|headband|hair wrap|turban|bath ?robe|dressing gown|pyjama|slippers|towel|socks/i],
   ["tool", /\bbrush(es)?\b|sponge|blender\b|applicator|tweezer|sharpener|eyelash curler|curler\b|puff\b|tool\b|mirror|comb\b|bag\b/i],
   ["hairDye", /hair (?:colou?r|dye)|permanent colou?r|root touch/i],
   ["nails", /nail (?:polish|varnish|lacquer|colou?r)|top coat|base coat|remover(?=.*nail)/i],
@@ -104,8 +126,15 @@ const KIND = [
   ["set", /\bset\b|\bkit\b|bundle|collection|gift|trio|duo|routine|coffret/i],
 ];
 
+const TOPICAL = /cream|serum|lotion|balm|\boil\b|spray|mask|masque|wash|shampoo|conditioner|butter|scrub|toner|cleanser|moisturi|soak|bath|deodorant|mist/i;
+const INGESTED = /gumm(y|ies)|softgels?|capsules|vegicaps|tablets|sachets|\bpowder\b|\bdrink\b|\bshots?\b|\bbar\b|\bshake\b|\bsupplement\b/i;
+
 export function cosmeticsKind(title) {
-  for (const [k, re] of KIND) if (re.test(title)) return k;
+  for (const [k, re] of KIND) {
+    if (!re.test(title)) continue;
+    if (k === "supplement" && TOPICAL.test(title) && !INGESTED.test(title)) continue;
+    return k;
+  }
   return "other";
 }
 
@@ -172,9 +201,26 @@ export function cosmeticsProductDetails({ title, brand, lf }) {
 
   const warnings = [];
   if (lfWarnings) warnings.push(...bullets(lfWarnings));
-  if (kind === "tool") {
+  const electrical = ELECTRICAL.test(name) && !/candle|diffuser refill/i.test(name);
+  if (kind === "supplement") {
+    warnings.push(W.supplementDose, W.supplementDiet, W.children, W.supplementAdvice, W.supplementAllergens);
+  } else if (kind === "intimate") {
+    warnings.push(W.intimate, W.intimateStop);
+    if (/lubricant|\blube\b|gel|oil|balm|serum/i.test(name)) warnings.push(W.intimateCompat);
+    else warnings.push(W.deviceClean);
+    warnings.push(W.children);
+  } else if (kind === "candle") {
+    warnings.push(W.candle, W.candleWick);
+  } else if (kind === "homeScent") {
+    warnings.push(W.homeScent);
+    if (!electrical) warnings.push(W.homeScentFlammable);
+  } else if (kind === "tool") {
     warnings.push(/sponge|blender/i.test(name) ? W.sponge : W.tool);
-    if (/heated|electric|rechargeable|usb/i.test(name)) warnings.push(W.heatedTool);
+    if (/heated|electric|rechargeable|usb/i.test(name) && !electrical) warnings.push(W.heatedTool);
+  } else if (kind === "textile") {
+    warnings.push("Follow the care label when washing. Keep small items away from young children.");
+  } else if (electrical && kind === "other") {
+    // Appliances: the electrical warnings below are the relevant ones.
   } else {
     if (kind === "hairDye") warnings.push(W.hairDye);
     if (/retin(?:ol|al|yl)|retinoate|tretinoin|adapalene/i.test(inci)) warnings.push(W.retinoid);
@@ -194,6 +240,7 @@ export function cosmeticsProductDetails({ title, brand, lf }) {
     if (kind !== "eye" && kind !== "lip") warnings.push(W.external, W.eyes);
     warnings.push(W.irritation, W.patch, W.children);
   }
+  if (electrical) warnings.push(W.electrical, W.ukPlug);
 
   let allergenStatement;
   if (kind !== "tool" && ingredients) {
@@ -222,16 +269,21 @@ export function cosmeticsProductDetails({ title, brand, lf }) {
     allergenStatement,
     warnings: warnings.length ? uniq(warnings) : undefined,
     storage:
-      kind === "tool"
+      kind === "tool" || kind === "textile" || electrical
         ? undefined
-        : kind === "fragrance" || kind === "sunscreen" || /aerosol/i.test(name)
+        : kind === "supplement"
+          ? "Store in a cool, dry place below 25 °C, out of direct sunlight, with the lid tightly closed."
+          : kind === "candle" || kind === "homeScent"
+            ? "Store upright in a cool, dry place away from direct sunlight and heat."
+            : kind === "fragrance" || kind === "sunscreen" || /aerosol/i.test(name)
           ? "Store below 25 °C, away from direct sunlight and heat. Do not leave in a hot car."
           : "Store in a cool, dry place away from direct sunlight, with the lid closed. Check the period-after-opening symbol (e.g. 12M) on the pack.",
     specs: specs.length ? specs : undefined,
   };
   for (const k of Object.keys(details)) if (details[k] === undefined) delete details[k];
 
-  const complete = kind === "tool" ? true : Boolean(ingredients && (how || descriptionText));
+  const noInci = kind === "tool" || kind === "textile" || kind === "candle" || (electrical && kind !== "intimate");
+  const complete = noInci ? Boolean(kind === "tool" || descriptionText) : Boolean(ingredients && (how || descriptionText));
   const description = descriptionText
     ? descriptionText.replace(/[ \t]{2,}/g, " ").replace(/ ([,.])/g, "$1").replace(/\s+\n/g, "\n").trim()
     : kind === "tool"

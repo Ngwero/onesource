@@ -7,7 +7,7 @@ import { cosmeticsAislePath } from "../utils/cosmeticsMode";
 
 export function CosmeticsCategoriesPage() {
   const { t } = useTranslation();
-  const { aisles, cosmeticsProducts, loading } = useCosmeticsCatalog();
+  const { aisles, loading } = useCosmeticsCatalog();
 
   return (
     <div className="cos-page">
@@ -23,7 +23,7 @@ export function CosmeticsCategoriesPage() {
           <p>{t("cosmetics.catalogSub")}</p>
         </header>
 
-        {loading && cosmeticsProducts.length === 0 ? (
+        {loading ? (
           <p className="cos-empty">{t("common.loading")}</p>
         ) : (
           <div className="cos-cat-grid">

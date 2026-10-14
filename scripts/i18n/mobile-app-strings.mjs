@@ -328,6 +328,14 @@ export const APP_STRINGS = {
   "product.tabDetails": ["Details", "Détails", "Maelezo", "Makambo", "Ibisobanuro"],
   "product.tabSupport": ["Support", "Assistance", "Msaada", "Lisalisi", "Ubufasha"],
   "product.tabRatings": ["Ratings", "Avis", "Tathmini", "Ba note", "Amanota"],
+  "product.tapToZoom": ["Tap to zoom", "Touchez pour zoomer", "Gusa kukuza", "Finá mpo na kobakisa", "Kanda wagure"],
+  "product.zoomHint": [
+    "Pinch or double-tap to zoom",
+    "Pincez ou touchez deux fois pour zoomer",
+    "Bana au gusa mara mbili kukuza",
+    "Kanga to finá mbala mibale mpo na kobakisa",
+    "Kanda kabiri cyangwa ukoreshe intoki ebyiri wagure",
+  ],
   "product.needHelp": ["Need help?", "Besoin d'aide ?", "Unahitaji msaada?", "Osengeli lisalisi?", "Ukeneye ubufasha?"],
   "product.supportText": [
     "Contact One Source support for delivery questions, refunds or product issues.",

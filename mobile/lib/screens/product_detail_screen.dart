@@ -22,8 +22,8 @@ import '../utils/user_facing_error.dart';
 import '../data/kitchen_ware.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_card_details.dart';
+import '../widgets/product_image_zoom.dart';
 import '../widgets/product_recommendation_row.dart';
-import '../widgets/product_thumbnail.dart';
 import '../widgets/quantity_stepper.dart';
 import '../widgets/rating_stars.dart';
 
@@ -344,11 +344,15 @@ class _HeroImage extends ConsumerWidget {
     final top = MediaQuery.paddingOf(context).top;
     final saved = ref.watch(isSavedProvider(product.id));
     final imageSize = compact ? 320.0 : 280.0;
+    final images = [product.image];
+    final hasImage = product.image.trim().isNotEmpty;
+    final heroTag = 'product-image-${product.id}';
 
     return Stack(
       children: [
         Container(
           width: double.infinity,
+          clipBehavior: Clip.hardEdge,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: compact ? BorderRadius.circular(24) : null,
@@ -356,7 +360,21 @@ class _HeroImage extends ConsumerWidget {
           padding: EdgeInsets.fromLTRB(20, compact ? 48 : top + 12, 20, 24),
           child: Stack(
             children: [
-              Center(child: ProductThumbnail(image: product.image, size: imageSize)),
+              Center(
+                child: ZoomableProductImage(
+                  images: images,
+                  size: imageSize,
+                  heroTag: heroTag,
+                ),
+              ),
+              if (hasImage)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: ProductZoomHintBadge(
+                    onTap: () => openProductImageViewer(context, images: images, heroTag: heroTag),
+                  ),
+                ),
               if (discount != null)
                 Positioned(
                   top: 0,

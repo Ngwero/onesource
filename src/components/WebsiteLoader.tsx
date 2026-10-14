@@ -16,7 +16,7 @@ type Props = { children: ReactNode };
 /** Pages that page products from the API themselves instead of using a full catalogue. */
 const SELF_LOADING_PATHS = [
   /^\/kitchen(\/|$)/,
-  /^\/cosmetics\/(products|search|aisle)(\/|$)/,
+  /^\/cosmetics(\/|$)/,
 ];
 
 function shopsNeededFor(pathname: string): ProductShop[] {

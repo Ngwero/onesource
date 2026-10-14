@@ -17,6 +17,7 @@ import '../providers/search_catalog_provider.dart';
 import '../services/auth_service.dart';
 import '../utils/fresh_categories.dart';
 import '../widgets/category_marquee.dart';
+import '../widgets/compact_home_bar.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_product_row.dart';
@@ -140,96 +141,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       decoration: const BoxDecoration(gradient: AppGradients.canvas),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: RefreshIndicator(
-          color: AppColors.leaf,
-          onRefresh: () async {
-            await ref.read(paginatedProductsProvider(query).notifier).refresh();
-            ref.invalidate(categoriesProvider);
-            ref.invalidate(heroSlidesProvider('home'));
-            ref.invalidate(homeAisleCatalogProvider);
-            ref.invalidate(searchCatalogProvider('fresh'));
-          },
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(
-                child: HomeHeader(
-                  name: greetingName,
-                  onAccount: () => context.go('/account'),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 36, 20, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CategoryMarquee(categories: produceCategories),
-                      const SizedBox(height: 22),
-                      Text(
-                        strings.specialOffers,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text),
-                      ),
-                      const SizedBox(height: 12),
-                      heroAsync.when(
-                        loading: () => const SizedBox(height: 220),
-                        error: (_, __) => FeaturedCarousel(slides: HeroSlide.defaults),
-                        data: (slides) => slides.isEmpty
-                            ? const SizedBox.shrink()
-                            : FeaturedCarousel(slides: slides),
-                      ),
-                      const SizedBox(height: 16),
-                      _ExportsBanner(onTap: () => context.push('/exports')),
-                    ],
+        body: CompactHomeBarOverlay(
+          child: RefreshIndicator(
+            color: AppColors.leaf,
+            onRefresh: () async {
+              await ref.read(paginatedProductsProvider(query).notifier).refresh();
+              ref.invalidate(categoriesProvider);
+              ref.invalidate(heroSlidesProvider('home'));
+              ref.invalidate(homeAisleCatalogProvider);
+              ref.invalidate(searchCatalogProvider('fresh'));
+            },
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: HomeHeader(
+                    name: greetingName,
+                    onAccount: () => context.go('/account'),
                   ),
                 ),
-              ),
-              if (themedRows.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    padding: const EdgeInsets.fromLTRB(20, 36, 20, 0),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final entry in themedRows)
-                          HomeProductRow(
-                            row: entry.row,
-                            products: entry.products,
-                            onAdd: _addToCart,
-                          ),
+                        CategoryMarquee(categories: produceCategories),
+                        const SizedBox(height: 22),
+                        Text(
+                          strings.specialOffers,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text),
+                        ),
+                        const SizedBox(height: 12),
+                        heroAsync.when(
+                          loading: () => const SizedBox(height: 220),
+                          error: (_, __) => FeaturedCarousel(slides: HeroSlide.defaults),
+                          data: (slides) => slides.isEmpty
+                              ? const SizedBox.shrink()
+                              : FeaturedCarousel(slides: slides),
+                        ),
+                        const SizedBox(height: 16),
+                        _ExportsBanner(onTap: () => context.push('/exports')),
                       ],
                     ),
                   ),
                 ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        strings.popularItems,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text),
+                if (themedRows.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      child: Column(
+                        children: [
+                          for (final entry in themedRows)
+                            HomeProductRow(
+                              row: entry.row,
+                              products: entry.products,
+                              onAdd: _addToCart,
+                            ),
+                        ],
                       ),
-                      TextButton(
-                        onPressed: () => context.go('/shop'),
-                        child: Text(strings.viewAll),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              if (popularProducts.isEmpty && themedRows.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: Text(context.tr.get('app.products.none'))),
-                )
-              else if (popularProducts.isNotEmpty)
-                PopularProductSliverGrid(
-                  products: popularProducts,
-                  onAdd: _addToCart,
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                ),
-              if (moreProducts.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -237,7 +209,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          strings.moreToExplore,
+                          strings.popularItems,
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text),
                         ),
                         TextButton(
@@ -248,21 +220,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
-                PopularProductSliverGrid(
-                  products: moreProducts,
-                  onAdd: _addToCart,
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                if (popularProducts.isEmpty && themedRows.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: Text(context.tr.get('app.products.none'))),
+                  )
+                else if (popularProducts.isNotEmpty)
+                  PopularProductSliverGrid(
+                    products: popularProducts,
+                    onAdd: _addToCart,
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  ),
+                if (moreProducts.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            strings.moreToExplore,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text),
+                          ),
+                          TextButton(
+                            onPressed: () => context.go('/shop'),
+                            child: Text(strings.viewAll),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  PopularProductSliverGrid(
+                    products: moreProducts,
+                    onAdd: _addToCart,
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  ),
+                ],
+                ProductsLoadMoreSliver(
+                  isLoadingMore: productsState.isLoadingMore,
+                  hasMore: productsState.hasMore,
+                  itemCount: productsState.items.length,
+                  total: productsState.total,
+                  error: productsState.hasLoadMoreError ? productsState.error : null,
+                  onRetry: ref.read(paginatedProductsProvider(query).notifier).retry,
                 ),
               ],
-              ProductsLoadMoreSliver(
-                isLoadingMore: productsState.isLoadingMore,
-                hasMore: productsState.hasMore,
-                itemCount: productsState.items.length,
-                total: productsState.total,
-                error: productsState.hasLoadMoreError ? productsState.error : null,
-                onRetry: ref.read(paginatedProductsProvider(query).notifier).retry,
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -1264,7 +1264,14 @@
       "sun-protection": "Sun protection",
       "acne-care": "Acne care",
       "body-care": "Body care",
-      "hair-baby-more": "Hair, fragrance & more",
+      "hair-baby-more": "Nails, baby & more",
+      "fragrance": "Perfume & fragrance",
+      "hair-care": "Hair care",
+      "mens": "Men's grooming",
+      "home-fragrance": "Candles & home fragrance",
+      "wellness": "Wellness & supplements",
+      "beauty-tech-home": "Beauty tech & home",
+      "sexual-wellness": "Sexual wellness",
       "kits-bundles": "Kits & gift sets",
       "brushes-tools": "Brushes & tools"
     },
@@ -1272,6 +1279,10 @@
     "allBrands": "All brands",
     "shopByCategory": "Shop by category",
     "topBrands": "Top brands",
+    "home": {
+      "latestTitle": "Latest in Cosmetics",
+      "latestSub": "Newest arrivals first — keep scrolling to see every product."
+    },
     "seeAll": "See all",
     "hero": {
       "prev": "Previous slide",

@@ -16,6 +16,7 @@ import '../services/auth_service.dart';
 import '../utils/kitchen_mode.dart';
 import '../utils/shop_mode.dart';
 import '../widgets/category_marquee.dart';
+import '../widgets/compact_home_bar.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/home_header.dart';
 import '../widgets/loading_view.dart';
@@ -157,106 +158,74 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       decoration: const BoxDecoration(gradient: AppGradients.canvas),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: RefreshIndicator(
-          color: AppColors.leaf,
-          onRefresh: () async {
-            await ref.read(paginatedProductsProvider(query).notifier).refresh();
-            await ref.read(kitchenCatalogNotifierProvider.notifier).refresh();
-            ref.invalidate(heroSlidesProvider('kitchen'));
-          },
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(
-                child: HomeHeader(
-                  name: greetingName,
-                  mode: ShopMode.kitchen,
-                  onAccount: () => context.go('/account'),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 36, 20, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CategoryMarquee(
-                        categories: _kitchenCategories,
-                        allPath: '/kitchen/categories',
-                        categoryPathBuilder: (c) => kitchenAislePath(c.id),
-                      ),
-                      const SizedBox(height: 22),
-                      Text(
-                        strings.specialOffers,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.text,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      FeaturedCarousel(
-                        slides: heroAsync.when(
-                          loading: () => HeroSlide.kitchenDefaults,
-                          error: (_, __) => HeroSlide.kitchenDefaults,
-                          data: (slides) =>
-                              slides.isEmpty ? HeroSlide.kitchenDefaults : slides,
-                        ),
-                      ),
-                    ],
+        body: CompactHomeBarOverlay(
+          mode: ShopMode.kitchen,
+          child: RefreshIndicator(
+            color: AppColors.leaf,
+            onRefresh: () async {
+              await ref.read(paginatedProductsProvider(query).notifier).refresh();
+              await ref.read(kitchenCatalogNotifierProvider.notifier).refresh();
+              ref.invalidate(heroSlidesProvider('kitchen'));
+            },
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: HomeHeader(
+                    name: greetingName,
+                    mode: ShopMode.kitchen,
+                    onAccount: () => context.go('/account'),
                   ),
                 ),
-              ),
-              if (themedRows.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    padding: const EdgeInsets.fromLTRB(20, 36, 20, 0),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final entry in themedRows)
-                          _KitchenAisleProductRow(
-                            aisle: entry.aisle,
-                            products: entry.products,
-                            onAdd: _addToCart,
+                        CategoryMarquee(
+                          categories: _kitchenCategories,
+                          allPath: '/kitchen/categories',
+                          categoryPathBuilder: (c) => kitchenAislePath(c.id),
+                        ),
+                        const SizedBox(height: 22),
+                        Text(
+                          strings.specialOffers,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.text,
                           ),
+                        ),
+                        const SizedBox(height: 12),
+                        FeaturedCarousel(
+                          slides: heroAsync.when(
+                            loading: () => HeroSlide.kitchenDefaults,
+                            error: (_, __) => HeroSlide.kitchenDefaults,
+                            data: (slides) =>
+                                slides.isEmpty ? HeroSlide.kitchenDefaults : slides,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        strings.popularItems,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.text,
-                        ),
+                if (themedRows.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      child: Column(
+                        children: [
+                          for (final entry in themedRows)
+                            _KitchenAisleProductRow(
+                              aisle: entry.aisle,
+                              products: entry.products,
+                              onAdd: _addToCart,
+                            ),
+                        ],
                       ),
-                      TextButton(
-                        onPressed: () => context.go('/kitchen/shop'),
-                        child: Text(strings.viewAll),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              if (popularProducts.isEmpty && themedRows.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: Text(context.tr.get('kitchen.empty'))),
-                )
-              else if (popularProducts.isNotEmpty)
-                PopularProductSliverGrid(
-                  products: popularProducts,
-                  onAdd: _addToCart,
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                ),
-              if (moreProducts.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -264,7 +233,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          strings.moreToExplore,
+                          strings.popularItems,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -279,21 +248,56 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                     ),
                   ),
                 ),
-                PopularProductSliverGrid(
-                  products: moreProducts,
-                  onAdd: _addToCart,
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                if (popularProducts.isEmpty && themedRows.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: Text(context.tr.get('kitchen.empty'))),
+                  )
+                else if (popularProducts.isNotEmpty)
+                  PopularProductSliverGrid(
+                    products: popularProducts,
+                    onAdd: _addToCart,
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  ),
+                if (moreProducts.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            strings.moreToExplore,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.text,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => context.go('/kitchen/shop'),
+                            child: Text(strings.viewAll),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  PopularProductSliverGrid(
+                    products: moreProducts,
+                    onAdd: _addToCart,
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  ),
+                ],
+                ProductsLoadMoreSliver(
+                  isLoadingMore: productsState.isLoadingMore,
+                  hasMore: productsState.hasMore,
+                  itemCount: popularProducts.length + moreProducts.length,
+                  total: productsState.total,
+                  error: productsState.hasLoadMoreError ? productsState.error : null,
+                  onRetry: ref.read(paginatedProductsProvider(query).notifier).retry,
                 ),
               ],
-              ProductsLoadMoreSliver(
-                isLoadingMore: productsState.isLoadingMore,
-                hasMore: productsState.hasMore,
-                itemCount: popularProducts.length + moreProducts.length,
-                total: productsState.total,
-                error: productsState.hasLoadMoreError ? productsState.error : null,
-                onRetry: ref.read(paginatedProductsProvider(query).notifier).retry,
-              ),
-            ],
+            ),
           ),
         ),
       ),

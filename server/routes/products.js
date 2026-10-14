@@ -11,9 +11,10 @@ import { listCategories } from "../lib/categoriesService.js";
 import { categoryMatchAliases } from "../data/categories.js";
 import { withLocalProductFallback } from "../lib/localSeed.js";
 import { enrichProductsWithSuppliers } from "../lib/suppliersService.js";
-import { nestedAislePrefixes } from "../lib/aisles.js";
+import { nestedAislePrefixes, productIdWithoutAisle } from "../lib/aisles.js";
 import { productMatchesSearch, rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
 import { hasPublishedColumn } from "../lib/productColumns.js";
+import { dbErrorMessage } from "../lib/supabaseErrors.js";
 
 const router = Router();
 
@@ -265,7 +266,7 @@ router.get("/", async (req, res) => {
       ...(result.source === "local-seed" ? { source: "local-seed" } : {}),
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: dbErrorMessage(e) });
   }
 });
 
@@ -281,67 +282,178 @@ router.get("/categories", async (_req, res) => {
     const categories = await listCategories(db, { admin: false });
     res.json({ categories });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: dbErrorMessage(e) });
   }
 });
+
+const TITLES_BATCH = 1000;
+const TITLES_MAX_ROWS = 30000;
+const TITLES_CONCURRENCY = 6;
+const TITLES_CACHE_TTL_MS = 10 * 60 * 1000;
+/** Past the TTL, keep serving the old list (while one refresh runs) for up to this long. */
+const TITLES_CACHE_STALE_MS = 60 * 60 * 1000;
+const TITLES_CACHE_MAX = 200;
+/** key -> { titles?, freshUntil, pending? } — concurrent requests share one in-flight load. */
+const titlesCache = new Map();
+
+function titlesCacheKey(ctx) {
+  return JSON.stringify([
+    ctx.admin,
+    ctx.previewCosmetics,
+    ctx.cosmeticsOnly,
+    ctx.kitchenOnly,
+    ctx.freshOnly,
+    ctx.aisleId,
+    ctx.category ? String(ctx.category) : "",
+    ctx.supplierId ? String(ctx.supplierId) : "",
+    ctx.search ?? "",
+    ctx.list.sale,
+    ctx.list.prime,
+    ctx.list.titlePrefixes,
+  ]);
+}
+
+async function loadListingTitles(ctx) {
+  return withLocalProductFallback(
+    async () => {
+      const db = requireSupabase();
+      const publishedColumn = await hasPublishedColumn(db);
+      const { sale, prime } = ctx.list;
+      const columns = ["id", "title", ...(sale ? ["price", "original_price"] : []), ...(prime ? ["prime"] : [])];
+
+      const fetchBatch = async (from, withCount = false) => {
+        const query = applyListFilters(
+          db
+            .from("products")
+            .select(columns.join(","), withCount ? { count: "exact" } : undefined)
+            .order("id", { ascending: true }),
+          ctx,
+          { publishedColumn }
+        );
+        const { data, error, count } = await query.range(from, from + TITLES_BATCH - 1);
+        if (error) throw error;
+        return { rows: data ?? [], count };
+      };
+
+      const first = await fetchBatch(0, true);
+      const total = Math.min(first.count ?? first.rows.length, TITLES_MAX_ROWS);
+      const offsets = [];
+      if (first.rows.length === TITLES_BATCH) {
+        for (let from = TITLES_BATCH; from < total; from += TITLES_BATCH) offsets.push(from);
+      }
+      // Batches stay in id order regardless of which worker finishes first.
+      const batches = [first.rows, ...offsets.map(() => [])];
+      let next = 0;
+      const worker = async () => {
+        while (next < offsets.length) {
+          const i = next++;
+          batches[i + 1] = (await fetchBatch(offsets[i])).rows;
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(TITLES_CONCURRENCY, offsets.length) }, worker));
+
+      const titles = [];
+      for (const row of batches.flat()) {
+        const p = {
+          title: row.title,
+          price: Number(row.price),
+          originalPrice: row.original_price != null ? Number(row.original_price) : undefined,
+          prime: Boolean(row.prime),
+        };
+        if (matchesListParams(p, ctx.list)) titles.push(row.title);
+      }
+      return { products: titles };
+    },
+    fallbackOptions(ctx, { page: 0, pageSize: TITLES_MAX_ROWS })
+  );
+}
+
+function refreshListingTitles(key, ctx, entry) {
+  entry.pending = loadListingTitles(ctx)
+    .then((result) => {
+      const titles = result.products.map((p) => (typeof p === "string" ? p : p.title));
+      // Don't pin seed-data fallbacks once Supabase is reachable again.
+      if (result.source !== "local-seed") {
+        entry.titles = titles;
+        entry.freshUntil = Date.now() + TITLES_CACHE_TTL_MS;
+      } else if (!entry.titles && titlesCache.get(key) === entry) {
+        titlesCache.delete(key);
+      }
+      return titles;
+    })
+    .catch((error) => {
+      if (!entry.titles && titlesCache.get(key) === entry) titlesCache.delete(key);
+      throw error;
+    })
+    .finally(() => {
+      entry.pending = undefined;
+    });
+  return entry.pending;
+}
+
+function cachedListingTitles(ctx) {
+  const key = titlesCacheKey(ctx);
+  const now = Date.now();
+  let entry = titlesCache.get(key);
+  if (entry?.titles && entry.freshUntil + TITLES_CACHE_STALE_MS < now) entry = undefined;
+
+  if (entry) {
+    if (entry.titles && entry.freshUntil > now) return Promise.resolve(entry.titles);
+    if (entry.titles) {
+      if (!entry.pending) refreshListingTitles(key, ctx, entry).catch(() => {});
+      return Promise.resolve(entry.titles);
+    }
+    if (entry.pending) return entry.pending;
+  }
+
+  entry = { titles: undefined, freshUntil: 0, pending: undefined };
+  titlesCache.delete(key);
+  if (titlesCache.size >= TITLES_CACHE_MAX) {
+    titlesCache.delete(titlesCache.keys().next().value);
+  }
+  titlesCache.set(key, entry);
+  return refreshListingTitles(key, ctx, entry);
+}
 
 /** Titles of every product matching the listing filters — for client-side facets (e.g. brands). */
 router.get("/titles", async (req, res) => {
   try {
     const ctx = parseListRequest(req.query);
-    const batch = 1000;
-    const maxRows = 30000;
-    const result = await withLocalProductFallback(
-      async () => {
-        const db = requireSupabase();
-        const publishedColumn = await hasPublishedColumn(db);
-        const titles = [];
-        for (let from = 0; from < maxRows; from += batch) {
-          const query = applyListFilters(
-            db
-              .from("products")
-              .select("id,title,price,original_price,prime")
-              .order("id", { ascending: true }),
-            ctx,
-            { publishedColumn }
-          );
-          const { data: rows, error } = await query.range(from, from + batch - 1);
-          if (error) throw error;
-          for (const row of rows ?? []) {
-            const p = {
-              title: row.title,
-              price: Number(row.price),
-              originalPrice: row.original_price != null ? Number(row.original_price) : undefined,
-              prime: Boolean(row.prime),
-            };
-            if (matchesListParams(p, ctx.list)) titles.push(row.title);
-          }
-          if ((rows ?? []).length < batch) break;
-        }
-        return { products: titles };
-      },
-      fallbackOptions(ctx, { page: 0, pageSize: maxRows })
-    );
-    const titles = result.products.map((p) => (typeof p === "string" ? p : p.title));
-    res.set("Cache-Control", "public, max-age=300");
+    const titles = await cachedListingTitles(ctx);
+    res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     res.json({ titles, total: titles.length });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: dbErrorMessage(e) });
   }
 });
+
+/**
+ * Cosmetics ids embed the aisle; when a product moves aisle (e.g. hair-baby-more →
+ * fragrance) old links, carts and lists still carry the old id. Look up the same
+ * source id (`lf-123`, `boots-456`) in any cosmetics aisle.
+ */
+async function findMovedCosmeticsProduct(db, id) {
+  if (!id.startsWith("cosmetics-")) return null;
+  const sourceId = productIdWithoutAisle("cosmetics", id);
+  if (sourceId === id || !/^[a-z]+-[\w-]+$/i.test(sourceId)) return null;
+  const { data, error } = await db.from("products").select("*").like("id", `cosmetics-%-${sourceId}`).limit(5);
+  if (error) throw error;
+  return (data ?? []).find((r) => productIdWithoutAisle("cosmetics", r.id) === sourceId) ?? null;
+}
 
 router.get("/:id", async (req, res) => {
   try {
     const result = await withLocalProductFallback(
       async () => {
         const db = requireSupabase();
-        const { data: row, error } = await db
+        const { data: found, error } = await db
           .from("products")
           .select("*")
           .eq("id", req.params.id)
           .maybeSingle();
 
         if (error) throw error;
+        const row = found ?? (await findMovedCosmeticsProduct(db, req.params.id));
         if (!row || (row.published === false && req.query.admin !== "true")) {
           const err = new Error("Product not found");
           err.status = 404;
@@ -359,7 +471,7 @@ router.get("/:id", async (req, res) => {
     res.json({ product: result.product });
   } catch (e) {
     const status = e.status === 404 ? 404 : 500;
-    res.status(status).json({ error: e.message });
+    res.status(status).json({ error: dbErrorMessage(e) });
   }
 });
 
@@ -393,7 +505,7 @@ router.post("/", async (req, res) => {
     if (error) throw error;
     res.status(201).json({ product: rowToProduct(row), message: "Product created" });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: dbErrorMessage(e) });
   }
 });
 
@@ -425,7 +537,7 @@ router.put("/:id", async (req, res) => {
     if (error) throw error;
     res.json({ product: rowToProduct(row), message: "Product updated" });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: dbErrorMessage(e) });
   }
 });
 
@@ -462,7 +574,7 @@ router.patch("/:id/stock", async (req, res) => {
     if (error) throw error;
     res.json({ product: rowToProduct(row), message: "Stock updated" });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: dbErrorMessage(e) });
   }
 });
 
@@ -479,7 +591,7 @@ router.delete("/:id", async (req, res) => {
     if (!data?.length) return res.status(404).json({ error: "Product not found" });
     res.json({ message: "Product deleted" });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: dbErrorMessage(e) });
   }
 });
 
