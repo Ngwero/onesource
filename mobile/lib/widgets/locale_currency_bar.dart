@@ -7,6 +7,7 @@ import '../i18n/app_strings.dart';
 import '../i18n/languages.dart';
 import '../providers/currency_provider.dart';
 import '../providers/locale_provider.dart';
+import 'sheet_option_tile.dart';
 
 class LocaleCurrencyBar extends ConsumerWidget {
   const LocaleCurrencyBar({
@@ -39,14 +40,16 @@ class LocaleCurrencyBar extends ConsumerWidget {
             flag: curr.flag,
             tooltip: strings.currencySelect,
             loading: currency.loading,
-            onTap: () => _showCurrencySheet(context, ref, strings),
+            onTap: () =>
+                showCurrencySheet(context, ProviderScope.containerOf(context)),
           ),
           const SizedBox(width: 6),
           _FlagButton(
             onDark: onDark,
             flag: lang.flag,
             tooltip: strings.langSelect,
-            onTap: () => _showLanguageSheet(context, ref, strings),
+            onTap: () =>
+                showLanguageSheet(context, ProviderScope.containerOf(context)),
           ),
         ],
       );
@@ -59,7 +62,8 @@ class LocaleCurrencyBar extends ConsumerWidget {
             onDark: onDark,
             flag: lang.flag,
             label: lang.nativeName,
-            onTap: () => _showLanguageSheet(context, ref, strings),
+            onTap: () =>
+                showLanguageSheet(context, ProviderScope.containerOf(context)),
           ),
           const SizedBox(width: 8),
           _CompactChip(
@@ -67,7 +71,8 @@ class LocaleCurrencyBar extends ConsumerWidget {
             flag: curr.flag,
             label: currencyCodeLabel(curr.code),
             loading: currency.loading,
-            onTap: () => _showCurrencySheet(context, ref, strings),
+            onTap: () =>
+                showCurrencySheet(context, ProviderScope.containerOf(context)),
           ),
         ],
       );
@@ -80,7 +85,8 @@ class LocaleCurrencyBar extends ConsumerWidget {
             onDark: onDark,
             flag: lang.flag,
             label: lang.nativeName,
-            onTap: () => _showLanguageSheet(context, ref, strings),
+            onTap: () =>
+                showLanguageSheet(context, ProviderScope.containerOf(context)),
           ),
         ),
         const SizedBox(width: 10),
@@ -90,97 +96,130 @@ class LocaleCurrencyBar extends ConsumerWidget {
             flag: curr.flag,
             label: currencyCodeLabel(curr.code),
             loading: currency.loading,
-            onTap: () => _showCurrencySheet(context, ref, strings),
+            onTap: () =>
+                showCurrencySheet(context, ProviderScope.containerOf(context)),
           ),
         ),
       ],
     );
   }
+}
 
-  void _showLanguageSheet(BuildContext context, WidgetRef ref, AppStrings strings) {
-    final current = ref.read(localeProvider);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(strings.langSelect, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-              const SizedBox(height: 12),
-              ...languages.map((lang) {
-                final selected = lang.code == current;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Text(lang.flag, style: const TextStyle(fontSize: 24)),
-                  title: Text(lang.nativeName, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  subtitle: Text(strings.langName(languageCodeLabel(lang.code))),
-                  trailing: selected ? const Icon(Icons.check_circle, color: AppColors.darkGreen) : null,
-                  onTap: () {
-                    ref.read(localeProvider.notifier).setLanguage(lang.code);
-                    Navigator.pop(context);
-                  },
-                );
-              }),
-            ],
-          ),
+/// Bottom sheets otherwise stop at 9/16 of the screen and paint an overflow
+/// band over the last rows, which then ignore taps.
+Widget _pickerSheet(BuildContext context, {required List<Widget> children}) {
+  final maxHeight = MediaQuery.sizeOf(context).height * 0.92;
+  return SafeArea(
+    top: false,
+    child: ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  void _showCurrencySheet(BuildContext context, WidgetRef ref, AppStrings strings) {
-    final state = ref.read(currencyProvider);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+void showLanguageSheet(BuildContext context, ProviderContainer container) {
+  final strings = container.read(stringsProvider);
+  final current = container.read(localeProvider);
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    clipBehavior: Clip.antiAlias,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (context) => _pickerSheet(
+      context,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+          child: Text(strings.langSelect,
+              style:
+                  const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+        ),
+        for (final lang in languages)
+          SheetOptionTile(
+            leading: Text(lang.flag, style: const TextStyle(fontSize: 24)),
+            title: lang.nativeName,
+            subtitle: strings.langName(languageCodeLabel(lang.code)),
+            selected: lang.code == current,
+            onTap: () {
+              container.read(localeProvider.notifier).setLanguage(lang.code);
+              Navigator.pop(context);
+            },
+          ),
+        const SizedBox(height: 8),
+      ],
+    ),
+  );
+}
+
+void showCurrencySheet(BuildContext context, ProviderContainer container) {
+  final strings = container.read(stringsProvider);
+  final state = container.read(currencyProvider);
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    clipBehavior: Clip.antiAlias,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (context) => _pickerSheet(
+      context,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+          child: Text(strings.currencySelect,
+              style:
+                  const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+        ),
+        for (final info in currencies)
+          SheetOptionTile(
+            leading: Text(info.flag, style: const TextStyle(fontSize: 24)),
+            title: strings.currencyName(info.nameKey),
+            subtitle: '${currencyCodeLabel(info.code)} · ${info.symbol}',
+            selected: info.code == state.currency,
+            onTap: () {
+              container.read(currencyProvider.notifier).setCurrency(info.code);
+              Navigator.pop(context);
+            },
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(strings.currencySelect, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-              const SizedBox(height: 12),
-              ...currencies.map((info) {
-                final selected = info.code == state.currency;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Text(info.flag, style: const TextStyle(fontSize: 24)),
-                  title: Text(strings.currencyName(info.nameKey), style: const TextStyle(fontWeight: FontWeight.w700)),
-                  subtitle: Text('${currencyCodeLabel(info.code)} · ${info.symbol}'),
-                  trailing: selected ? const Icon(Icons.check_circle, color: AppColors.darkGreen) : null,
-                  onTap: () {
-                    ref.read(currencyProvider.notifier).setCurrency(info.code);
-                    Navigator.pop(context);
-                  },
-                );
-              }),
-              const SizedBox(height: 8),
               Text(
                 strings.liveRates,
-                style: const TextStyle(fontSize: 12, color: AppColors.textMuted, height: 1.4),
+                style: const TextStyle(
+                    fontSize: 12, color: AppColors.textMuted, height: 1.4),
               ),
               TextButton(
-                onPressed: () => ref.read(currencyProvider.notifier).refreshRates(),
+                style: TextButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+                  minimumSize: const Size(48, 48),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  alignment: Alignment.centerLeft,
+                ),
+                onPressed: () =>
+                    container.read(currencyProvider.notifier).refreshRates(),
                 child: Text(strings.refreshRates),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+  );
 }
 
 class _FlagButton extends StatelessWidget {
@@ -356,7 +395,8 @@ class _SwitcherChip extends StatelessWidget {
                 const SizedBox(
                   width: 14,
                   height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.lemonGreen),
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: AppColors.lemonGreen),
                 )
               else
                 Icon(

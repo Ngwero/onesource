@@ -35,6 +35,8 @@ class BrandLoader extends StatelessWidget {
       animate: animate,
       repeat: true,
       fit: BoxFit.contain,
+      // Parse off the UI isolate so a bad or heavy file can't freeze launch.
+      backgroundLoading: true,
       errorBuilder: (_, __, ___) => Padding(
         padding: EdgeInsets.all(size * 0.2),
         child: const CircularProgressIndicator(

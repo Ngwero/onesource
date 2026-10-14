@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,7 +28,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Timer? _auto;
   Timer? _fallback;
-  bool _navigated = false;
+  bool _left = false;
+  int _attempts = 0;
+  GoRouter? _router;
 
   @override
   void initState() {
@@ -61,22 +62,35 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
     _enter.forward();
 
+    // Capture the router on the first frame. Later ticks navigate through this
+    // instance, so a disposed splash element can still leave /splash.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _router = GoRouter.of(context);
+    });
+
     // Warm auth in the background — never block leaving the splash.
     unawaited(_warmSupabase());
 
-    _auto = Timer(const Duration(milliseconds: 1800), () {
-      unawaited(_continue());
+    _auto = Timer(const Duration(milliseconds: 1500), () {
+      unawaited(_leave());
     });
-    // Hard failsafe if prefs / router stall (common on cold Xcode device runs).
-    _fallback = Timer(const Duration(seconds: 5), () {
-      unawaited(_continue(forceHome: true));
+    // Hard deadline. Not cancelled until the location actually leaves /splash,
+    // so a hung prefs read, a failed Lottie load, or a thrown go() cannot
+    // leave the user on this route. Geo detection is started in OneSourceApp
+    // and is intentionally not awaited here.
+    _fallback = Timer(const Duration(seconds: 3), () {
+      unawaited(_leave(forceHome: true));
     });
   }
 
   @override
   void dispose() {
     _auto?.cancel();
-    _fallback?.cancel();
+    // Keep the hard deadline alive across dispose. Cold Xcode launches can
+    // unmount this element while the route is still /splash; the captured
+    // router is what finishes the handoff.
+    if (_left) _fallback?.cancel();
     _enter.dispose();
     _breathe.dispose();
     super.dispose();
@@ -94,40 +108,91 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
   }
 
-  Future<void> _continue({bool forceHome = false}) async {
-    if (_navigated || !mounted) return;
-    _navigated = true;
-    _auto?.cancel();
-    _fallback?.cancel();
+  GoRouter? get _nav {
+    final captured = _router;
+    if (captured != null) return captured;
+    if (!mounted) return null;
+    final fromContext = GoRouter.maybeOf(context);
+    if (fromContext != null) _router = fromContext;
+    return fromContext;
+  }
 
-    var done = forceHome;
-    if (!forceHome) {
+  bool _stillOnSplash(GoRouter router) {
+    final path = router.routeInformationProvider.value.uri.path;
+    return path.isEmpty || path == '/splash';
+  }
+
+  Future<void> _leave({bool forceHome = false}) async {
+    final router = _nav;
+    if (_left) return;
+    if (router == null) {
+      _scheduleRetry();
+      return;
+    }
+    if (!_stillOnSplash(router)) {
+      _left = true;
+      _auto?.cancel();
+      _fallback?.cancel();
+      return;
+    }
+
+    var home = forceHome;
+    if (!home) {
       try {
-        done = await isOnboardingDone().timeout(const Duration(seconds: 2));
+        home = await isOnboardingDone().timeout(const Duration(milliseconds: 800));
       } catch (e) {
         debugPrint('[OneSource] onboarding prefs failed: $e');
-        done = false;
+        home = false;
       }
     }
+    final latest = _nav;
+    if (_left) return;
+    if (latest == null) {
+      _scheduleRetry();
+      return;
+    }
+    if (!_stillOnSplash(latest)) {
+      _left = true;
+      _auto?.cancel();
+      _fallback?.cancel();
+      return;
+    }
+    if (forceHome) home = true;
 
-    if (!mounted) return;
-    final target = done ? '/home' : '/onboarding';
+    final target = home ? '/home' : '/onboarding';
     debugPrint('[OneSource] splash → $target');
+    if (_go(latest, target)) return;
+    if (target != '/home' && _go(latest, '/home')) return;
+    _scheduleRetry();
+  }
+
+  bool _go(GoRouter router, String target) {
     try {
-      context.go(target);
+      router.go(target);
+      final path = router.routeInformationProvider.value.uri.path;
+      if (path == '/splash') return false;
+      _left = true;
+      _auto?.cancel();
+      _fallback?.cancel();
+      return true;
     } catch (e) {
       debugPrint('[OneSource] splash navigate failed: $e');
-      _navigated = false;
-      if (mounted) {
-        try {
-          context.go('/home');
-        } catch (_) {}
-      }
+      return false;
     }
+  }
+
+  void _scheduleRetry() {
+    if (_left || _attempts >= 6) return;
+    _attempts++;
+    _fallback?.cancel();
+    _fallback = Timer(const Duration(milliseconds: 400), () {
+      unawaited(_leave(forceHome: true));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    _router ??= GoRouter.of(context);
     return Scaffold(
       backgroundColor: AppColors.darkGreen,
       body: Stack(

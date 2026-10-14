@@ -6,6 +6,7 @@ import '../i18n/app_strings.dart';
 import '../i18n/country_defaults.dart';
 import '../providers/delivery_country_provider.dart';
 import 'country_flag.dart';
+import 'sheet_option_tile.dart';
 
 /// "Deliver to 🇺🇬 Uganda ▾" — opens the delivery country picker.
 class DeliverToChip extends ConsumerWidget {
@@ -71,7 +72,8 @@ class DeliveryCountryFlagButton extends ConsumerWidget {
     final strings = ref.watch(stringsProvider);
     final code = ref.watch(deliveryCountryProvider);
     return Tooltip(
-      message: '${strings.get('header.deliverTo')} ${strings.countryName(code)}',
+      message:
+          '${strings.get('header.deliverTo')} ${strings.countryName(code)}',
       child: Material(
         color: onDark ? Colors.white.withValues(alpha: 0.12) : Colors.white,
         shape: CircleBorder(
@@ -113,6 +115,7 @@ void showDeliveryCountrySheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.white,
+    clipBehavior: Clip.antiAlias,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -137,9 +140,14 @@ class _CountrySheetState extends ConsumerState<_CountrySheet> {
     final q = _fold(_query.trim());
     final options = [
       for (final c in deliveryCountries)
-        (code: c, name: strings.countryName(c), key: _fold(strings.countryName(c))),
+        (
+          code: c,
+          name: strings.countryName(c),
+          key: _fold(strings.countryName(c))
+        ),
     ]
-        .where((o) => q.isEmpty || o.key.contains(q) || o.code.toLowerCase() == q)
+        .where(
+            (o) => q.isEmpty || o.key.contains(q) || o.code.toLowerCase() == q)
         .toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
@@ -149,43 +157,53 @@ class _CountrySheetState extends ConsumerState<_CountrySheet> {
       minChildSize: 0.4,
       maxChildSize: 0.92,
       builder: (context, scrollController) => SafeArea(
+        top: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.viewInsetsOf(context).bottom),
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                strings.get('header.chooseCountry'),
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Text(
+                  strings.get('header.chooseCountry'),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 18),
+                ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                onChanged: (v) => setState(() => _query = v),
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: strings.get('header.searchCountries'),
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  isDense: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextField(
+                  onChanged: (v) => setState(() => _query = v),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: strings.get('header.searchCountries'),
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    isDense: true,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               Expanded(
                 child: ListView.builder(
                   controller: scrollController,
+                  padding: EdgeInsets.zero,
                   itemCount: options.length,
                   itemBuilder: (context, i) {
                     final o = options[i];
-                    final selected = o.code == current;
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
+                    return SheetOptionTile(
                       leading: CountryFlag(code: o.code, size: 26),
-                      title: Text(o.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      trailing: selected
-                          ? const Icon(Icons.check_circle, color: AppColors.darkGreen)
-                          : null,
+                      title: o.name,
+                      titleWeight: FontWeight.w600,
+                      selected: o.code == current,
                       onTap: () {
-                        ref.read(deliveryCountryProvider.notifier).choose(o.code);
+                        ref
+                            .read(deliveryCountryProvider.notifier)
+                            .choose(o.code);
                         Navigator.pop(context);
                       },
                     );
