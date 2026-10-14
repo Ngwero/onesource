@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../utils/responsive.dart';
+import 'brand_loader.dart';
 
 /// Footer for endless product lists: a spinner while more pages exist, an
 /// inline retry row when the next page failed, and an end-of-list message.
@@ -62,13 +63,7 @@ class ProductsLoadMoreSliver extends StatelessWidget {
       return SliverToBoxAdapter(
         child: Padding(
           padding: EdgeInsets.fromLTRB(0, 24, 0, bottom),
-          child: const Center(
-            child: SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.darkGreen),
-            ),
-          ),
+          child: const Center(child: BrandLoader(size: 36)),
         ),
       );
     }

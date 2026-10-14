@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { BRAND_LOGOS } from "../brand/logos";
+import { BrandLoader } from "./BrandLoader";
 import { useLocation } from "react-router-dom";
 import { useProducts, type ProductShop } from "../context/ProductsContext";
 import { shopForProductId, useEnsureShops } from "../hooks/useEnsureShops";
@@ -97,9 +98,7 @@ export function WebsiteLoader({ children }: Props) {
             height={96}
           />
           <p className="site-loader-slogan">{t("shop.slogan")}</p>
-          <div className="site-loader-bar" aria-hidden>
-            <span className="site-loader-bar-fill" />
-          </div>
+          <BrandLoader size={56} tone="onDark" decorative className="site-loader-lottie" />
           <p className="site-loader-text">{t("shop.loading")}</p>
         </div>
       </div>

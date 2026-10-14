@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
+import { BrandLoader } from "../components/BrandLoader";
 import { OrderProgressRoadmap } from "../components/OrderProgressRoadmap";
 import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
@@ -41,7 +42,7 @@ export function OrderDetailPage() {
   if (loading) {
     return (
       <PageContainer className="py-20 flex justify-center">
-        <div className="h-8 w-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+        <BrandLoader size={72} />
       </PageContainer>
     );
   }

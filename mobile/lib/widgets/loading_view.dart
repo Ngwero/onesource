@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../utils/user_facing_error.dart';
+import 'brand_loader.dart';
 
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key, this.message});
@@ -15,9 +16,9 @@ class LoadingView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(color: AppColors.accent),
+          BrandLoader(excludeSemantics: message != null),
           if (message != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(message!, style: const TextStyle(color: AppColors.textMuted)),
           ],
         ],

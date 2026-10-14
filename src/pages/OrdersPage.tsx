@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
+import { BrandLoader } from "../components/BrandLoader";
 import { OrderProgressRoadmap } from "../components/OrderProgressRoadmap";
 import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
@@ -44,7 +45,7 @@ export function OrdersPage() {
 
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="h-8 w-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+          <BrandLoader size={72} />
         </div>
       )}
 

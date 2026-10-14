@@ -10,6 +10,7 @@ import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../utils/responsive.dart';
 import '../utils/user_facing_error.dart';
+import '../widgets/brand_loader.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/order_progress.dart';
 
@@ -460,7 +461,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
         future: apiClientProvider.fetchOrders(user.id),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.darkGreen));
+            return const Center(child: BrandLoader());
           }
           if (snapshot.hasError) {
             return Center(

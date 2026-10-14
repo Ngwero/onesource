@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../providers/notifications_provider.dart';
+import '../widgets/brand_loader.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -44,7 +45,7 @@ class NotificationsScreen extends ConsumerWidget {
             ? ListView(
                 children: const [
                   SizedBox(height: 120),
-                  Center(child: CircularProgressIndicator(color: AppColors.leaf)),
+                  Center(child: BrandLoader()),
                 ],
               )
             : state.items.isEmpty

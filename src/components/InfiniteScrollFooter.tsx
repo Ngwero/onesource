@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { BrandLoader } from "./BrandLoader";
 
 type Props = {
   sentinelRef: (el: HTMLElement | null) => void;
@@ -37,7 +38,7 @@ export function InfiniteScrollFooter({
         </div>
       ) : hasMore || loading ? (
         <div className="infinite-footer-loading" role="status">
-          <span className="infinite-footer-spinner" aria-hidden />
+          <BrandLoader size={32} decorative />
           <span>{t("listing.loadingMore")}</span>
         </div>
       ) : count > 0 ? (

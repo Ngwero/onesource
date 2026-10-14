@@ -7,6 +7,7 @@ import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../models/order.dart';
 import '../services/api_client.dart';
+import '../widgets/brand_loader.dart';
 import '../widgets/order_progress.dart';
 import '../widgets/product_thumbnail.dart';
 
@@ -33,7 +34,7 @@ class OrderDetailScreen extends ConsumerWidget {
         future: apiClientProvider.fetchOrderById(orderId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.darkGreen));
+            return const Center(child: BrandLoader());
           }
           if (snapshot.hasError || !snapshot.hasData) {
             return Center(child: Text(context.tr.get('app.errors.orderNotFound')));

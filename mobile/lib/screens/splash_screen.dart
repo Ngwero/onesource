@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../config/theme.dart';
 import '../services/auth_service.dart';
 import '../utils/onboarding_prefs.dart';
+import '../widgets/brand_loader.dart';
 import '../widgets/brand_logo.dart';
 
 /// Soft Apple-style brand splash — logo spring, then route to onboarding/home.
@@ -192,14 +193,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                       ),
                       const SizedBox(height: 28),
-                      SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: Colors.white.withValues(alpha: 0.55),
-                        ),
-                      ),
+                      const BrandLoader(size: 44, onDark: true, excludeSemantics: true),
                     ],
                   ),
                 ),

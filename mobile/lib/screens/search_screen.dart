@@ -13,6 +13,7 @@ import '../utils/kitchen_mode.dart';
 import '../utils/responsive.dart';
 import '../utils/shop_mode.dart';
 import '../utils/user_facing_error.dart';
+import '../widgets/brand_loader.dart';
 import '../widgets/products_load_more.dart';
 import '../widgets/search_result_tile.dart';
 
@@ -151,9 +152,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget _buildBody(SearchState search) {
     final s = context.tr;
     if (search.isLoading && search.results.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.darkGreen),
-      );
+      return const Center(child: BrandLoader());
     }
 
     if (search.error != null && search.results.isEmpty) {
@@ -177,9 +176,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _loadMore();
       });
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.darkGreen),
-      );
+      return const Center(child: BrandLoader());
     }
 
     if (search.results.isEmpty && search.loadMoreError == null) {
