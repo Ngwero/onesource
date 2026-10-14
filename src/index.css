@@ -8833,33 +8833,6 @@ body {
   color: #8a8a8a;
 }
 
-.cos-view-all-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: 2.25rem;
-}
-
-.cos-view-all {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 12rem;
-  min-height: 3.1rem;
-  padding: 0 2.5rem;
-  background: #1a1a1a;
-  color: #fff;
-  font-family: "Jost", var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  transition: background 0.15s;
-}
-
-.cos-view-all:hover {
-  background: var(--cos-plum);
-}
-
 /* Product card */
 .cos-card {
   display: flex;
@@ -9161,3 +9134,99 @@ body {
 }
 
 
+/* Endless product listings */
+.infinite-footer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-top: 1.75rem;
+  min-height: 3rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.infinite-footer-sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.infinite-footer-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.infinite-footer-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  animation: infinite-footer-spin 0.8s linear infinite;
+}
+
+.kitchen-home .infinite-footer-spinner {
+  border-top-color: var(--kitchen-green, var(--color-accent));
+}
+
+.cos-page .infinite-footer-spinner {
+  border-top-color: var(--cos-plum, var(--color-accent));
+}
+
+@keyframes infinite-footer-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .infinite-footer-spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+.infinite-footer-end {
+  margin: 0;
+  padding: 0.5rem 0;
+  text-align: center;
+}
+
+.infinite-footer-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.infinite-footer-error p {
+  margin: 0;
+}
+
+.infinite-footer-retry {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+}
+
+.kitchen-home .infinite-footer-retry {
+  color: var(--kitchen-green, var(--color-accent));
+}
+
+.cos-page .infinite-footer-retry {
+  color: var(--cos-plum, var(--color-accent));
+}
+
+.product-skeleton-card {
+  min-width: 0;
+}

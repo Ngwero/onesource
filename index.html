@@ -10,6 +10,36 @@
       content="One Source — Everything on One Place. Shop fresh foods, kitchen ware, and everyday essentials from one trusted store."
     />
     <meta name="theme-color" content="#244a3b" />
+    <script>
+      // A page opened just before a deploy can ask for the previous build's
+      // /assets/* files, which no longer exist. Reload once to get the new build.
+      (function () {
+        var KEY = "os-asset-reload";
+        window.addEventListener(
+          "error",
+          function (e) {
+            var el = e.target;
+            var src = el && (el.src || el.href);
+            if (!src || src.indexOf("/assets/") === -1) return;
+            try {
+              if (sessionStorage.getItem(KEY)) return;
+              sessionStorage.setItem(KEY, "1");
+            } catch (_) {
+              return;
+            }
+            location.reload();
+          },
+          true
+        );
+        window.addEventListener("load", function () {
+          setTimeout(function () {
+            try {
+              sessionStorage.removeItem(KEY);
+            } catch (_) {}
+          }, 10000);
+        });
+      })();
+    </script>
 
     <!-- Open Graph / WhatsApp / iMessage link previews -->
     <meta property="og:site_name" content="One Source" />

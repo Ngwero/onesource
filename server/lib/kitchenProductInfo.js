@@ -150,7 +150,7 @@ const BATTERY_DEVICE = /\b(mill|mills|scale|scales|timer|thermometer|corkscrew|b
 /** Ordered profiles: first match wins. */
 const PROFILES = [
   { kind: "mandoline", re: /mandoline|spiral(?:izer|iser)|v-?slicer/i, use: "slices, juliennes and shreds vegetables quickly and evenly", warnings: [W.mandoline, W.sharpWash] },
-  { kind: "knife", re: /\bknife|\bknives|cleaver|santoku|nakiri|gyuto|deba|petty knife|filleting/i, use: "for precise cutting and preparation", warnings: [W.sharp, W.sharpWash], care: "Wash by hand straight after use and dry immediately; dishwashers dull and damage blades. Keep the edge sharp with a honing steel or sharpener and use on a wooden or plastic board." },
+  { kind: "knife", re: /(?<!waiter'?s )\bknife|\bknives|cleaver|santoku|nakiri|gyuto|deba|petty knife|filleting/i, use: "for precise cutting and preparation", warnings: [W.sharp, W.sharpWash], care: "Wash by hand straight after use and dry immediately; dishwashers dull and damage blades. Keep the edge sharp with a honing steel or sharpener and use on a wooden or plastic board." },
   { kind: "sharpTool", re: /scissors|shears|grater|zester|peeler|pizza cutter|sharpener|microplane|can opener|tin opener|oyster|slicer|corer|cutter|knife block|messenblok/i, use: "for everyday food preparation", warnings: [W.sharp] },
   { kind: "pressure", re: /pressure (?:cooker|canner)/i, use: "cooks stews, beans and tough cuts much faster under pressure", warnings: [W.pressure, W.hotHandles, W.turnHandles] },
   { kind: "moka", re: /percolator|moka|espresso maker|stovetop espresso|caffettiera/i, use: "brews strong stovetop coffee", warnings: [W.moka, W.hotHandles] },
@@ -164,7 +164,7 @@ const PROFILES = [
   { kind: "ovenGlove", re: /oven glove|oven mitt|pot holder|potholder|gauntlet/i, use: "protects hands when handling hot pans and dishes", warnings: [W.ovenGloveWet] },
   { kind: "textile", re: /tea towel|dish ?cloth|kitchen towel|apron|napkin|tablecloth|table ?cloth|runner|placemat|place mat|coaster|cushion/i, use: "for the kitchen and dining table", warnings: [], material: "cotton" },
   { kind: "glassware", re: /wine glass|champagne|flute|coupe|tumbler|highball|whisk(?:e)?y glass|beer glass|cocktail glass|martini|water glass|\bglasses\b|decanter|carafe|aerator|shot glass|pint|goblet|\bglass\b(?!\s*(?:lid|jar|bowl|dish|container|storage|bottle|teapot|teacup|frother|carafe for))/i, use: "for serving and enjoying drinks", warnings: [W.fragile, W.thermal], material: "glass" },
-  { kind: "wine", re: /corkscrew|bottle opener|waiter'?s friend|wine opener|wine stopper|bottle stopper|wine cooler|ice bucket|cocktail shaker|jigger|bar spoon|muddler|strainer(?=.*cocktail)/i, use: "for opening, serving and mixing drinks", warnings: [] },
+  { kind: "wine", re: /corkscrew|bottle opener|waiter'?s (?:friend|knife)|wine opener|wine stopper|bottle stopper|wine cooler|ice bucket|cocktail shaker|jigger|bar spoon|muddler|strainer(?=.*cocktail)/i, use: "for opening, serving and mixing drinks", warnings: [] },
   { kind: "teaware", re: /teapot|tea pot|tea set|tea infuser|tea strainer|teacup|tea cup|tea warmer|kettle|coffee pot|coffee filter|milk jug|creamer|sugar bowl|frother/i, use: "for brewing and serving tea and coffee", warnings: [W.hotHandles] },
   { kind: "crockery", re: /plate|bowl|mug|\bcup\b|cups\b|saucer|dish|platter|egg cup|serving|tableware|dinner set|tray|jug|pitcher|butter dish|gravy|tureen|cake stand/i, use: "for serving and everyday dining", warnings: [W.fragile] },
   { kind: "cutlery", re: /cutlery|flatware|\bfork|\bspoons?\b|teaspoon|tablespoon|chopsticks|salad server|cake server|dessert set/i, use: "for everyday dining and entertaining", warnings: [] },
@@ -200,6 +200,35 @@ function extraWarnings(text, materials, kind) {
 const uniq = (arr) => [...new Set(arr.filter(Boolean))];
 const cap1 = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
+const ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", rsquo: "'", lsquo: "'", rdquo: '"', ldquo: '"', ndash: "–", mdash: "—" };
+/** Cleans scraped text: leftover JSON escapes, HTML tags and entities. */
+export function cleanText(s) {
+  return String(s || "")
+    .replace(/\\u([0-9a-f]{4})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\n/g, "\n")
+    .replace(/\\(["/\\])/g, "$1")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&([a-z]+);/gi, (m, n) => ENTITIES[n.toLowerCase()] ?? m)
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|li|h\d)>/gi, "\n")
+    .replace(/<\/?[a-z][^>]*>/gi, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function cleanCws(c) {
+  return {
+    ...c,
+    brand: cleanText(c.brand),
+    description: cleanText(c.description),
+    specs: (c.specs || []).map((s) => ({ label: cleanText(s.label), value: cleanText(s.value) })).filter((s) => s.label && s.value),
+    flags: (c.flags || []).map(cleanText).filter(Boolean),
+  };
+}
+
 const CWS_LABEL_KEY = (label) =>
   label
     .toLowerCase()
@@ -220,7 +249,7 @@ const CWS_LABEL_KEY = (label) =>
  */
 export function kitchenProductDetails(p) {
   const title = stripSuffix(p.title);
-  const cws = p.cws && !p.cws.gone ? p.cws : null;
+  const cws = p.cws && !p.cws.gone ? cleanCws(p.cws) : null;
   const mSpecs = cws?.specs?.length ? cws.specs : p.manufacturerSpecs || [];
   const specText = mSpecs.map((s) => `${s.label} ${s.value}`).join(" ");
   const flagText = (cws?.flags || []).join(" ");

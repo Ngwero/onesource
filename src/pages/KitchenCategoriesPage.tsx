@@ -3,12 +3,19 @@ import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { ProductImage } from "../components/ProductImage";
 import { getKitchenAisleTitle } from "../i18n/useLocalizedProduct";
-import { useKitchenCatalog } from "../hooks/useKitchenCatalog";
+import { KITCHEN_WARE_AISLES } from "../data/kitchenWare";
+import { useKitchenAisleShelves } from "../hooks/useKitchenAisleShelf";
 import { kitchenAislePath } from "../utils/kitchenMode";
+
+const AISLE_IDS = KITCHEN_WARE_AISLES.map((a) => a.id);
 
 export function KitchenCategoriesPage() {
   const { t } = useTranslation();
-  const { aisles, kitchenProducts, loading } = useKitchenCatalog();
+  const { shelves, loading } = useKitchenAisleShelves(AISLE_IDS, true);
+  const aisles = KITCHEN_WARE_AISLES.map((aisle, i) => ({
+    ...aisle,
+    products: shelves[i] ?? [],
+  }));
 
   return (
     <div className="kitchen-home kitchen-subpage w-full pb-20">
@@ -34,7 +41,7 @@ export function KitchenCategoriesPage() {
           </div>
         </header>
 
-        {loading && kitchenProducts.length === 0 ? (
+        {loading ? (
           <p className="kitchen-home-empty">{t("common.loading")}</p>
         ) : (
           <div className="kitchen-cat-grid">

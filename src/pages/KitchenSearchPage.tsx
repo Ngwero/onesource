@@ -1,27 +1,17 @@
-import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { KitchenIkeaProductCard } from "../components/kitchen/KitchenIkeaProductCard";
-import { useKitchenCatalog } from "../hooks/useKitchenCatalog";
-import { productMatchesSearch } from "../utils/searchMatch";
-
-const PAGE_SIZE = 36;
+import { InfiniteScrollFooter, ProductGridSkeleton } from "../components/InfiniteScrollFooter";
+import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
 
 export function KitchenSearchPage() {
   const { t } = useTranslation();
-  const { kitchenProducts, loading } = useKitchenCatalog();
   const [params] = useSearchParams();
   const query = params.get("q")?.trim() ?? "";
-  const [visible, setVisible] = useState(PAGE_SIZE);
-
-  const results = useMemo(() => {
-    if (!query) return [];
-    return kitchenProducts.filter((p) => productMatchesSearch(p, query));
-  }, [kitchenProducts, query]);
-
-  const shown = results.slice(0, visible);
-  const remaining = Math.max(0, results.length - shown.length);
+  const list = useInfiniteProducts(query ? { shop: "kitchen", q: query } : null);
+  const results = list.products;
+  const noResults = !list.initialLoading && results.length === 0 && !list.hasMore && !list.error;
 
   return (
     <div className="kitchen-home kitchen-subpage w-full pb-20">
@@ -35,7 +25,7 @@ export function KitchenSearchPage() {
         <header className="kitchen-sub-hero">
           <h1>
             {query
-              ? results.length === 0
+              ? noResults
                 ? t("search.noResults", { query })
                 : t("search.forQuery", { query })
               : t("kitchen.searchTitle")}
@@ -52,9 +42,9 @@ export function KitchenSearchPage() {
               {t("kitchen.navCategories")}
             </Link>
           </div>
-        ) : loading && kitchenProducts.length === 0 ? (
-          <p className="kitchen-home-empty">{t("common.loading")}</p>
-        ) : shown.length === 0 ? (
+        ) : list.initialLoading ? (
+          <ProductGridSkeleton gridClassName="kitchen-home-grid" />
+        ) : noResults ? (
           <div className="kitchen-home-empty">
             <p>{t("search.tryDifferent")}</p>
             <Link to="/kitchen/categories" className="kitchen-home-reset">
@@ -64,7 +54,7 @@ export function KitchenSearchPage() {
         ) : (
           <>
             <div className="kitchen-home-grid">
-              {shown.map((product, index) => (
+              {results.map((product, index) => (
                 <KitchenIkeaProductCard
                   key={product.id}
                   product={product}
@@ -72,19 +62,14 @@ export function KitchenSearchPage() {
                 />
               ))}
             </div>
-            {remaining > 0 && (
-              <div className="kitchen-home-more-wrap">
-                <button
-                  type="button"
-                  className="kitchen-home-more"
-                  onClick={() => setVisible((n) => n + PAGE_SIZE)}
-                >
-                  {t("kitchen.showMore", {
-                    count: Math.min(remaining, PAGE_SIZE),
-                  })}
-                </button>
-              </div>
-            )}
+            <InfiniteScrollFooter
+              sentinelRef={list.sentinelRef}
+              hasMore={list.hasMore}
+              loading={list.loading}
+              error={list.error}
+              onRetry={list.retry}
+              count={results.length}
+            />
           </>
         )}
       </PageContainer>

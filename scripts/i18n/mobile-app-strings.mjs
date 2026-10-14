@@ -63,6 +63,27 @@ export const APP_STRINGS = {
     "Okoki na suka",
     "Wageze ku iherezo",
   ],
+  "common.seenAll_one": [
+    "You've seen the only product",
+    "Vous avez vu le seul produit",
+    "Umeona bidhaa pekee iliyopo",
+    "Omoni eloko se moko oyo ezali",
+    "Wabonye igicuruzwa kimwe gihari",
+  ],
+  "common.seenAll_other": [
+    "You've seen all {{count}} products",
+    "Vous avez vu les {{count}} produits",
+    "Umeona bidhaa zote {{count}}",
+    "Omoni biloko nyonso {{count}}",
+    "Wabonye ibicuruzwa byose {{count}}",
+  ],
+  "common.loadMoreFailed": [
+    "Couldn't load more products.",
+    "Impossible de charger plus de produits.",
+    "Imeshindwa kupakia bidhaa zaidi.",
+    "Ekoki te kobakisa biloko mosusu.",
+    "Ntibyashobotse kuzana ibicuruzwa byinshi.",
+  ],
 
   "common.skip": ["Skip", "Passer", "Ruka", "Leka", "Simbuka"],
   "common.fast": ["Fast", "Rapide", "Haraka", "Noki", "Byihuse"],

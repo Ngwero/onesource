@@ -37,11 +37,33 @@ export function filterLocalProducts({
   pageSize = 1000,
   shop,
   aisle,
+  sale = false,
+  prime = false,
+  sort = "newest",
+  titlePrefixes = [],
 } = {}) {
   let filtered = loadRows();
   if (!admin) {
     filtered = filtered.filter((r) => r.in_stock && r.stock_quantity > 0);
   }
+  if (sale) {
+    filtered = filtered.filter(
+      (r) => r.original_price != null && Number(r.original_price) > Number(r.price)
+    );
+  }
+  if (prime) {
+    filtered = filtered.filter((r) => Boolean(r.prime));
+  }
+  if (titlePrefixes.length) {
+    const prefixes = titlePrefixes.map((p) => p.toLowerCase());
+    filtered = filtered.filter((r) => {
+      const title = String(r.title ?? "").toLowerCase();
+      return prefixes.some(
+        (p) => title.startsWith(p) && !/[a-z0-9]/i.test(title.charAt(p.length))
+      );
+    });
+  }
+  filtered = sortLocalRows(filtered, sort);
   if (category) {
     const aliases = categoryMatchAliases(category);
     filtered = filtered.filter((r) => aliases.includes(r.category));
@@ -80,11 +102,41 @@ export function filterLocalProducts({
       search
     );
     const from = page * pageSize;
-    return { products: all.slice(from, from + pageSize), total: all.length };
+    return {
+      products: all.slice(from, from + pageSize),
+      total: all.length,
+      hasMore: from + pageSize < all.length,
+    };
   }
   const from = page * pageSize;
   const slice = filtered.slice(from, from + pageSize);
-  return { products: slice.map(rowToProduct), total: filtered.length };
+  return {
+    products: slice.map(rowToProduct),
+    total: filtered.length,
+    hasMore: from + pageSize < filtered.length,
+  };
+}
+
+function sortLocalRows(rows, sort) {
+  const list = [...rows];
+  const byId = (a, b) => String(a.id).localeCompare(String(b.id));
+  switch (sort) {
+    case "price-asc":
+      return list.sort((a, b) => Number(a.price) - Number(b.price) || byId(a, b));
+    case "price-desc":
+      return list.sort((a, b) => Number(b.price) - Number(a.price) || byId(a, b));
+    case "name":
+      return list.sort((a, b) => String(a.title).localeCompare(String(b.title)) || byId(a, b));
+    case "top":
+      return list.sort(
+        (a, b) =>
+          (b.review_count ?? 0) - (a.review_count ?? 0) ||
+          Number(b.rating ?? 0) - Number(a.rating ?? 0) ||
+          byId(a, b)
+      );
+    default:
+      return list;
+  }
 }
 
 export function getLocalProductById(id) {
@@ -115,6 +167,7 @@ export async function withLocalProductFallback(query, options = {}) {
     return {
       products: products.products,
       total: products.total,
+      hasMore: products.hasMore,
       source: "local-seed",
     };
   }

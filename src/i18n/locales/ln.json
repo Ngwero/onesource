@@ -2053,5 +2053,11 @@
       "fragranceCta": "Tala ba parfums",
       "offersCta": "Tala ba offres"
     }
+  },
+  "listing": {
+    "loadingMore": "Biloko mosusu ezali koya…",
+    "loadError": "Tokoki te kolakisa biloko mosusu.",
+    "endOfResults_one": "Omoni eloko se moko oyo ezali awa",
+    "endOfResults_other": "Omoni biloko nyonso {{count}}"
   }
 }

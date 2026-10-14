@@ -8,7 +8,6 @@ import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/paginated_products_provider.dart';
 import '../utils/cart_feedback.dart';
-import '../utils/kitchen_mode.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/products_load_more.dart';
@@ -52,8 +51,21 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
   InfiniteScrollListener? _scrollListener;
   late _KitchenFilter _filter = widget.dealsOnly ? _KitchenFilter.deals : _KitchenFilter.all;
   _KitchenSort _sort = _KitchenSort.featured;
+  bool _contentShown = false;
 
-  ProductsQuery get _query => ProductsQuery(shop: 'kitchen', aisle: widget.aisleId);
+  /// Deals/Prime and sort run server-side so every page is already filtered.
+  ProductsQuery get _query => ProductsQuery(
+        shop: 'kitchen',
+        aisle: widget.aisleId,
+        sale: _filter == _KitchenFilter.deals,
+        prime: _filter == _KitchenFilter.prime,
+        sort: switch (_sort) {
+          _KitchenSort.featured || _KitchenSort.rating => 'top',
+          _KitchenSort.priceLow => 'price-asc',
+          _KitchenSort.priceHigh => 'price-desc',
+          _KitchenSort.name => 'name',
+        },
+      );
 
   PaginatedProductsNotifier get _notifier => ref.read(paginatedProductsProvider(_query).notifier);
 
@@ -73,35 +85,11 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
     super.dispose();
   }
 
-  List<Product> _apply(List<Product> products, AppStrings s) {
-    var list = switch (_filter) {
-      _KitchenFilter.all => [...products],
-      _KitchenFilter.deals =>
-        products.where((p) => p.originalPrice != null && p.originalPrice! > p.price).toList(),
-      _KitchenFilter.prime => products.where((p) => p.prime).toList(),
+  List<Product> _apply(List<Product> products) {
+    return switch (_filter) {
       _KitchenFilter.inStock => products.where((p) => p.inStock).toList(),
+      _ => products,
     };
-    switch (_sort) {
-      case _KitchenSort.priceLow:
-        list.sort((a, b) => a.price.compareTo(b.price));
-      case _KitchenSort.priceHigh:
-        list.sort((a, b) => b.price.compareTo(a.price));
-      case _KitchenSort.name:
-        list.sort((a, b) => s.productTitle(a).compareTo(s.productTitle(b)));
-      case _KitchenSort.rating:
-        list.sort((a, b) => b.rating.compareTo(a.rating));
-      case _KitchenSort.featured:
-        list = sortKitchenWithSaucepansFirst(list);
-    }
-    return list;
-  }
-
-  /// Filters can leave too few items to scroll, so the scroll trigger never fires.
-  void _topUpIfShort(PaginatedProductsState state, int visible) {
-    if (visible >= 12 || !state.hasMore || state.isLoadingMore || state.isInitialLoading) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _notifier.loadMore();
-    });
   }
 
   @override
@@ -145,7 +133,7 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
             ],
           );
 
-    if (state.isInitialLoading) {
+    if (state.isInitialLoading && !_contentShown) {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         body: CustomScrollView(
@@ -159,7 +147,7 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
         ),
       );
     }
-    if (state.error != null && state.items.isEmpty) {
+    if (state.error != null && state.items.isEmpty && !_contentShown) {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         appBar: AppBar(),
@@ -167,8 +155,10 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
       );
     }
 
-    final products = _apply(state.items, s);
-    _topUpIfShort(state, products.length);
+    _contentShown = true;
+    final products = _apply(state.items);
+    final feedPending = state.isInitialLoading || (state.hasMore && state.error == null);
+    _scrollListener?.scheduleCheck();
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -221,11 +211,23 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
                 ),
               ),
             ),
-            if (products.isEmpty && !state.hasMore)
+            if (state.isInitialLoading)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: LoadingView(message: s.get('common.loading')),
+              )
+            else if (state.error != null && state.items.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: ErrorView(message: state.error!, onRetry: () => _notifier.refresh()),
+              )
+            else if (products.isEmpty && !feedPending)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(
-                  child: Text(s.get(state.items.isEmpty ? 'kitchen.empty' : 'kitchen.noFilterResults')),
+                  child: Text(s.get(state.items.isEmpty && _filter == _KitchenFilter.all
+                      ? 'kitchen.empty'
+                      : 'kitchen.noFilterResults')),
                 ),
               )
             else
@@ -234,12 +236,15 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
                 onAdd: (p) => addToCartWithFeedback(context, ref, p),
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               ),
-            ProductsLoadMoreSliver(
-              isLoadingMore: state.isLoadingMore,
-              hasMore: state.hasMore,
-              itemCount: state.items.length,
-              total: state.total,
-            ),
+            if (!state.isInitialLoading)
+              ProductsLoadMoreSliver(
+                isLoadingMore: state.isLoadingMore,
+                hasMore: state.hasMore,
+                itemCount: products.length,
+                total: state.total,
+                error: state.hasLoadMoreError ? state.error : null,
+                onRetry: () => _notifier.retry(),
+              ),
           ],
         ),
       ),

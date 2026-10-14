@@ -3,13 +3,11 @@ import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { CosmeticsListing } from "../components/cosmetics/CosmeticsListing";
 import { COSMETICS_AISLES } from "../data/cosmetics";
-import { useCosmeticsCatalog } from "../hooks/useCosmeticsCatalog";
-import { filterCosmeticsAisle, isValidCosmeticsAisleId } from "../utils/cosmeticsMode";
+import { isValidCosmeticsAisleId } from "../utils/cosmeticsMode";
 
 export function CosmeticsAislePage() {
   const { t } = useTranslation();
   const { aisleId } = useParams<{ aisleId: string }>();
-  const { cosmeticsProducts, loading } = useCosmeticsCatalog();
 
   if (!isValidCosmeticsAisleId(aisleId)) {
     return <Navigate to="/cosmetics/categories" replace />;
@@ -17,7 +15,6 @@ export function CosmeticsAislePage() {
 
   const aisle = COSMETICS_AISLES.find((a) => a.id === aisleId)!;
   const aisleTitle = t(`cosmetics.aisles.${aisle.id}`, { defaultValue: aisle.title });
-  const products = filterCosmeticsAisle(cosmeticsProducts, aisleId);
 
   return (
     <div className="cos-page">
@@ -32,14 +29,13 @@ export function CosmeticsAislePage() {
 
         <header className="cos-page-head">
           <h1>{aisleTitle}</h1>
-          {loading && products.length === 0 && <p>{t("common.loading")}</p>}
         </header>
 
-        {loading && products.length === 0 ? null : products.length === 0 ? (
-          <p className="cos-empty">{t("cosmetics.empty")}</p>
-        ) : (
-          <CosmeticsListing key={aisle.id} products={products} />
-        )}
+        <CosmeticsListing
+          key={aisle.id}
+          baseQuery={{ aisle: aisle.id }}
+          emptyState={<p className="cos-empty">{t("cosmetics.empty")}</p>}
+        />
       </PageContainer>
     </div>
   );

@@ -1,7 +1,8 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { Product } from "../types/product";
-import { useProducts } from "../context/ProductsContext";
+import { fetchProductById, useProducts } from "../context/ProductsContext";
+import { shopForProductId, useEnsureShops } from "../hooks/useEnsureShops";
 import { StarRating } from "../components/StarRating";
 import { ProductRelatedSection } from "../components/product/ProductRelatedSection";
 import { ProductCustomersAlsoViewedSection } from "../components/product/ProductCustomersAlsoViewedSection";
@@ -70,7 +71,26 @@ export function ProductPage() {
   const { formatPrice, freeDeliveryThreshold } = useCurrency();
   const { id } = useParams<{ id: string }>();
   const { getProductById, products } = useProducts();
-  const product = id ? getProductById(id) : undefined;
+  useEnsureShops(id ? [shopForProductId(id)] : []);
+  const knownProduct = id ? getProductById(id) : undefined;
+  const [fetched, setFetched] = useState<{ id: string; product: Product | null } | null>(null);
+  useEffect(() => {
+    if (!id || knownProduct) return;
+    let cancelled = false;
+    fetchProductById(id)
+      .then((p) => {
+        if (!cancelled) setFetched({ id, product: p ?? null });
+      })
+      .catch(() => {
+        if (!cancelled) setFetched({ id, product: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, knownProduct]);
+  const product =
+    knownProduct ?? (fetched && fetched.id === id ? fetched.product ?? undefined : undefined);
+  const fetchingProduct = Boolean(id) && !knownProduct && fetched?.id !== id;
   const { user } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
@@ -162,6 +182,14 @@ export function ProductPage() {
     t,
     i18n.language,
   ]);
+
+  if (fetchingProduct) {
+    return (
+      <PageContainer className="py-16 sm:py-20 text-center">
+        <p className="text-text-muted">{t("common.loading")}</p>
+      </PageContainer>
+    );
+  }
 
   if (!product || !pageContent) {
     return (

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { BRAND_LOGOS } from "../brand/logos";
 import { useLocation } from "react-router-dom";
 import { useProducts, type ProductShop } from "../context/ProductsContext";
+import { shopForProductId, useEnsureShops } from "../hooks/useEnsureShops";
 import { shopModeForPath } from "../utils/shopMode";
 
 const MIN_VISIBLE_MS = 850;
@@ -12,16 +13,20 @@ type Phase = "loading" | "exiting" | "done";
 
 type Props = { children: ReactNode };
 
+/** Pages that page products from the API themselves instead of using a full catalogue. */
+const SELF_LOADING_PATHS = [
+  /^\/kitchen(\/|$)/,
+  /^\/cosmetics\/(products|search|aisle)(\/|$)/,
+];
+
 function shopsNeededFor(pathname: string): ProductShop[] {
   const productId = pathname.match(/^\/product\/([^/]+)/)?.[1];
   if (productId) {
-    const id = decodeURIComponent(productId);
-    if (id.startsWith("kitchen-")) return ["kitchen"];
-    if (id.startsWith("cosmetics-")) return ["cosmetics"];
-    return ["fresh", "kitchen", "cosmetics"];
+    // Specialty product pages fetch their product by id; recommendations load in the background.
+    const shop = shopForProductId(decodeURIComponent(productId));
+    return shop === "fresh" ? ["fresh"] : [];
   }
-  // The Kitchen home fetches its own per-aisle shelves.
-  if (pathname === "/kitchen" || pathname === "/kitchen/") return [];
+  if (SELF_LOADING_PATHS.some((re) => re.test(pathname))) return [];
   return [shopModeForPath(pathname)];
 }
 
@@ -29,7 +34,9 @@ export function WebsiteLoader({ children }: Props) {
   const { t } = useTranslation();
   const { shopLoading, error, refresh } = useProducts();
   const { pathname } = useLocation();
-  const loading = shopsNeededFor(pathname).some((shop) => shopLoading[shop]);
+  const neededShops = shopsNeededFor(pathname);
+  useEnsureShops(neededShops);
+  const loading = neededShops.some((shop) => shopLoading[shop]);
   const mountTime = useRef(Date.now());
   const [phase, setPhase] = useState<Phase>("loading");
 

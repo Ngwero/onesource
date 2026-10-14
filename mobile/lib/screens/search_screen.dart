@@ -13,6 +13,7 @@ import '../utils/kitchen_mode.dart';
 import '../utils/responsive.dart';
 import '../utils/shop_mode.dart';
 import '../utils/user_facing_error.dart';
+import '../widgets/products_load_more.dart';
 import '../widgets/search_result_tile.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -32,10 +33,15 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
+  final _scrollController = ScrollController();
+  late final InfiniteScrollListener _scrollListener;
+
+  void _loadMore() => ref.read(searchProvider.notifier).loadMore();
 
   @override
   void initState() {
     super.initState();
+    _scrollListener = InfiniteScrollListener(controller: _scrollController, onLoadMore: _loadMore);
     _controller = TextEditingController(text: widget.initialQuery ?? '');
     _focusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -48,19 +54,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   void dispose() {
+    _scrollListener.dispose();
+    _scrollController.dispose();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
+  void _resetScroll() {
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+  }
+
   void _onQueryChanged(String value) {
     setState(() {});
+    _resetScroll();
     ref.read(searchProvider.notifier).setQuery(value);
   }
 
   void _applySuggestion(String term) {
     _controller.text = term;
     _controller.selection = TextSelection.collapsed(offset: term.length);
+    _resetScroll();
     ref.read(searchProvider.notifier).setQuery(term);
   }
 
@@ -82,6 +96,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       isLoading: search.isLoading,
       error: search.error,
       total: results.length,
+      hasMore: search.hasMore,
+      isLoadingMore: search.isLoadingMore,
+      loadMoreError: search.loadMoreError,
     );
 
     return Scaffold(
@@ -155,7 +172,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     }
 
-    if (search.results.isEmpty) {
+    if (search.results.isEmpty && search.hasMore && search.loadMoreError == null) {
+      // Matches so far belong to another shop; keep paging until some show up.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadMore();
+      });
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.darkGreen),
+      );
+    }
+
+    if (search.results.isEmpty && search.loadMoreError == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -181,6 +208,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     }
 
+    _scrollListener.scheduleCheck();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -212,18 +240,38 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
         Expanded(
-          child: ListView.separated(
-            padding: EdgeInsets.fromLTRB(20, 12, 20, shellBottomPadding(context)),
-            itemCount: search.results.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              final product = search.results[index];
-              return SearchResultTile(
-                product: product,
-                query: search.query,
-                onAdd: () => addToCartWithFeedback(context, ref, product),
-              );
-            },
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final product = search.results[index];
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index == search.results.length - 1 ? 0 : 10,
+                        ),
+                        child: SearchResultTile(
+                          product: product,
+                          query: search.query,
+                          onAdd: () => addToCartWithFeedback(context, ref, product),
+                        ),
+                      );
+                    },
+                    childCount: search.results.length,
+                  ),
+                ),
+              ),
+              ProductsLoadMoreSliver(
+                isLoadingMore: search.isLoadingMore,
+                hasMore: search.hasMore,
+                itemCount: search.results.length,
+                error: search.loadMoreError,
+                onRetry: () => ref.read(searchProvider.notifier).retryMore(),
+              ),
+            ],
           ),
         ),
       ],

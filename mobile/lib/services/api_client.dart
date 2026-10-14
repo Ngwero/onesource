@@ -18,6 +18,7 @@ class ProductsPageResult {
     required this.total,
     required this.page,
     required this.pageSize,
+    this.serverHasMore,
   });
 
   final List<Product> products;
@@ -25,7 +26,10 @@ class ProductsPageResult {
   final int page;
   final int pageSize;
 
-  bool get hasMore => (page + 1) * pageSize < total;
+  /// `hasMore` from the API; null on older deployments that only send `total`.
+  final bool? serverHasMore;
+
+  bool get hasMore => serverHasMore ?? (page + 1) * pageSize < total;
 }
 
 /// Aisles whose id starts with another aisle's id (`cookware` vs `cookware-accessories`).
@@ -74,6 +78,9 @@ class ApiClient {
     int pageSize = 24,
     String? shop,
     String? aisle,
+    bool sale = false,
+    bool prime = false,
+    String? sort,
     bool allowServerErrorAsEmpty = false,
   }) async {
     final params = <String, String>{
@@ -84,6 +91,9 @@ class ApiClient {
     if (query != null && query.isNotEmpty) params['q'] = query;
     if (shop != null && shop.isNotEmpty) params['shop'] = shop;
     if (aisle != null && aisle.isNotEmpty) params['aisle'] = aisle;
+    if (sale) params['sale'] = '1';
+    if (prime) params['prime'] = '1';
+    if (sort != null && sort.isNotEmpty) params['sort'] = sort;
 
     final uri = _uri('/products', params);
     debugPrint('[OneSource] GET $uri');
@@ -103,11 +113,13 @@ class ApiClient {
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     final list = data['products'] as List<dynamic>? ?? [];
     final total = (data['total'] as num?)?.toInt() ?? list.length;
+    final hasMore = data['hasMore'];
     return ProductsPageResult(
       products: list.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList(),
       total: total,
       page: page,
       pageSize: pageSize,
+      serverHasMore: hasMore is bool ? hasMore : null,
     );
   }
 
@@ -147,6 +159,10 @@ class ApiClient {
     String? shop,
     /// Aisle id within the kitchen (default) or cosmetics shop — filters `{shop}-{aisle}-%`.
     String? aisle,
+    /// Server-side filters/sort (`sale=1`, `prime=1`, `sort=…`); older APIs ignore them.
+    bool sale = false,
+    bool prime = false,
+    String? sort,
   }) async {
     final scopedShop = shop?.trim().toLowerCase();
     final scopedAisle = aisle?.trim().toLowerCase();
@@ -179,6 +195,9 @@ class ApiClient {
       pageSize: pageSize,
       shop: hasAisle && scopedShop != 'cosmetics' ? 'kitchen' : scopedShop,
       aisle: scopedAisle,
+      sale: sale,
+      prime: prime,
+      sort: sort,
     );
 
     if (hasAisle) {
@@ -194,6 +213,7 @@ class ApiClient {
         total: matched.isEmpty && page == 0 ? 0 : (raw.total > 0 ? raw.total : matched.length),
         page: page,
         pageSize: pageSize,
+        serverHasMore: raw.serverHasMore,
       );
     }
 
@@ -203,6 +223,7 @@ class ApiClient {
         total: raw.total,
         page: page,
         pageSize: pageSize,
+        serverHasMore: raw.serverHasMore,
       );
     }
 
@@ -213,11 +234,13 @@ class ApiClient {
       final total = kitchen.isEmpty
           ? page * pageSize
           : (raw.total > 0 ? raw.total : kitchen.length);
+      final leftKitchenBlock = kitchen.isEmpty && raw.products.isNotEmpty;
       return ProductsPageResult(
         products: kitchen,
         total: total,
         page: page,
         pageSize: pageSize,
+        serverHasMore: leftKitchenBlock ? false : raw.serverHasMore,
       );
     }
 
@@ -232,6 +255,7 @@ class ApiClient {
           total: raw.total,
           page: page,
           pageSize: pageSize,
+          serverHasMore: raw.serverHasMore,
         );
       }
 
@@ -251,6 +275,7 @@ class ApiClient {
         total: raw.total,
         page: page,
         pageSize: pageSize,
+        serverHasMore: raw.serverHasMore,
       );
     }
 

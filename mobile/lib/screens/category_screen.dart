@@ -38,8 +38,20 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
   _CategorySort _sort = _CategorySort.featured;
   final _scrollController = ScrollController();
   InfiniteScrollListener? _scrollListener;
+  bool _contentShown = false;
 
-  ProductsQuery get _query => ProductsQuery(categoryId: widget.categoryId);
+  /// Deals/Prime and sort run server-side so every page is already filtered.
+  ProductsQuery get _query => ProductsQuery(
+        categoryId: widget.categoryId,
+        sale: _filter == _CategoryFilter.deals,
+        prime: _filter == _CategoryFilter.prime,
+        sort: switch (_sort) {
+          _CategorySort.featured || _CategorySort.rating => 'top',
+          _CategorySort.priceLow => 'price-asc',
+          _CategorySort.priceHigh => 'price-desc',
+          _CategorySort.name => 'name',
+        },
+      );
 
   @override
   void initState() {
@@ -63,29 +75,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
 
   List<Product> _applyFilter(List<Product> products) {
     return switch (_filter) {
-      _CategoryFilter.all => products,
-      _CategoryFilter.deals =>
-        products.where((p) => p.originalPrice != null && p.originalPrice! > p.price).toList(),
-      _CategoryFilter.prime => products.where((p) => p.prime).toList(),
       _CategoryFilter.inStock => products.where((p) => p.inStock).toList(),
+      _ => products,
     };
-  }
-
-  List<Product> _applySort(List<Product> products) {
-    final list = [...products];
-    switch (_sort) {
-      case _CategorySort.priceLow:
-        list.sort((a, b) => a.price.compareTo(b.price));
-      case _CategorySort.priceHigh:
-        list.sort((a, b) => b.price.compareTo(a.price));
-      case _CategorySort.name:
-        list.sort((a, b) => AppStrings.current.productTitle(a).compareTo(AppStrings.current.productTitle(b)));
-      case _CategorySort.rating:
-        list.sort((a, b) => b.rating.compareTo(a.rating));
-      case _CategorySort.featured:
-        list.sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
-    }
-    return list;
   }
 
   void _addToCart(Product product) => addToCartWithFeedback(context, ref, product);
@@ -109,34 +101,40 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
     final category = categoriesAsync.value?.where((c) => c.id == widget.categoryId).firstOrNull;
     final categoryName = context.tr.categoryName(widget.categoryId, category?.name);
     final categoryIcon = category?.icon ?? '🥬';
+    final notifier = ref.read(paginatedProductsProvider(query).notifier);
     final allProducts = productsState.items;
-    final filtered = _applySort(_applyFilter(allProducts));
+    final filtered = _applyFilter(allProducts);
     final spotlight = _spotlightProduct(allProducts);
 
-    if (productsState.isInitialLoading) {
+    if (productsState.isInitialLoading && !_contentShown) {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         body: LoadingView(message: context.tr.get('common.loading')),
       );
     }
 
-    if (productsState.error != null && allProducts.isEmpty) {
+    if (productsState.error != null && allProducts.isEmpty && !_contentShown) {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         appBar: AppBar(title: Text(categoryName)),
         body: ErrorView(
           message: productsState.error!,
-          onRetry: () => ref.read(paginatedProductsProvider(query).notifier).refresh(),
+          onRetry: notifier.refresh,
         ),
       );
     }
+
+    _contentShown = true;
+    final feedPending = productsState.isInitialLoading ||
+        (productsState.hasMore && productsState.error == null);
+    _scrollListener?.scheduleCheck();
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: RefreshIndicator(
         color: AppColors.leaf,
         onRefresh: () async {
-          await ref.read(paginatedProductsProvider(query).notifier).refresh();
+          await notifier.refresh();
           ref.invalidate(categoriesProvider);
         },
         child: CustomScrollView(
@@ -317,7 +315,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                         ),
                       ),
                     ),
-                    if (filtered.isEmpty) ...[
+                    if (filtered.isEmpty && !feedPending) ...[
                       const SizedBox(height: 10),
                       Text(
                         context.tr.get('kitchen.noFilterResults'),
@@ -329,7 +327,17 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                 ),
               ),
             ),
-            if (filtered.isEmpty)
+            if (productsState.isInitialLoading)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: LoadingView(message: context.tr.get('common.loading')),
+              )
+            else if (productsState.error != null && allProducts.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: ErrorView(message: productsState.error!, onRetry: notifier.refresh),
+              )
+            else if (filtered.isEmpty && !feedPending)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(child: Text(context.tr.get('kitchen.noFilterResults'))),
@@ -371,11 +379,15 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                   ),
                 ),
               ),
-            ProductsLoadMoreSliver(
-              isLoadingMore: productsState.isLoadingMore,
-              hasMore: productsState.hasMore,
-              itemCount: allProducts.length,
-            ),
+            if (!productsState.isInitialLoading)
+              ProductsLoadMoreSliver(
+                isLoadingMore: productsState.isLoadingMore,
+                hasMore: productsState.hasMore,
+                itemCount: filtered.length,
+                total: productsState.total,
+                error: productsState.hasLoadMoreError ? productsState.error : null,
+                onRetry: notifier.retry,
+              ),
           ],
         ),
       ),

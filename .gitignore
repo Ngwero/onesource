@@ -43,3 +43,4 @@ mobile/**/local.properties
 *.njsproj
 *.sln
 *.sw?
+.tmp-shots/

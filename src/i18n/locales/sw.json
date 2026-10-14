@@ -2053,5 +2053,11 @@
       "fragranceCta": "Nunua manukato",
       "offersCta": "Tazama ofa"
     }
+  },
+  "listing": {
+    "loadingMore": "Inapakia bidhaa zaidi…",
+    "loadError": "Imeshindwa kupakia bidhaa zaidi.",
+    "endOfResults_one": "Umeona bidhaa pekee iliyopo hapa",
+    "endOfResults_other": "Umeona bidhaa zote {{count}}"
   }
 }

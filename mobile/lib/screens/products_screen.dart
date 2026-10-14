@@ -35,8 +35,19 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
   bool _gridView = true;
   final _scrollController = ScrollController();
   InfiniteScrollListener? _scrollListener;
+  bool _contentShown = false;
 
-  static const _query = ProductsQuery();
+  /// Deals/Prime and sort run server-side so every page is already filtered.
+  ProductsQuery get _query => ProductsQuery(
+        sale: _filter == ShopFilter.deals,
+        prime: _filter == ShopFilter.prime,
+        sort: switch (_sort) {
+          ShopSort.featured => null,
+          ShopSort.priceLow => 'price-asc',
+          ShopSort.priceHigh => 'price-desc',
+          ShopSort.name => 'name',
+        },
+      );
 
   @override
   void initState() {
@@ -61,57 +72,46 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
 
   List<Product> _applyFilter(List<Product> products) {
     return switch (_filter) {
-      ShopFilter.all => products,
-      ShopFilter.deals => products.where((p) => p.originalPrice != null && p.originalPrice! > p.price).toList(),
-      ShopFilter.prime => products.where((p) => p.prime).toList(),
       ShopFilter.inStock => products.where((p) => p.inStock).toList(),
+      _ => products,
     };
-  }
-
-  List<Product> _applySort(List<Product> products) {
-    final list = [...products];
-    switch (_sort) {
-      case ShopSort.priceLow:
-        list.sort((a, b) => a.price.compareTo(b.price));
-      case ShopSort.priceHigh:
-        list.sort((a, b) => b.price.compareTo(a.price));
-      case ShopSort.name:
-        list.sort((a, b) => AppStrings.current.productTitle(a).compareTo(AppStrings.current.productTitle(b)));
-      case ShopSort.featured:
-        break;
-    }
-    return list;
   }
 
   void _addToCart(Product product) => addToCartWithFeedback(context, ref, product);
 
   @override
   Widget build(BuildContext context) {
-    final productsState = ref.watch(paginatedProductsProvider(_query));
+    final query = _query;
+    final productsState = ref.watch(paginatedProductsProvider(query));
+    final notifier = ref.read(paginatedProductsProvider(query).notifier);
 
-    if (productsState.isInitialLoading) {
+    if (productsState.isInitialLoading && !_contentShown) {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         body: LoadingView(message: context.tr.get('common.loading')),
       );
     }
 
-    if (productsState.error != null && productsState.items.isEmpty) {
+    if (productsState.error != null && productsState.items.isEmpty && !_contentShown) {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         body: ErrorView(
           message: productsState.error!,
-          onRetry: () => ref.read(paginatedProductsProvider(_query).notifier).refresh(),
+          onRetry: notifier.refresh,
         ),
       );
     }
 
-    final filtered = _applySort(_applyFilter(productsState.items));
+    _contentShown = true;
+    final filtered = _applyFilter(productsState.items);
+    final feedPending = productsState.isInitialLoading ||
+        (productsState.hasMore && productsState.error == null);
+    _scrollListener?.scheduleCheck();
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: RefreshIndicator(
-        onRefresh: () => ref.read(paginatedProductsProvider(_query).notifier).refresh(),
+        onRefresh: notifier.refresh,
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
@@ -170,7 +170,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if (filtered.isEmpty) ...[
+                    if (filtered.isEmpty && !feedPending) ...[
                       Text(
                         context.tr.get('kitchen.noFilterResults'),
                         style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
@@ -181,7 +181,17 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                 ),
               ),
             ),
-            if (filtered.isEmpty)
+            if (productsState.isInitialLoading)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: LoadingView(message: context.tr.get('common.loading')),
+              )
+            else if (productsState.error != null && productsState.items.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: ErrorView(message: productsState.error!, onRetry: notifier.refresh),
+              )
+            else if (filtered.isEmpty && !feedPending)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(child: Text(context.tr.get('kitchen.noFilterResults'))),
@@ -223,12 +233,15 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                   ),
                 ),
               ),
-            ProductsLoadMoreSliver(
-              isLoadingMore: productsState.isLoadingMore,
-              hasMore: productsState.hasMore,
-              itemCount: productsState.items.length,
-              total: productsState.total,
-            ),
+            if (!productsState.isInitialLoading)
+              ProductsLoadMoreSliver(
+                isLoadingMore: productsState.isLoadingMore,
+                hasMore: productsState.hasMore,
+                itemCount: filtered.length,
+                total: productsState.total,
+                error: productsState.hasLoadMoreError ? productsState.error : null,
+                onRetry: notifier.retry,
+              ),
           ],
         ),
       ),

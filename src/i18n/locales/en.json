@@ -1297,5 +1297,11 @@
       "fragranceCta": "Shop fragrance",
       "offersCta": "See offers"
     }
+  },
+  "listing": {
+    "loadingMore": "Loading more products…",
+    "loadError": "Couldn't load more products.",
+    "endOfResults_one": "You've seen the only product here",
+    "endOfResults_other": "You've seen all {{count}} products"
   }
 }

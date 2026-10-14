@@ -26,6 +26,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = env.port;
 
+/** Bare domain → www, so carts/logins (stored per origin) stay on one site. */
+app.use((req, res, next) => {
+  const host = String(req.headers["x-forwarded-host"] || req.get("host") || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (host === "onesourco.com") {
+    return res.redirect(301, `https://www.onesourco.com${req.originalUrl}`);
+  }
+  next();
+});
+
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: "2mb" }));
 
@@ -38,6 +50,12 @@ app.use((req, res, next) => {
     });
   }
   next();
+});
+
+/** Railway deploy healthcheck: process is up and serving. No DB call, so a slow or
+ * busy Supabase can't fail the deploy and leave the old version live. */
+app.get("/api/health/live", (_req, res) => {
+  res.set("Cache-Control", "no-store").json({ ok: true, shop: serveShop });
 });
 
 app.get("/api/health", async (_req, res) => {
@@ -176,6 +194,16 @@ function sendShopIndex(req, res) {
 }
 
 if (serveShop) {
+  // Hashed build files: cache forever, and 404 when missing (never fall through to
+  // index.html — browsers would run HTML as JS and stay on the loader after a deploy).
+  app.use(
+    "/assets",
+    express.static(path.join(shopDist, "assets"), {
+      immutable: true,
+      maxAge: "1y",
+    }),
+    (_req, res) => res.status(404).end()
+  );
   app.use(
     express.static(shopDist, {
       index: false,

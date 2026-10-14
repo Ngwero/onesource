@@ -150,6 +150,68 @@ export async function fetchKitchenAislePage(
   return fetchProductsPageRaw(search, 0);
 }
 
+export type ProductSort = "newest" | "top" | "price-asc" | "price-desc" | "name";
+
+/** Server-side filters for a paged product listing (GET /api/products). */
+export type ProductListQuery = {
+  shop?: "fresh" | "kitchen" | "cosmetics";
+  aisle?: string;
+  category?: string;
+  q?: string;
+  sale?: boolean;
+  prime?: boolean;
+  sort?: ProductSort;
+  /** Title must start with one of these words (e.g. a brand's name variants). */
+  titlePrefix?: string[];
+};
+
+export type ProductListPage = { products: Product[]; total: number; hasMore: boolean };
+
+function listQueryParams(query: ProductListQuery): URLSearchParams {
+  const search = new URLSearchParams();
+  if (query.shop) search.set("shop", query.shop);
+  if (query.aisle) search.set("aisle", query.aisle);
+  if (query.category) search.set("category", query.category);
+  if (query.q) search.set("q", query.q);
+  if (query.sale) search.set("sale", "1");
+  if (query.prime) search.set("prime", "1");
+  if (query.sort) search.set("sort", query.sort);
+  for (const prefix of query.titlePrefix ?? []) search.append("titlePrefix", prefix);
+  return search;
+}
+
+export async function fetchProductListPage(
+  query: ProductListQuery,
+  page: number,
+  pageSize: number,
+  signal?: AbortSignal
+): Promise<ProductListPage> {
+  const search = listQueryParams(query);
+  search.set("page", String(page));
+  search.set("pageSize", String(pageSize));
+  const res = await fetch(`${API_BASE}/products?${search.toString()}`, { signal });
+  if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
+  const data = await res.json();
+  const products = (data.products as Product[]) ?? [];
+  const total = typeof data.total === "number" ? data.total : 0;
+  const hasMore =
+    typeof data.hasMore === "boolean" ? data.hasMore : (page + 1) * pageSize < total;
+  return { products, total, hasMore };
+}
+
+/** Titles of every product matching `query` — lightweight input for facets like brands. */
+export async function fetchProductTitles(
+  query: ProductListQuery,
+  signal?: AbortSignal
+): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/products/titles?${listQueryParams(query).toString()}`, {
+    signal,
+  });
+  if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
+  const data = await res.json();
+  return (data.titles as string[]) ?? [];
+}
+
 export async function fetchProductById(id: string): Promise<Product | undefined> {
   const res = await fetch(`${API_BASE}/products/${id}`);
   if (res.status === 404) return undefined;

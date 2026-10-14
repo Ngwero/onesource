@@ -103,7 +103,6 @@ export function CosmeticsShopPage() {
             {offers.length > 0 && (
               <ProductRow
                 title={t("kitchen.home.feedOffers")}
-                href="/cosmetics/products?sale=1"
                 products={offers}
               />
             )}
@@ -112,7 +111,6 @@ export function CosmeticsShopPage() {
               <ProductRow
                 key={aisle.id}
                 title={aisle.label}
-                href={cosmeticsAislePath(aisle.id)}
                 products={aisle.ranked.slice(0, ROW_LIMIT)}
               />
             ))}
@@ -123,16 +121,7 @@ export function CosmeticsShopPage() {
   );
 }
 
-function ProductRow({
-  title,
-  href,
-  products,
-}: {
-  title: string;
-  href: string;
-  products: Product[];
-}) {
-  const { t } = useTranslation();
+function ProductRow({ title, products }: { title: string; products: Product[] }) {
   return (
     <section className="cos-section cos-section--grid">
       <h2 className="cos-grid-title">
@@ -144,11 +133,6 @@ function ProductRow({
             <CosmeticsProductCard product={product} />
           </div>
         ))}
-      </div>
-      <div className="cos-view-all-wrap">
-        <Link to={href} className="cos-view-all">
-          {t("cosmetics.seeAll")}
-        </Link>
       </div>
     </section>
   );

@@ -1,74 +1,97 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { Product } from "../../types/product";
-import { splitCosmeticTitle } from "../../data/cosmeticBrands";
+import { fetchProductTitles, type ProductListQuery } from "../../api/client";
+import { cosmeticBrandTitlePrefixes, splitCosmeticTitle } from "../../data/cosmeticBrands";
+import { useInfiniteProducts } from "../../hooks/useInfiniteProducts";
+import { InfiniteScrollFooter, ProductGridSkeleton } from "../InfiniteScrollFooter";
 import { CosmeticsProductCard } from "./CosmeticsProductCard";
 
 type SortKey = "top" | "price-asc" | "price-desc" | "name";
 
+type BaseQuery = Pick<ProductListQuery, "aisle" | "q" | "sale">;
+
 type Props = {
-  products: Product[];
-  pageSize?: number;
+  /** Scope of the listing (aisle, search text, sale-only page). */
+  baseQuery: BaseQuery;
+  /** Shown when the scope has no products at all (no filters applied). */
+  emptyState?: ReactNode;
 };
 
-function sortProducts(products: Product[], sort: SortKey): Product[] {
-  const list = [...products];
-  switch (sort) {
-    case "price-asc":
-      return list.sort((a, b) => a.price - b.price);
-    case "price-desc":
-      return list.sort((a, b) => b.price - a.price);
-    case "name":
-      return list.sort((a, b) =>
-        splitCosmeticTitle(a.title).name.localeCompare(splitCosmeticTitle(b.title).name)
-      );
-    case "top":
-    default:
-      return list.sort((a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount);
+type BrandCounts = Array<[string, number]>;
+
+const brandCache = new Map<string, Promise<BrandCounts>>();
+
+function loadBrandCounts(query: ProductListQuery): Promise<BrandCounts> {
+  const key = JSON.stringify(query);
+  let pending = brandCache.get(key);
+  if (!pending) {
+    pending = fetchProductTitles(query)
+      .then((titles) => {
+        const counts = new Map<string, number>();
+        for (const title of titles) {
+          const brand = splitCosmeticTitle(title).brand;
+          if (brand) counts.set(brand, (counts.get(brand) ?? 0) + 1);
+        }
+        return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+      })
+      .catch(() => {
+        brandCache.delete(key);
+        return [];
+      });
+    brandCache.set(key, pending);
   }
+  return pending;
 }
 
-/** Filterable, sortable beauty grid. Brand filter is kept in the ?brand= query. */
-export function CosmeticsListing({ products, pageSize = 40 }: Props) {
+/** Brand options (with counts) for everything in scope, not just the loaded pages. */
+function useBrandCounts(query: ProductListQuery): BrandCounts {
+  const key = JSON.stringify(query);
+  const [state, setState] = useState<{ key: string; brands: BrandCounts } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadBrandCounts(JSON.parse(key) as ProductListQuery).then((brands) => {
+      if (!cancelled) setState({ key, brands });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+
+  return state?.key === key ? state.brands : [];
+}
+
+/** Filterable, sortable beauty grid that keeps loading as you scroll. Brand is kept in ?brand=. */
+export function CosmeticsListing({ baseQuery, emptyState }: Props) {
   const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const brand = params.get("brand") ?? "";
   const [sort, setSort] = useState<SortKey>("top");
   const [offersOnly, setOffersOnly] = useState(false);
-  const [visible, setVisible] = useState(pageSize);
 
-  const brandOf = useMemo(() => {
-    const map = new Map<string, string | null>();
-    for (const p of products) map.set(p.id, splitCosmeticTitle(p.title).brand);
-    return map;
-  }, [products]);
-
-  const brands = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const b of brandOf.values()) if (b) counts.set(b, (counts.get(b) ?? 0) + 1);
-    return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [brandOf]);
-
-  const filtered = useMemo(() => {
-    let list = products;
-    if (brand) list = list.filter((p) => brandOf.get(p.id) === brand);
-    if (offersOnly) list = list.filter((p) => p.originalPrice != null && p.originalPrice > p.price);
-    return sortProducts(list, sort);
-  }, [products, brand, brandOf, offersOnly, sort]);
-
-  const shown = filtered.slice(0, visible);
-  const remaining = filtered.length - shown.length;
+  const scope: ProductListQuery = { shop: "cosmetics", ...baseQuery };
+  const brands = useBrandCounts(scope);
+  const brandPrefixes = brand ? cosmeticBrandTitlePrefixes(brand) : [];
+  const list = useInfiniteProducts({
+    ...scope,
+    sale: Boolean(baseQuery.sale) || offersOnly,
+    sort,
+    titlePrefix: brandPrefixes.length ? brandPrefixes : brand ? [brand] : undefined,
+  });
+  const { products } = list;
 
   const setBrand = (next: string) => {
     const nextParams = new URLSearchParams(params);
     if (next) nextParams.set("brand", next);
     else nextParams.delete("brand");
     setParams(nextParams, { replace: true });
-    setVisible(pageSize);
   };
 
   const hasFilters = Boolean(brand) || offersOnly || sort !== "top";
+  const isEmpty = !list.initialLoading && products.length === 0 && !list.hasMore && !list.error;
+  const brandOptions =
+    brand && !brands.some(([name]) => name === brand) ? [[brand, 0] as [string, number], ...brands] : brands;
 
   return (
     <section className="cos-listing">
@@ -77,9 +100,9 @@ export function CosmeticsListing({ products, pageSize = 40 }: Props) {
           <span>{t("cosmetics.brandLabel")}</span>
           <select value={brand} onChange={(e) => setBrand(e.target.value)}>
             <option value="">{t("cosmetics.allBrands")}</option>
-            {brands.map(([name, count]) => (
+            {brandOptions.map(([name, count]) => (
               <option key={name} value={name}>
-                {name} ({count})
+                {count > 0 ? `${name} (${count})` : name}
               </option>
             ))}
           </select>
@@ -89,10 +112,7 @@ export function CosmeticsListing({ products, pageSize = 40 }: Props) {
           <span>{t("kitchen.sortBy")}</span>
           <select
             value={sort}
-            onChange={(e) => {
-              setSort(e.target.value as SortKey);
-              setVisible(pageSize);
-            }}
+            onChange={(e) => setSort(e.target.value as SortKey)}
           >
             <option value="top">{t("kitchen.sortTop")}</option>
             <option value="price-asc">{t("kitchen.sortPriceAsc")}</option>
@@ -105,10 +125,7 @@ export function CosmeticsListing({ products, pageSize = 40 }: Props) {
           type="button"
           className={`cos-pill${offersOnly ? " is-active" : ""}`}
           aria-pressed={offersOnly}
-          onClick={() => {
-            setOffersOnly((v) => !v);
-            setVisible(pageSize);
-          }}
+          onClick={() => setOffersOnly((v) => !v)}
         >
           {t("kitchen.offersOnly")}
         </button>
@@ -129,26 +146,30 @@ export function CosmeticsListing({ products, pageSize = 40 }: Props) {
 
       </div>
 
-      {shown.length === 0 ? (
-        <p className="cos-empty">{t("kitchen.noFilterResults")}</p>
+      {list.initialLoading ? (
+        <ProductGridSkeleton gridClassName="cos-grid" cards={10} />
+      ) : isEmpty ? (
+        hasFilters || !emptyState ? (
+          <p className="cos-empty">{t("kitchen.noFilterResults")}</p>
+        ) : (
+          emptyState
+        )
       ) : (
-        <div className="cos-grid">
-          {shown.map((product, index) => (
-            <CosmeticsProductCard key={product.id} product={product} priority={index < 10} />
-          ))}
-        </div>
-      )}
-
-      {remaining > 0 && (
-        <div className="cos-more-wrap">
-          <button
-            type="button"
-            className="cos-more"
-            onClick={() => setVisible((n) => n + pageSize)}
-          >
-            {t("kitchen.showMore", { count: Math.min(remaining, pageSize) })}
-          </button>
-        </div>
+        <>
+          <div className="cos-grid">
+            {products.map((product, index) => (
+              <CosmeticsProductCard key={product.id} product={product} priority={index < 10} />
+            ))}
+          </div>
+          <InfiniteScrollFooter
+            sentinelRef={list.sentinelRef}
+            hasMore={list.hasMore}
+            loading={list.loading}
+            error={list.error}
+            onRetry={list.retry}
+            count={products.length}
+          />
+        </>
       )}
     </section>
   );

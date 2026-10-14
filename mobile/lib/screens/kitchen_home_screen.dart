@@ -138,10 +138,17 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
     final feed = catalog.isNotEmpty ? catalog : products;
     final popularProducts = diversifyKitchenProducts(feed, limit: _popularCount);
     final popularIds = popularProducts.map((p) => p.id).toSet();
-    final moreProducts = diversifyKitchenProducts(
+    final explore = diversifyKitchenProducts(
       feed.where((p) => !popularIds.contains(p.id)).toList(),
       limit: 36,
     );
+    // Then every paged product in server order, so the grid grows endlessly.
+    final shownIds = {...popularIds, ...explore.map((p) => p.id)};
+    final moreProducts = [
+      ...explore,
+      ...productsState.items.where((p) => !shownIds.contains(p.id)),
+    ];
+    _scrollListener?.scheduleCheck();
 
     // Always list every kitchen subcategory row (same idea as Fresh home rows).
     final themedRows = <({KitchenAisle aisle, List<Product> products})>[
@@ -287,8 +294,10 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
               ProductsLoadMoreSliver(
                 isLoadingMore: productsState.isLoadingMore,
                 hasMore: productsState.hasMore,
-                itemCount: productsState.items.length,
+                itemCount: popularProducts.length + moreProducts.length,
                 total: productsState.total,
+                error: productsState.hasLoadMoreError ? productsState.error : null,
+                onRetry: ref.read(paginatedProductsProvider(query).notifier).retry,
               ),
             ],
           ),

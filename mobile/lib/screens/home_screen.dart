@@ -114,6 +114,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
 
+    _scrollListener?.scheduleCheck();
     final products = productsState.items;
     // Seed chicken/meat/fish/etc. so aisle rows under Special Offers stay full.
     final aisleSeed = ref.watch(homeAisleCatalogProvider).valueOrNull ?? const [];
@@ -258,6 +259,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 hasMore: productsState.hasMore,
                 itemCount: productsState.items.length,
                 total: productsState.total,
+                error: productsState.hasLoadMoreError ? productsState.error : null,
+                onRetry: ref.read(paginatedProductsProvider(query).notifier).retry,
               ),
             ],
           ),

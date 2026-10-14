@@ -2053,5 +2053,11 @@
       "fragranceCta": "Reba parfum",
       "offersCta": "Reba poromosiyo"
     }
+  },
+  "listing": {
+    "loadingMore": "Turimo gufungura ibindi bicuruzwa…",
+    "loadError": "Ntibyashobotse gufungura ibindi bicuruzwa.",
+    "endOfResults_one": "Wabonye igicuruzwa kimwe gihari",
+    "endOfResults_other": "Wabonye ibicuruzwa byose uko ari {{count}}"
   }
 }

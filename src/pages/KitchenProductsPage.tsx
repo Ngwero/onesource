@@ -1,51 +1,20 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { KitchenIkeaProductCard } from "../components/kitchen/KitchenIkeaProductCard";
-import { useKitchenCatalog } from "../hooks/useKitchenCatalog";
-import type { Product } from "../types/product";
-
-const PAGE_SIZE = 36;
+import { InfiniteScrollFooter, ProductGridSkeleton } from "../components/InfiniteScrollFooter";
+import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
 
 type SortKey = "top" | "price-asc" | "price-desc" | "name";
 
-function sortProducts(products: Product[], sort: SortKey): Product[] {
-  const list = [...products];
-  switch (sort) {
-    case "price-asc":
-      return list.sort((a, b) => a.price - b.price);
-    case "price-desc":
-      return list.sort((a, b) => b.price - a.price);
-    case "name":
-      return list.sort((a, b) => a.title.localeCompare(b.title));
-    case "top":
-    default:
-      return list.sort(
-        (a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount
-      );
-  }
-}
-
 export function KitchenProductsPage() {
   const { t } = useTranslation();
-  const { kitchenProducts, loading } = useKitchenCatalog();
   const [params] = useSearchParams();
   const saleOnly = params.get("sale") === "1";
   const [sort, setSort] = useState<SortKey>("top");
-  const [visible, setVisible] = useState(PAGE_SIZE);
-
-  const filtered = useMemo(() => {
-    const base = saleOnly
-      ? kitchenProducts.filter(
-          (p) => p.originalPrice != null && p.originalPrice > p.price
-        )
-      : kitchenProducts;
-    return sortProducts(base, sort);
-  }, [kitchenProducts, saleOnly, sort]);
-
-  const shown = filtered.slice(0, visible);
-  const remaining = Math.max(0, filtered.length - shown.length);
+  const list = useInfiniteProducts({ shop: "kitchen", sale: saleOnly, sort });
+  const { products } = list;
 
   return (
     <div className="kitchen-home kitchen-subpage w-full pb-20">
@@ -74,10 +43,7 @@ export function KitchenProductsPage() {
             <span>{t("kitchen.sortBy")}</span>
             <select
               value={sort}
-              onChange={(e) => {
-                setSort(e.target.value as SortKey);
-                setVisible(PAGE_SIZE);
-              }}
+              onChange={(e) => setSort(e.target.value as SortKey)}
             >
               <option value="top">{t("kitchen.sortTop")}</option>
               <option value="price-asc">{t("kitchen.sortPriceAsc")}</option>
@@ -95,9 +61,9 @@ export function KitchenProductsPage() {
           </Link>
         </div>
 
-        {loading && kitchenProducts.length === 0 ? (
-          <p className="kitchen-home-empty">{t("common.loading")}</p>
-        ) : shown.length === 0 ? (
+        {list.initialLoading ? (
+          <ProductGridSkeleton gridClassName="kitchen-home-grid" />
+        ) : products.length === 0 && !list.hasMore && !list.error ? (
           <div className="kitchen-home-empty">
             <p>{t("kitchen.noFilterResults")}</p>
             <Link to="/kitchen/products" className="kitchen-home-reset">
@@ -107,7 +73,7 @@ export function KitchenProductsPage() {
         ) : (
           <>
             <div className="kitchen-home-grid">
-              {shown.map((product, index) => (
+              {products.map((product, index) => (
                 <KitchenIkeaProductCard
                   key={product.id}
                   product={product}
@@ -115,19 +81,14 @@ export function KitchenProductsPage() {
                 />
               ))}
             </div>
-            {remaining > 0 && (
-              <div className="kitchen-home-more-wrap">
-                <button
-                  type="button"
-                  className="kitchen-home-more"
-                  onClick={() => setVisible((n) => n + PAGE_SIZE)}
-                >
-                  {t("kitchen.showMore", {
-                    count: Math.min(remaining, PAGE_SIZE),
-                  })}
-                </button>
-              </div>
-            )}
+            <InfiniteScrollFooter
+              sentinelRef={list.sentinelRef}
+              hasMore={list.hasMore}
+              loading={list.loading}
+              error={list.error}
+              onRetry={list.retry}
+              count={products.length}
+            />
           </>
         )}
       </PageContainer>

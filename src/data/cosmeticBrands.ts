@@ -78,6 +78,11 @@ const PREFIXES = BRANDS.flatMap(([brand, prefixes]) =>
   prefixes.map((prefix) => ({ brand, prefix: prefix.toLowerCase() }))
 ).sort((a, b) => b.prefix.length - a.prefix.length);
 
+/** Title prefixes that identify `brand` (for server-side brand filtering). */
+export function cosmeticBrandTitlePrefixes(brand: string): string[] {
+  return BRANDS.find(([name]) => name === brand)?.[1] ?? [];
+}
+
 export type CosmeticTitle = { brand: string | null; name: string };
 
 /** Split "DIOR Addict Lip Glow – One Source" into brand + product name. */

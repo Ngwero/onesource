@@ -1,21 +1,21 @@
-import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { CosmeticsListing } from "../components/cosmetics/CosmeticsListing";
-import { useCosmeticsCatalog } from "../hooks/useCosmeticsCatalog";
-import { productMatchesSearch } from "../utils/searchMatch";
 
 export function CosmeticsSearchPage() {
   const { t } = useTranslation();
-  const { cosmeticsProducts, loading } = useCosmeticsCatalog();
   const [params] = useSearchParams();
   const query = params.get("q")?.trim() ?? "";
 
-  const results = useMemo(() => {
-    if (!query) return [];
-    return cosmeticsProducts.filter((p) => productMatchesSearch(p, query));
-  }, [cosmeticsProducts, query]);
+  const tryDifferent = (
+    <div className="cos-empty">
+      <p>{t("search.tryDifferent")}</p>
+      <Link to="/cosmetics/categories" className="cos-btn cos-btn--outline">
+        {t("cosmetics.navCategories")}
+      </Link>
+    </div>
+  );
 
   return (
     <div className="cos-page">
@@ -28,26 +28,24 @@ export function CosmeticsSearchPage() {
 
         <header className="cos-page-head">
           <h1>
-            {query
-              ? results.length === 0
-                ? t("search.noResults", { query })
-                : t("search.forQuery", { query })
-              : t("cosmetics.searchTitle")}
+            {query ? t("search.forQuery", { query }) : t("cosmetics.searchTitle")}
           </h1>
           {!query && <p>{t("cosmetics.searchHint")}</p>}
         </header>
 
-        {query && loading && cosmeticsProducts.length === 0 ? (
-          <p className="cos-empty">{t("common.loading")}</p>
-        ) : results.length === 0 ? (
-          <div className="cos-empty">
-            <p>{t("search.tryDifferent")}</p>
-            <Link to="/cosmetics/categories" className="cos-btn cos-btn--outline">
-              {t("cosmetics.navCategories")}
-            </Link>
-          </div>
+        {query ? (
+          <CosmeticsListing
+            key={query}
+            baseQuery={{ q: query }}
+            emptyState={
+              <>
+                <p className="cos-empty">{t("search.noResults", { query })}</p>
+                {tryDifferent}
+              </>
+            }
+          />
         ) : (
-          <CosmeticsListing key={query} products={results} />
+          tryDifferent
         )}
       </PageContainer>
     </div>

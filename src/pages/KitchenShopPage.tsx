@@ -1,5 +1,4 @@
 import { Fragment, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { KitchenAisleCarousel } from "../components/kitchen/KitchenAisleCarousel";
@@ -104,8 +103,6 @@ function KitchenDealsShelf() {
 }
 
 export function KitchenShopPage() {
-  const { t } = useTranslation();
-
   return (
     <div className="categories-fresh-page kitchen-fresh-layout">
       <div className="categories-fresh-layout">
@@ -124,12 +121,6 @@ export function KitchenShopPage() {
                   />
                 </Fragment>
               ))}
-            </div>
-
-            <div className="kitchen-ikea-more-wrap">
-              <Link to="/kitchen/products" className="kitchen-ikea-more">
-                {t("kitchen.navAll")}
-              </Link>
             </div>
           </PageContainer>
         </main>

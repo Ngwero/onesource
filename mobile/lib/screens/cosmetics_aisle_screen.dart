@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../config/theme.dart';
 import '../data/cosmetics.dart';
 import '../i18n/app_strings.dart';
-import '../models/product.dart';
 import '../providers/paginated_products_provider.dart';
 import '../utils/cart_feedback.dart';
 import '../utils/responsive.dart';
@@ -34,8 +33,20 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
   InfiniteScrollListener? _scrollListener;
   _Sort _sort = _Sort.featured;
   late bool _dealsOnly = widget.dealsOnly;
+  bool _contentShown = false;
 
-  ProductsQuery get _query => ProductsQuery(shop: 'cosmetics', aisle: widget.aisleId);
+  /// Offers filter and sort run server-side so every page is already filtered.
+  ProductsQuery get _query => ProductsQuery(
+        shop: 'cosmetics',
+        aisle: widget.aisleId,
+        sale: _dealsOnly,
+        sort: switch (_sort) {
+          _Sort.featured => 'top',
+          _Sort.priceLow => 'price-asc',
+          _Sort.priceHigh => 'price-desc',
+          _Sort.name => 'name',
+        },
+      );
 
   @override
   void initState() {
@@ -53,33 +64,19 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
     super.dispose();
   }
 
-  List<Product> _apply(List<Product> raw, AppStrings s) {
-    var list = _dealsOnly
-        ? raw.where((p) => p.originalPrice != null && p.originalPrice! > p.price).toList()
-        : [...raw];
-    switch (_sort) {
-      case _Sort.priceLow:
-        list.sort((a, b) => a.price.compareTo(b.price));
-      case _Sort.priceHigh:
-        list.sort((a, b) => b.price.compareTo(a.price));
-      case _Sort.name:
-        list.sort((a, b) => s.productTitle(a).compareTo(s.productTitle(b)));
-      case _Sort.featured:
-        break;
-    }
-    return list;
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = context.tr;
-    final state = ref.watch(paginatedProductsProvider(_query));
+    final query = _query;
+    final state = ref.watch(paginatedProductsProvider(query));
+    final notifier = ref.read(paginatedProductsProvider(query).notifier);
     final aisle = widget.aisleId == null ? null : cosmeticsAisleById(widget.aisleId!);
     final title = aisle == null
         ? s.get('cosmetics.navAll')
         : '${aisle.icon} ${s.cosmeticsAisle(aisle.id, aisle.title)}';
-    final products = _apply(state.items, s);
+    final products = state.items;
     final isTab = widget.aisleId == null;
+    final feedPending = state.isInitialLoading || (state.hasMore && state.error == null);
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -96,18 +93,20 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
       ),
       body: Builder(
         builder: (context) {
-          if (state.isInitialLoading) {
+          if (state.isInitialLoading && !_contentShown) {
             return LoadingView(message: s.get('common.loading'));
           }
-          if (state.error != null && state.items.isEmpty) {
+          if (state.error != null && state.items.isEmpty && !_contentShown) {
             return ErrorView(
               message: state.error!,
-              onRetry: () => ref.read(paginatedProductsProvider(_query).notifier).refresh(),
+              onRetry: notifier.refresh,
             );
           }
+          _contentShown = true;
+          _scrollListener?.scheduleCheck();
           return RefreshIndicator(
             color: cosmeticsAccent,
-            onRefresh: () => ref.read(paginatedProductsProvider(_query).notifier).refresh(),
+            onRefresh: notifier.refresh,
             child: CustomScrollView(
               controller: _scrollController,
               slivers: [
@@ -153,7 +152,17 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
                     ),
                   ),
                 ),
-                if (products.isEmpty)
+                if (state.isInitialLoading)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: LoadingView(message: s.get('common.loading')),
+                  )
+                else if (state.error != null && products.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: ErrorView(message: state.error!, onRetry: notifier.refresh),
+                  )
+                else if (products.isEmpty && !feedPending)
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
@@ -172,12 +181,15 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
                     onAdd: (p) => addToCartWithFeedback(context, ref, p),
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                   ),
-                ProductsLoadMoreSliver(
-                  isLoadingMore: state.isLoadingMore,
-                  hasMore: state.hasMore,
-                  itemCount: state.items.length,
-                  total: state.total,
-                ),
+                if (!state.isInitialLoading)
+                  ProductsLoadMoreSliver(
+                    isLoadingMore: state.isLoadingMore,
+                    hasMore: state.hasMore,
+                    itemCount: products.length,
+                    total: state.total,
+                    error: state.hasLoadMoreError ? state.error : null,
+                    onRetry: notifier.retry,
+                  ),
               ],
             ),
           );

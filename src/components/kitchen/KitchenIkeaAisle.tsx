@@ -1,56 +1,26 @@
-import { useMemo, useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import type { Product } from "../../types/product";
 import { KitchenIkeaProductCard } from "./KitchenIkeaProductCard";
+import { InfiniteScrollFooter, ProductGridSkeleton } from "../InfiniteScrollFooter";
+import { useInfiniteProducts } from "../../hooks/useInfiniteProducts";
 
 type SortKey = "top" | "price-asc" | "price-desc" | "name";
 
 type Props = {
   aisleId: string;
   title: string;
-  products: Product[];
-  initialLimit?: number;
+  /** Shown when the aisle has no products at all (no filters applied). */
+  emptyState?: ReactNode;
 };
 
-function sortProducts(products: Product[], sort: SortKey): Product[] {
-  const list = [...products];
-  switch (sort) {
-    case "price-asc":
-      return list.sort((a, b) => a.price - b.price);
-    case "price-desc":
-      return list.sort((a, b) => b.price - a.price);
-    case "name":
-      return list.sort((a, b) => a.title.localeCompare(b.title));
-    case "top":
-    default:
-      return list.sort(
-        (a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount
-      );
-  }
-}
-
-export function KitchenIkeaAisle({
-  aisleId,
-  title,
-  products,
-  initialLimit = 24,
-}: Props) {
+export function KitchenIkeaAisle({ aisleId, title, emptyState }: Props) {
   const { t } = useTranslation();
   const [sort, setSort] = useState<SortKey>("top");
   const [offersOnly, setOffersOnly] = useState(false);
-  const [visible, setVisible] = useState(initialLimit);
-
-  const filtered = useMemo(() => {
-    const base = offersOnly
-      ? products.filter(
-          (p) => p.originalPrice != null && p.originalPrice > p.price
-        )
-      : products;
-    return sortProducts(base, sort);
-  }, [products, offersOnly, sort]);
-
-  const shown = filtered.slice(0, visible);
-  const remaining = Math.max(0, filtered.length - shown.length);
+  const list = useInfiniteProducts({ shop: "kitchen", aisle: aisleId, sale: offersOnly, sort });
+  const { products } = list;
+  const filtersActive = offersOnly || sort !== "top";
+  const isEmpty = !list.initialLoading && products.length === 0 && !list.hasMore && !list.error;
 
   return (
     <section className="kitchen-ikea-aisle" aria-labelledby={`ikea-${aisleId}`}>
@@ -70,10 +40,7 @@ export function KitchenIkeaAisle({
           <span>{t("kitchen.sortBy")}</span>
           <select
             value={sort}
-            onChange={(e) => {
-              setSort(e.target.value as SortKey);
-              setVisible(initialLimit);
-            }}
+            onChange={(e) => setSort(e.target.value as SortKey)}
           >
             <option value="top">{t("kitchen.sortTop")}</option>
             <option value="price-asc">{t("kitchen.sortPriceAsc")}</option>
@@ -86,22 +53,18 @@ export function KitchenIkeaAisle({
           <input
             type="checkbox"
             checked={offersOnly}
-            onChange={(e) => {
-              setOffersOnly(e.target.checked);
-              setVisible(initialLimit);
-            }}
+            onChange={(e) => setOffersOnly(e.target.checked)}
           />
           <span>{t("kitchen.offersOnly")}</span>
         </label>
 
-        {(offersOnly || sort !== "top") && (
+        {filtersActive && (
           <button
             type="button"
             className="kitchen-ikea-reset"
             onClick={() => {
               setOffersOnly(false);
               setSort("top");
-              setVisible(initialLimit);
             }}
           >
             {t("kitchen.resetFilters")}
@@ -110,30 +73,34 @@ export function KitchenIkeaAisle({
 
       </div>
 
-      {shown.length === 0 ? (
-        <p className="kitchen-ikea-empty">{t("kitchen.noFilterResults")}</p>
+      {list.initialLoading ? (
+        <ProductGridSkeleton gridClassName="kitchen-ikea-grid" />
+      ) : isEmpty ? (
+        filtersActive || !emptyState ? (
+          <p className="kitchen-ikea-empty">{t("kitchen.noFilterResults")}</p>
+        ) : (
+          emptyState
+        )
       ) : (
-        <div className="kitchen-ikea-grid">
-          {shown.map((product, index) => (
-            <KitchenIkeaProductCard
-              key={product.id}
-              product={product}
-              priority={index < 4}
-            />
-          ))}
-        </div>
-      )}
-
-      {remaining > 0 && (
-        <div className="kitchen-ikea-more-wrap">
-          <button
-            type="button"
-            className="kitchen-ikea-more"
-            onClick={() => setVisible((n) => n + initialLimit)}
-          >
-            {t("kitchen.showMore", { count: Math.min(remaining, initialLimit) })}
-          </button>
-        </div>
+        <>
+          <div className="kitchen-ikea-grid">
+            {products.map((product, index) => (
+              <KitchenIkeaProductCard
+                key={product.id}
+                product={product}
+                priority={index < 4}
+              />
+            ))}
+          </div>
+          <InfiniteScrollFooter
+            sentinelRef={list.sentinelRef}
+            hasMore={list.hasMore}
+            loading={list.loading}
+            error={list.error}
+            onRetry={list.retry}
+            count={products.length}
+          />
+        </>
       )}
     </section>
   );

@@ -2053,5 +2053,11 @@
       "fragranceCta": "Voir les parfums",
       "offersCta": "Voir les offres"
     }
+  },
+  "listing": {
+    "loadingMore": "Chargement d'autres produits…",
+    "loadError": "Impossible de charger plus de produits.",
+    "endOfResults_one": "Vous avez vu le seul produit disponible",
+    "endOfResults_other": "Vous avez vu les {{count}} produits"
   }
 }

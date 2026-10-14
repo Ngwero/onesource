@@ -27,7 +27,10 @@ type ProductsContextType = {
   categories: Category[];
   /** True while the Fresh catalogue is loading. */
   loading: boolean;
+  /** True until that shop's full catalogue has loaded (or failed); see `ensureShop`. */
   shopLoading: Record<ProductShop, boolean>;
+  /** Start loading a shop's full catalogue; Kitchen and Cosmetics only load on demand. */
+  ensureShop: (shop: ProductShop) => void;
   error: string | null;
   refresh: () => Promise<void>;
   getProductById: (id: string) => Product | undefined;
@@ -52,34 +55,44 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
   });
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
+  const requested = useRef(new Set<ProductShop>());
+
+  // Each shop renders as soon as its own catalogue arrives; the large Kitchen
+  // catalogue must not hold up Fresh or Cosmetics.
+  const loadShop = useCallback(async (shop: ProductShop) => {
+    setShopLoading((prev) => ({ ...prev, [shop]: true }));
+    try {
+      const rows = await fetchProducts({ shop });
+      setByShop((prev) => ({ ...prev, [shop]: rows }));
+    } catch (e) {
+      setByShop((prev) => ({ ...prev, [shop]: [] }));
+      if (shop === "fresh") {
+        setError(e instanceof Error ? e.message : i18n.t("errors.loadProducts"));
+      }
+    } finally {
+      setShopLoading((prev) => ({ ...prev, [shop]: false }));
+    }
+  }, []);
+
+  const ensureShop = useCallback(
+    (shop: ProductShop) => {
+      if (requested.current.has(shop)) return;
+      requested.current.add(shop);
+      void loadShop(shop);
+    },
+    [loadShop]
+  );
 
   const load = useCallback(async () => {
-    setShopLoading({ fresh: true, kitchen: true, cosmetics: true });
     setError(null);
-
-    // Each shop renders as soon as its own catalogue arrives; the large Kitchen
-    // catalogue must not hold up Fresh or Cosmetics.
-    const loadShop = async (shop: ProductShop) => {
-      try {
-        const rows = await fetchProducts({ shop });
-        setByShop((prev) => ({ ...prev, [shop]: rows }));
-      } catch (e) {
-        setByShop((prev) => ({ ...prev, [shop]: [] }));
-        if (shop === "fresh") {
-          setError(e instanceof Error ? e.message : i18n.t("errors.loadProducts"));
-        }
-      } finally {
-        setShopLoading((prev) => ({ ...prev, [shop]: false }));
-      }
-    };
-
+    requested.current.add("fresh");
     await Promise.all([
-      ...SHOPS.map(loadShop),
+      ...SHOPS.filter((shop) => requested.current.has(shop)).map(loadShop),
       fetchCategories()
         .then((cats) => setCategories(cats.length ? cats : staticCategories))
         .catch(() => setCategories(staticCategories)),
     ]);
-  }, []);
+  }, [loadShop]);
 
   useEffect(() => {
     if (started.current) return;
@@ -126,6 +139,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
         categories,
         loading: shopLoading.fresh,
         shopLoading,
+        ensureShop,
         error,
         refresh: load,
         getProductById,

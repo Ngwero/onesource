@@ -10,6 +10,8 @@ buildCommand = "npm install && npm install --prefix server && VITE_CACHE_DIR=/tm
 [deploy]
 # Shop is already in dist/; only start the API (serves dist + /api + /admin).
 startCommand = "npm start --prefix server"
-healthcheckPath = "/api/health"
+# Liveness only (no Supabase query): /api/health counts products and can fail
+# while the database is busy, which makes Railway reject the new deploy.
+healthcheckPath = "/api/health/live"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"

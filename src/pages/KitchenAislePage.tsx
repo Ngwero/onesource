@@ -4,13 +4,11 @@ import { PageContainer } from "../components/PageContainer";
 import { KitchenIkeaAisle } from "../components/kitchen/KitchenIkeaAisle";
 import { getKitchenAisleTitle } from "../i18n/useLocalizedProduct";
 import { KITCHEN_WARE_AISLES } from "../data/kitchenWare";
-import { useKitchenCatalog } from "../hooks/useKitchenCatalog";
-import { filterKitchenAisle, isValidKitchenAisleId } from "../utils/kitchenMode";
+import { isValidKitchenAisleId } from "../utils/kitchenMode";
 
 export function KitchenAislePage() {
   const { t } = useTranslation();
   const { aisleId } = useParams<{ aisleId: string }>();
-  const { kitchenProducts, loading } = useKitchenCatalog();
 
   if (!isValidKitchenAisleId(aisleId)) {
     return <Navigate to="/kitchen/categories" replace />;
@@ -18,7 +16,6 @@ export function KitchenAislePage() {
 
   const aisle = KITCHEN_WARE_AISLES.find((a) => a.id === aisleId)!;
   const aisleTitle = getKitchenAisleTitle(aisle.id, t, aisle.title);
-  const products = filterKitchenAisle(kitchenProducts, aisleId);
 
   return (
     <div className="kitchen-home kitchen-subpage w-full pb-20">
@@ -38,26 +35,22 @@ export function KitchenAislePage() {
           <div>
             <p className="kitchen-aisle-kicker">{t("kitchen.aisleOf")}</p>
             <h1>{aisleTitle}</h1>
-            {loading && <p>{t("common.loading")}</p>}
           </div>
         </header>
 
-        {loading && products.length === 0 ? (
-          <p className="kitchen-home-empty">{t("common.loading")}</p>
-        ) : products.length === 0 ? (
-          <div className="kitchen-home-empty">
-            <p>{t("kitchen.empty")}</p>
-            <Link to="/kitchen/categories" className="kitchen-home-reset">
-              {t("kitchen.navCategories")}
-            </Link>
-          </div>
-        ) : (
-          <KitchenIkeaAisle
-            aisleId={aisle.id}
-            title={aisleTitle}
-            products={products}
-          />
-        )}
+        <KitchenIkeaAisle
+          key={aisle.id}
+          aisleId={aisle.id}
+          title={aisleTitle}
+          emptyState={
+            <div className="kitchen-home-empty">
+              <p>{t("kitchen.empty")}</p>
+              <Link to="/kitchen/categories" className="kitchen-home-reset">
+                {t("kitchen.navCategories")}
+              </Link>
+            </div>
+          }
+        />
       </PageContainer>
     </div>
   );

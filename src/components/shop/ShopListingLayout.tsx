@@ -11,6 +11,8 @@ import {
   type PriceRangeId,
 } from "../../utils/shopFilters";
 import { ShopFilterSidebar } from "./ShopFilterSidebar";
+import { InfiniteScrollFooter } from "../InfiniteScrollFooter";
+import { useProgressiveReveal } from "../../hooks/useInfiniteProducts";
 
 type Props = {
   products: Product[];
@@ -85,6 +87,7 @@ export function ShopListingLayout({
 
   const filtered = useMemo(() => applyShopFilters(products, filters), [products, filters]);
   const facetCounts = useMemo(() => buildFacetCounts(products), [products]);
+  const reveal = useProgressiveReveal(filtered);
 
   const sidebar = (
     <ShopFilterSidebar
@@ -130,7 +133,14 @@ export function ShopListingLayout({
               </div>
             )
           ) : (
-            children(filtered)
+            <>
+              {children(reveal.visible)}
+              <InfiniteScrollFooter
+                sentinelRef={reveal.sentinelRef}
+                hasMore={reveal.hasMore}
+                count={filtered.length}
+              />
+            </>
           )}
         </div>
       </div>

@@ -62,6 +62,7 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
     final greetingName = profile?.fullName?.split(' ').first ??
         user?.email?.split('@').first ??
         s.get('app.common.guest');
+    if (!all.isInitialLoading) _scrollListener?.scheduleCheck();
 
     return Container(
       decoration: const BoxDecoration(gradient: AppGradients.canvas),
@@ -116,7 +117,6 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                     title: '🏷️ ${s.get('cosmetics.hero.offersCta')}',
                     products: offers,
                     onAdd: _addToCart,
-                    onSeeAll: () => context.go('/cosmetics/shop'),
                   ),
                 ),
               for (final aisle in cosmeticsAisles)
@@ -152,12 +152,15 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                   onAdd: _addToCart,
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 ),
-              ProductsLoadMoreSliver(
-                isLoadingMore: all.isLoadingMore,
-                hasMore: all.hasMore,
-                itemCount: all.items.length,
-                total: all.total,
-              ),
+              if (!all.isInitialLoading)
+                ProductsLoadMoreSliver(
+                  isLoadingMore: all.isLoadingMore,
+                  hasMore: all.hasMore,
+                  itemCount: all.items.length,
+                  total: all.total,
+                  error: all.hasLoadMoreError ? all.error : null,
+                  onRetry: ref.read(paginatedProductsProvider(_query).notifier).retry,
+                ),
             ],
           ),
         ),
@@ -218,7 +221,6 @@ class _AisleRow extends ConsumerWidget {
       title: '${aisle.icon} ${s.cosmeticsAisle(aisle.id, aisle.title)}',
       products: page.products,
       onAdd: onAdd,
-      onSeeAll: () => context.push(cosmeticsAislePath(aisle.id)),
     );
   }
 }
@@ -228,13 +230,11 @@ class _ProductRow extends StatelessWidget {
     required this.title,
     required this.products,
     required this.onAdd,
-    required this.onSeeAll,
   });
 
   final String title;
   final List<Product> products;
   final void Function(Product) onAdd;
-  final VoidCallback onSeeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -244,24 +244,10 @@ class _ProductRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                ),
-                TextButton(
-                  onPressed: onSeeAll,
-                  style: TextButton.styleFrom(foregroundColor: cosmeticsAccent),
-                  child: Text(
-                    context.tr.get('cosmetics.seeAll'),
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.only(right: 20),
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
           ),
           const SizedBox(height: 10),
