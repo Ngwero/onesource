@@ -545,6 +545,13 @@
         "subtitle": "FREE delivery on orders over {{amount}} — across Greater Kampala",
         "cta": "Start shopping",
         "ctaHref": "/categories"
+      },
+      "393949": {
+        "badge": "Butcher counter",
+        "title": "Fresh meat",
+        "subtitle": "Beef, goat & chicken — freshly cut and delivered chilled",
+        "cta": "Shop meat",
+        "cta2": "Shop poultry"
       }
     },
     "slides": [

@@ -43,7 +43,7 @@ class HeroSlide {
   /// Mirrors the website's `mergeHeroSlideWithI18n`: copy comes from the
   /// active locale when the slide id has an entry; image and links stay.
   HeroSlide localized(AppStrings s) {
-    final prefix = id.startsWith('hero-') ? 'home.slidesById.$id' : 'app.slides.$id';
+    final prefix = s.has('home.slidesById.$id.title') ? 'home.slidesById.$id' : 'app.slides.$id';
     if (!s.has('$prefix.title')) return this;
     String pick(String field, String value) => s.or('$prefix.$field', value);
     return HeroSlide(

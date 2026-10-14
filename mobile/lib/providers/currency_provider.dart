@@ -55,7 +55,7 @@ class CurrencyNotifier extends Notifier<CurrencyState> {
   @override
   CurrencyState build() {
     Future.microtask(_init);
-    return CurrencyState(currency: CurrencyCode.ugx, rates: fallbackRates, loading: true);
+    return CurrencyState(currency: defaultCurrency, rates: fallbackRates, loading: true);
   }
 
   Future<void> _init() async {

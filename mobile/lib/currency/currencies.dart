@@ -1,6 +1,9 @@
 enum CurrencyCode { ugx, gbp, usd, kes, cdf, rwf }
 
 const baseCurrency = CurrencyCode.ugx;
+
+/// Display currency until the user picks one.
+const defaultCurrency = CurrencyCode.usd;
 const freeDeliveryThresholdUgx = 100000;
 const currencyStorageKey = 'amazon-uk-clone-currency';
 const ratesCacheKey = 'amazon-uk-clone-rates-cache';

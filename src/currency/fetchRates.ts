@@ -89,14 +89,23 @@ export async function fetchLiveRates(): Promise<{
   }
 }
 
-export function getSavedCurrency(): CurrencyCode {
-  const saved = localStorage.getItem(CURRENCY_STORAGE_KEY);
-  if (saved && TARGET_CODES.includes(saved as CurrencyCode)) {
-    return saved as CurrencyCode;
+export function isCurrencyCode(code: string): code is CurrencyCode {
+  return TARGET_CODES.includes(code as CurrencyCode);
+}
+
+export function getSavedCurrency(): CurrencyCode | null {
+  try {
+    const saved = localStorage.getItem(CURRENCY_STORAGE_KEY);
+    return saved && isCurrencyCode(saved) ? saved : null;
+  } catch {
+    return null;
   }
-  return BASE_CURRENCY;
 }
 
 export function saveCurrency(code: CurrencyCode) {
-  localStorage.setItem(CURRENCY_STORAGE_KEY, code);
+  try {
+    localStorage.setItem(CURRENCY_STORAGE_KEY, code);
+  } catch {
+    /* private mode */
+  }
 }

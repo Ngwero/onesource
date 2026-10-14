@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { LANGUAGES } from "../i18n/languages";
+import { chooseLanguage } from "../i18n/countryDefaults";
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
@@ -50,7 +51,7 @@ export function LanguageSwitcher() {
               key={lang.code}
               type="button"
               onClick={() => {
-                i18n.changeLanguage(lang.code);
+                chooseLanguage(lang.code);
                 setOpen(false);
               }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${

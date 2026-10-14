@@ -532,6 +532,13 @@
         "subtitle": "Livraison GRATUITE kobanda na {{amount}} — Grand Kampala",
         "cta": "Banda kosomba",
         "ctaHref": "/categories"
+      },
+      "393949": {
+        "badge": "Esika ya mosuni",
+        "title": "Mosuni ya sika",
+        "subtitle": "Ngombe, ntaba mpe nsoso — ekatami sika mpe ememami na malili",
+        "cta": "Somba mosuni",
+        "cta2": "Somba nsoso"
       }
     },
     "slides": [

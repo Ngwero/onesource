@@ -5,19 +5,23 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import i18n from "../i18n";
+import { chooseCurrency } from "../i18n/countryDefaults";
 import {
   BASE_CURRENCY,
   FREE_DELIVERY_THRESHOLD_GBP,
   getCurrencyInfo,
   type CurrencyCode,
 } from "../currency/currencies";
-import { fetchLiveRates, getSavedCurrency, saveCurrency } from "../currency/fetchRates";
+import { fetchLiveRates } from "../currency/fetchRates";
+import { getCurrency, subscribeCurrency } from "../currency/currencyStore";
 
 type CurrencyContextType = {
   currency: CurrencyCode;
+  /** The visitor's explicit choice; kept over auto-detected country defaults. */
   setCurrency: (code: CurrencyCode) => void;
   rates: Record<CurrencyCode, number>;
   ratesUpdatedAt: string | null;
@@ -34,7 +38,7 @@ type CurrencyContextType = {
 const CurrencyContext = createContext<CurrencyContextType | null>(null);
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [currency, setCurrencyState] = useState<CurrencyCode>(getSavedCurrency);
+  const currency = useSyncExternalStore(subscribeCurrency, getCurrency);
   const [rates, setRates] = useState<Record<CurrencyCode, number>>({
     GBP: 1,
     USD: 1,
@@ -67,10 +71,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [loadRates]);
 
-  const setCurrency = useCallback((code: CurrencyCode) => {
-    setCurrencyState(code);
-    saveCurrency(code);
-  }, []);
+  const setCurrency = chooseCurrency;
 
   const convert = useCallback(
     (amountGbp: number) => {

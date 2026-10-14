@@ -63,7 +63,7 @@ const OTHER_ALLERGENS = [
   ["Cocamidopropyl betaine", /cocamidopropyl betaine/i],
 ];
 
-const W = {
+export const COSMETICS_WARNINGS = {
   external: "For external use only.",
   eyes: "Avoid contact with eyes. If the product gets into the eyes, rinse immediately and thoroughly with water.",
   irritation: "Stop using and seek medical advice if redness, swelling, itching or irritation develops.",
@@ -101,12 +101,14 @@ const W = {
   electrical: "Electrical item: read the manufacturer's safety instructions before use, keep away from water, unplug after use and before cleaning, and keep the cable out of reach of children.",
 };
 
+const W = COSMETICS_WARNINGS;
+
 /** Mains-powered or rechargeable beauty appliances (UK models). */
-const ELECTRICAL = /hair ?dryer|straightener|\bstyler\b|air ?styler|air ?wrap|multi-?styler|curl(ing)? (iron|wand|tong)|\btongs?\b|waver|hot brush|\bled\b|light therapy|microcurrent|\bdevice\b|epilator|\bipl\b|shaver|trimmer|clipper|sonic|electric|rechargeable|cordless|\bfridge\b|nail lamp|\buv lamp|facial steamer|\b\d{3,4}\s?w\b/i;
+export const ELECTRICAL = /hair ?dryer|straightener|(?<!(instant|brow) )\bstyler\b(?!.*(\d+\s?(ml|g)\b|various shades|pencil|\bgel\b|brow))|air ?styler|air ?wrap|multi-?styler|curl(ing)? (iron|wand|tong)|\btongs?\b|waver|hot brush|\bled\b|light therapy|microcurrent|\bdevice\b|epilator|\bipl\b|shaver|trimmer|clipper|sonic (tooth|cleans|brush|head)|supersonic|electric (tooth|shaver|razor|cleans|facial|massag|nail|file|brush)|\belectrical\b|rechargeable|cordless|\bfridge\b|nail lamp|\buv lamp|facial steamer|\b\d{3,4}\s?w\b/i;
 
 const KIND = [
   ["supplement", /gumm(y|ies)|softgels?|\btablets\b|\d+\s*(x\s*)?(capsules|vegicaps|sachets)|\((\d+ )?capsules\)|vegicaps|\bsachets?\b|nootropic|adaptogen|myvitamins|myprotein|the nue co|dirtea|vida glow|kiki health|revive collagen|dose & co|protein (powder|bar|shake)|marine collagen|collagen (powder|shot|drink|bovine)|superfood powder|greens powder|ashwagandha|supplement(?!.*(serum|shampoo|conditioner|treatment))|multivitamin(?! (cream|serum|masque|power))|vitamin (d3?|b complex|b12)\b(?!.*(cream|serum))|chlorophyll|mushroom (extract|powder|blend)|probiotic (capsules|supplement)|\bbiotics\b|magnesium|maca\b|digestion|immunity|hormone balance|cod liver/i],
-  ["intimate", /vibrator|\blelo\b|smile makers|so divine|lubricant|\blube\b|erotic|massage wand|\bwand\b.*(various|vibrat)|pleasure|condom|intimate (wash|gel|moisturi)/i],
+  ["intimate", /vibrator|\blelo\b|smile makers|so divine|lubricant|\blube\b|erotic|massage wand|smile makers|\bvush\b|pleasure(?! (lip|gloss|palette|balm))|condom|intimate (wash|gel|moisturi)/i],
   ["candle", /candle/i],
   ["homeScent", /diffuser(?! .*(dryer|hair))|room (spray|mist)|home (fragrance|spray|scent|scenting)|wax melts?|incense|linen (spray|mist)|pillow (spray|mist)|air freshener|car (diffuser|fragrance)|scented (sachet|stone|pearls)|\bpearls\b(?=.*baobab)|baobab collection/i],
   ["textile", /pillow ?case|pillowcase|scrunchie|sleep mask(?!.*(cream|gel|\d+\s?ml))|eye mask(?=.*silk)|\b(mulberry )?silk (scrunchies?|hair ties?|bonnet|turban|wrap)\b|headband|hair wrap|turban|bath ?robe|dressing gown|pyjama|slippers|towel|socks/i],
@@ -126,13 +128,14 @@ const KIND = [
   ["set", /\bset\b|\bkit\b|bundle|collection|gift|trio|duo|routine|coffret/i],
 ];
 
-const TOPICAL = /cream|serum|lotion|balm|\boil\b|spray|mask|masque|wash|shampoo|conditioner|butter|scrub|toner|cleanser|moisturi|soak|bath|deodorant|mist/i;
-const INGESTED = /gumm(y|ies)|softgels?|capsules|vegicaps|tablets|sachets|\bpowder\b|\bdrink\b|\bshots?\b|\bbar\b|\bshake\b|\bsupplement\b/i;
+const TOPICAL = /cream|serum|lotion|balm|\boil\b|spray|mask|masque|wash|shampoo|conditioner|butter|scrub|toner|cleanser|moisturi|soak|bath|deodorant|mist|patch|\blips?\b|\beyes?\b|pro-collagen/i;
+const INGESTED = /gumm(y|ies)(?! bear)|softgels?|vegicaps|tablets|\bdrink\b|\bshake\b|\bsupplement\b/i;
 
 export function cosmeticsKind(title) {
   for (const [k, re] of KIND) {
     if (!re.test(title)) continue;
     if (k === "supplement" && TOPICAL.test(title) && !INGESTED.test(title)) continue;
+    if (k === "homeScent" && /dryer|airwrap|styler/i.test(title)) continue;
     return k;
   }
   return "other";

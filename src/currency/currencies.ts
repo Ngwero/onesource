@@ -2,6 +2,8 @@ export type CurrencyCode = "GBP" | "USD" | "UGX" | "KES" | "CDF" | "RWF";
 
 /** Product prices in the database are stored in this currency. */
 export const BASE_CURRENCY: CurrencyCode = "UGX";
+/** Display currency when nothing is known about the visitor. */
+export const DEFAULT_CURRENCY: CurrencyCode = "USD";
 export const FREE_DELIVERY_THRESHOLD_GBP = 100_000;
 
 export type CurrencyInfo = {

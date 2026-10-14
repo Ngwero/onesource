@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
+import { applyCountryDefaults } from "../i18n/countryDefaults";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 const CHOSEN_KEY = "onesource.deliveryCountry";
@@ -16,8 +17,12 @@ export const DELIVERY_COUNTRIES = (
 ).split(" ");
 
 const listeners = new Set<() => void>();
-let country = readStored(CHOSEN_KEY) ?? readStored(DETECTED_KEY) ?? DEFAULT_COUNTRY;
+const storedCountry = readStored(CHOSEN_KEY) ?? readStored(DETECTED_KEY);
+let country = storedCountry ?? DEFAULT_COUNTRY;
 let detection: Promise<void> | null = null;
+
+// Before the first render, so a returning visitor never sees the generic USD/English defaults.
+if (storedCountry) applyCountryDefaults(storedCountry, { keepUserChoice: true });
 
 function readStored(key: string): string | null {
   try {
@@ -64,6 +69,7 @@ function detectCountry() {
       if (!detected || readStored(CHOSEN_KEY)) return;
       store(DETECTED_KEY, detected);
       setCountry(detected);
+      applyCountryDefaults(detected, { keepUserChoice: true });
     });
 }
 
@@ -95,6 +101,7 @@ export function useDeliveryCountry() {
   const chooseCountry = useCallback((c: string) => {
     store(CHOSEN_KEY, c);
     setCountry(c);
+    applyCountryDefaults(c, { keepUserChoice: false });
   }, []);
 
   return { code, name: countryName(code), countryName, chooseCountry };

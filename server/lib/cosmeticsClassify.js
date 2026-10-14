@@ -69,7 +69,7 @@ export function classifyCosmetic(title, breadcrumb = "") {
     if (
       group === "supplements-food" &&
       /serum|ceramide|retinoid|cream|lotion|\bmask\b|shampoo|conditioner|\blip|balm|mist|spray|wipe|\btan\b|pro-collagen/i.test(text) &&
-      !/\bsupplement\b|gumm(y|ies)|tablets|sachets|softgels?|vegicaps|myvitamins|kiki health|vida glow|the nue co/i.test(text)
+      !/\bsupplement\b|tablets|sachets|softgels?|vegicaps/i.test(text)
     ) continue;
     if (!re.test(text)) continue;
     return aisle ? { aisle, group } : { skip: group };

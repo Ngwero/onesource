@@ -84,7 +84,8 @@ Future<RatesCache> fetchLiveRates() async {
 
 Future<CurrencyCode> loadSavedCurrency() async {
   final prefs = await SharedPreferences.getInstance();
-  return currencyCodeFromString(prefs.getString(currencyStorageKey));
+  final saved = prefs.getString(currencyStorageKey);
+  return saved == null ? defaultCurrency : currencyCodeFromString(saved);
 }
 
 Future<void> saveCurrency(CurrencyCode code) async {

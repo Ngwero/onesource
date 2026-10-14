@@ -532,6 +532,13 @@
         "subtitle": "Uwasilishaji BURE kutoka {{amount}} — Kampala Kubwa",
         "cta": "Anza kununua",
         "ctaHref": "/categories"
+      },
+      "393949": {
+        "badge": "Kaunta ya bucha",
+        "title": "Nyama safi",
+        "subtitle": "Nyama ya ng'ombe, mbuzi na kuku — imekatwa upya na kuletwa ikiwa baridi",
+        "cta": "Nunua nyama",
+        "cta2": "Nunua kuku"
       }
     },
     "slides": [

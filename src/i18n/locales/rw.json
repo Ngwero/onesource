@@ -532,6 +532,13 @@
         "subtitle": "Gutanga KU BUNTU kuva kuri {{amount}} — Grand Kampala",
         "cta": "Tangira kugura",
         "ctaHref": "/categories"
+      },
+      "393949": {
+        "badge": "Ibagiro",
+        "title": "Inyama nshya",
+        "subtitle": "Inyama y'inka, ihene n'inkoko — ikasewe vuba kandi igezwa ikonje",
+        "cta": "Gura inyama",
+        "cta2": "Gura inkoko"
       }
     },
     "slides": [

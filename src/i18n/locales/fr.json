@@ -532,6 +532,13 @@
         "subtitle": "Livraison GRATUITE dès {{amount}} — Grand Kampala",
         "cta": "Commencer vos achats",
         "ctaHref": "/categories"
+      },
+      "393949": {
+        "badge": "Boucherie",
+        "title": "Viande fraîche",
+        "subtitle": "Bœuf, chèvre et poulet — fraîchement découpés et livrés au frais",
+        "cta": "Acheter de la viande",
+        "cta2": "Acheter de la volaille"
       }
     },
     "slides": [
