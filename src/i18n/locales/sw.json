@@ -57,6 +57,8 @@
   },
   "header": {
     "deliverTo": "Wasilisha kwa",
+    "chooseCountry": "Chagua nchi ya kuwasilisha",
+    "searchCountries": "Tafuta nchi",
     "unitedKingdom": "Uganda",
     "searchPlaceholder": "Tafuta mazao mapya, nafaka, maziwa…",
     "allProduce": "Zote",
@@ -1645,7 +1647,8 @@
     "boughtPastMonthK": "{{count}}K+ zilinunuliwa mwezi uliopita",
     "bestSeller": "Inauzwa zaidi",
     "bestSellerTop": "Na. 1 Inauzwa zaidi",
-    "unitPrice": "({{price}} / {{unit}})"
+    "unitPrice": "({{price}} / {{unit}})",
+    "noReviews": "Bado hakuna maoni"
   },
   "product": {
     "notFound": "Bidhaa haipatikani",

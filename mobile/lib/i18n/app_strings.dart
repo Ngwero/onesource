@@ -83,6 +83,7 @@ class AppStrings {
 
   String currencyName(String code) => get('currency.names.$code');
   String langName(String code) => get('lang.$code');
+  String countryName(String code) => or('countryNames.$code', code);
 
   String homeRowTitle(String id) => get('home.rows.$id.title');
   String homeRowSubtitle(String id) => get('home.rows.$id.subtitle');

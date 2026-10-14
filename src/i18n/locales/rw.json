@@ -57,6 +57,8 @@
   },
   "header": {
     "deliverTo": "Tanga kuri",
+    "chooseCountry": "Hitamo igihugu cyo koherezamo",
+    "searchCountries": "Shakisha igihugu",
     "unitedKingdom": "Ubugande",
     "searchPlaceholder": "Shakisha ibiribwa bishya, imbuto, amata…",
     "allProduce": "Byose",
@@ -1645,7 +1647,8 @@
     "boughtPastMonthK": "{{count}}K+ byaguzwe ukwezi gushize",
     "bestSeller": "Igicuruzwa cyagurishijwe cyane",
     "bestSellerTop": "N°1 Igicuruzwa cyagurishijwe cyane",
-    "unitPrice": "({{price}} / {{unit}})"
+    "unitPrice": "({{price}} / {{unit}})",
+    "noReviews": "Nta bitekerezo biratangwa"
   },
   "product": {
     "notFound": "Igicuruzwa nticyabonetse",

@@ -454,7 +454,7 @@ class _SpotlightCard extends ConsumerWidget {
                       style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, height: 1.25),
                     ),
                     const SizedBox(height: 6),
-                    RatingStars(rating: product.rating, reviewCount: product.reviewCount, size: 12),
+                    CardRating(product: product),
                     const SizedBox(height: 8),
                     Row(
                       children: [

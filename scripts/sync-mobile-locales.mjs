@@ -25,8 +25,23 @@ function setPath(obj, dotted, value) {
   node[parts.at(-1)] = value;
 }
 
+// The app has no Intl.DisplayNames, so ship the "Deliver to" country names
+// the website computes at runtime. Missing names fall back to English in the app.
+const deliveryHook = await fs.readFile(path.join(root, "src/hooks/useDeliveryCountry.ts"), "utf8");
+const countryList = deliveryHook.match(/DELIVERY_COUNTRIES = \(([\s\S]*?)\)\.split/)?.[1];
+if (!countryList) throw new Error("DELIVERY_COUNTRIES not found in useDeliveryCountry.ts");
+const COUNTRIES = countryList.match(/\b[A-Z]{2}\b/g);
+
+function countryNames(lang) {
+  const names = new Intl.DisplayNames([lang], { type: "region", fallback: "code" });
+  return Object.fromEntries(
+    COUNTRIES.map((c) => [c, names.of(c)]).filter(([c, name]) => name && name !== c)
+  );
+}
+
 for (const [i, lang] of LANGS.entries()) {
   const json = JSON.parse(await fs.readFile(path.join(srcDir, `${lang}.json`), "utf8"));
+  json.countryNames = countryNames(lang);
   json.app = {};
   for (const [key, values] of Object.entries(APP_STRINGS)) {
     if (values.length !== LANGS.length) throw new Error(`app.${key}: expected ${LANGS.length} values`);

@@ -6,10 +6,11 @@ import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../utils/shop_mode.dart';
 import 'brand_logo.dart';
+import 'deliver_to_picker.dart';
 import 'home_header.dart';
 import 'locale_currency_bar.dart';
 
-/// Pins a compact header (logo, search, currency, language) over a home
+/// Pins a compact header (logo, search, country, currency, language) over a home
 /// scroll view once the full [HomeHeader] has scrolled out of view.
 class CompactHomeBarOverlay extends StatefulWidget {
   const CompactHomeBarOverlay({
@@ -135,6 +136,8 @@ class CompactHomeBar extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
+            const DeliveryCountryFlagButton(onDark: true),
+            const SizedBox(width: 6),
             const LocaleCurrencyBar(onDark: true, flagsOnly: true),
           ],
         ),

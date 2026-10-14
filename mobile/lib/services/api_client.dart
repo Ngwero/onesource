@@ -332,6 +332,20 @@ class ApiClient {
     return [];
   }
 
+  /// Country of the device's IP address (no GPS); null when unknown or offline.
+  Future<String?> fetchGeoCountry() async {
+    try {
+      final res = await _client.get(_uri('/geo')).timeout(const Duration(seconds: 6));
+      if (res.statusCode != 200) return null;
+      final data = jsonDecode(res.body);
+      final country = data is Map<String, dynamic> ? data['country'] : null;
+      return country is String && RegExp(r'^[A-Z]{2}$').hasMatch(country) ? country : null;
+    } catch (e) {
+      debugPrint('[OneSource] geo lookup failed: $e');
+      return null;
+    }
+  }
+
   Future<List<AppNotification>> fetchNotifications() async {
     try {
       final res = await _client

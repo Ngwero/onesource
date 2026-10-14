@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'config/theme.dart';
 import 'i18n/app_strings.dart';
 import 'i18n/languages.dart';
+import 'providers/delivery_country_provider.dart';
 import 'providers/locale_provider.dart';
 import 'providers/notifications_provider.dart';
 import 'router/app_router.dart';
@@ -27,6 +28,8 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Starts IP country detection, which may set default currency and language.
+    ref.read(deliveryCountryProvider);
     onSupabaseInitialized = () {
       if (mounted) {
         ref.read(supabaseReadyProvider.notifier).state = isSupabaseReady;

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../currency/currencies.dart';
 import '../currency/format_price.dart';
@@ -51,22 +54,44 @@ class CurrencyState {
   }
 }
 
+/// "user" = picked in the switcher; "auto" = derived from the delivery country.
+const _currencySourceKey = 'onesource.currencySource';
+
 class CurrencyNotifier extends Notifier<CurrencyState> {
+  /// Completes once the saved currency has been loaded.
+  late Future<void> ready;
+
   @override
   CurrencyState build() {
-    Future.microtask(_init);
+    ready = Future.microtask(_loadSaved);
     return CurrencyState(currency: defaultCurrency, rates: fallbackRates, loading: true);
   }
 
-  Future<void> _init() async {
+  Future<void> _loadSaved() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Values saved before sources were tracked could only come from the switcher.
+    if (prefs.getString(_currencySourceKey) == null && prefs.getString(currencyStorageKey) != null) {
+      await prefs.setString(_currencySourceKey, 'user');
+    }
     final saved = await loadSavedCurrency();
     state = state.copyWith(currency: saved, clearError: true);
-    await refreshRates();
+    unawaited(refreshRates());
   }
 
-  Future<void> setCurrency(CurrencyCode code) async {
+  Future<void> setCurrency(CurrencyCode code, {bool byUser = true}) async {
     state = state.copyWith(currency: code);
     await saveCurrency(code);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_currencySourceKey, byUser ? 'user' : 'auto');
+  }
+
+  /// Switch to a delivery country's currency. With [keepUserChoice] a
+  /// currency the user picked in the switcher is left alone.
+  Future<void> applyCountryDefault(CurrencyCode code, {required bool keepUserChoice}) async {
+    await ready;
+    final prefs = await SharedPreferences.getInstance();
+    if (keepUserChoice && prefs.getString(_currencySourceKey) == 'user') return;
+    await setCurrency(code, byUser: false);
   }
 
   Future<void> refreshRates() async {

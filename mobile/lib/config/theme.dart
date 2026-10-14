@@ -45,6 +45,7 @@ class AppColors {
   static const highlight = amber;
   static const lemon = lemonGreen;
   static const deal = Color(0xFFC9920F);
+  static const star = Color(0xFFFFA41C);
 
   static const cardRadius = 20.0;
   static const pillRadius = 28.0;

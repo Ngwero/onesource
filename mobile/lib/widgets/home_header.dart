@@ -6,6 +6,7 @@ import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../providers/notifications_provider.dart';
 import 'brand_logo.dart';
+import 'deliver_to_picker.dart';
 import 'home_search_bar.dart';
 import 'locale_currency_bar.dart';
 import 'shop_mode_switch.dart';
@@ -120,6 +121,8 @@ class _HomeHeaderState extends ConsumerState<HomeHeader>
                                 color: Colors.white,
                               ),
                             ),
+                            const SizedBox(height: 4),
+                            const DeliverToChip(onDark: true),
                           ],
                         ),
                       ),

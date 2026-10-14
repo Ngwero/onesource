@@ -23,6 +23,7 @@ class PrivacyScreen extends StatelessWidget {
         '• Information you provide: name, email address, phone number, delivery address, account password, and order notes.',
         '• Order and payment-related data: items purchased, basket contents, delivery preferences, and cash-on-delivery order details. We currently accept cash on delivery only and do not process card payments in the app.',
         '• Usage data: pages and products viewed, searches, device type, app version, and approximate technical logs needed to keep the service secure and reliable.',
+        '• Approximate country: when you open the website or app we look up the country of your IP address (using the country.is service) to pre-fill “Deliver to” and suggest a currency and language. We do not use GPS or ask for location permission, we only keep the country, not your precise location, and you can change it at any time.',
         '• Communications: messages you send to support, and transactional emails we send (for example login codes, password reset links, and order updates).',
         'We do not require access to your SMS inbox, full contacts list, or installed app list to use One Source shopping features.',
       ],
@@ -31,7 +32,7 @@ class PrivacyScreen extends StatelessWidget {
       '3. Cookies and how we use them',
       [
         'A cookie (or similar technology) is a small file stored on your device. We use cookies and local storage to:',
-        '• Keep you signed in and remember language or currency preferences',
+        '• Keep you signed in and remember language, currency or delivery-country preferences',
         '• Save your basket, saved items, browsing history and shopping session',
         '• Measure basic site performance and fix errors',
         '• Improve how the shop works for returning customers',

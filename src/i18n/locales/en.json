@@ -57,6 +57,8 @@
   },
   "header": {
     "deliverTo": "Deliver to",
+    "chooseCountry": "Choose your delivery country",
+    "searchCountries": "Search countries",
     "unitedKingdom": "Uganda",
     "searchPlaceholder": "Search fresh produce, grains, dairy...",
     "kitchenSearchPlaceholder": "Search cookware, pans, cabinets...",
@@ -881,7 +883,8 @@
     "boughtPastMonthK": "{{count}}K+ bought in past month",
     "bestSeller": "Best Seller",
     "bestSellerTop": "#1 Best Seller",
-    "unitPrice": "({{price}} / {{unit}})"
+    "unitPrice": "({{price}} / {{unit}})",
+    "noReviews": "No reviews yet"
   },
   "product": {
     "notFound": "Product not found",
