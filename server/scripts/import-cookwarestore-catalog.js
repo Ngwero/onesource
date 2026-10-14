@@ -366,7 +366,6 @@ function buildProductRow(item, index, image) {
     id: item.id,
     title: `${item.title} – One Source`,
     price,
-    originalPrice: index % 5 === 0 ? Math.round(price * 1.14) : undefined,
     rating: Number((4.2 + (Number(item.articleId) % 7) * 0.1).toFixed(1)),
     reviewCount: 10 + (Number(item.articleId) % 180),
     image,

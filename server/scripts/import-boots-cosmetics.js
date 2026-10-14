@@ -110,8 +110,8 @@ function cleanTitle(title) {
   return String(title ?? "").replace(/\s+/g, " ").trim();
 }
 
-function priceUgx(gbp) {
-  return gbpToUgandanCosmeticsPrice(gbp);
+function priceUgx(gbp, ctx) {
+  return gbpToUgandanCosmeticsPrice(gbp, ctx);
 }
 
 function unitFor(size) {
@@ -161,7 +161,7 @@ async function listCatalogItems() {
       brand: cleanTitle(product.brand) || "Luxury",
       title: cleanTitle(product.title),
       gbp,
-      price: priceUgx(gbp),
+      price: priceUgx(gbp, { title: cleanTitle(product.title), brand: cleanTitle(product.brand) }),
       unit: unitFor(product.size),
       absolutePath: path.join(CATALOG_ROOT, image.local_path),
     };

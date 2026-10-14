@@ -20,7 +20,7 @@ import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
-import { gbpToUgandanCosmeticsPrice } from "../lib/cosmeticsPrices.js";
+import { cosmeticsWasPrice, gbpToUgandanCosmeticsPrice } from "../lib/cosmeticsPrices.js";
 import { seedRowFromJson } from "../db.js";
 
 const SITES = {
@@ -86,8 +86,8 @@ function cleanText(text) {
     .trim();
 }
 
-function priceUgx(gbp) {
-  return gbpToUgandanCosmeticsPrice(gbp);
+function priceUgx(gbp, ctx) {
+  return gbpToUgandanCosmeticsPrice(gbp, ctx);
 }
 
 function unitFromTitle(title) {
@@ -251,10 +251,10 @@ async function main() {
     }
     const primary = files.find((f) => d.primaryImage && f.includes(d.primaryImage)) ?? files[0];
     const aisleId = resolveAisle(d);
-    const price = priceUgx(d.gbp);
+    const price = priceUgx(d.gbp, { title: d.title, brand: d.brand });
     const worthGbp = Number(d.title.match(/worth (?:over )?£([\d,.]+)/i)?.[1]?.replace(/,/g, ""));
     const listGbp = Math.max(d.rrpGbp ?? 0, Number.isFinite(worthGbp) ? worthGbp : 0) || null;
-    const rrp = listGbp && listGbp > d.gbp ? priceUgx(listGbp) : null;
+    const rrp = listGbp ? cosmeticsWasPrice(price, d.gbp, listGbp) : null;
     const item = {
       id: `cosmetics-${aisleId}-${SITE.tag}-${productId}`,
       productId,

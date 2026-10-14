@@ -10,8 +10,9 @@
  *   cd server && npm run import:everythingkitchens -- --aisle small-appliances
  *   cd server && npm run import:everythingkitchens -- --reuse-images --limit 50
  *
- * Prices: small appliances use USD × EK_USD_TO_UGX (default 3700) × 1.1;
- * everything else uses the Kampala shelf-price bands in ugandanKitchenPrices.js.
+ * Prices: kitchenShelfPrice() in ugandanKitchenPrices.js — small appliances at
+ * US price × 3,700 × 1.05, everything else at the Kampala shelf-price band capped
+ * at landed cost × 1.15. The feed has no crossed-out prices, so no was-price.
  * Listings without a source price (discontinued / bundle-only) are skipped.
  *
  * Product id: kitchen-{aisleId}-ek-{urlSlug}
@@ -22,16 +23,13 @@ import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
 import { KITCHEN_WARE_AISLES, KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWareCatalog.js";
-import { gbpToUgandanKitchenPrice, roundUgx } from "../lib/ugandanKitchenPrices.js";
+import { kitchenShelfPrice } from "../lib/ugandanKitchenPrices.js";
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
 const CATALOG_CSV =
   process.env.EK_CATALOG?.trim() ||
   "/Users/user/everythingkitchens-scraper/products/products.csv";
 const CATALOG_ROOT = path.dirname(CATALOG_CSV);
-const USD_TO_UGX = Number(process.env.EK_USD_TO_UGX || 3700);
-const USD_TO_GBP = 0.79;
-const APPLIANCE_MARKUP = 1;
 
 const dryRun = process.argv.includes("--dry-run");
 const reuseImages = process.argv.includes("--reuse-images");
@@ -180,14 +178,13 @@ function slugFromUrl(url) {
 }
 
 function priceFor(item) {
-  if (item.aisleId === "small-appliances") {
-    return roundUgx(item.usd * USD_TO_UGX * APPLIANCE_MARKUP);
-  }
-  return gbpToUgandanKitchenPrice(item.usd * USD_TO_GBP, {
+  return kitchenShelfPrice({
     id: item.id,
     title: item.title,
+    brand: item.brand,
     aisleId: item.aisleId,
-  });
+    usd: item.usd,
+  }).price;
 }
 
 async function listCatalogItems() {
@@ -368,7 +365,6 @@ async function main() {
         id: item.id,
         title: `${item.title} – One Source`,
         price: item.price,
-        originalPrice: h % 3 === 0 ? roundUgx(item.price * 1.1) : undefined,
         rating: Number((4.4 + (h % 5) * 0.1).toFixed(1)),
         reviewCount: 18 + (h % 140),
         image,

@@ -3,7 +3,8 @@
  *
  * Not a GBP/USD FX conversion — UK luxury catalogues were landing at
  * UGX 100k–4.7M (a spatula at ~168k). These bands match Jumia UG, Game,
- * Shoprite, and local cookware shops.
+ * Shoprite, and local cookware shops. Importers should use kitchenShelfPrice()
+ * (bottom of file), which adds the landed-cost cap and appliance pricing.
  */
 
 const AISLE_IDS = [
@@ -160,4 +161,81 @@ export function gbpToUgandanKitchenPrice(gbp, product = {}) {
   const n = Number(gbp);
   const premium = Number.isFinite(n) && n >= 80;
   return ugandanKitchenPrice({ ...product, premium });
+}
+
+/*
+ * Cost-aware model (Oct 2026, benchmarks in data/uganda-price-benchmarks.json).
+ *
+ * Kampala shops sell imported brands above UK price × FX (Tefal Unlimited 26cm
+ * pan UGX 255k at Bayet, Le Creuset 24cm casserole UGX 1.85M at mtunda.ug),
+ * while generic pans, mugs and cutlery match the bands above. So:
+ *   - non-electric kit: the Kampala band, never above landed cost × KITCHEN_MAX_MARGIN;
+ *   - small appliances: landed cost × APPLIANCE_MARGIN (no Kampala band fits a
+ *     KitchenAid or Vitamix; local mixers/blenders are a different class).
+ * Landed cost = supplier price without UK VAT (US prices exclude sales tax) × FX.
+ */
+export const KITCHEN_UGX_PER_GBP = 4750;
+export const KITCHEN_UGX_PER_USD = 3700;
+export const UK_VAT = 1.2;
+export const COST_FLOOR_MARGIN = 1.05;
+export const APPLIANCE_MARGIN = 1.05;
+export const KITCHEN_MAX_MARGIN = 1.15;
+
+const PREMIUM_KITCHEN_BRANDS =
+  /le creuset|\bstaub\b|kitchenaid|kitchen aid|\bsmeg\b|de'?longhi|breville|vitamix|blendtec|all-?clad|mauviel|de buyer|^global\b|w[uü]sthof|zwilling|henckels|\bshun\b|miyabi|\bkai\b|emile henry|alessi|georg jensen|iittala|villeroy|rosenthal|riedel|zalto|royal copenhagen|ankarsrum|dualit|^made in$|robert welch|\bkuvings\b|zojirushi|harvest right|\bjura\b|technivorm|moccamaster|balmuda|demeyere|scanpan|\booni\b/i;
+const BUDGET_KITCHEN_BRANDS = /\bikea\b|generic|\bpyrex\b|kilner|\bprestige\b|\btower\b|russell hobbs|morphy richards/i;
+
+/** "premium" | "mid" | "budget" from brand words in the title (or brand field). */
+export function kitchenBrandTier(title = "", brand = "") {
+  const fields = [String(brand || "").trim(), String(title || "").trim()];
+  if (fields.some((f) => PREMIUM_KITCHEN_BRANDS.test(f))) return "premium";
+  if (fields.some((f) => BUDGET_KITCHEN_BRANDS.test(f))) return "budget";
+  return "mid";
+}
+
+/** Supplier price without UK VAT / US sales tax, in UGX. */
+export function kitchenLandedCostUgx({ gbp, usd } = {}) {
+  if (Number(gbp) > 0) return (Number(gbp) / UK_VAT) * KITCHEN_UGX_PER_GBP;
+  if (Number(usd) > 0) return Number(usd) * KITCHEN_UGX_PER_USD;
+  return null;
+}
+
+function roundUpUgx(amount) {
+  const step = amount < 20000 ? 500 : 1000;
+  return Math.max(2000, Math.ceil(amount / step) * step);
+}
+
+/**
+ * Shelf price for one kitchen SKU from its source price.
+ * @param {{ id?: string, title?: string, aisleId?: string, brand?: string, gbp?: number, usd?: number }} item
+ * @returns {{ price: number, floor: number|null, tier: string, belowCost: boolean }}
+ */
+export function kitchenShelfPrice(item = {}) {
+  const aisleId = item.aisleId || aisleIdFromKitchenProductId(item.id);
+  const tier = kitchenBrandTier(item.title, item.brand);
+  const cost = kitchenLandedCostUgx(item);
+  const floor = cost ? roundUpUgx(cost * COST_FLOOR_MARGIN) : null;
+
+  if (aisleId === "small-appliances" && cost) {
+    const price = roundUpUgx(cost * APPLIANCE_MARGIN);
+    return { price, floor, tier, belowCost: false };
+  }
+
+  const ukGbp = Number(item.gbp) || (Number(item.usd) || 0) * 0.79;
+  const band = ugandanKitchenPrice({
+    id: item.id,
+    title: item.title,
+    aisleId,
+    premium: tier === "premium" || ukGbp >= 80,
+  });
+  const price = cost ? Math.min(band, roundUgx(cost * KITCHEN_MAX_MARGIN)) : band;
+  return { price, floor, tier, belowCost: floor != null && price < floor };
+}
+
+/** Was-price only when the supplier showed a real crossed-out price; same discount ratio. */
+export function kitchenWasPrice(price, { gbp, wasGbp, usd, wasUsd } = {}) {
+  const ratio = wasGbp && gbp ? wasGbp / gbp : wasUsd && usd ? wasUsd / usd : 0;
+  if (!(ratio > 1.02)) return null;
+  const was = roundUgx(price * ratio);
+  return was > price ? was : null;
 }

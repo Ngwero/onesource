@@ -22,7 +22,7 @@ import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
 import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWareCatalog.js";
-import { gbpToUgandanKitchenPrice } from "../lib/ugandanKitchenPrices.js";
+import { kitchenShelfPrice, kitchenWasPrice } from "../lib/ugandanKitchenPrices.js";
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
 const CATALOG_ROOT =
@@ -117,11 +117,13 @@ function buildTitle(productTitle, variant) {
 }
 
 function kitchenPriceFor(item) {
-  return gbpToUgandanKitchenPrice(item.gbp, {
+  return kitchenShelfPrice({
     id: item.id,
     title: item.title,
+    brand: "Made In",
     aisleId: item.aisleId,
-  });
+    gbp: item.gbp,
+  }).price;
 }
 
 async function fetchShopProducts() {
@@ -243,6 +245,7 @@ async function listCatalogItems() {
         productType: type,
         price,
         gbp: Number(variant.price) || null,
+        wasGbp: Number(variant.compare_at_price) || null,
         sku: variant.sku || null,
         imageUrl: variantImageUrl(product, variant),
         localPath: local?.absolutePath || null,
@@ -465,7 +468,7 @@ async function main() {
         id: item.id,
         title: `${item.title} – One Source`,
         price: item.price,
-        originalPrice: index % 3 === 0 ? Math.round(item.price * 1.1) : undefined,
+        originalPrice: kitchenWasPrice(item.price, item) ?? undefined,
         rating: Number((4.4 + (h % 5) * 0.1).toFixed(1)),
         reviewCount: 18 + (h % 140),
         image,

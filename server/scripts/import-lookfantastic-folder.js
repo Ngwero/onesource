@@ -31,7 +31,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
-import { gbpToUgandanCosmeticsPrice } from "../lib/cosmeticsPrices.js";
+import { cosmeticsWasPrice, gbpToUgandanCosmeticsPrice } from "../lib/cosmeticsPrices.js";
 import { cosmeticsProductDetails } from "../lib/cosmeticsProductInfo.js";
 import { brandKey, matchLf, sizeOf, tokens, normText } from "../lib/cosmeticsMatch.js";
 import { classifyCosmetic } from "../lib/cosmeticsClassify.js";
@@ -194,9 +194,9 @@ function planItems({ products, images }, existingLf, matchedLf) {
     if (aisleArg && c.aisle !== aisleArg) continue;
     seenNames.add(nameKey);
 
-    const price = gbpToUgandanCosmeticsPrice(gbp);
+    const price = gbpToUgandanCosmeticsPrice(gbp, { title, brand });
     const worthGbp = Number(title.match(/worth (?:over )?£([\d,.]+)/i)?.[1]?.replace(/,/g, ""));
-    const was = Number.isFinite(worthGbp) && worthGbp > gbp ? gbpToUgandanCosmeticsPrice(worthGbp) : null;
+    const was = Number.isFinite(worthGbp) ? cosmeticsWasPrice(price, gbp, worthGbp) : null;
     items.push({
       id: `cosmetics-${c.aisle}-lf-${p.id}`,
       productId: String(p.id),
@@ -272,6 +272,7 @@ async function uploadImage(db, item) {
 function productRow(item, image) {
   const h = hashStr(item.id);
   const { description, details } = productInfo(item);
+  if (item.rating && item.reviewCount) details.ratingSource = "lookfantastic";
   return seedRowFromJson({
     id: item.id,
     title: `${item.title} – One Source`,

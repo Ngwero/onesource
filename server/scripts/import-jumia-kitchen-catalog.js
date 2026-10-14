@@ -461,7 +461,6 @@ async function main() {
         id: item.id,
         title: `${item.title} – One Source`,
         price,
-        originalPrice: index % 4 === 0 ? Math.round(price * 1.12) : undefined,
         rating: Number((4.1 + (h % 8) * 0.1).toFixed(1)),
         reviewCount: 8 + (h % 180),
         image,

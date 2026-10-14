@@ -11,9 +11,10 @@
  *   cd server && npm run import:cookwarestore-csv
  *   cd server && npm run import:cookwarestore-csv -- --aisle tabletop --limit 50
  *
- * Prices: electric tea & coffee kit goes to Small appliances at the UK price
- * ex-VAT × CWS_GBP_TO_UGX; everything else uses the Kampala shelf-price bands
- * in ugandanKitchenPrices.js.
+ * Prices: kitchenShelfPrice() in ugandanKitchenPrices.js — electric tea & coffee
+ * kit (Small appliances) at UK ex-VAT landed cost × 1.05, everything else at the
+ * Kampala shelf-price band capped at landed cost × 1.15. Was-price only when the
+ * CSV has a real old_price.
  *
  * Product id: kitchen-{aisleId}-cws{productId}
  */
@@ -23,14 +24,12 @@ import sharp from "sharp";
 import { requireSupabase } from "../lib/supabase.js";
 import { seedRowFromJson } from "../db.js";
 import { KITCHEN_WARE_AISLES, KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWareCatalog.js";
-import { gbpToUgandanKitchenPrice, roundUgx } from "../lib/ugandanKitchenPrices.js";
+import { kitchenShelfPrice, kitchenWasPrice } from "../lib/ugandanKitchenPrices.js";
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";
 const CATALOG_CSV =
   process.env.CWS_CATALOG?.trim() || "/Users/user/cookwarestore-scraper/products/products.csv";
 const CATALOG_ROOT = path.dirname(CATALOG_CSV);
-const GBP_TO_UGX = Number(process.env.CWS_GBP_TO_UGX || 4900);
-const UK_VAT = 1.2;
 
 const dryRun = process.argv.includes("--dry-run");
 const aisleArg = flagValue("--aisle");
@@ -145,14 +144,7 @@ function gbpValue(text) {
 }
 
 function priceFor(item) {
-  const ukExVat = roundUgx((item.gbp / UK_VAT) * GBP_TO_UGX);
-  if (item.aisleId === "small-appliances") return ukExVat;
-  const shelf = gbpToUgandanKitchenPrice(item.gbp, {
-    id: item.id,
-    title: item.title,
-    aisleId: item.aisleId,
-  });
-  return Math.min(shelf, ukExVat);
+  return kitchenShelfPrice({ id: item.id, title: item.title, aisleId: item.aisleId, gbp: item.gbp }).price;
 }
 
 async function listCatalogItems() {
@@ -193,6 +185,7 @@ async function listCatalogItems() {
       aisleId,
       leaf: category.split(" / ").pop(),
       gbp,
+      wasGbp: gbpValue(row.old_price) || null,
       localPath: path.join(CATALOG_ROOT, row.image_file),
     };
     item.price = priceFor(item);
@@ -274,7 +267,7 @@ function productRow(item, image) {
     id: item.id,
     title: `${item.title} – One Source`,
     price: item.price,
-    originalPrice: h % 4 === 0 ? roundUgx(item.price * 1.12) : undefined,
+    originalPrice: kitchenWasPrice(item.price, item) ?? undefined,
     rating: Number((4.2 + (h % 7) * 0.1).toFixed(1)),
     reviewCount: 10 + (h % 180),
     image,
