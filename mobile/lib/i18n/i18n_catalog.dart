@@ -14,19 +14,35 @@ class I18nCatalog {
   static final Map<LanguageCode, Map<String, String>> _phrases = {};
   static final Map<LanguageCode, List<(RegExp, String)>> _rules = {};
   static bool _loaded = false;
+  static Future<void>? _inFlight;
+
+  /// Bumps after a successful [load] so widgets pick up catalog strings.
+  static final ValueNotifier<int> revision = ValueNotifier<int>(0);
 
   static bool get isLoaded => _loaded;
 
-  static Future<void> load() async {
-    if (_loaded) return;
-    await Future.wait([
-      for (final lang in LanguageCode.values) _loadLanguage(lang),
-      _loadProductRules(),
-    ]);
-    _loaded = true;
+  static Future<void> load() {
+    if (_loaded) return Future<void>.value();
+    return _inFlight ??= _load();
+  }
+
+  static Future<void> _load() async {
+    try {
+      await Future.wait([
+        for (final lang in LanguageCode.values) _loadLanguage(lang),
+        _loadProductRules(),
+      ]);
+      _loaded = true;
+      revision.value++;
+    } catch (e) {
+      _inFlight = null;
+      rethrow;
+    }
   }
 
   static Future<void> _loadLanguage(LanguageCode lang) async {
+    // Yield so a large decode cannot hold off the splash deadline timer.
+    await Future<void>.delayed(Duration.zero);
     try {
       final raw = await rootBundle.loadString('assets/i18n/${lang.name}.json');
       final flat = <String, String>{};
@@ -38,6 +54,7 @@ class I18nCatalog {
   }
 
   static Future<void> _loadProductRules() async {
+    await Future<void>.delayed(Duration.zero);
     try {
       final raw = await rootBundle.loadString('assets/i18n/product_rules.json');
       final json = jsonDecode(raw) as Map<String, dynamic>;

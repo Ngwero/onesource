@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'config/theme.dart';
 import 'i18n/app_strings.dart';
+import 'i18n/i18n_catalog.dart';
 import 'i18n/languages.dart';
 import 'providers/delivery_country_provider.dart';
 import 'providers/locale_provider.dart';
@@ -12,6 +13,60 @@ import 'providers/notifications_provider.dart';
 import 'router/app_router.dart';
 import 'services/auth_service.dart';
 import 'services/system_notifications.dart';
+
+/// Armed in [main] before [runApp]. Splash disposal cannot cancel it, and it
+/// still fires when the first frame is late — as long as [main] was not
+/// blocked on a platform channel.
+class SplashDeadline {
+  SplashDeadline._();
+
+  static const limit = Duration(seconds: 3);
+  static bool reached = false;
+  static VoidCallback? _listener;
+  static Timer? _retry;
+  static bool _armed = false;
+
+  static void arm() {
+    if (_armed) return;
+    _armed = true;
+    debugPrint('[OneSource] splash deadline armed');
+    Timer(limit, _fire);
+  }
+
+  static void bind(VoidCallback listener) {
+    _listener = listener;
+    if (reached) scheduleMicrotask(listener);
+  }
+
+  static void unbind(VoidCallback listener) {
+    if (identical(_listener, listener)) _listener = null;
+  }
+
+  static void _fire() {
+    reached = true;
+    debugPrint('[OneSource] splash deadline fired');
+    final listener = _listener;
+    if (listener != null) {
+      listener();
+      return;
+    }
+    _retry?.cancel();
+    var tries = 0;
+    _retry = Timer.periodic(const Duration(milliseconds: 200), (timer) {
+      tries += 1;
+      final pending = _listener;
+      if (pending != null) {
+        timer.cancel();
+        pending();
+      } else if (tries >= 25) {
+        timer.cancel();
+        debugPrint('[OneSource] splash deadline: app not mounted');
+      }
+    });
+  }
+}
+
+bool _isSplashPath(String path) => path.isEmpty || path == '/splash' || path == '/splash/';
 
 class OneSourceApp extends ConsumerStatefulWidget {
   const OneSourceApp({super.key});
@@ -23,30 +78,27 @@ class OneSourceApp extends ConsumerStatefulWidget {
 class _OneSourceAppState extends ConsumerState<OneSourceApp>
     with WidgetsBindingObserver {
   late final ThemeData _theme = buildAppTheme();
+  late final VoidCallback _deadlineListener = _leaveSplashIfNeeded;
   Timer? _splashWatch;
   final DateTime _started = DateTime.now();
 
   @override
   void initState() {
     super.initState();
+    // Before any plugin or network work. The timer itself was armed in main().
+    SplashDeadline.bind(_deadlineListener);
     WidgetsBinding.instance.addObserver(this);
-    // Starts IP country detection, which may set default currency and language.
-    ref.read(deliveryCountryProvider);
     onSupabaseInitialized = () {
       if (mounted) {
         ref.read(supabaseReadyProvider.notifier).state = isSupabaseReady;
       }
     };
-    // Lives on the app, not the splash element. Splash dispose, a failed
-    // prefs read, or a thrown go() must not cancel it. Re-armed only after
-    // it fires and the location is still /splash.
-    _splashWatch = Timer(const Duration(seconds: 3), _leaveSplashIfNeeded);
-    // Defer auth init until after the first frame so the UI appears immediately.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       debugPrint(
         '[OneSource] first frame +${DateTime.now().difference(_started).inMilliseconds}ms',
       );
-      unawaited(_initSupabase());
+      if (!mounted) return;
+      if (SplashDeadline.reached) _leaveSplashIfNeeded();
       SystemNotifications.onTap = (payload) {
         final router = ref.read(routerProvider);
         final path = (payload == null || payload.isEmpty)
@@ -58,36 +110,59 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
           router.push(path);
         }
       };
+      // Next turn, after this frame callback returns, so a plugin channel
+      // cannot freeze the splash that just painted.
+      unawaited(Future<void>.delayed(Duration.zero, _startAfterFirstFrame));
     });
   }
 
   @override
   void dispose() {
+    SplashDeadline.unbind(_deadlineListener);
     _splashWatch?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  /// Last-resort handoff. The splash screen also navigates; this runs even
-  /// if that element was unmounted while the location was still /splash.
+  void _startAfterFirstFrame() {
+    if (!mounted) return;
+    unawaited(_loadI18n());
+    ref.read(deliveryCountryProvider);
+    unawaited(_initSupabase());
+  }
+
+  Future<void> _loadI18n() async {
+    try {
+      await I18nCatalog.load().timeout(const Duration(seconds: 3));
+      debugPrint('[OneSource] i18n ready');
+    } catch (e) {
+      debugPrint('[OneSource] i18n not ready: $e');
+    }
+  }
+
+  /// Last-resort handoff. Runs from the timer armed in main(), so a disposed
+  /// splash element cannot cancel it. Always lands on /home.
   void _leaveSplashIfNeeded() {
     if (!mounted) return;
-    final router = ref.read(routerProvider);
-    final path = router.routeInformationProvider.value.uri.path;
-    if (path.isNotEmpty && path != '/splash') {
-      debugPrint('[OneSource] splash watchdog idle at $path');
-      return;
-    }
-    debugPrint('[OneSource] splash watchdog → /home (was ${path.isEmpty ? '(empty)' : path})');
+    var left = false;
     try {
+      final router = ref.read(routerProvider);
+      final path = router.routeInformationProvider.value.uri.path;
+      if (!_isSplashPath(path)) {
+        debugPrint('[OneSource] splash watchdog idle at $path');
+        return;
+      }
+      debugPrint('[OneSource] splash watchdog → /home (was ${path.isEmpty ? '(empty)' : path})');
       router.go('/home');
-    } catch (e) {
-      debugPrint('[OneSource] splash watchdog failed: $e');
+      final now = router.routeInformationProvider.value.uri.path;
+      left = !_isSplashPath(now);
+      debugPrint('[OneSource] splash watchdog now $now');
+    } catch (e, stack) {
+      debugPrint('[OneSource] splash watchdog failed: $e\n$stack');
     }
-    final now = router.routeInformationProvider.value.uri.path;
-    if (now.isEmpty || now == '/splash') {
-      _splashWatch = Timer(const Duration(milliseconds: 400), _leaveSplashIfNeeded);
-    }
+    if (!mounted || left) return;
+    _splashWatch?.cancel();
+    _splashWatch = Timer(const Duration(milliseconds: 300), _leaveSplashIfNeeded);
   }
 
   @override
@@ -101,10 +176,16 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
     }
   }
 
-  Future<void> _refreshNotificationsWhenReady() async {
+  Future<void> _refreshNotificationsWhenReady({int attempt = 0}) async {
     await Future<void>.delayed(const Duration(seconds: 4));
     if (!mounted) return;
     try {
+      final path = ref.read(routerProvider).routeInformationProvider.value.uri.path;
+      // The permission sheet pauses the engine. Never raise it over the splash.
+      if (_isSplashPath(path) && attempt < 4) {
+        unawaited(_refreshNotificationsWhenReady(attempt: attempt + 1));
+        return;
+      }
       await ref
           .read(notificationsProvider.notifier)
           .refresh(surfaceBanners: true, quiet: true)

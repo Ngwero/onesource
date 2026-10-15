@@ -1,13 +1,16 @@
-import 'dart:async';
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
-import 'i18n/i18n_catalog.dart';
 
-Future<void> main() async {
+/// Synchronous on purpose. On a physical iPhone the asset and plugin
+/// channels are not serviced until the Flutter view is attached, which
+/// happens inside [runApp]. Awaiting them here (i18n, Supabase, permissions)
+/// stalls the same run loop that would fire [Future.timeout], so the native
+/// launch screen — the same dark green as the Flutter splash — never leaves.
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   FlutterError.onError = (details) {
@@ -20,16 +23,8 @@ Future<void> main() async {
     return true;
   };
 
-  // Asset reads go through a platform channel. On a physical iPhone that
-  // channel can stall (debug asset server, a plugin that never answers).
-  // A short timeout keeps the native launch screen from sitting there forever.
-  try {
-    await I18nCatalog.load().timeout(const Duration(milliseconds: 800));
-    debugPrint('[OneSource] i18n ready');
-  } catch (e) {
-    debugPrint('[OneSource] i18n not ready before first frame: $e');
-  }
-
+  // Exists even if the first frame is late or the splash element is disposed.
+  SplashDeadline.arm();
   debugPrint('[OneSource] main() — launching app');
   runApp(const ProviderScope(child: OneSourceApp()));
 }

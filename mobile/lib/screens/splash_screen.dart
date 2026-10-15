@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
-import '../services/auth_service.dart';
 import '../utils/onboarding_prefs.dart';
 import '../widgets/brand_loader.dart';
 import '../widgets/brand_logo.dart';
@@ -68,16 +67,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       _router = GoRouter.of(context);
     });
 
-    // Warm auth in the background — never block leaving the splash.
-    unawaited(_warmSupabase());
-
+    // Preferred handoff (onboarding or home). The unconditional exit is
+    // SplashDeadline, armed in main() before runApp — this element must not
+    // be the only clock, and it must not start plugins before the first frame.
     _auto = Timer(const Duration(milliseconds: 1500), () {
       unawaited(_leave());
     });
-    // Hard deadline. Not cancelled until the location actually leaves /splash,
-    // so a hung prefs read, a failed Lottie load, or a thrown go() cannot
-    // leave the user on this route. Geo detection is started in OneSourceApp
-    // and is intentionally not awaited here.
     _fallback = Timer(const Duration(seconds: 3), () {
       unawaited(_leave(forceHome: true, fromHard: true));
     });
@@ -93,18 +88,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _enter.dispose();
     _breathe.dispose();
     super.dispose();
-  }
-
-  Future<void> _warmSupabase() async {
-    if (isSupabaseReady) return;
-    try {
-      await initializeSupabase().timeout(const Duration(seconds: 4));
-    } catch (e) {
-      debugPrint('[OneSource] splash Supabase warm skipped: $e');
-    }
-    if (mounted) {
-      ref.read(supabaseReadyProvider.notifier).state = isSupabaseReady;
-    }
   }
 
   GoRouter? get _nav {

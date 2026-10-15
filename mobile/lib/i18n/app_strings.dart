@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -595,7 +597,25 @@ const _bundles = <LanguageCode, StringMap>{
   },
 };
 
+final i18nRevisionProvider = Provider<int>((ref) {
+  final notifier = I18nCatalog.revision;
+  var disposed = false;
+  void listener() {
+    scheduleMicrotask(() {
+      if (!disposed) ref.invalidateSelf();
+    });
+  }
+
+  notifier.addListener(listener);
+  ref.onDispose(() {
+    disposed = true;
+    notifier.removeListener(listener);
+  });
+  return notifier.value;
+});
+
 final stringsProvider = Provider<AppStrings>((ref) {
+  ref.watch(i18nRevisionProvider);
   final language = ref.watch(localeProvider);
   return AppStrings.current = AppStrings(language);
 });
