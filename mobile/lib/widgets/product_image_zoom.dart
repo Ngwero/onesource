@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -8,9 +9,50 @@ import '../services/image_url.dart';
 import 'product_thumbnail.dart';
 
 const double _kViewerMaxScale = 4;
+const double _kViewerMinScale = 0.8;
 const double _kDoubleTapScale = 2.5;
 
 String productImageHeroTag(String base, int index) => '$base-$index';
+
+String _tapToZoomLabel(BuildContext context) =>
+    context.tr.get('app.product.tapToZoom', fallback: 'Tap to zoom');
+
+/// Wins the gesture arena as soon as a finger lands, so a parent [ScrollView]
+/// cannot claim the pointer before a second finger arrives and turn a pinch
+/// into a page scroll.
+class _EagerScaleRecognizer extends ScaleGestureRecognizer {
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolve(GestureDisposition.accepted);
+  }
+
+  @override
+  String get debugDescription => 'eager scale';
+}
+
+/// Full-screen scale: a second finger accepts immediately. A single finger is
+/// left for the page swipe and the swipe-down dismiss, unless the photo is
+/// already zoomed (then that finger pans).
+class _ViewerScaleRecognizer extends ScaleGestureRecognizer {
+  _ViewerScaleRecognizer({required this.zoomed});
+
+  final bool Function() zoomed;
+
+  @override
+  void handleEvent(PointerEvent event) {
+    if (!zoomed() && pointerCount < 2 && event is PointerMoveEvent) {
+      return;
+    }
+    super.handleEvent(event);
+    if (pointerCount >= 2) {
+      resolve(GestureDisposition.accepted);
+    }
+  }
+
+  @override
+  String get debugDescription => 'viewer scale';
+}
 
 /// Opens the full-screen pinch / double-tap zoom viewer.
 Future<void> openProductImageViewer(
@@ -31,10 +73,16 @@ Future<void> openProductImageViewer(
         initialIndex: initialIndex.clamp(0, urls.length - 1),
         heroTag: heroTag,
       ),
-      transitionsBuilder: (_, animation, __, child) => FadeTransition(
-        opacity: animation.drive(CurveTween(curve: Curves.easeOutCubic)),
-        child: child,
-      ),
+      transitionsBuilder: (_, animation, __, child) {
+        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
+            child: child,
+          ),
+        );
+      },
     ),
   );
 }
@@ -74,8 +122,8 @@ class ProductHiResImage extends StatelessWidget {
   }
 }
 
-/// Product image with Instagram-style pinch-to-peek (snaps back to 1x on
-/// release) and tap to open [ProductImageViewer].
+/// Product image with pinch-to-zoom in place (snaps back to 1× on release)
+/// and a tap that opens [ProductImageViewer].
 class ZoomableProductImage extends StatefulWidget {
   const ZoomableProductImage({
     super.key,
@@ -96,8 +144,10 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
   final _transform = ValueNotifier<Matrix4>(Matrix4.identity());
   late final AnimationController _reset;
   Matrix4 _resetFrom = Matrix4.identity();
-  Offset _startFocal = Offset.zero;
+  Offset _pinchOrigin = Offset.zero;
+  double _travel = 0;
   bool _pinching = false;
+  Drag? _scrollDrag;
 
   @override
   void initState() {
@@ -111,30 +161,94 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
         .transform(Curves.easeOutCubic.transform(_reset.value));
   }
 
+  void _endScroll({bool cancel = false, Velocity? velocity}) {
+    final drag = _scrollDrag;
+    _scrollDrag = null;
+    if (drag == null) return;
+    if (cancel) {
+      drag.cancel();
+      return;
+    }
+    final vy = velocity?.pixelsPerSecond.dy ?? 0;
+    drag.end(DragEndDetails(velocity: velocity ?? Velocity.zero, primaryVelocity: vy));
+  }
+
+  void _ensureScroll(ScaleUpdateDetails d) {
+    if (_scrollDrag != null) return;
+    final position = Scrollable.maybeOf(context)?.position;
+    if (position is! ScrollPositionWithSingleContext) return;
+    _scrollDrag = position.drag(
+      DragStartDetails(
+        globalPosition: d.focalPoint,
+        localPosition: d.localFocalPoint,
+        sourceTimeStamp: d.sourceTimeStamp,
+      ),
+      () => _scrollDrag = null,
+    );
+  }
+
   void _onScaleStart(ScaleStartDetails d) {
-    if (d.pointerCount < 2) return;
-    _reset.stop();
-    _startFocal = d.localFocalPoint;
-    _pinching = true;
+    if (d.pointerCount >= 2) {
+      _reset.stop();
+      _pinching = true;
+      _pinchOrigin = d.localFocalPoint;
+      _endScroll(cancel: true);
+    }
   }
 
   void _onScaleUpdate(ScaleUpdateDetails d) {
-    if (!_pinching) return;
-    final s = d.scale.clamp(1.0, _kViewerMaxScale);
-    final focal = d.localFocalPoint;
-    _transform.value = Matrix4.diagonal3Values(s, s, 1)
-      ..setTranslationRaw(focal.dx - _startFocal.dx * s, focal.dy - _startFocal.dy * s, 0);
+    if (d.pointerCount >= 2 || _pinching) {
+      _pinching = true;
+      _endScroll(cancel: true);
+      final s = d.scale.clamp(1.0, _kViewerMaxScale);
+      final focal = d.localFocalPoint;
+      _transform.value = Matrix4.identity()
+        ..translate(focal.dx, focal.dy)
+        ..scale(s, s, 1)
+        ..translate(-_pinchOrigin.dx, -_pinchOrigin.dy);
+      return;
+    }
+
+    _travel += d.focalPointDelta.distance;
+    if (_travel < kTouchSlop) return;
+    _ensureScroll(d);
+    _scrollDrag?.update(
+      DragUpdateDetails(
+        globalPosition: d.focalPoint,
+        localPosition: d.localFocalPoint,
+        delta: d.focalPointDelta,
+        primaryDelta: d.focalPointDelta.dy,
+        sourceTimeStamp: d.sourceTimeStamp,
+      ),
+    );
   }
 
   void _onScaleEnd(ScaleEndDetails d) {
-    if (!_pinching) return;
+    if (d.pointerCount > 0) {
+      if (d.pointerCount >= 2) _endScroll(cancel: true);
+      return;
+    }
+    final pinched = _pinching;
+    final travel = _travel;
     _pinching = false;
-    _resetFrom = _transform.value.clone();
-    _reset.forward(from: 0);
+    _travel = 0;
+    if (pinched) {
+      _endScroll(cancel: true);
+      _resetFrom = _transform.value.clone();
+      _reset.forward(from: 0);
+      return;
+    }
+    if (travel < kTouchSlop) {
+      _endScroll(cancel: true);
+      openProductImageViewer(context, images: widget.images, heroTag: widget.heroTag);
+      return;
+    }
+    _endScroll(velocity: d.velocity);
   }
 
   @override
   void dispose() {
+    _endScroll(cancel: true);
     _reset.dispose();
     _transform.dispose();
     super.dispose();
@@ -154,20 +268,44 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
 
     return Semantics(
       button: true,
-      label: context.tr.get('app.product.tapToZoom'),
-      child: GestureDetector(
+      label: _tapToZoomLabel(context),
+      child: RawGestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => openProductImageViewer(context, images: widget.images, heroTag: widget.heroTag),
-        onScaleStart: _onScaleStart,
-        onScaleUpdate: _onScaleUpdate,
-        onScaleEnd: _onScaleEnd,
+        gestures: <Type, GestureRecognizerFactory>{
+          _EagerScaleRecognizer: GestureRecognizerFactoryWithHandlers<_EagerScaleRecognizer>(
+            () => _EagerScaleRecognizer(),
+            (_EagerScaleRecognizer instance) {
+              instance
+                ..onStart = _onScaleStart
+                ..onUpdate = _onScaleUpdate
+                ..onEnd = _onScaleEnd;
+            },
+          ),
+        },
         child: SizedBox(
           width: widget.size,
           height: widget.size,
-          child: ValueListenableBuilder<Matrix4>(
-            valueListenable: _transform,
-            builder: (_, m, child) => Transform(transform: m, child: child),
-            child: image,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRect(
+                child: ValueListenableBuilder<Matrix4>(
+                  valueListenable: _transform,
+                  builder: (_, matrix, child) => Transform(
+                    alignment: Alignment.topLeft,
+                    transform: matrix,
+                    child: child,
+                  ),
+                  child: image,
+                ),
+              ),
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: IgnorePointer(child: ProductZoomHintBadge()),
+              ),
+            ],
           ),
         ),
       ),
@@ -175,35 +313,35 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
   }
 }
 
-/// Small "Tap to zoom" pill shown on the product image corner.
+/// Dark "Tap to zoom" bar shown across the bottom of the product photo.
 class ProductZoomHintBadge extends StatelessWidget {
-  const ProductZoomHintBadge({super.key, required this.onTap});
+  const ProductZoomHintBadge({super.key, this.onTap});
 
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.92),
-      shape: const StadiumBorder(side: BorderSide(color: AppColors.border)),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const StadiumBorder(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.zoom_in_rounded, size: 16, color: AppColors.darkGreen),
-              const SizedBox(width: 4),
-              Text(
-                context.tr.get('app.product.tapToZoom'),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.darkGreen),
-              ),
-            ],
-          ),
+    final bar = ColoredBox(
+      color: AppColors.darkGreen.withValues(alpha: 0.92),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.zoom_in_rounded, size: 18, color: Colors.white),
+            const SizedBox(width: 6),
+            Text(
+              _tapToZoomLabel(context),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+            ),
+          ],
         ),
       ),
+    );
+    if (onTap == null) return bar;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(onTap: onTap, child: bar),
     );
   }
 }
@@ -281,7 +419,7 @@ class _ProductImageViewerState extends State<ProductImageViewer> with SingleTick
                   offset: Offset(0, _dragDy),
                   child: PageView.builder(
                     controller: _pages,
-                    physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+                    physics: _zoomed ? const NeverScrollableScrollPhysics() : const PageScrollPhysics(),
                     itemCount: count,
                     onPageChanged: (i) => setState(() {
                       _index = i;
@@ -289,6 +427,7 @@ class _ProductImageViewerState extends State<ProductImageViewer> with SingleTick
                     }),
                     itemBuilder: (_, i) => _ZoomPage(
                       url: widget.images[i],
+                      index: i,
                       heroTag: widget.heroTag == null ? null : productImageHeroTag(widget.heroTag!, i),
                       active: i == _index,
                       onZoomChanged: (z) {
@@ -308,7 +447,7 @@ class _ProductImageViewerState extends State<ProductImageViewer> with SingleTick
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.14),
+                          color: Colors.black.withValues(alpha: 0.55),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -317,11 +456,15 @@ class _ProductImageViewerState extends State<ProductImageViewer> with SingleTick
                         ),
                       ),
                     const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      tooltip: s.get('common.close'),
-                      style: IconButton.styleFrom(backgroundColor: Colors.white.withValues(alpha: 0.14)),
-                      icon: const Icon(Icons.close_rounded, color: Colors.white),
+                    Material(
+                      color: Colors.black.withValues(alpha: 0.55),
+                      shape: const CircleBorder(),
+                      child: IconButton(
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        tooltip: s.get('common.close', fallback: 'Close'),
+                        iconSize: 26,
+                        icon: const Icon(Icons.close_rounded, color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -340,9 +483,9 @@ class _ProductImageViewerState extends State<ProductImageViewer> with SingleTick
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
-                        s.get('app.product.zoomHint'),
+                        s.get('app.product.zoomHint', fallback: 'Pinch or double-tap to zoom'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 13),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -359,12 +502,14 @@ class _ProductImageViewerState extends State<ProductImageViewer> with SingleTick
 class _ZoomPage extends StatefulWidget {
   const _ZoomPage({
     required this.url,
+    required this.index,
     required this.heroTag,
     required this.active,
     required this.onZoomChanged,
   });
 
   final String url;
+  final int index;
   final String? heroTag;
   final bool active;
   final ValueChanged<bool> onZoomChanged;
@@ -374,21 +519,27 @@ class _ZoomPage extends StatefulWidget {
 }
 
 class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixin {
-  final _controller = TransformationController();
+  final _matrix = ValueNotifier<Matrix4>(Matrix4.identity());
   late final AnimationController _anim;
-  Matrix4 _from = Matrix4.identity();
-  Matrix4 _to = Matrix4.identity();
+  double _scale = 1;
+  Offset _translate = Offset.zero;
+  double _fromScale = 1;
+  double _toScale = 1;
+  Offset _fromTranslate = Offset.zero;
+  Offset _toTranslate = Offset.zero;
+  double _gestureScale = 1;
+  Offset _gestureFocal = Offset.zero;
+  Offset _gestureTranslate = Offset.zero;
   Offset? _doubleTapAt;
+  Size _viewport = Size.zero;
   bool _zoomed = false;
+
+  bool get _isZoomed => _scale > 1.01;
 
   @override
   void initState() {
     super.initState();
-    _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 240))
-      ..addListener(() {
-        _controller.value = Matrix4Tween(begin: _from, end: _to).transform(Curves.easeOutCubic.transform(_anim.value));
-      });
-    _controller.addListener(_syncZoom);
+    _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 240))..addListener(_tick);
   }
 
   @override
@@ -396,40 +547,92 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
     super.didUpdateWidget(oldWidget);
     if (oldWidget.active && !widget.active) {
       _anim.stop();
+      _scale = 1;
+      _translate = Offset.zero;
       _zoomed = false;
-      _controller.value = Matrix4.identity();
+      _publish();
     }
   }
 
   @override
   void dispose() {
     _anim.dispose();
-    _controller.dispose();
+    _matrix.dispose();
     super.dispose();
   }
 
-  void _syncZoom() {
-    final zoomed = _controller.value.getMaxScaleOnAxis() > 1.01;
+  void _publish() {
+    _matrix.value = Matrix4.identity()
+      ..translate(_translate.dx, _translate.dy)
+      ..scale(_scale, _scale, 1);
+    final zoomed = _isZoomed;
     if (zoomed == _zoomed) return;
-    if (mounted) setState(() => _zoomed = zoomed);
+    _zoomed = zoomed;
     widget.onZoomChanged(zoomed);
   }
 
-  void _animateTo(Matrix4 target) {
-    _from = _controller.value.clone();
-    _to = target;
+  void _tick() {
+    final t = Curves.easeOutCubic.transform(_anim.value);
+    _scale = _fromScale + (_toScale - _fromScale) * t;
+    _translate = Offset.lerp(_fromTranslate, _toTranslate, t)!;
+    _publish();
+  }
+
+  Offset _clamped(double scale, Offset translate) {
+    if (scale < 1 || _viewport.isEmpty) return translate;
+    final maxX = _viewport.width * (scale - 1);
+    final maxY = _viewport.height * (scale - 1);
+    return Offset(translate.dx.clamp(-maxX, 0), translate.dy.clamp(-maxY, 0));
+  }
+
+  void _clamp() {
+    _translate = _clamped(_scale, _translate);
+  }
+
+  void _animateTo(double scale, Offset translate) {
+    _fromScale = _scale;
+    _fromTranslate = _translate;
+    _toScale = scale;
+    _toTranslate = translate;
     _anim.forward(from: 0);
   }
 
-  void _onDoubleTap() {
-    if (_zoomed) {
-      _animateTo(Matrix4.identity());
+  void _onScaleStart(ScaleStartDetails d) {
+    _anim.stop();
+    _gestureScale = _scale;
+    _gestureFocal = d.localFocalPoint;
+    _gestureTranslate = _translate;
+  }
+
+  void _onScaleUpdate(ScaleUpdateDetails d) {
+    if (!_zoomed && d.pointerCount < 2 && _gestureScale <= 1.01) return;
+    final next = (_gestureScale * d.scale).clamp(_kViewerMinScale, _kViewerMaxScale);
+    final scene = (_gestureFocal - _gestureTranslate) / _gestureScale;
+    _scale = next;
+    _translate = d.localFocalPoint - scene * next;
+    _clamp();
+    _publish();
+  }
+
+  void _onScaleEnd(ScaleEndDetails d) {
+    if (d.pointerCount > 0) return;
+    if (_scale < 0.999) {
+      _animateTo(1, Offset.zero);
       return;
     }
-    final size = context.size ?? Size.zero;
+    _publish();
+  }
+
+  void _onDoubleTap() {
+    if (_isZoomed) {
+      _animateTo(1, Offset.zero);
+      return;
+    }
+    final size = _viewport.isEmpty ? (context.size ?? Size.zero) : _viewport;
     final p = _doubleTapAt ?? size.center(Offset.zero);
     const k = _kDoubleTapScale;
-    _animateTo(Matrix4.diagonal3Values(k, k, 1)..setTranslationRaw(-p.dx * (k - 1), -p.dy * (k - 1), 0));
+    final scene = (p - _translate) / _scale;
+    _animateTo(k, _clamped(k, p - scene * k));
   }
 
   @override
@@ -437,28 +640,46 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
     Widget image = ProductHiResImage(url: widget.url);
     if (widget.heroTag != null) image = Hero(tag: widget.heroTag!, child: image);
 
-    return GestureDetector(
-      onDoubleTapDown: (d) => _doubleTapAt = d.localPosition,
-      onDoubleTap: _onDoubleTap,
-      child: InteractiveViewer(
-        transformationController: _controller,
-        alignment: Alignment.topLeft,
-        minScale: 0.8,
-        maxScale: _kViewerMaxScale,
-        panEnabled: _zoomed,
-        onInteractionStart: (_) => _anim.stop(),
-        onInteractionEnd: (_) {
-          if (_controller.value.getMaxScaleOnAxis() < 0.999) {
-            _animateTo(Matrix4.identity());
-          }
-        },
-        child: SizedBox.expand(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 56),
-            child: image,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _viewport = constraints.biggest;
+        return RawGestureDetector(
+          behavior: HitTestBehavior.opaque,
+          gestures: <Type, GestureRecognizerFactory>{
+            _ViewerScaleRecognizer: GestureRecognizerFactoryWithHandlers<_ViewerScaleRecognizer>(
+              () => _ViewerScaleRecognizer(zoomed: () => _zoomed),
+              (_ViewerScaleRecognizer instance) {
+                instance
+                  ..onStart = _onScaleStart
+                  ..onUpdate = _onScaleUpdate
+                  ..onEnd = _onScaleEnd;
+              },
+            ),
+            DoubleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
+              () => DoubleTapGestureRecognizer(),
+              (DoubleTapGestureRecognizer instance) {
+                instance.onDoubleTapDown = (d) => _doubleTapAt = d.localPosition;
+                instance.onDoubleTap = _onDoubleTap;
+              },
+            ),
+          },
+          child: ValueListenableBuilder<Matrix4>(
+            valueListenable: _matrix,
+            builder: (_, matrix, child) => Transform(
+              key: ValueKey('product-zoom-${widget.index}'),
+              alignment: Alignment.topLeft,
+              transform: matrix,
+              child: child,
+            ),
+            child: SizedBox.expand(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 72, 12, 72),
+                child: image,
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

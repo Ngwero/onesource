@@ -7,6 +7,7 @@ class Product {
     required this.rating,
     required this.reviewCount,
     required this.image,
+    this.images = const [],
     required this.category,
     required this.unit,
     required this.prime,
@@ -25,6 +26,9 @@ class Product {
   final double rating;
   final int reviewCount;
   final String image;
+
+  /// Extra gallery frames. [gallery] always includes [image] first.
+  final List<String> images;
   final String category;
   final String unit;
   final bool prime;
@@ -40,6 +44,21 @@ class Product {
   /// True only when [rating] / [reviewCount] come from real customer reviews.
   bool get hasVerifiedRating => details.ratingSource != null && rating > 0 && reviewCount > 0;
 
+  /// Every product photo, cover first, with blanks and duplicates removed.
+  List<String> get gallery {
+    final urls = <String>[];
+    void add(String? raw) {
+      final url = raw?.trim() ?? '';
+      if (url.isNotEmpty && !urls.contains(url)) urls.add(url);
+    }
+
+    add(image);
+    for (final extra in images) {
+      add(extra);
+    }
+    return urls;
+  }
+
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       id: json['id'] as String,
@@ -49,6 +68,7 @@ class Product {
       rating: (json['rating'] as num?)?.toDouble() ?? 0,
       reviewCount: json['reviewCount'] as int? ?? 0,
       image: json['image'] as String? ?? '',
+      images: _imageList(json['images']),
       category: json['category'] as String? ?? '',
       unit: json['unit'] as String? ?? '',
       prime: json['prime'] as bool? ?? false,
@@ -63,6 +83,11 @@ class Product {
     );
   }
 
+  static List<String> _imageList(Object? raw) {
+    if (raw is! List) return const [];
+    return raw.whereType<String>().map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+  }
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
@@ -71,6 +96,7 @@ class Product {
         'rating': rating,
         'reviewCount': reviewCount,
         'image': image,
+        if (images.isNotEmpty) 'images': images,
         'category': category,
         'unit': unit,
         'prime': prime,

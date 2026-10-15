@@ -343,9 +343,7 @@ class _HeroImage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final top = MediaQuery.paddingOf(context).top;
     final saved = ref.watch(isSavedProvider(product.id));
-    final imageSize = compact ? 320.0 : 280.0;
-    final images = [product.image];
-    final hasImage = product.image.trim().isNotEmpty;
+    final images = product.gallery;
     final heroTag = 'product-image-${product.id}';
 
     return Stack(
@@ -358,40 +356,38 @@ class _HeroImage extends ConsumerWidget {
             borderRadius: compact ? BorderRadius.circular(24) : null,
           ),
           padding: EdgeInsets.fromLTRB(20, compact ? 48 : top + 12, 20, 24),
-          child: Stack(
-            children: [
-              Center(
-                child: ZoomableProductImage(
-                  images: images,
-                  size: imageSize,
-                  heroTag: heroTag,
-                ),
-              ),
-              if (hasImage)
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: ProductZoomHintBadge(
-                    onTap: () => openProductImageViewer(context, images: images, heroTag: heroTag),
-                  ),
-                ),
-              if (discount != null)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.deal,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '-$discount%',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final raw = constraints.maxWidth;
+              final imageSize = raw.isFinite ? raw : (compact ? 320.0 : 280.0);
+              return Stack(
+                children: [
+                  Center(
+                    child: ZoomableProductImage(
+                      images: images,
+                      size: imageSize,
+                      heroTag: heroTag,
                     ),
                   ),
-                ),
-            ],
+                  if (discount != null)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.deal,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '-$discount%',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ),
         Positioned(
