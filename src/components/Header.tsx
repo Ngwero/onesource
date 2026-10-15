@@ -18,14 +18,18 @@ import { shopModeForPath, SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode"
 import { DELIVERY_COUNTRIES, useDeliveryCountry } from "../hooks/useDeliveryCountry";
 import { CountryFlag } from "./CountryFlag";
 
-function DeliverToPicker() {
+function DeliverToPicker({ visible }: { visible: boolean }) {
   const { t, i18n } = useTranslation();
   const { code, name, countryName, chooseCountry } = useDeliveryCountry();
   const options = [...DELIVERY_COUNTRIES]
     .map((c) => ({ c, label: countryName(c) }))
     .sort((a, b) => a.label.localeCompare(b.label, i18n.language));
   return (
-    <label className="relative hidden xl:flex flex-col items-end px-3 py-2 rounded-xl hover:bg-muted transition-colors text-right cursor-pointer">
+    <label
+      className={`site-header-deliver relative flex-col items-end px-3 py-2 rounded-xl hover:bg-muted transition-colors text-right cursor-pointer ${
+        visible ? "hidden xl:flex" : "hidden"
+      }`}
+    >
       <span className="text-[10px] text-text-muted uppercase tracking-wide">
         {t("header.deliverTo")}
       </span>
@@ -277,7 +281,7 @@ export function Header() {
               <BrandLogo variant="icon" className="site-header-brand-mark" />
               <BrandLogo
                 variant="horizontal"
-                className="hidden md:block h-9 sm:h-10 md:h-11 max-w-[min(220px,48vw)]"
+                className="site-header-brand-full hidden md:block h-9 sm:h-10 md:h-11 max-w-[min(220px,48vw)]"
               />
               <span className="site-header-shop-badge">
                 {kitchenMode
@@ -383,7 +387,7 @@ export function Header() {
               <CurrencySwitcher />
               <LanguageSwitcher />
 
-              <DeliverToPicker />
+              <DeliverToPicker visible={!compact} />
 
               <AccountMenu />
 

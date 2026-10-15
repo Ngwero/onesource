@@ -1,16 +1,16 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
+import '../utils/device_perf.dart';
 import '../utils/shop_mode.dart';
-import 'brand_logo.dart';
-import 'deliver_to_picker.dart';
-import 'home_header.dart';
 import 'locale_currency_bar.dart';
 
-/// Pins a compact header (logo, search, country, currency, language) over a home
+/// Pins a slim header (logo, search, currency, language) over a home
 /// scroll view once the full [HomeHeader] has scrolled out of view.
 class CompactHomeBarOverlay extends StatefulWidget {
   const CompactHomeBarOverlay({
@@ -81,40 +81,44 @@ class CompactHomeBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hint = ref.watch(stringsProvider).get(mode.searchHintKey);
     final topPad = MediaQuery.paddingOf(context).top;
-
-    return Material(
-      color: homeHeaderColor(mode),
-      elevation: 6,
-      shadowColor: Colors.black.withValues(alpha: 0.3),
-      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(18)),
+    final bar = DecoratedBox(
+      decoration: const BoxDecoration(
+        color: Color(0xC7FAF9F6),
+        border: Border(
+          bottom: BorderSide(color: AppColors.border),
+        ),
+      ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(14, topPad + 8, 14, 10),
+        padding: EdgeInsets.fromLTRB(12, topPad + 6, 8, 8),
         child: Row(
           children: [
             InkWell(
               customBorder: const CircleBorder(),
               onTap: () => context.go(mode.homePath),
-              child: const BrandLogoMark(size: 36),
+              child: const _CompactLogo(),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Expanded(
               child: Material(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                color: const Color(0xB8FFFFFF),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  side: const BorderSide(color: AppColors.border),
+                ),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
                   onTap: () => context.push(mode.searchPath),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 10,
+                      vertical: 8,
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.search_rounded,
-                          size: 20,
-                          color: AppColors.darkGreen.withValues(alpha: 0.9),
+                          size: 18,
+                          color: AppColors.darkGreen.withValues(alpha: 0.8),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -124,8 +128,10 @@ class CompactHomeBar extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: AppColors.textMuted,
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w500,
+                              letterSpacing: -0.15,
+                              height: 1.2,
                             ),
                           ),
                         ),
@@ -135,11 +141,57 @@ class CompactHomeBar extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            const DeliveryCountryFlagButton(onDark: true),
             const SizedBox(width: 6),
-            const LocaleCurrencyBar(onDark: true, flagsOnly: true),
+            const LocaleCurrencyBar(flagsOnly: true),
           ],
+        ),
+      ),
+    );
+
+    final frosted = reduceMotionForDevice
+        ? bar
+        : ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: bar,
+            ),
+          );
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x142E5E4A),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: frosted,
+    );
+  }
+}
+
+class _CompactLogo extends StatelessWidget {
+  const _CompactLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const SizedBox(
+        width: 32,
+        height: 32,
+        child: Padding(
+          padding: EdgeInsets.all(5),
+          child: Image(
+            image: AssetImage('assets/brand/logo-primary.png'),
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );

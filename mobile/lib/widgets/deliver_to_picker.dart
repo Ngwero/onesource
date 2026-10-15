@@ -61,42 +61,6 @@ class DeliverToChip extends ConsumerWidget {
   }
 }
 
-/// Round flag-only button for the pinned compact header.
-class DeliveryCountryFlagButton extends ConsumerWidget {
-  const DeliveryCountryFlagButton({super.key, this.onDark = false});
-
-  final bool onDark;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final strings = ref.watch(stringsProvider);
-    final code = ref.watch(deliveryCountryProvider);
-    return Tooltip(
-      message:
-          '${strings.get('header.deliverTo')} ${strings.countryName(code)}',
-      child: Material(
-        color: onDark ? Colors.white.withValues(alpha: 0.12) : Colors.white,
-        shape: CircleBorder(
-          side: BorderSide(
-            color: onDark
-                ? Colors.white.withValues(alpha: 0.18)
-                : AppColors.border.withValues(alpha: 0.6),
-          ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => showDeliveryCountrySheet(context),
-          child: SizedBox(
-            width: 40,
-            height: 40,
-            child: Center(child: CountryFlag(code: code, size: 22)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 const _accented = 'àáâãäåçèéêëìíîïñòóôõöøùúûüýÿɛɔ';
 const _plain = 'aaaaaaceeeeiiiinoooooouuuuyyeo';
 
