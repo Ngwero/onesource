@@ -83,7 +83,7 @@ class ProductListNotifier extends StateNotifier<List<Product>> {
 }
 
 final _userKeyProvider = Provider<String>((ref) {
-  final user = ref.watch(authStateProvider).value?.session?.user;
+  final user = ref.watch(authStateProvider).valueOrNull?.session?.user;
   return user?.id ?? 'guest';
 });
 

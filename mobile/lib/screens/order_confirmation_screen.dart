@@ -36,7 +36,7 @@ class OrderConfirmationScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = context.tr;
-    final user = ref.watch(authStateProvider).value?.session?.user;
+    final user = ref.watch(authStateProvider).valueOrNull?.session?.user;
     final order = ref.watch(_confirmedOrderProvider((orderId, user?.id))).valueOrNull;
     final formatPrice = ref.watch(formatPriceProvider);
     final shortId = orderId.length > 8 ? orderId.substring(0, 8).toUpperCase() : orderId.toUpperCase();

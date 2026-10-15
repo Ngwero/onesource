@@ -74,8 +74,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final categoriesAsync = ref.watch(categoriesProvider);
     final heroAsync = ref.watch(heroSlidesProvider('home'));
-    final profile = ref.watch(profileProvider).value;
-    final user = ref.watch(authStateProvider).value?.session?.user;
+    final profile = ref.watch(profileProvider).valueOrNull;
+    final user = ref.watch(authStateProvider).valueOrNull?.session?.user;
     final greetingName = profile?.fullName?.split(' ').first ??
         user?.email?.split('@').first ??
         context.tr.get('app.common.guest');

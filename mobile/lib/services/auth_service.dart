@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -29,7 +30,7 @@ class AuthService {
   User? get user => _client.auth.currentUser;
   bool get isSignedIn => session != null;
 
-  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+  Stream<AuthState> get authStateChanges => safeAuthStateChanges(_client.auth);
 
   Future<UserProfile?> fetchProfile(String userId) async {
     final res = await _client
@@ -182,23 +183,125 @@ Future<void> initializeSupabase() async {
     onSupabaseInitialized?.call();
     completer.complete();
   } catch (e, stack) {
+    // A revoked refresh token can fail session restore. Drop the local
+    // session and let the app continue signed out instead of crashing.
+    if (isStaleSessionError(e)) {
+      debugPrint('[OneSource] stale session during Supabase init: $e');
+      await signOutStaleSession();
+    }
     _supabaseInitCompleter = null;
     completer.completeError(e, stack);
     rethrow;
   }
 }
 
+/// Refresh-token and session failures that mean the stored login is dead.
+///
+/// Network blips ([AuthRetryableFetchException]) are not stale: the saved
+/// session may still be valid once connectivity returns.
+bool isStaleSessionError(Object error) {
+  if (error is AuthRetryableFetchException) return false;
+  if (error is AuthSessionMissingException || error is AuthInvalidJwtException) {
+    return true;
+  }
+  if (error is! AuthException) return false;
+
+  final code = (error.code ?? '').toLowerCase();
+  const staleCodes = {
+    'refresh_token_not_found',
+    'invalid_refresh_token',
+    'refresh_token_already_used',
+    'session_not_found',
+    'session_expired',
+    'bad_jwt',
+    'invalid_jwt',
+  };
+  if (staleCodes.contains(code)) return true;
+
+  final message = error.message.toLowerCase();
+  return message.contains('refresh token') ||
+      message.contains('refresh_token') ||
+      message.contains('invalid jwt') ||
+      message.contains('session expired') ||
+      message.contains('session is missing') ||
+      message.contains('session missing') ||
+      message.contains('session not found') ||
+      (message.contains('session') && message.contains('invalid'));
+}
+
+bool _staleSignOutInFlight = false;
+
+/// Clears the persisted Supabase session without surfacing a refresh error.
+Future<void> signOutStaleSession() async {
+  if (_staleSignOutInFlight) return;
+  _staleSignOutInFlight = true;
+  try {
+    if (!Supabase.instance.isInitialized) return;
+    await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+  } catch (e, stack) {
+    debugPrint('[OneSource] local sign-out after stale session failed: $e\n$stack');
+  } finally {
+    _staleSignOutInFlight = false;
+  }
+}
+
+/// Auth recovery and token refresh push failures onto [GoTrueClient.onAuthStateChange].
+/// A late listener (Riverpod) otherwise receives that error as its first event and
+/// rethrows it during build. Translate those into a signed-out state.
+Stream<AuthState> safeAuthStateChanges(GoTrueClient auth) {
+  return mapAuthRecoveryErrors(
+    auth.onAuthStateChange,
+    readSession: () => auth.currentSession,
+    onStaleSession: () {
+      unawaited(signOutStaleSession());
+    },
+  );
+}
+
+@visibleForTesting
+Stream<AuthState> mapAuthRecoveryErrors(
+  Stream<AuthState> source, {
+  required Session? Function() readSession,
+  required void Function() onStaleSession,
+}) {
+  return source.transform(
+    StreamTransformer<AuthState, AuthState>.fromHandlers(
+      handleData: (data, sink) => sink.add(data),
+      handleError: (error, stackTrace, sink) {
+        if (isStaleSessionError(error)) {
+          debugPrint('[OneSource] stale auth session, signing out locally: $error');
+          onStaleSession();
+          sink.add(const AuthState(AuthChangeEvent.signedOut, null));
+          return;
+        }
+        debugPrint(
+          '[OneSource] auth recovery error kept off the widget tree: $error\n$stackTrace',
+        );
+        final session = readSession();
+        sink.add(
+          AuthState(
+            session == null ? AuthChangeEvent.signedOut : AuthChangeEvent.initialSession,
+            session,
+          ),
+        );
+      },
+    ),
+  );
+}
+
 final authStateProvider = StreamProvider<AuthState>((ref) {
   if (!ref.watch(supabaseReadyProvider)) {
     return const Stream<AuthState>.empty();
   }
-  return Supabase.instance.client.auth.onAuthStateChange;
+  return safeAuthStateChanges(Supabase.instance.client.auth);
 });
 
 final profileProvider = FutureProvider<UserProfile?>((ref) async {
   if (!ref.watch(supabaseReadyProvider)) return null;
   final auth = ref.watch(authStateProvider);
-  final user = auth.value?.session?.user;
+  // Never let a session-restore failure fail this provider (and then the build).
+  if (auth.hasError) return null;
+  final user = auth.valueOrNull?.session?.user;
   if (user == null) return null;
   return ref.read(authServiceProvider).fetchProfile(user.id);
 });

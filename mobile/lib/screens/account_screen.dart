@@ -23,7 +23,7 @@ class AccountScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authStateProvider);
     final profileAsync = ref.watch(profileProvider);
-    final user = auth.value?.session?.user;
+    final user = auth.valueOrNull?.session?.user;
 
     final s = context.tr;
     if (user == null) {
@@ -109,7 +109,7 @@ class AccountScreen extends ConsumerWidget {
       );
     }
 
-    final name = profileAsync.value?.fullName ?? user.email ?? s.get('app.account.customer');
+    final name = profileAsync.valueOrNull?.fullName ?? user.email ?? s.get('app.account.customer');
     final initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
     final strings = ref.watch(stringsProvider);
     final bottomPad = shellBottomPadding(context);
@@ -420,7 +420,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authStateProvider).value?.session?.user;
+    final user = ref.watch(authStateProvider).valueOrNull?.session?.user;
     final s = context.tr;
 
     if (user == null) {

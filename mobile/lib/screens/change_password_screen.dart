@@ -63,7 +63,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final s = context.tr;
-    final user = ref.watch(authStateProvider).value?.session?.user;
+    final user = ref.watch(authStateProvider).valueOrNull?.session?.user;
     if (user == null) {
       return Scaffold(
         appBar: AppBar(title: Text(s.get('accountPage.sections.account.links.resetPassword'))),

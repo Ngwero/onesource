@@ -131,7 +131,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final exportCount = allItems.length - items.length;
     final subtotal = items.fold<double>(0, (sum, i) => sum + i.lineTotal);
     final totals = calcOrderTotal(subtotal);
-    final user = ref.watch(authStateProvider).value?.session?.user;
+    final user = ref.watch(authStateProvider).valueOrNull?.session?.user;
     String? required(String? v) =>
         v == null || v.trim().isEmpty ? s.get('app.form.required') : null;
 

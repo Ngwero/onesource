@@ -60,8 +60,8 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
     final all = ref.watch(paginatedProductsProvider(_query));
     final offers = ref.watch(cosmeticsOffersProvider).valueOrNull ?? const <Product>[];
     final total = ref.watch(cosmeticsTotalProvider).valueOrNull;
-    final profile = ref.watch(profileProvider).value;
-    final user = ref.watch(authStateProvider).value?.session?.user;
+    final profile = ref.watch(profileProvider).valueOrNull;
+    final user = ref.watch(authStateProvider).valueOrNull?.session?.user;
     final greetingName = profile?.fullName?.split(' ').first ??
         user?.email?.split('@').first ??
         s.get('app.common.guest');
