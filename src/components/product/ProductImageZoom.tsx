@@ -1,236 +1,211 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent,
-} from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { usePointerImageZoom } from "./usePointerImageZoom";
 
-const ZOOM_LEVEL = 2.5;
-const LENS_RATIO = 0.42;
-/** Magnified preview panel vs main image stage (Amazon-style larger flyout). */
-const FLYOUT_WIDTH_SCALE = 2.25;
-const FLYOUT_HEIGHT_SCALE = 2.15;
-const FLYOUT_MAX_WIDTH = 720;
-const FLYOUT_MAX_HEIGHT = 680;
-const FLYOUT_GAP = 16;
-
-type LensState = {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-};
-
-type ZoomPan = {
-  ratioX: number;
-  ratioY: number;
-  stageW: number;
-  stageH: number;
-};
-
-type StageRect = {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-  width: number;
-  height: number;
-};
+const LOUPE_MAX = 176;
+const LOUPE_ZOOM = 2.35;
 
 type Props = {
   imageSrc: string;
   alt: string;
   discount?: number;
   onOpenLightbox: () => void;
+  onSwipeImage?: (direction: 1 | -1) => void;
   enlargeLabel: string;
   rollOverHint: string;
+  tapHint: string;
 };
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function readStageRect(stage: HTMLElement): StageRect {
-  const rect = stage.getBoundingClientRect();
-  return {
-    left: rect.left,
-    top: rect.top,
-    right: rect.right,
-    bottom: rect.bottom,
-    width: rect.width,
-    height: rect.height,
-  };
-}
+const hoverQuery = "(min-width: 1024px) and (hover: hover) and (pointer: fine)";
 
 export function ProductImageZoom({
   imageSrc,
   alt,
   discount = 0,
   onOpenLightbox,
+  onSwipeImage,
   enlargeLabel,
   rollOverHint,
+  tapHint,
 }: Props) {
   const stageRef = useRef<HTMLButtonElement>(null);
-  const [hoverZoomEnabled, setHoverZoomEnabled] = useState(false);
-  const [zooming, setZooming] = useState(false);
-  const [lens, setLens] = useState<LensState | null>(null);
-  const [pan, setPan] = useState<ZoomPan | null>(null);
-  const [stageRect, setStageRect] = useState<StageRect | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const loupeRef = useRef<HTMLDivElement>(null);
+  const loupeImgRef = useRef<HTMLImageElement>(null);
+  const loupeOnRef = useRef(false);
+  const pointerKind = useRef("mouse");
+  const pending = useRef<{ x: number; y: number } | null>(null);
+  const raf = useRef(0);
+  const [hoverZoomEnabled, setHoverZoomEnabled] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(hoverQuery).matches
+  );
+  const [ready, setReady] = useState(false);
+  const [loupeOn, setLoupeOn] = useState(false);
+
+  const zoom = usePointerImageZoom(imgRef, {
+    enabled: !hoverZoomEnabled,
+    capture: "inline",
+    onTap: onOpenLightbox,
+    onSwipe: onSwipeImage,
+    resetKey: imageSrc,
+  });
 
   useEffect(() => {
-    const mq = window.matchMedia(
-      "(min-width: 1024px) and (hover: hover) and (pointer: fine)"
-    );
+    const mq = window.matchMedia(hoverQuery);
     const sync = () => setHoverZoomEnabled(mq.matches);
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
 
-  const updateZoom = useCallback(
-    (clientX: number, clientY: number) => {
-      const stage = stageRef.current;
-      if (!stage || !hoverZoomEnabled) return;
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) setReady(true);
+    else setReady(false);
+  }, [imageSrc]);
 
-      const rect = readStageRect(stage);
-      setStageRect(rect);
-
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-
-      const lensW = rect.width * LENS_RATIO;
-      const lensH = rect.height * LENS_RATIO;
-      const maxLeft = Math.max(rect.width - lensW, 0);
-      const maxTop = Math.max(rect.height - lensH, 0);
-
-      const lensLeft = clamp(x - lensW / 2, 0, maxLeft);
-      const lensTop = clamp(y - lensH / 2, 0, maxTop);
-
-      setLens({ left: lensLeft, top: lensTop, width: lensW, height: lensH });
-      setPan({
-        ratioX: maxLeft > 0 ? lensLeft / maxLeft : 0,
-        ratioY: maxTop > 0 ? lensTop / maxTop : 0,
-        stageW: rect.width,
-        stageH: rect.height,
-      });
+  useEffect(
+    () => () => {
+      if (raf.current) cancelAnimationFrame(raf.current);
     },
-    [hoverZoomEnabled]
+    []
   );
 
-  const handleMouseEnter = () => {
-    if (!hoverZoomEnabled) return;
+  const hideLoupe = () => {
+    if (!loupeOnRef.current) return;
+    loupeOnRef.current = false;
+    setLoupeOn(false);
+  };
+
+  const positionLoupe = (clientX: number, clientY: number) => {
     const stage = stageRef.current;
-    if (stage) setStageRect(readStageRect(stage));
-    setZooming(true);
+    const img = imgRef.current;
+    const loupe = loupeRef.current;
+    const loupeImg = loupeImgRef.current;
+    if (!stage || !img || !loupe || !loupeImg || !hoverZoomEnabled) return;
+
+    const stageRect = stage.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+    if (imgRect.width < 88 || imgRect.height < 88) {
+      hideLoupe();
+      return;
+    }
+
+    const ix = clientX - imgRect.left;
+    const iy = clientY - imgRect.top;
+    if (ix < 0 || iy < 0 || ix > imgRect.width || iy > imgRect.height) {
+      hideLoupe();
+      return;
+    }
+
+    const size = Math.round(Math.min(LOUPE_MAX, imgRect.width * 0.5, imgRect.height * 0.5));
+    const half = size / 2;
+    const originX = stageRect.left + stage.clientLeft;
+    const originY = stageRect.top + stage.clientTop;
+    const imgLeft = imgRect.left - originX;
+    const imgTop = imgRect.top - originY;
+    const localX = clientX - originX;
+    const localY = clientY - originY;
+    const maxX = imgLeft + imgRect.width - half;
+    const maxY = imgTop + imgRect.height - half;
+    if (maxX < imgLeft + half || maxY < imgTop + half) {
+      hideLoupe();
+      return;
+    }
+    const cx = clamp(localX, imgLeft + half, maxX);
+    const cy = clamp(localY, imgTop + half, maxY);
+    const sampleX = cx - imgLeft;
+    const sampleY = cy - imgTop;
+
+    loupe.style.width = `${size}px`;
+    loupe.style.height = `${size}px`;
+    loupe.style.transform = `translate3d(${cx - half}px, ${cy - half}px, 0)`;
+    loupeImg.style.width = `${imgRect.width * LOUPE_ZOOM}px`;
+    loupeImg.style.height = `${imgRect.height * LOUPE_ZOOM}px`;
+    loupeImg.style.transform = `translate3d(${half - sampleX * LOUPE_ZOOM}px, ${half - sampleY * LOUPE_ZOOM}px, 0)`;
+
+    if (!loupeOnRef.current) {
+      loupeOnRef.current = true;
+      setLoupeOn(true);
+    }
   };
 
-  const handleMouseLeave = () => {
-    setZooming(false);
-    setLens(null);
-    setPan(null);
-    setStageRect(null);
+  const queueLoupe = (x: number, y: number) => {
+    pending.current = { x, y };
+    if (raf.current) return;
+    raf.current = requestAnimationFrame(() => {
+      raf.current = 0;
+      const point = pending.current;
+      if (point) positionLoupe(point.x, point.y);
+    });
   };
 
-  const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
-    if (!hoverZoomEnabled) return;
-    updateZoom(e.clientX, e.clientY);
+  const onPointerMove = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!hoverZoomEnabled) {
+      zoom.handlers.onPointerMove(e);
+      return;
+    }
+    if (e.pointerType === "touch") return;
+    queueLoupe(e.clientX, e.clientY);
   };
 
-  const flyoutVisible =
-    zooming && hoverZoomEnabled && lens && pan && stageRect;
-  const flyoutW = pan
-    ? Math.min(Math.round(pan.stageW * FLYOUT_WIDTH_SCALE), FLYOUT_MAX_WIDTH)
-    : 0;
-  const flyoutH = pan
-    ? Math.min(Math.round(pan.stageH * FLYOUT_HEIGHT_SCALE), FLYOUT_MAX_HEIGHT)
-    : 0;
-  const flyoutScaleW = pan && pan.stageW > 0 ? flyoutW / pan.stageW : 1;
-  const flyoutScaleH = pan && pan.stageH > 0 ? flyoutH / pan.stageH : 1;
-  const zoomW = pan ? pan.stageW * ZOOM_LEVEL * flyoutScaleW : 0;
-  const zoomH = pan ? pan.stageH * ZOOM_LEVEL * flyoutScaleH : 0;
-  const offsetX = pan ? pan.ratioX * Math.max(zoomW - flyoutW, 0) : 0;
-  const offsetY = pan ? pan.ratioY * Math.max(zoomH - flyoutH, 0) : 0;
-
-  let flyoutLeft = 0;
-  let flyoutTop = 0;
-  if (stageRect && flyoutW > 0 && flyoutH > 0) {
-    const preferRight = stageRect.right + FLYOUT_GAP;
-    const fitsRight = preferRight + flyoutW <= window.innerWidth - 8;
-    flyoutLeft = fitsRight
-      ? preferRight
-      : Math.max(8, stageRect.left - FLYOUT_GAP - flyoutW);
-    flyoutTop = clamp(
-      stageRect.top,
-      8,
-      Math.max(8, window.innerHeight - flyoutH - 8)
-    );
-  }
+  const zoomed = !hoverZoomEnabled && zoom.view.scale > 1.02;
 
   return (
-    <div className={`pdp-zoom-main-col ${flyoutVisible ? "is-zooming" : ""}`}>
+    <div className={`pdp-zoom-main-col ${loupeOn ? "is-zooming" : ""}`}>
       <button
         ref={stageRef}
         type="button"
-        className={`pdp-image-stage flex-1 relative group ${hoverZoomEnabled ? "pdp-image-stage--hover-zoom" : ""}`}
-        onClick={onOpenLightbox}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onMouseMove={handleMouseMove}
+        className={`pdp-image-stage ${hoverZoomEnabled ? "pdp-image-stage--hover-zoom" : "pdp-image-stage--touch"} ${loupeOn ? "is-loupe" : ""} ${zoomed ? "is-zoomed" : ""}`}
+        onClick={() => {
+          if (zoom.consumeClick()) return;
+          if (pointerKind.current === "touch") return;
+          if (zoom.view.scale > 1.02) return;
+          onOpenLightbox();
+        }}
+        onPointerDown={(e) => {
+          pointerKind.current = e.pointerType;
+          if (!hoverZoomEnabled) zoom.handlers.onPointerDown(e);
+        }}
+        onPointerMove={onPointerMove}
+        onPointerUp={(e) => {
+          if (!hoverZoomEnabled) zoom.handlers.onPointerUp(e);
+        }}
+        onPointerCancel={(e) => {
+          if (!hoverZoomEnabled) zoom.handlers.onPointerCancel(e);
+        }}
+        onPointerLeave={hideLoupe}
         aria-label={enlargeLabel}
       >
         {discount > 0 && <span className="pdp-badge-deal">-{discount}%</span>}
+        {!ready && <span className="pdp-image-spinner" aria-hidden />}
         <img
+          ref={imgRef}
           src={imageSrc}
           alt={alt}
-          className="pdp-main-image"
+          className={`pdp-main-image ${ready ? "" : "is-loading"}`}
           draggable={false}
+          decoding="async"
+          style={
+            hoverZoomEnabled
+              ? undefined
+              : {
+                  transform: `translate3d(${zoom.view.tx}px, ${zoom.view.ty}px, 0) scale(${zoom.view.scale})`,
+                }
+          }
+          onLoad={() => setReady(true)}
+          onError={() => setReady(true)}
         />
-        {flyoutVisible && lens && (
-          <span
-            className="pdp-zoom-lens"
-            style={{
-              left: lens.left,
-              top: lens.top,
-              width: lens.width,
-              height: lens.height,
-            }}
-            aria-hidden
-          />
-        )}
+        <span ref={loupeRef} className={`pdp-zoom-loupe ${loupeOn ? "is-on" : ""}`} aria-hidden>
+          <img ref={loupeImgRef} src={imageSrc} alt="" draggable={false} />
+        </span>
         <span className="pdp-zoom-hint" aria-hidden>
-          {hoverZoomEnabled ? rollOverHint : enlargeLabel}
+          {hoverZoomEnabled ? rollOverHint : tapHint}
         </span>
       </button>
-
-      {flyoutVisible &&
-        pan &&
-        createPortal(
-          <div
-            className="pdp-zoom-flyout pdp-zoom-flyout--portal"
-            aria-hidden
-            style={{
-              width: flyoutW,
-              height: flyoutH,
-              left: flyoutLeft,
-              top: flyoutTop,
-            }}
-          >
-            <img
-              src={imageSrc}
-              alt=""
-              className="pdp-zoom-flyout-image"
-              draggable={false}
-              style={{
-                width: zoomW,
-                height: zoomH,
-                transform: `translate(${-offsetX}px, ${-offsetY}px)`,
-              }}
-            />
-          </div>,
-          document.body
-        )}
     </div>
   );
 }

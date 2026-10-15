@@ -1,71 +1,76 @@
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ProductImageZoom } from "./ProductImageZoom";
+import { ProductLightbox } from "./ProductLightbox";
 
 type Props = {
   imageSrc: string;
+  /** Extra angles. Falls back to the single hero image. */
+  images?: string[];
   alt: string;
   discount?: number;
 };
 
-export function ProductImageGallery({ imageSrc, alt, discount = 0 }: Props) {
+export function ProductImageGallery({ imageSrc, images, alt, discount = 0 }: Props) {
   const { t } = useTranslation();
+  const gallery = useMemo(() => {
+    const list = (images?.length ? images : [imageSrc]).map((src) => src.trim()).filter(Boolean);
+    return list.length ? list : [imageSrc];
+  }, [imageSrc, images]);
+  const [index, setIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const safeIndex = Math.min(index, gallery.length - 1);
+  const current = gallery[safeIndex] ?? imageSrc;
 
   useEffect(() => {
-    if (!lightboxOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLightboxOpen(false);
-    };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [lightboxOpen]);
+    setIndex(0);
+  }, [imageSrc]);
+
+  const step = (dir: 1 | -1) => {
+    setIndex((i) => (i + dir + gallery.length) % gallery.length);
+  };
 
   return (
     <div className="pdp-gallery">
       <div className="pdp-gallery-inner">
         <ProductImageZoom
-          imageSrc={imageSrc}
+          imageSrc={current}
           alt={alt}
           discount={discount}
           onOpenLightbox={() => setLightboxOpen(true)}
+          onSwipeImage={gallery.length > 1 ? step : undefined}
           enlargeLabel={t("product.clickToEnlarge")}
           rollOverHint={t("product.rollOverToZoom")}
+          tapHint={t("product.tapToEnlarge")}
         />
       </div>
 
-      {lightboxOpen &&
-        createPortal(
-          <div
-            className="pdp-lightbox"
-            role="dialog"
-            aria-modal="true"
-            aria-label={alt}
-            onClick={() => setLightboxOpen(false)}
-          >
+      {gallery.length > 1 && (
+        <div className="pdp-thumbs" role="tablist" aria-label={t("product.thumbnailStrip")}>
+          {gallery.map((src, i) => (
             <button
+              key={`${src}-${i}`}
               type="button"
-              className="pdp-lightbox-close"
-              onClick={() => setLightboxOpen(false)}
-              aria-label={t("common.close")}
+              className={`pdp-thumb ${i === safeIndex ? "is-active" : ""}`}
+              aria-label={t("product.imageN", { n: i + 1 })}
+              aria-current={i === safeIndex ? "true" : undefined}
+              onClick={() => setIndex(i)}
             >
-              ×
+              <img src={src} alt="" />
             </button>
-            <img
-              src={imageSrc}
-              alt={alt}
-              className="pdp-lightbox-image"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>,
-          document.body
-        )}
+          ))}
+        </div>
+      )}
+
+      {lightboxOpen && (
+        <ProductLightbox
+          images={gallery}
+          index={safeIndex}
+          alt={alt}
+          onIndex={setIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }

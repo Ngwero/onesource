@@ -24,14 +24,17 @@ Future<void> openProductImageViewer(
   return Navigator.of(context).push(
     PageRouteBuilder<void>(
       opaque: false,
-      transitionDuration: const Duration(milliseconds: 260),
-      reverseTransitionDuration: const Duration(milliseconds: 220),
+      transitionDuration: const Duration(milliseconds: 240),
+      reverseTransitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (_, __, ___) => ProductImageViewer(
         images: urls,
         initialIndex: initialIndex.clamp(0, urls.length - 1),
         heroTag: heroTag,
       ),
-      transitionsBuilder: (_, animation, __, child) => FadeTransition(opacity: animation, child: child),
+      transitionsBuilder: (_, animation, __, child) => FadeTransition(
+        opacity: animation.drive(CurveTween(curve: Curves.easeOutCubic)),
+        child: child,
+      ),
     ),
   );
 }
@@ -205,8 +208,8 @@ class ProductZoomHintBadge extends StatelessWidget {
   }
 }
 
-/// Full-screen gallery: pinch / double-tap zoom, swipe between images,
-/// swipe down (or back / X) to dismiss.
+/// Full-screen gallery: pinch and double-tap zoom to a point, pan while
+/// zoomed, snap back under 1×, swipe between photos, swipe down or close.
 class ProductImageViewer extends StatefulWidget {
   const ProductImageViewer({
     super.key,
@@ -408,7 +411,7 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
   void _syncZoom() {
     final zoomed = _controller.value.getMaxScaleOnAxis() > 1.01;
     if (zoomed == _zoomed) return;
-    _zoomed = zoomed;
+    if (mounted) setState(() => _zoomed = zoomed);
     widget.onZoomChanged(zoomed);
   }
 
@@ -439,9 +442,16 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
       onDoubleTap: _onDoubleTap,
       child: InteractiveViewer(
         transformationController: _controller,
-        minScale: 1,
+        alignment: Alignment.topLeft,
+        minScale: 0.8,
         maxScale: _kViewerMaxScale,
+        panEnabled: _zoomed,
         onInteractionStart: (_) => _anim.stop(),
+        onInteractionEnd: (_) {
+          if (_controller.value.getMaxScaleOnAxis() < 0.999) {
+            _animateTo(Matrix4.identity());
+          }
+        },
         child: SizedBox.expand(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 56),
