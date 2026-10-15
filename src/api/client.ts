@@ -19,13 +19,26 @@ function isFreshSku(p: Product): boolean {
   return !isKitchenSku(p) && !isCosmeticsSku(p);
 }
 
+/**
+ * A cold API (Railway just woke, or Supabase cancelled the first statement) can
+ * fail or sit much longer than the next call. Stay above that, then try once more.
+ * A real outage still fails the second attempt.
+ */
+const CATALOG_ATTEMPT_MS = 45_000;
+const CATALOG_RETRY_PAUSE_MS = 800;
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
 async function fetchProductsPageRaw(
   search: URLSearchParams,
-  page: number
+  page: number,
+  signal?: AbortSignal
 ): Promise<{ products: Product[]; total: number }> {
   const query = new URLSearchParams(search);
   query.set("page", String(page));
-  const res = await fetch(`${API_BASE}/products?${query.toString()}`);
+  const res = await fetch(`${API_BASE}/products?${query.toString()}`, { signal });
   if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
   const data = await res.json();
   return {
@@ -38,7 +51,8 @@ async function fetchProductsPageRaw(
 async function findLegacyFreshStartPage(
   search: URLSearchParams,
   pageSize: number,
-  catalogTotal: number
+  catalogTotal: number,
+  signal?: AbortSignal
 ): Promise<number> {
   const last = catalogTotal <= 0 ? 0 : Math.floor((catalogTotal - 1) / pageSize);
   let lo = 0;
@@ -46,7 +60,7 @@ async function findLegacyFreshStartPage(
   let answer = last;
   while (lo <= hi) {
     const mid = Math.floor((lo + hi) / 2);
-    const { products } = await fetchProductsPageRaw(search, mid);
+    const { products } = await fetchProductsPageRaw(search, mid, signal);
     if (products.some(isFreshSku)) {
       answer = mid;
       hi = mid - 1;
@@ -57,11 +71,14 @@ async function findLegacyFreshStartPage(
   return answer;
 }
 
-export async function fetchProducts(params?: {
-  category?: string;
-  q?: string;
-  shop?: "fresh" | "kitchen" | "cosmetics";
-}): Promise<Product[]> {
+async function fetchProductsAttempt(
+  params: {
+    category?: string;
+    q?: string;
+    shop?: "fresh" | "kitchen" | "cosmetics";
+  } | undefined,
+  signal: AbortSignal
+): Promise<Product[]> {
   const shop = params?.shop ?? "fresh";
   const search = new URLSearchParams();
   if (params?.category) search.set("category", params.category);
@@ -70,13 +87,13 @@ export async function fetchProducts(params?: {
   const pageSize = 1000;
   search.set("pageSize", String(pageSize));
 
-  const first = await fetchProductsPageRaw(search, 0);
+  const first = await fetchProductsPageRaw(search, 0, signal);
   let startPage = 0;
 
   if (shop === "fresh" && !params?.category && !params?.q) {
     const produceOnFirst = first.products.filter(isFreshSku);
     if (first.products.length > 0 && produceOnFirst.length === 0) {
-      startPage = await findLegacyFreshStartPage(search, pageSize, first.total);
+      startPage = await findLegacyFreshStartPage(search, pageSize, first.total, signal);
     }
   }
 
@@ -91,7 +108,7 @@ export async function fetchProducts(params?: {
     for (let from = 1; from < pageCount; from += concurrency) {
       const batch = await Promise.all(
         Array.from({ length: Math.min(concurrency, pageCount - from) }, (_, i) =>
-          fetchProductsPageRaw(search, from + i).then((r) => r.products.filter(matchesShop))
+          fetchProductsPageRaw(search, from + i, signal).then((r) => r.products.filter(matchesShop))
         )
       );
       pages.push(...batch);
@@ -108,7 +125,7 @@ export async function fetchProducts(params?: {
     const batch =
       page === 0 && startPage === 0
         ? first.products
-        : (await fetchProductsPageRaw(search, page)).products;
+        : (await fetchProductsPageRaw(search, page, signal)).products;
 
     if (shop === "fresh") {
       const fresh = batch.filter(isFreshSku);
@@ -135,6 +152,36 @@ export async function fetchProducts(params?: {
   }
 
   return products;
+}
+
+function catalogAttempt(
+  params: {
+    category?: string;
+    q?: string;
+    shop?: "fresh" | "kitchen" | "cosmetics";
+  } | undefined
+): Promise<Product[]> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), CATALOG_ATTEMPT_MS);
+  return fetchProductsAttempt(params, controller.signal).finally(() => window.clearTimeout(timer));
+}
+
+export async function fetchProducts(params?: {
+  category?: string;
+  q?: string;
+  shop?: "fresh" | "kitchen" | "cosmetics";
+}): Promise<Product[]> {
+  try {
+    return await catalogAttempt(params);
+  } catch {
+    await new Promise((resolve) => window.setTimeout(resolve, CATALOG_RETRY_PAUSE_MS));
+    try {
+      return await catalogAttempt(params);
+    } catch (error) {
+      if (isAbortError(error)) throw new Error(i18n.t("errors.loadProductsApi"));
+      throw error;
+    }
+  }
 }
 
 /** One page of a single Kitchen Ware aisle (newest first) — for home-page shelves. */

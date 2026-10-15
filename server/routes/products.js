@@ -14,7 +14,7 @@ import { enrichProductsWithSuppliers } from "../lib/suppliersService.js";
 import { nestedAislePrefixes, productIdWithoutAisle } from "../lib/aisles.js";
 import { productMatchesSearch, rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
 import { hasPublishedColumn } from "../lib/productColumns.js";
-import { dbErrorMessage } from "../lib/supabaseErrors.js";
+import { dbErrorMessage, isStatementTimeoutError } from "../lib/supabaseErrors.js";
 
 const router = Router();
 
@@ -374,6 +374,15 @@ async function loadListPage(ctx, { page, pageSize, card }) {
   );
 }
 
+async function loadListOnceOrRetry(load) {
+  try {
+    return await load();
+  } catch (error) {
+    if (!isStatementTimeoutError(error)) throw error;
+    return load();
+  }
+}
+
 router.get("/", async (req, res) => {
   try {
     const ctx = parseListRequest(req.query);
@@ -384,7 +393,11 @@ router.get("/", async (req, res) => {
     const card = String(req.query.fields ?? "").toLowerCase() === "card";
     const shopperList = !admin && !search && !previewCosmetics;
 
-    const load = () => loadListPage(ctx, { page, pageSize, card });
+    // Supabase cancels a cold statement (often around 8s). The same query is
+    // usually fast immediately after, so one retry stays on this request
+    // instead of answering 500 while the shop loader is still waiting.
+    const load = () =>
+      loadListOnceOrRetry(() => loadListPage(ctx, { page, pageSize, card }));
     const result = shopperList
       ? await listPageCache.get(
           JSON.stringify([listFilterKey(ctx), ctx.list.sort, page, pageSize, card]),

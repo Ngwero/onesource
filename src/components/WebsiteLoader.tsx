@@ -46,12 +46,19 @@ export function WebsiteLoader({ children }: Props) {
   }, []);
 
   useEffect(() => {
-    if (loading && !error) return;
+    // Stay on the brand loader for the whole attempt, including a slow success
+    // and the one automatic retry. An error only ends the wait once loading stops.
+    if (loading) {
+      setPhase((current) => (current === "loading" ? current : "loading"));
+      return;
+    }
 
     const elapsed = Date.now() - mountTime.current;
     const delay = Math.max(0, MIN_VISIBLE_MS - elapsed);
 
-    const timer = window.setTimeout(() => setPhase("exiting"), delay);
+    const timer = window.setTimeout(() => {
+      setPhase(error ? "done" : "exiting");
+    }, delay);
     return () => window.clearTimeout(timer);
   }, [loading, error]);
 
@@ -61,7 +68,7 @@ export function WebsiteLoader({ children }: Props) {
     return () => window.clearTimeout(timer);
   }, [phase]);
 
-  if (phase === "done") {
+  if (!loading && phase === "done") {
     if (error) {
       return (
         <div className="site-loader-error page-container">
@@ -81,7 +88,7 @@ export function WebsiteLoader({ children }: Props) {
 
   return (
     <>
-      {phase === "exiting" ? children : null}
+      {!loading && phase === "exiting" && !error ? children : null}
       <div
         className={`site-loader${phase === "exiting" ? " site-loader--exit" : ""}`}
         role="status"

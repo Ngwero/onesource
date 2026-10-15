@@ -56,22 +56,47 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
   const requested = useRef(new Set<ProductShop>());
+  const inflight = useRef(new Map<ProductShop, Promise<void>>());
+  const generation = useRef<Record<ProductShop, number>>({
+    fresh: 0,
+    kitchen: 0,
+    cosmetics: 0,
+  });
 
   // Each shop renders as soon as its own catalogue arrives; the large Kitchen
-  // catalogue must not hold up Fresh or Cosmetics.
-  const loadShop = useCallback(async (shop: ProductShop) => {
-    setShopLoading((prev) => ({ ...prev, [shop]: true }));
-    try {
-      const rows = await fetchProducts({ shop });
-      setByShop((prev) => ({ ...prev, [shop]: rows }));
-    } catch (e) {
-      setByShop((prev) => ({ ...prev, [shop]: [] }));
-      if (shop === "fresh") {
-        setError(e instanceof Error ? e.message : i18n.t("errors.loadProducts"));
-      }
-    } finally {
-      setShopLoading((prev) => ({ ...prev, [shop]: false }));
+  // catalogue must not hold up Fresh or Cosmetics. Overlapping callers share one
+  // request so a fast failure cannot clear loading while a slower one is still out.
+  const loadShop = useCallback((shop: ProductShop, force = false) => {
+    if (!force) {
+      const existing = inflight.current.get(shop);
+      if (existing) return existing;
     }
+
+    const gen = generation.current[shop] + 1;
+    generation.current[shop] = gen;
+    setShopLoading((prev) => ({ ...prev, [shop]: true }));
+
+    const run = (async () => {
+      try {
+        const rows = await fetchProducts({ shop });
+        if (generation.current[shop] !== gen) return;
+        setByShop((prev) => ({ ...prev, [shop]: rows }));
+        if (shop === "fresh") setError(null);
+      } catch (e) {
+        if (generation.current[shop] !== gen) return;
+        setByShop((prev) => ({ ...prev, [shop]: [] }));
+        if (shop === "fresh") {
+          setError(e instanceof Error ? e.message : i18n.t("errors.loadProducts"));
+        }
+      } finally {
+        if (generation.current[shop] !== gen) return;
+        inflight.current.delete(shop);
+        setShopLoading((prev) => ({ ...prev, [shop]: false }));
+      }
+    })();
+
+    inflight.current.set(shop, run);
+    return run;
   }, []);
 
   const ensureShop = useCallback(
@@ -83,11 +108,11 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     [loadShop]
   );
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     setError(null);
     requested.current.add("fresh");
     await Promise.all([
-      ...SHOPS.filter((shop) => requested.current.has(shop)).map(loadShop),
+      ...SHOPS.filter((shop) => requested.current.has(shop)).map((shop) => loadShop(shop, force)),
       fetchCategories()
         .then((cats) => setCategories(cats.length ? cats : staticCategories))
         .catch(() => setCategories(staticCategories)),
@@ -141,7 +166,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
         shopLoading,
         ensureShop,
         error,
-        refresh: load,
+        refresh: () => load(true),
         getProductById,
         getProductsByCategory,
         getProductCountByCategory,
