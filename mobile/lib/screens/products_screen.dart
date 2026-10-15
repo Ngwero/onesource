@@ -206,6 +206,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                       index: index,
                       child: ProductCard(
                         product: filtered[index],
+                        showImageZoom: true,
                         onAdd: () => _addToCart(filtered[index]),
                       ),
                     ),
@@ -225,6 +226,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                         axis: Axis.horizontal,
                         child: HorizontalProductCard(
                           product: product,
+                          showImageZoom: true,
                           onBuy: () => _addToCart(product),
                         ),
                       );

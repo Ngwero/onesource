@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import 'product_card_details.dart';
+import 'product_image_zoom.dart';
 import 'product_thumbnail.dart';
 import 'rating_stars.dart';
 
@@ -13,10 +14,15 @@ class ProductCard extends StatelessWidget {
     super.key,
     required this.product,
     this.onAdd,
+    this.showImageZoom = false,
   });
 
   final Product product;
   final VoidCallback? onAdd;
+
+  /// Shows a zoom button on the photo. Used on the products list, where a tap
+  /// on the card itself opens the product.
+  final bool showImageZoom;
 
   @override
   Widget build(BuildContext context) {
@@ -65,11 +71,20 @@ class ProductCard extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Center(
-                    child: ProductThumbnail(
-                      image: product.image,
-                      size: 128,
-                    ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      ProductThumbnail(
+                        image: product.image,
+                        size: 128,
+                      ),
+                      if (showImageZoom)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: ProductCardZoomButton(images: product.gallery),
+                        ),
+                    ],
                   ),
                 ),
               ),

@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import 'product_card_details.dart';
+import 'product_image_zoom.dart';
 import 'product_thumbnail.dart';
 import 'quantity_stepper.dart';
 import 'rating_stars.dart';
@@ -16,12 +17,17 @@ class HorizontalProductCard extends StatelessWidget {
     this.onBuy,
     this.onQuantityChanged,
     this.quantity,
+    this.showImageZoom = false,
   });
 
   final Product product;
   final VoidCallback? onBuy;
   final int? quantity;
   final ValueChanged<int>? onQuantityChanged;
+
+  /// Shows a zoom button on the photo. A tap on the rest of the card still
+  /// opens the product.
+  final bool showImageZoom;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +57,17 @@ class HorizontalProductCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProductThumbnail(image: product.image, size: 136),
+                Stack(
+                  children: [
+                    ProductThumbnail(image: product.image, size: 136),
+                    if (showImageZoom)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: ProductCardZoomButton(images: product.gallery),
+                      ),
+                  ],
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(

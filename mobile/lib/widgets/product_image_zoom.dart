@@ -65,7 +65,8 @@ Future<void> openProductImageViewer(
   if (urls.isEmpty) return Future.value();
   return Navigator.of(context).push(
     PageRouteBuilder<void>(
-      opaque: false,
+      opaque: true,
+      barrierColor: Colors.black,
       transitionDuration: const Duration(milliseconds: 240),
       reverseTransitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (_, __, ___) => ProductImageViewer(
@@ -74,7 +75,8 @@ Future<void> openProductImageViewer(
         heroTag: heroTag,
       ),
       transitionsBuilder: (_, animation, __, child) {
-        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+        final curved =
+            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
         return FadeTransition(
           opacity: curved,
           child: ScaleTransition(
@@ -90,33 +92,31 @@ Future<void> openProductImageViewer(
 /// Full-resolution product image; identical params everywhere so the inline
 /// image and the viewer share one memory-cache entry (no flash on Hero flight).
 class ProductHiResImage extends StatelessWidget {
-  const ProductHiResImage({super.key, required this.url});
+  const ProductHiResImage({super.key, required this.url, this.memCacheWidth});
 
   final String url;
+  final int? memCacheWidth;
 
   @override
   Widget build(BuildContext context) {
     return CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.contain,
+      width: double.infinity,
+      height: double.infinity,
+      memCacheWidth: memCacheWidth,
       fadeInDuration: const Duration(milliseconds: 150),
-      placeholder: (_, __) => CachedNetworkImage(
-        imageUrl: url,
-        fit: BoxFit.contain,
-        memCacheWidth: 512,
-        maxWidthDiskCache: 1024,
-        fadeInDuration: Duration.zero,
-        placeholder: (_, __) => const Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.darkGreen),
-          ),
+      placeholder: (_, __) => const Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: AppColors.darkGreen),
         ),
-        errorWidget: (_, __, ___) => const SizedBox.shrink(),
       ),
       errorWidget: (_, __, ___) => const Center(
-        child: Icon(Icons.image_not_supported_outlined, color: AppColors.textMuted, size: 40),
+        child: Icon(Icons.image_not_supported_outlined,
+            color: AppColors.textMuted, size: 40),
       ),
     );
   }
@@ -140,7 +140,8 @@ class ZoomableProductImage extends StatefulWidget {
   State<ZoomableProductImage> createState() => _ZoomableProductImageState();
 }
 
-class _ZoomableProductImageState extends State<ZoomableProductImage> with SingleTickerProviderStateMixin {
+class _ZoomableProductImageState extends State<ZoomableProductImage>
+    with SingleTickerProviderStateMixin {
   final _transform = ValueNotifier<Matrix4>(Matrix4.identity());
   late final AnimationController _reset;
   Matrix4 _resetFrom = Matrix4.identity();
@@ -152,7 +153,8 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
   @override
   void initState() {
     super.initState();
-    _reset = AnimationController(vsync: this, duration: const Duration(milliseconds: 220))
+    _reset = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 220))
       ..addListener(_tickReset);
   }
 
@@ -170,7 +172,8 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
       return;
     }
     final vy = velocity?.pixelsPerSecond.dy ?? 0;
-    drag.end(DragEndDetails(velocity: velocity ?? Velocity.zero, primaryVelocity: vy));
+    drag.end(DragEndDetails(
+        velocity: velocity ?? Velocity.zero, primaryVelocity: vy));
   }
 
   void _ensureScroll(ScaleUpdateDetails d) {
@@ -201,11 +204,13 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
       _pinching = true;
       _endScroll(cancel: true);
       final s = d.scale.clamp(1.0, _kViewerMaxScale);
-      final focal = d.localFocalPoint;
+      final center = Offset(widget.size / 2, widget.size / 2);
+      final focal = d.localFocalPoint - center;
+      final origin = _pinchOrigin - center;
       _transform.value = Matrix4.identity()
         ..translate(focal.dx, focal.dy)
         ..scale(s, s, 1)
-        ..translate(-_pinchOrigin.dx, -_pinchOrigin.dy);
+        ..translate(-origin.dx, -origin.dy);
       return;
     }
 
@@ -238,9 +243,10 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
       _reset.forward(from: 0);
       return;
     }
-    if (travel < kTouchSlop) {
+    if (travel < 36) {
       _endScroll(cancel: true);
-      openProductImageViewer(context, images: widget.images, heroTag: widget.heroTag);
+      openProductImageViewer(context,
+          images: widget.images, heroTag: widget.heroTag);
       return;
     }
     _endScroll(velocity: d.velocity);
@@ -256,7 +262,8 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
 
   @override
   Widget build(BuildContext context) {
-    final url = widget.images.isEmpty ? '' : resolveImageUrl(widget.images.first);
+    final url =
+        widget.images.isEmpty ? '' : resolveImageUrl(widget.images.first);
     if (url.isEmpty) {
       return ProductThumbnail(image: '', size: widget.size);
     }
@@ -272,7 +279,8 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
       child: RawGestureDetector(
         behavior: HitTestBehavior.opaque,
         gestures: <Type, GestureRecognizerFactory>{
-          _EagerScaleRecognizer: GestureRecognizerFactoryWithHandlers<_EagerScaleRecognizer>(
+          _EagerScaleRecognizer:
+              GestureRecognizerFactoryWithHandlers<_EagerScaleRecognizer>(
             () => _EagerScaleRecognizer(),
             (_EagerScaleRecognizer instance) {
               instance
@@ -292,7 +300,8 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
                 child: ValueListenableBuilder<Matrix4>(
                   valueListenable: _transform,
                   builder: (_, matrix, child) => Transform(
-                    alignment: Alignment.topLeft,
+                    alignment: Alignment.center,
+                    filterQuality: FilterQuality.medium,
                     transform: matrix,
                     child: child,
                   ),
@@ -300,12 +309,48 @@ class _ZoomableProductImageState extends State<ZoomableProductImage> with Single
                 ),
               ),
               const Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: IgnorePointer(child: ProductZoomHintBadge()),
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: IgnorePointer(
+                  child: Center(child: ProductZoomHintBadge()),
+                ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Round control on a product-list photo. Opens the same full-screen viewer
+/// without navigating to the product page.
+class ProductCardZoomButton extends StatelessWidget {
+  const ProductCardZoomButton({super.key, required this.images});
+
+  final List<String> images;
+
+  @override
+  Widget build(BuildContext context) {
+    if (images.every((url) => url.trim().isEmpty)) {
+      return const SizedBox.shrink();
+    }
+    return Material(
+      color: AppColors.darkGreen,
+      elevation: 2,
+      shadowColor: Colors.black26,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => openProductImageViewer(context, images: images),
+        child: Semantics(
+          button: true,
+          label: _tapToZoomLabel(context),
+          child: const SizedBox(
+            width: 36,
+            height: 36,
+            child: Icon(Icons.zoom_in_rounded, color: Colors.white, size: 20),
           ),
         ),
       ),
@@ -321,18 +366,30 @@ class ProductZoomHintBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bar = ColoredBox(
-      color: AppColors.darkGreen.withValues(alpha: 0.92),
+    final bar = DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.darkGreen,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x73000000), blurRadius: 12, offset: Offset(0, 3)),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.zoom_in_rounded, size: 18, color: Colors.white),
+            const Icon(Icons.zoom_in_rounded, size: 20, color: Colors.white),
             const SizedBox(width: 6),
             Text(
               _tapToZoomLabel(context),
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+              style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  height: 1.1),
             ),
           ],
         ),
@@ -365,8 +422,10 @@ class ProductImageViewer extends StatefulWidget {
   State<ProductImageViewer> createState() => _ProductImageViewerState();
 }
 
-class _ProductImageViewerState extends State<ProductImageViewer> with SingleTickerProviderStateMixin {
-  late final PageController _pages = PageController(initialPage: widget.initialIndex);
+class _ProductImageViewerState extends State<ProductImageViewer>
+    with SingleTickerProviderStateMixin {
+  late final PageController _pages =
+      PageController(initialPage: widget.initialIndex);
   late int _index = widget.initialIndex;
   bool _zoomed = false;
   double _dragDy = 0;
@@ -376,9 +435,11 @@ class _ProductImageViewerState extends State<ProductImageViewer> with SingleTick
   @override
   void initState() {
     super.initState();
-    _dragBack = AnimationController(vsync: this, duration: const Duration(milliseconds: 200))
+    _dragBack = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 200))
       ..addListener(() {
-        setState(() => _dragDy = _dragFrom * (1 - Curves.easeOut.transform(_dragBack.value)));
+        setState(() => _dragDy =
+            _dragFrom * (1 - Curves.easeOut.transform(_dragBack.value)));
       });
   }
 
@@ -408,18 +469,23 @@ class _ProductImageViewerState extends State<ProductImageViewer> with SingleTick
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: Colors.black.withValues(alpha: bgOpacity),
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
+        body: SizedBox.expand(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              GestureDetector(
                 onVerticalDragStart: _zoomed ? null : (_) => _dragBack.stop(),
-                onVerticalDragUpdate: _zoomed ? null : (d) => setState(() => _dragDy += d.delta.dy),
+                onVerticalDragUpdate: _zoomed
+                    ? null
+                    : (d) => setState(() => _dragDy += d.delta.dy),
                 onVerticalDragEnd: _zoomed ? null : _onDragEnd,
                 child: Transform.translate(
                   offset: Offset(0, _dragDy),
                   child: PageView.builder(
                     controller: _pages,
-                    physics: _zoomed ? const NeverScrollableScrollPhysics() : const PageScrollPhysics(),
+                    physics: _zoomed
+                        ? const NeverScrollableScrollPhysics()
+                        : const PageScrollPhysics(),
                     itemCount: count,
                     onPageChanged: (i) => setState(() {
                       _index = i;
@@ -428,71 +494,108 @@ class _ProductImageViewerState extends State<ProductImageViewer> with SingleTick
                     itemBuilder: (_, i) => _ZoomPage(
                       url: widget.images[i],
                       index: i,
-                      heroTag: widget.heroTag == null ? null : productImageHeroTag(widget.heroTag!, i),
+                      heroTag: widget.heroTag == null
+                          ? null
+                          : productImageHeroTag(widget.heroTag!, i),
                       active: i == _index,
                       onZoomChanged: (z) {
-                        if (i == _index && z != _zoomed) setState(() => _zoomed = z);
+                        if (i == _index && z != _zoomed) {
+                          setState(() => _zoomed = z);
+                        }
                       },
                     ),
                   ),
                 ),
               ),
-            ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  children: [
-                    if (count > 1)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.55),
-                          borderRadius: BorderRadius.circular(20),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        if (count > 1)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.55),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '${_index + 1} / $count',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13),
+                            ),
+                          ),
+                        const Spacer(),
+                        Material(
+                          color: Colors.white,
+                          elevation: 4,
+                          shadowColor: Colors.black54,
+                          borderRadius: BorderRadius.circular(24),
+                          child: InkWell(
+                            onTap: () => Navigator.of(context).maybePop(),
+                            borderRadius: BorderRadius.circular(24),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.close_rounded,
+                                      color: AppColors.ink, size: 22),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    s.get('common.close', fallback: 'Close'),
+                                    style: const TextStyle(
+                                      color: AppColors.ink,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        child: Text(
-                          '${_index + 1} / $count',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
-                        ),
-                      ),
-                    const Spacer(),
-                    Material(
-                      color: Colors.black.withValues(alpha: 0.55),
-                      shape: const CircleBorder(),
-                      child: IconButton(
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        tooltip: s.get('common.close', fallback: 'Close'),
-                        iconSize: 26,
-                        icon: const Icon(Icons.close_rounded, color: Colors.white),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: SafeArea(
-                top: false,
-                child: IgnorePointer(
-                  child: AnimatedOpacity(
-                    opacity: _zoomed || _dragDy != 0 ? 0 : 1,
-                    duration: const Duration(milliseconds: 180),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        s.get('app.product.zoomHint', fallback: 'Pinch or double-tap to zoom'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w600),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SafeArea(
+                  top: false,
+                  child: IgnorePointer(
+                    child: AnimatedOpacity(
+                      opacity: _zoomed || _dragDy != 0 ? 0 : 1,
+                      duration: const Duration(milliseconds: 180),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          s.get('app.product.zoomHint',
+                              fallback: 'Pinch or double-tap to zoom'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.92),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -518,7 +621,8 @@ class _ZoomPage extends StatefulWidget {
   State<_ZoomPage> createState() => _ZoomPageState();
 }
 
-class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixin {
+class _ZoomPageState extends State<_ZoomPage>
+    with SingleTickerProviderStateMixin {
   final _matrix = ValueNotifier<Matrix4>(Matrix4.identity());
   late final AnimationController _anim;
   double _scale = 1;
@@ -539,7 +643,9 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
   @override
   void initState() {
     super.initState();
-    _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 240))..addListener(_tick);
+    _anim = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 240))
+      ..addListener(_tick);
   }
 
   @override
@@ -578,15 +684,16 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
     _publish();
   }
 
-  Offset _clamped(double scale, Offset translate) {
-    if (scale < 1 || _viewport.isEmpty) return translate;
-    final maxX = _viewport.width * (scale - 1);
-    final maxY = _viewport.height * (scale - 1);
-    return Offset(translate.dx.clamp(-maxX, 0), translate.dy.clamp(-maxY, 0));
-  }
+  Offset _focal(Offset local) =>
+      local - Offset(_viewport.width / 2, _viewport.height / 2);
 
-  void _clamp() {
-    _translate = _clamped(_scale, _translate);
+  /// Pan limits for a center-origin scale. Under 1× the photo stays centered.
+  Offset _clamped(double scale, Offset translate) {
+    if (scale <= 1 || _viewport.isEmpty) return Offset.zero;
+    final maxX = _viewport.width * (scale - 1) / 2;
+    final maxY = _viewport.height * (scale - 1) / 2;
+    return Offset(
+        translate.dx.clamp(-maxX, maxX), translate.dy.clamp(-maxY, maxY));
   }
 
   void _animateTo(double scale, Offset translate) {
@@ -606,11 +713,18 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
 
   void _onScaleUpdate(ScaleUpdateDetails d) {
     if (!_zoomed && d.pointerCount < 2 && _gestureScale <= 1.01) return;
-    final next = (_gestureScale * d.scale).clamp(_kViewerMinScale, _kViewerMaxScale);
-    final scene = (_gestureFocal - _gestureTranslate) / _gestureScale;
+    if (d.pointerCount < 2) {
+      _translate = _clamped(_scale, _translate + d.focalPointDelta);
+      _publish();
+      return;
+    }
+    final next =
+        (_gestureScale * d.scale).clamp(_kViewerMinScale, _kViewerMaxScale);
+    final startFocal = _focal(_gestureFocal);
+    final focal = _focal(d.localFocalPoint);
+    final scene = (startFocal - _gestureTranslate) / _gestureScale;
     _scale = next;
-    _translate = d.localFocalPoint - scene * next;
-    _clamp();
+    _translate = _clamped(next, focal - scene * next);
     _publish();
   }
 
@@ -629,7 +743,7 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
       return;
     }
     final size = _viewport.isEmpty ? (context.size ?? Size.zero) : _viewport;
-    final p = _doubleTapAt ?? size.center(Offset.zero);
+    final p = _focal(_doubleTapAt ?? size.center(Offset.zero));
     const k = _kDoubleTapScale;
     final scene = (p - _translate) / _scale;
     _animateTo(k, _clamped(k, p - scene * k));
@@ -637,16 +751,22 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
-    Widget image = ProductHiResImage(url: widget.url);
-    if (widget.heroTag != null) image = Hero(tag: widget.heroTag!, child: image);
-
     return LayoutBuilder(
       builder: (context, constraints) {
         _viewport = constraints.biggest;
+        Widget image = ColoredBox(
+          color: Colors.black,
+          child: ProductHiResImage(url: widget.url),
+        );
+        if (widget.heroTag != null) {
+          image = Hero(tag: widget.heroTag!, child: image);
+        }
+
         return RawGestureDetector(
           behavior: HitTestBehavior.opaque,
           gestures: <Type, GestureRecognizerFactory>{
-            _ViewerScaleRecognizer: GestureRecognizerFactoryWithHandlers<_ViewerScaleRecognizer>(
+            _ViewerScaleRecognizer:
+                GestureRecognizerFactoryWithHandlers<_ViewerScaleRecognizer>(
               () => _ViewerScaleRecognizer(zoomed: () => _zoomed),
               (_ViewerScaleRecognizer instance) {
                 instance
@@ -655,10 +775,12 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
                   ..onEnd = _onScaleEnd;
               },
             ),
-            DoubleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
+            DoubleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<
+                DoubleTapGestureRecognizer>(
               () => DoubleTapGestureRecognizer(),
               (DoubleTapGestureRecognizer instance) {
-                instance.onDoubleTapDown = (d) => _doubleTapAt = d.localPosition;
+                instance.onDoubleTapDown =
+                    (d) => _doubleTapAt = d.localPosition;
                 instance.onDoubleTap = _onDoubleTap;
               },
             ),
@@ -667,16 +789,12 @@ class _ZoomPageState extends State<_ZoomPage> with SingleTickerProviderStateMixi
             valueListenable: _matrix,
             builder: (_, matrix, child) => Transform(
               key: ValueKey('product-zoom-${widget.index}'),
-              alignment: Alignment.topLeft,
+              alignment: Alignment.center,
+              filterQuality: FilterQuality.medium,
               transform: matrix,
               child: child,
             ),
-            child: SizedBox.expand(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 72, 12, 72),
-                child: image,
-              ),
-            ),
+            child: image,
           ),
         );
       },

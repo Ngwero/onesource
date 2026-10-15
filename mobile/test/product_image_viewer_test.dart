@@ -4,13 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:onesource_mobile/widgets/product_image_zoom.dart';
 
 double _scaleOf(WidgetTester tester, {int index = 0}) {
-  final transform = tester.widget<Transform>(find.byKey(ValueKey('product-zoom-$index')));
+  final transform =
+      tester.widget<Transform>(find.byKey(ValueKey('product-zoom-$index')));
   return transform.transform.getMaxScaleOnAxis();
 }
 
 double _inlineScale(WidgetTester tester) {
   final transform = tester.widget<Transform>(
-    find.descendant(of: find.byType(ZoomableProductImage), matching: find.byType(Transform)),
+    find.descendant(
+        of: find.byType(ZoomableProductImage),
+        matching: find.byType(Transform)),
   );
   return transform.transform.getMaxScaleOnAxis();
 }
@@ -62,7 +65,8 @@ void main() {
     await openViewer(tester);
     expect(_scaleOf(tester), closeTo(1, 0.001));
 
-    final center = tester.getCenter(find.byKey(const ValueKey('product-zoom-0')));
+    final center =
+        tester.getCenter(find.byKey(const ValueKey('product-zoom-0')));
     Future<void> doubleTap() async {
       await tester.tapAt(center);
       await tester.pump(const Duration(milliseconds: 60));
@@ -77,6 +81,25 @@ void main() {
     expect(_scaleOf(tester), closeTo(1, 0.001));
   });
 
+  testWidgets('double-tap away from the centre zooms toward that point',
+      (tester) async {
+    await openViewer(tester);
+    final box = tester.getRect(find.byKey(const ValueKey('product-zoom-0')));
+    final point = box.center + const Offset(-90, -70);
+    final hits = tester
+        .hitTestOnBinding(point)
+        .path
+        .map((h) => h.target.runtimeType)
+        .join(',');
+    expect(hits, contains('RenderPointerListener'),
+        reason: 'box=$box point=$point hits=$hits');
+    await tester.tapAt(point);
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.tapAt(point);
+    await _settle(tester);
+    expect(_scaleOf(tester), greaterThan(2), reason: 'box=$box point=$point');
+  });
+
   testWidgets('swipe down dismisses when not zoomed', (tester) async {
     await openViewer(tester);
     await tester.fling(find.byType(PageView), const Offset(0, 300), 1500);
@@ -84,7 +107,8 @@ void main() {
     expect(find.byType(ProductImageViewer), findsNothing);
   });
 
-  testWidgets('photo shows Tap to zoom and a tap opens the viewer', (tester) async {
+  testWidgets('photo shows Tap to zoom and a tap opens the viewer',
+      (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -107,7 +131,8 @@ void main() {
     expect(find.byType(ProductImageViewer), findsOneWidget);
   });
 
-  testWidgets('pinch on the photo is not stolen by the page scroll', (tester) async {
+  testWidgets('pinch on the photo is not stolen by the page scroll',
+      (tester) async {
     final controller = ScrollController();
     addTearDown(controller.dispose);
     await tester.pumpWidget(
@@ -147,7 +172,8 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('one finger drag on the photo still scrolls the page', (tester) async {
+  testWidgets('one finger drag on the photo still scrolls the page',
+      (tester) async {
     final controller = ScrollController();
     addTearDown(controller.dispose);
     await tester.pumpWidget(

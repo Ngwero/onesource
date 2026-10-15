@@ -359,7 +359,9 @@ class _HeroImage extends ConsumerWidget {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final raw = constraints.maxWidth;
-              final imageSize = raw.isFinite ? raw : (compact ? 320.0 : 280.0);
+              final viewportCap = MediaQuery.sizeOf(context).height * (compact ? 0.7 : 0.58);
+              final cap = viewportCap < 160 ? 160.0 : viewportCap;
+              final imageSize = (raw.isFinite ? raw : (compact ? 320.0 : 280.0)).clamp(160.0, cap);
               return Stack(
                 children: [
                   Center(
