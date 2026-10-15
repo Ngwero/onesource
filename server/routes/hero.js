@@ -26,6 +26,7 @@ router.get("/slides", async (req, res) => {
       requestedPlacement === "onboarding"
         ? requestedPlacement
         : "home";
+    if (!admin) res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json({ slides: filterHeroSlidesByPlacement(slides, placement) });
   } catch (e) {
     res.status(500).json({ error: e.message });

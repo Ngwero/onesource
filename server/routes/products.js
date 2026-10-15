@@ -309,6 +309,18 @@ function fallbackOptions(ctx, extra = {}) {
 
 /** PostgREST returns at most this many rows per request (Supabase default `max-rows`). */
 const MAX_ROWS = 1000;
+const CARD_COUNT_WAIT_MS = 1500;
+
+/** `promise`'s value, or null if it hasn't settled within `ms`. */
+function withinMs(promise, ms) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((resolve) => {
+      timer = setTimeout(() => resolve(null), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
 
 async function loadListPage(ctx, { page, pageSize, card }) {
   const { admin, search, list } = ctx;
@@ -349,9 +361,13 @@ async function loadListPage(ctx, { page, pageSize, card }) {
         { publishedColumn }
       ).range(from, from + pageSize);
 
+      // Web card listings page by `hasMore` and never show `total`, so a cold count
+      // (a full scan) must not hold the page; it keeps filling the cache meanwhile.
+      // Other clients (the mobile app shows totals) still wait for the exact count.
+      const countPromise = listingCount(db, ctx, publishedColumn).catch(() => null);
       const [{ data, error }, count] = await Promise.all([
         pageQuery,
-        listingCount(db, ctx, publishedColumn).catch(() => null),
+        card ? withinMs(countPromise, CARD_COUNT_WAIT_MS) : countPromise,
       ]);
       if (error) throw error;
 
@@ -431,6 +447,7 @@ router.get("/categories", async (_req, res) => {
   try {
     const db = requireSupabase();
     const categories = await listCategories(db, { admin: false });
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json({ categories });
   } catch (e) {
     res.status(500).json({ error: dbErrorMessage(e) });
@@ -620,6 +637,9 @@ router.get("/:id", async (req, res) => {
       { productId: req.params.id }
     );
 
+    if (req.query.admin !== "true") {
+      res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    }
     res.json({ product: result.product });
   } catch (e) {
     const status = e.status === 404 ? 404 : 500;

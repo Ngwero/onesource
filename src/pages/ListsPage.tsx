@@ -4,14 +4,14 @@ import { useMemo } from "react";
 import { PageContainer } from "../components/PageContainer";
 import { SavedItemRow } from "../components/SavedItemRow";
 import { useProducts } from "../context/ProductsContext";
-import { shopForProductId, useEnsureShops } from "../hooks/useEnsureShops";
+import { useEnsureProducts } from "../hooks/useEnsureShops";
 import { useSavedList } from "../context/SavedListContext";
 
 export function ListsPage() {
   const { t } = useTranslation();
   const { products } = useProducts();
   const { savedIds } = useSavedList();
-  useEnsureShops([...new Set([...savedIds].map(shopForProductId))]);
+  useEnsureProducts([...savedIds]);
 
   const saved = useMemo(() => {
     const byId = new Map(products.map((p) => [p.id, p]));

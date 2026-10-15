@@ -12,6 +12,15 @@ export function useEnsureShops(shops: readonly ProductShop[]) {
   }, [key, ensureShop]);
 }
 
+/** Loads just these products (not their whole shop) when the caller mounts. */
+export function useEnsureProducts(ids: readonly string[]) {
+  const { ensureProducts } = useProducts();
+  const key = ids.join(",");
+  useEffect(() => {
+    ensureProducts(key ? key.split(",") : []);
+  }, [key, ensureProducts]);
+}
+
 export function shopForProductId(id: string): ProductShop {
   if (id.startsWith("kitchen-")) return "kitchen";
   if (id.startsWith("cosmetics-")) return "cosmetics";

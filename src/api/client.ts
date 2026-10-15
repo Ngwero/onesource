@@ -154,34 +154,70 @@ async function fetchProductsAttempt(
   return products;
 }
 
-function catalogAttempt(
-  params: {
-    category?: string;
-    q?: string;
-    shop?: "fresh" | "kitchen" | "cosmetics";
-  } | undefined
-): Promise<Product[]> {
+function attemptWithTimeout<T>(
+  attempt: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number
+): Promise<T> {
   const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), CATALOG_ATTEMPT_MS);
-  return fetchProductsAttempt(params, controller.signal).finally(() => window.clearTimeout(timer));
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  return attempt(controller.signal).finally(() => window.clearTimeout(timer));
 }
 
-export async function fetchProducts(params?: {
+async function withOneRetry<T>(
+  attempt: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number
+): Promise<T> {
+  try {
+    return await attemptWithTimeout(attempt, timeoutMs);
+  } catch {
+    await new Promise((resolve) => window.setTimeout(resolve, CATALOG_RETRY_PAUSE_MS));
+    try {
+      return await attemptWithTimeout(attempt, timeoutMs);
+    } catch (error) {
+      if (isAbortError(error)) {
+        throw new Error(i18n.t("errors.loadProductsApi"), { cause: error });
+      }
+      throw error;
+    }
+  }
+}
+
+/** A shop's whole catalogue (full product fields). Slow on a cold API; never await it for first paint. */
+export function fetchProducts(params?: {
   category?: string;
   q?: string;
   shop?: "fresh" | "kitchen" | "cosmetics";
 }): Promise<Product[]> {
-  try {
-    return await catalogAttempt(params);
-  } catch {
-    await new Promise((resolve) => window.setTimeout(resolve, CATALOG_RETRY_PAUSE_MS));
-    try {
-      return await catalogAttempt(params);
-    } catch (error) {
-      if (isAbortError(error)) throw new Error(i18n.t("errors.loadProductsApi"));
-      throw error;
-    }
-  }
+  return withOneRetry((signal) => fetchProductsAttempt(params, signal), CATALOG_ATTEMPT_MS);
+}
+
+/**
+ * First screen of a shop: one small card-only page. Retried once only if that
+ * request fails. 45s is the abort ceiling, not how long a healthy call waits.
+ */
+export function fetchFirstProductsBatch(
+  shop: "fresh" | "kitchen" | "cosmetics",
+  pageSize: number
+): Promise<ProductListPage> {
+  return withOneRetry(
+    (signal) => fetchProductListPage({ shop }, 0, pageSize, signal),
+    CATALOG_ATTEMPT_MS
+  );
+}
+
+/**
+ * Rest of a small shop (Fresh) as cards, after the first screen is up.
+ * Skips description and details JSON — the full-row catalogue is ~400KB and
+ * the query that builds it is what stalls a cold database. Not for Kitchen
+ * or Cosmetics (tens of thousands of rows).
+ */
+export function fetchCardCatalog(
+  shop: "fresh" | "kitchen" | "cosmetics"
+): Promise<ProductListPage> {
+  return withOneRetry(
+    (signal) => fetchProductListPage({ shop }, 0, 1000, signal),
+    CATALOG_ATTEMPT_MS
+  );
 }
 
 /** One page of a single Kitchen Ware aisle (newest first) — for home-page shelves. */
@@ -193,6 +229,8 @@ export async function fetchKitchenAislePage(
     shop: "kitchen",
     aisle: aisleId,
     pageSize: String(pageSize),
+    // Shelves render cards. Full rows include descriptions and details JSON.
+    fields: "card",
   });
   return fetchProductsPageRaw(search, 0);
 }
@@ -293,13 +331,24 @@ export async function updateCategoryImage(
   return data.category as Category;
 }
 
+const heroSlideCache = new Map<string, Promise<HeroSlide[]>>();
+
 export async function fetchHeroSlides(
   placement: "home" | "exports" | "kitchen" | "cosmetics" | "onboarding" = "home"
 ): Promise<HeroSlide[]> {
-  const res = await fetch(`${API_BASE}/hero/slides?placement=${placement}`);
-  if (!res.ok) throw new Error(i18n.t("errors.loadHeroSlides"));
-  const data = await res.json();
-  return (data.slides as HeroSlide[]) ?? [];
+  const cached = heroSlideCache.get(placement);
+  if (cached) return cached;
+  const pending = (async () => {
+    const res = await fetch(`${API_BASE}/hero/slides?placement=${placement}`);
+    if (!res.ok) throw new Error(i18n.t("errors.loadHeroSlides"));
+    const data = await res.json();
+    return (data.slides as HeroSlide[]) ?? [];
+  })().catch((error) => {
+    heroSlideCache.delete(placement);
+    throw error;
+  });
+  heroSlideCache.set(placement, pending);
+  return pending;
 }
 
 export async function fetchKitchenCollage(): Promise<KitchenCollage> {

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Product } from "../types/product";
 import { fetchProductById, useProducts } from "../context/ProductsContext";
 import { shopForProductId, useEnsureShops } from "../hooks/useEnsureShops";
+import { useAisleNeighbours } from "../hooks/useAisleNeighbours";
 import { StarRating } from "../components/StarRating";
 import { ProductRelatedSection } from "../components/product/ProductRelatedSection";
 import { ProductCustomersAlsoViewedSection } from "../components/product/ProductCustomersAlsoViewedSection";
@@ -70,8 +71,14 @@ export function ProductPage() {
   const { t, i18n } = useTranslation();
   const { formatPrice, freeDeliveryThreshold } = useCurrency();
   const { id } = useParams<{ id: string }>();
-  const { getProductById, products } = useProducts();
-  useEnsureShops(id ? [shopForProductId(id)] : []);
+  const { getProductById, products: loadedProducts } = useProducts();
+  useEnsureShops(id && shopForProductId(id) === "fresh" ? ["fresh"] : []);
+  const aisleNeighbours = useAisleNeighbours(id);
+  const products = useMemo(() => {
+    if (!aisleNeighbours.length) return loadedProducts;
+    const seen = new Set(loadedProducts.map((p) => p.id));
+    return [...loadedProducts, ...aisleNeighbours.filter((p) => !seen.has(p.id))];
+  }, [loadedProducts, aisleNeighbours]);
   const knownProduct = id ? getProductById(id) : undefined;
   const [fetched, setFetched] = useState<{ id: string; product: Product | null } | null>(null);
   useEffect(() => {

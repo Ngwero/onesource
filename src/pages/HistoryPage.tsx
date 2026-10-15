@@ -5,16 +5,14 @@ import { PageContainer } from "../components/PageContainer";
 import { ProductCard } from "../components/ProductCard";
 import { useAuth } from "../context/AuthContext";
 import { useProducts } from "../context/ProductsContext";
-import { shopForProductId, useEnsureShops } from "../hooks/useEnsureShops";
+import { useEnsureProducts } from "../hooks/useEnsureShops";
 import { getBrowsingHistory } from "../utils/userStorage";
 
 export function HistoryPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { products } = useProducts();
-  useEnsureShops([
-    ...new Set(getBrowsingHistory(user?.id).map((e) => shopForProductId(e.productId))),
-  ]);
+  useEnsureProducts(getBrowsingHistory(user?.id).map((e) => e.productId));
 
   const viewed = useMemo(() => {
     const order = getBrowsingHistory(user?.id).map((e) => e.productId);

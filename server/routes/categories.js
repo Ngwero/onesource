@@ -16,6 +16,7 @@ router.get("/", async (req, res) => {
     const admin = req.query.admin === "true";
     const categories = await listCategories(db, { admin });
     const canDelete = admin ? await categoriesTableSupportsDelete(db) : undefined;
+    if (!admin) res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json({ categories, canDelete });
   } catch (e) {
     res.status(500).json({ error: e.message });
