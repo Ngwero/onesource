@@ -88,7 +88,7 @@ async function attachProductCounts(db, rows) {
   return rows.map((row) => rowToSupplier(row, tally.get(row.id) ?? 0));
 }
 
-export async function listSuppliers(db, { admin = false, status } = {}) {
+export async function listSuppliers(db, { admin = false, status, withProductCounts = true } = {}) {
   let query = db.from("suppliers").select("*").order("created_at", { ascending: false });
 
   if (!admin) {
@@ -106,6 +106,7 @@ export async function listSuppliers(db, { admin = false, status } = {}) {
     throw error;
   }
 
+  if (!withProductCounts) return (rows ?? []).map((row) => rowToSupplier(row, 0));
   return attachProductCounts(db, rows ?? []);
 }
 

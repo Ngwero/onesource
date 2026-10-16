@@ -7,6 +7,7 @@ const PACKAGING_API = "/api/packaging";
 const NOTIFICATIONS_API = "/api/notifications";
 const HEALTH = "/api/health";
 const ADMIN_STATS = "/api/admin/stats";
+const ADMIN_PRODUCT_COUNT = "/api/admin/product-count";
 let SHOP = "http://localhost:5173";
 
 async function detectShopUrl() {
@@ -1016,6 +1017,16 @@ async function loadAdminStats({ fresh = false } = {}) {
     text.textContent = e.network ? "Cannot reach API" : e.message;
     throw e;
   }
+}
+
+async function loadExactProductCount() {
+  const data = await fetchJson(ADMIN_PRODUCT_COUNT);
+  const count = Number(data.products ?? 0);
+  productsTotal = count;
+  productsTotalExact = true;
+  if (adminStats) adminStats.products = count;
+  renderAll();
+  return count;
 }
 
 async function checkHealth() {
@@ -3679,10 +3690,15 @@ async function loadProducts(showLoader = true) {
     lastRefresh = new Date();
     renderAll();
     // Inventory and analytics are secondary to opening the portal.
-    void Promise.allSettled([refreshInventory(), loadAdminStats()]).then((results) => {
+    void Promise.allSettled([refreshInventory(), loadAdminStats()]).then(async (results) => {
       const failures = results.filter((result) => result.status === "rejected");
       if (failures.length) console.warn("[admin] background refresh failed", failures);
       renderAll();
+      // COUNT(*) is intentionally last. It updates the displayed total once it
+      // finishes without competing with the tables and dashboard for the DB.
+      await loadExactProductCount().catch((error) => {
+        console.warn("[admin] exact product count failed", error);
+      });
     });
     showError(null);
   } catch (e) {

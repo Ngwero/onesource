@@ -5,6 +5,7 @@ import { listSuppliers } from "../lib/suppliersService.js";
 import {
   getCategoryPreviewImages,
   getDashboardProductLists,
+  getExactProductCount,
   getInventorySummary,
   isStatementTimeout,
   listAdminProducts,
@@ -34,6 +35,17 @@ router.get("/products", async (req, res) => {
   }
 });
 
+// Kept separate from the page data: an exact COUNT(*) can take several seconds
+// on a large catalogue, but it must never hold up the admin tables.
+router.get("/product-count", async (_req, res) => {
+  try {
+    const count = await getExactProductCount(requireSupabase());
+    res.set("Cache-Control", "no-store").json({ ok: true, products: count, exact: true });
+  } catch (e) {
+    sendDbError(res, e, 503);
+  }
+});
+
 router.get("/stats", async (req, res) => {
   try {
     const db = requireSupabase();
@@ -44,13 +56,13 @@ router.get("/stats", async (req, res) => {
     // statement-timeout budget on a cold database.
     const summary = await getInventorySummary(db, { fresh });
     const [lists, orderCountRes, categories, suppliers] = await Promise.all([
-      getDashboardProductLists(db),
-      db.from("orders").select("id", { count: "exact", head: true }),
+      getDashboardProductLists(db).catch(() => ({ attention: [], recent: [] })),
+      db.from("orders").select("id", { count: "planned", head: true }),
       listCategories(db, { admin: true }).catch(() => []),
-      listSuppliers(db, { admin: true }).catch(() => []),
+      listSuppliers(db, { admin: true, withProductCounts: false }).catch(() => []),
     ]);
     const ordersErr = orderCountRes.error;
-    if (ordersErr && !isMissingTable(ordersErr)) throw ordersErr;
+    if (ordersErr && !isMissingTable(ordersErr) && !isStatementTimeout(ordersErr)) throw ordersErr;
 
     let revenue = 0;
     let placedOrders = 0;
@@ -71,6 +83,7 @@ router.get("/stats", async (req, res) => {
     res.set("Cache-Control", "no-store").json({
       ok: true,
       products: summary.total,
+      productsExact: summary.totalExact !== false,
       orders: orderCountRes.count ?? 0,
       categories: categories.filter((c) => c.active !== false).length,
       suppliers: suppliers.length,

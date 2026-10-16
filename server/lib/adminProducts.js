@@ -69,6 +69,21 @@ export async function getExactProductCount(db, { fresh = false } = {}) {
   return productCountInFlight;
 }
 
+/** Return immediately from cache, otherwise use Postgres' fast planner estimate. */
+export async function getFastProductCount(db) {
+  if (productCountCache && Date.now() - productCountCache.at < PRODUCT_COUNT_TTL_MS) {
+    return { value: productCountCache.value, exact: true };
+  }
+  const { count, error } = await db
+    .from("products")
+    .select("id", { count: "planned", head: true });
+  if (error) {
+    if (productCountCache) return { value: productCountCache.value, exact: true };
+    throw error;
+  }
+  return { value: Number(count ?? 0), exact: false };
+}
+
 export function isStatementTimeout(error) {
   return (
     error?.code === "57014" ||
@@ -191,11 +206,11 @@ export async function listAdminProducts(db, params) {
   const hasFilters = Boolean(
     params.ids.length || params.q || params.category || params.supplier || params.stock || params.prime || params.sale
   );
+  const fastTotalPromise = hasFilters ? null : getFastProductCount(db);
   // Unfiltered admin views share one exact count. Filtered lists keep their count
   // attached to the query, falling back to the planner if Postgres reaches its limit.
   // Attach the rejection handler immediately: the page query may fail before the
   // count finishes, and Node treats a temporarily unobserved rejection as fatal.
-  const exactTotal = hasFilters ? null : getExactProductCount(db).catch(() => null);
   let countMode = hasFilters ? "exact" : null;
   let result = await run(countMode);
   if (result.error && isStatementTimeout(result.error) && params.sortKey !== "id") {
@@ -219,16 +234,11 @@ export async function listAdminProducts(db, params) {
   if (params.sale) {
     products = products.filter((p) => p.originalPrice != null && p.originalPrice > p.price);
   }
-  let sharedTotal = exactTotal ? await exactTotal : null;
-  let sharedTotalExact = sharedTotal != null;
-  if (!hasFilters && sharedTotal == null) {
-    const planned = await db.from("products").select("id", { count: "planned", head: true });
-    sharedTotal = planned.error ? from + products.length : Number(planned.count ?? 0);
-  }
+  const fastTotal = fastTotalPromise ? await fastTotalPromise : null;
   return {
     products,
-    total: hasFilters ? result.count ?? from + products.length : sharedTotal,
-    totalExact: hasFilters ? countMode === "exact" : sharedTotalExact,
+    total: hasFilters ? result.count ?? from + products.length : fastTotal.value,
+    totalExact: hasFilters ? countMode === "exact" : fastTotal.exact,
     page: params.page,
     pageSize: params.pageSize,
   };
@@ -271,14 +281,15 @@ async function summaryFromRpc(db) {
 
 /** Lightweight fallback when the optional aggregate RPC has not been installed. */
 async function summaryFromCounts(db) {
-  const total = await getExactProductCount(db);
+  const total = await getFastProductCount(db);
   return {
     ...emptySummary(),
-    total,
+    total: total.value,
+    totalExact: total.exact,
     // Detailed inventory aggregates require the optional admin_product_stats RPC.
     // Keep the fallback fast and exact for the catalogue total.
-    live: total,
-    healthy: total,
+    live: total.value,
+    healthy: total.value,
   };
 }
 
@@ -322,8 +333,9 @@ export async function getDashboardProductLists(db) {
       .from("products")
       .select(columns)
       .lte("stock_quantity", 10)
-      .order("stock_quantity", { ascending: true })
-      .order("id", { ascending: true })
+      // stock_quantity is not indexed on older databases. Primary-key order
+      // finds a small attention sample quickly without sorting the catalogue.
+      .order("id", { ascending: false })
       .limit(8),
     db
       .from("products")
