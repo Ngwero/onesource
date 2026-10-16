@@ -7,8 +7,6 @@ const PACKAGING_API = "/api/packaging";
 const NOTIFICATIONS_API = "/api/notifications";
 const HEALTH = "/api/health";
 const ADMIN_STATS = "/api/admin/stats";
-/** Dummy catalogue size shown in admin KPIs / badges (not the real SKU count). */
-const DISPLAY_PRODUCT_COUNT = 9899;
 let SHOP = "http://localhost:5173";
 
 async function detectShopUrl() {
@@ -43,6 +41,9 @@ let inventoryPage = 1;
 const INVENTORY_PAGE_SIZE = 100;
 /** Server-side aggregates (inventory counts, per-category counts, dashboard lists). */
 let adminStats = null;
+function displayedProductCount() {
+  return Number(adminStats?.products ?? productsTotal ?? 0);
+}
 /** Every slim product row seen in any list, for lookups by id (stock +/-, delete titles). */
 const productCache = new Map();
 let heroSlides = [];
@@ -64,7 +65,9 @@ let productsPage = 1;
 let ordersPage = 1;
 let productsPageSize = 50;
 let ordersPageSize = 50;
-let productsSort = { key: "updatedAt", dir: "desc" };
+// Primary-key sorting is indexed on every deployment and keeps the first admin
+// view responsive even before the optional performance migration is installed.
+let productsSort = { key: "id", dir: "desc" };
 const selectedProductIds = new Set();
 let showInactiveHero = false;
 let orderAlertsMuted = localStorage.getItem("os_admin_order_mute") === "1";
@@ -418,7 +421,7 @@ function buildPageMeta(view) {
     ? ` · Updated ${lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
     : "";
   const maps = {
-    dashboard: `<strong>${DISPLAY_PRODUCT_COUNT.toLocaleString()}</strong> products · <strong>${orders.length}</strong> orders · <strong>${formatMoney(os.revenue)}</strong> revenue · <strong>${suppliers.length}</strong> suppliers · <strong>${packagingMaterials.length}</strong> packaging${refreshed}`,
+    dashboard: `<strong>${displayedProductCount().toLocaleString()}</strong> products · <strong>${orders.length}</strong> orders · <strong>${formatMoney(os.revenue)}</strong> revenue · <strong>${suppliers.length}</strong> suppliers · <strong>${packagingMaterials.length}</strong> packaging${refreshed}`,
     analytics: `<strong>${formatMoney(os.revenue)}</strong> total revenue · <strong>${os.delivered}</strong> delivered · <strong>${os.placed}</strong> awaiting action`,
     products: `<strong>${stats.live}</strong> live · <strong>${stats.low}</strong> low stock · <strong>${stats.out}</strong> out of stock`,
     inventory: `<strong>${stats.units.toLocaleString()}</strong> units on hand · stock value <strong>${formatMoney(stats.value)}</strong>`,
@@ -432,7 +435,7 @@ function buildPageMeta(view) {
     notifications: `<strong>${appNotifications.filter((n) => n.active).length}</strong> active · <strong>${appNotifications.length}</strong> total sent`,
     categories: `<strong>${categories.length}</strong> category banners`,
   };
-  return maps[view] || `${DISPLAY_PRODUCT_COUNT.toLocaleString()} products · ${orders.length} orders${refreshed}`;
+  return maps[view] || `${displayedProductCount().toLocaleString()} products · ${orders.length} orders${refreshed}`;
 }
 
 function renderKpiCard({ icon, iconClass, label, value, sub, trend }) {
@@ -632,7 +635,7 @@ function renderDashBrowse() {
   const os = computeOrderStats();
   const pending = suppliers.filter((s) => s.status === "pending").length;
   const items = [
-    { view: "products", icon: "📦", cls: "c0", name: "Products", count: `${DISPLAY_PRODUCT_COUNT.toLocaleString()} listings` },
+    { view: "products", icon: "📦", cls: "c0", name: "Products", count: `${displayedProductCount().toLocaleString()} listings` },
     { view: "orders", icon: "🛒", cls: "c1", name: "Orders", count: `${os.placed} awaiting` },
     { view: "packaging", icon: "🥡", cls: "c3", name: "Packaging", count: `${packagingMaterials.filter((m) => m.lowStock || m.outOfStock).length} need restock` },
     { view: "suppliers", icon: "🏪", cls: "c2", name: "Suppliers", count: `${pending} pending` },
@@ -663,7 +666,7 @@ function renderDashKpis() {
   el.innerHTML = [
     renderKpiCard({ icon: "💰", iconClass: "green", label: "Revenue", value: formatMoney(os.revenue), sub: "All non-cancelled orders" }),
     renderKpiCard({ icon: "🛒", iconClass: "blue", label: "Orders", value: os.total, sub: `${os.placed} new · ${os.delivered} delivered` }),
-    renderKpiCard({ icon: "📦", iconClass: "teal", label: "Products", value: DISPLAY_PRODUCT_COUNT.toLocaleString(), sub: `${stats.live} live on shop` }),
+    renderKpiCard({ icon: "📦", iconClass: "teal", label: "Products", value: displayedProductCount().toLocaleString(), sub: `${stats.live} live on shop` }),
     renderKpiCard({ icon: "🏪", iconClass: "purple", label: "Suppliers", value: suppliers.length, sub: `${approved} approved sellers` }),
     renderKpiCard({ icon: "⚠️", iconClass: "amber", label: "Low stock", value: stats.low, sub: `${stats.out} out of stock` }),
     renderKpiCard({ icon: "📈", iconClass: "green", label: "Avg order", value: aov ? formatMoney(aov) : "—", sub: "Order value (AOV)" }),
@@ -672,7 +675,7 @@ function renderDashKpis() {
 
 function updateNavBadges() {
   const pc = $("navProductsCount");
-  if (pc) pc.textContent = String(DISPLAY_PRODUCT_COUNT);
+  if (pc) pc.textContent = displayedProductCount().toLocaleString();
   const placed = orders.filter((o) => o.status === "placed").length;
   const ob = $("navOrdersBadge");
   if (ob) {
@@ -971,8 +974,8 @@ async function refreshInventory() {
     const data = await fetchAdminProducts({
       q: $("searchInventory")?.value?.trim() ?? "",
       stock: stockSel === "low" || stockSel === "out" ? stockSel : "",
-      sort: "stockQuantity",
-      dir: "asc",
+      sort: "id",
+      dir: "desc",
       page: inventoryPage,
       pageSize: INVENTORY_PAGE_SIZE,
     });
@@ -1047,7 +1050,7 @@ function categoryCounts() {
 function computeStats() {
   const inv = adminStats?.inventory ?? {};
   return {
-    total: DISPLAY_PRODUCT_COUNT,
+    total: displayedProductCount(),
     live: inv.live ?? 0,
     out: inv.out ?? 0,
     low: inv.low ?? 0,
@@ -2696,7 +2699,7 @@ function renderAnalytics() {
       renderKpiCard({ icon: "📦", iconClass: "blue", label: "Orders", value: os.total, sub: `${os.active} in progress` }),
       renderKpiCard({ icon: "✅", iconClass: "teal", label: "Delivered", value: os.delivered, sub: "Completed orders" }),
       renderKpiCard({ icon: "📈", iconClass: "amber", label: "AOV", value: aov ? formatMoney(aov) : "—", sub: "Average order value" }),
-      renderKpiCard({ icon: "🛍️", iconClass: "purple", label: "SKUs", value: DISPLAY_PRODUCT_COUNT.toLocaleString(), sub: `${stats.live} in stock` }),
+      renderKpiCard({ icon: "🛍️", iconClass: "purple", label: "SKUs", value: displayedProductCount().toLocaleString(), sub: `${stats.live} in stock` }),
       renderKpiCard({ icon: "🏪", iconClass: "green", label: "Sellers", value: suppliers.filter((s) => s.status === "approved").length, sub: "Approved suppliers" }),
     ].join("");
   }
@@ -3670,15 +3673,17 @@ async function loadCategories() {
 async function loadProducts(showLoader = true) {
   if (showLoader) setLoading(true);
   try {
-    const results = await Promise.allSettled([
-      refreshProductsTable(),
-      refreshInventory(),
-      loadAdminStats(),
-    ]);
+    // Open the primary table first. On a cold database, competing catalogue
+    // requests can exhaust the statement timeout even though each is fast alone.
+    await refreshProductsTable();
     lastRefresh = new Date();
     renderAll();
-    const failed = results.find((r) => r.status === "rejected");
-    if (failed) throw failed.reason;
+    // Inventory and analytics are secondary to opening the portal.
+    void Promise.allSettled([refreshInventory(), loadAdminStats()]).then((results) => {
+      const failures = results.filter((result) => result.status === "rejected");
+      if (failures.length) console.warn("[admin] background refresh failed", failures);
+      renderAll();
+    });
     showError(null);
   } catch (e) {
     showError(describeLoadError(e));

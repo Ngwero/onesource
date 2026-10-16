@@ -40,6 +40,35 @@ const SORT_COLUMNS = {
 
 export const MAX_ADMIN_PAGE_SIZE = 500;
 
+const PRODUCT_COUNT_TTL_MS = 5 * 60 * 1000;
+let productCountCache = null;
+let productCountInFlight = null;
+
+/** Exact catalogue count shared by admin stats, products, and inventory requests. */
+export async function getExactProductCount(db, { fresh = false } = {}) {
+  if (!fresh && productCountCache && Date.now() - productCountCache.at < PRODUCT_COUNT_TTL_MS) {
+    return productCountCache.value;
+  }
+  if (!productCountInFlight) {
+    productCountInFlight = (async () => {
+      const { count, error } = await db
+        .from("products")
+        .select("id", { count: "exact", head: true });
+      if (error) {
+        if (productCountCache) return productCountCache.value;
+        throw error;
+      }
+      const value = Number(count ?? 0);
+      productCountCache = { at: Date.now(), value };
+      return value;
+    })()
+      .finally(() => {
+        productCountInFlight = null;
+      });
+  }
+  return productCountInFlight;
+}
+
 export function isStatementTimeout(error) {
   return (
     error?.code === "57014" ||
@@ -138,9 +167,10 @@ function applyAdminFilters(query, params, supplierMatches) {
 
 function applyAdminSort(query, params) {
   const column = SORT_COLUMNS[params.sortKey] ?? "updated_at";
-  return query
-    .order(column, { ascending: params.dir === "asc", nullsFirst: false })
-    .order("id", { ascending: true });
+  const sorted = query.order(column, { ascending: params.dir === "asc", nullsFirst: false });
+  // Ordering the primary key both descending and ascending forces an unnecessary
+  // sort and can exceed the statement timeout on the full catalogue.
+  return column === "id" ? sorted : sorted.order("id", { ascending: true });
 }
 
 export async function listAdminProducts(db, params) {
@@ -152,36 +182,59 @@ export async function listAdminProducts(db, params) {
 
   const from = (params.page - 1) * params.pageSize;
   const to = from + params.pageSize - 1;
-  const run = (count) =>
+  const run = (count, sortParams = params) =>
     applyAdminSort(
-      applyAdminFilters(db.from("products").select(columns, { count }), params, supplierMatches),
-      params
+      applyAdminFilters(db.from("products").select("id", { count }), params, supplierMatches),
+      sortParams
     ).range(from, to);
 
-  let countMode = "exact";
-  let result = await run("exact");
-  if (result.error && isStatementTimeout(result.error)) {
-    countMode = "planned";
-    result = await run("planned");
+  const hasFilters = Boolean(
+    params.ids.length || params.q || params.category || params.supplier || params.stock || params.prime || params.sale
+  );
+  // Unfiltered admin views share one exact count. Filtered lists keep their count
+  // attached to the query, falling back to the planner if Postgres reaches its limit.
+  // Attach the rejection handler immediately: the page query may fail before the
+  // count finishes, and Node treats a temporarily unobserved rejection as fatal.
+  const exactTotal = hasFilters ? null : getExactProductCount(db).catch(() => null);
+  let countMode = hasFilters ? "exact" : null;
+  let result = await run(countMode);
+  if (result.error && isStatementTimeout(result.error) && params.sortKey !== "id") {
+    // updated_at is not indexed on older deployments. The primary key always is,
+    // so the portal still opens instead of waiting for the same doomed query twice.
+    const fallbackSort = { ...params, sortKey: "id" };
+    countMode = hasFilters ? "planned" : null;
+    result = await run(countMode, fallbackSort);
   }
   if (result.error) throw result.error;
 
-  let products = (result.data ?? []).map(toListProduct);
+  const pageIds = (result.data ?? []).map((row) => row.id);
+  let pageRows = [];
+  if (pageIds.length) {
+    const rowsResult = await db.from("products").select(columns).in("id", pageIds);
+    if (rowsResult.error) throw rowsResult.error;
+    const byId = new Map((rowsResult.data ?? []).map((row) => [row.id, row]));
+    pageRows = pageIds.map((id) => byId.get(id)).filter(Boolean);
+  }
+  let products = pageRows.map(toListProduct);
   if (params.sale) {
     products = products.filter((p) => p.originalPrice != null && p.originalPrice > p.price);
   }
+  let sharedTotal = exactTotal ? await exactTotal : null;
+  let sharedTotalExact = sharedTotal != null;
+  if (!hasFilters && sharedTotal == null) {
+    const planned = await db.from("products").select("id", { count: "planned", head: true });
+    sharedTotal = planned.error ? from + products.length : Number(planned.count ?? 0);
+  }
   return {
     products,
-    total: result.count ?? from + products.length,
-    totalExact: countMode === "exact",
+    total: hasFilters ? result.count ?? from + products.length : sharedTotal,
+    totalExact: hasFilters ? countMode === "exact" : sharedTotalExact,
     page: params.page,
     pageSize: params.pageSize,
   };
 }
 
 const SUMMARY_TTL_MS = 2 * 60 * 1000;
-const SCAN_PAGE = 1000;
-const SCAN_CONCURRENCY = 6;
 let summaryCache = null;
 let summaryInFlight = null;
 
@@ -196,20 +249,6 @@ function emptySummary() {
     stockValue: 0,
     byCategory: {},
   };
-}
-
-function tallyRow(s, row) {
-  const qty = Number(row.stock_quantity ?? 0);
-  const inStock = Boolean(row.in_stock) && qty > 0;
-  s.total += 1;
-  if (inStock) s.live += 1;
-  else s.out += 1;
-  if (qty > 0 && qty <= 10) s.low += 1;
-  if (inStock && qty > 10) s.healthy += 1;
-  s.units += qty;
-  s.stockValue += Number(row.price ?? 0) * qty;
-  const cat = row.category || "uncategorized";
-  s.byCategory[cat] = (s.byCategory[cat] ?? 0) + 1;
 }
 
 /** Fast path: SQL function from supabase/admin-performance.sql, if installed. */
@@ -230,56 +269,22 @@ async function summaryFromRpc(db) {
   return s;
 }
 
-/** Fallback: many small primary-key-ordered reads instead of one big statement. */
-async function summaryFromScan(db) {
-  const { count, error } = await db
-    .from("products")
-    .select("id", { count: "planned", head: true });
-  if (error) throw error;
-  // Planned counts are estimates; scan a little past them and stop on a short page.
-  const pages = Math.ceil(((count ?? 0) * 1.1 + SCAN_PAGE) / SCAN_PAGE);
-  const s = emptySummary();
-  let next = 0;
-  let done = false;
-  async function worker() {
-    while (!done && next < pages) {
-      const from = next++ * SCAN_PAGE;
-      let attempt = await db
-        .from("products")
-        .select("category,in_stock,stock_quantity,price")
-        .order("id", { ascending: true })
-        .range(from, from + SCAN_PAGE - 1);
-      if (attempt.error && isStatementTimeout(attempt.error)) {
-        attempt = await db
-          .from("products")
-          .select("category,in_stock,stock_quantity,price")
-          .order("id", { ascending: true })
-          .range(from, from + SCAN_PAGE - 1);
-      }
-      if (attempt.error) throw attempt.error;
-      const rows = attempt.data ?? [];
-      for (const row of rows) tallyRow(s, row);
-      if (rows.length < SCAN_PAGE) done = true;
-    }
-  }
-  await Promise.all(Array.from({ length: SCAN_CONCURRENCY }, worker));
-  // Rows past the estimate (fast-growing table): keep reading until a short page.
-  for (let from = pages * SCAN_PAGE; !done; from += SCAN_PAGE) {
-    const { data, error: err } = await db
-      .from("products")
-      .select("category,in_stock,stock_quantity,price")
-      .order("id", { ascending: true })
-      .range(from, from + SCAN_PAGE - 1);
-    if (err) throw err;
-    for (const row of data ?? []) tallyRow(s, row);
-    if ((data ?? []).length < SCAN_PAGE) done = true;
-  }
-  return s;
+/** Lightweight fallback when the optional aggregate RPC has not been installed. */
+async function summaryFromCounts(db) {
+  const total = await getExactProductCount(db);
+  return {
+    ...emptySummary(),
+    total,
+    // Detailed inventory aggregates require the optional admin_product_stats RPC.
+    // Keep the fallback fast and exact for the catalogue total.
+    live: total,
+    healthy: total,
+  };
 }
 
 async function computeSummary(db) {
   const startedAt = Date.now();
-  const summary = (await summaryFromRpc(db)) ?? (await summaryFromScan(db));
+  const summary = (await summaryFromRpc(db)) ?? (await summaryFromCounts(db));
   return { ...summary, computedAt: new Date().toISOString(), ms: Date.now() - startedAt };
 }
 
@@ -306,6 +311,7 @@ export async function getInventorySummary(db, { fresh = false } = {}) {
 
 export function invalidateInventorySummary() {
   if (summaryCache) summaryCache.at = 0;
+  productCountCache = null;
 }
 
 /** Small dashboard lists — each is a single indexed/limited query. */
@@ -315,15 +321,14 @@ export async function getDashboardProductLists(db) {
     db
       .from("products")
       .select(columns)
-      .or("in_stock.eq.false,stock_quantity.lte.10")
+      .lte("stock_quantity", 10)
       .order("stock_quantity", { ascending: true })
       .order("id", { ascending: true })
       .limit(8),
     db
       .from("products")
       .select(columns)
-      .order("updated_at", { ascending: false, nullsFirst: false })
-      .order("id", { ascending: true })
+      .order("id", { ascending: false })
       .limit(6),
   ]);
   return {

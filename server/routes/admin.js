@@ -39,8 +39,11 @@ router.get("/stats", async (req, res) => {
     const db = requireSupabase();
     const fresh = req.query.fresh === "1";
 
-    const [summary, lists, orderCountRes, categories, suppliers] = await Promise.all([
-      getInventorySummary(db, { fresh }),
+    // Counting the full catalogue is the one expensive operation. Let it finish
+    // before the smaller dashboard reads so they do not compete for the same
+    // statement-timeout budget on a cold database.
+    const summary = await getInventorySummary(db, { fresh });
+    const [lists, orderCountRes, categories, suppliers] = await Promise.all([
       getDashboardProductLists(db),
       db.from("orders").select("id", { count: "exact", head: true }),
       listCategories(db, { admin: true }).catch(() => []),
