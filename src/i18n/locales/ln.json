@@ -71,7 +71,10 @@
     "shopFreshHint": "Ba fruits, ba légumes, mosuni…",
     "shopCosmetics": "Cosmétiques",
     "shopCosmeticsHint": "Soins, maquillage & malasi",
-    "cosmeticsSearchPlaceholder": "Luka maquillage, sérums, crème ya moi..."
+    "cosmeticsSearchPlaceholder": "Luka maquillage, sérums, crème ya moi...",
+    "shopPharmacy": "Pharmacie",
+    "shopPharmacyHint": "Mankisi, soin & vitamines",
+    "pharmacySearchPlaceholder": "Luka mankisi, vitamines, secours..."
   },
   "nav": {
     "allCategories": "Ba catégories nyonso",
@@ -82,7 +85,8 @@
     "kitchen": "Biloko ya cuisine",
     "categoriesLabel": "Ba catégorie",
     "mobileLabel": "Navigation ya téléphone",
-    "cosmetics": "Cosmétiques"
+    "cosmetics": "Cosmétiques",
+    "pharmacy": "Pharmacie"
   },
   "kitchen": {
     "brand": "One Source Biloko ya Cuisine",
@@ -687,7 +691,8 @@
       "berries": "Bambuma ya sika",
       "citrus": "Bambuma ya sika",
       "tropical": "Bambuma ya sika",
-      "cosmetics": "Cosmétiques"
+      "cosmetics": "Cosmétiques",
+      "pharmacy": "Pharmacie"
     }
   },
   "categoryTile": {
@@ -2087,5 +2092,54 @@
     "loadError": "Tokoki te kolakisa biloko mosusu.",
     "endOfResults_one": "Omoni eloko se moko oyo ezali awa",
     "endOfResults_other": "Omoni biloko nyonso {{count}}"
+  },
+  "pharmacy": {
+    "brand": "Pharmacie One Source",
+    "kicker": "Pharmacie",
+    "title": "Pharmacie na yango moko",
+    "lede": "Mankisi, secours, vitamines, soin na mama na mwana, na boutique na bango.",
+    "ctaBrowse": "Tala pharmacie",
+    "ctaCategories": "Tala ba rayon",
+    "navCategories": "Ba rayon nyonso",
+    "navAll": "Biloko nyonso ya pharmacie",
+    "navLabel": "Ba rayon ya pharmacie",
+    "empty": "Eloko te na rayon oyo.",
+    "searchTitle": "Luka na pharmacie",
+    "searchHint": "Meka kombo ya biloko to marque.",
+    "shopByCategory": "Somba na rayon",
+    "home": {
+      "latestTitle": "Ya sika na Pharmacie",
+      "latestSub": "Biloko ya sika liboso — kende se na nse mpo na komona nyonso."
+    },
+    "aisles": {
+      "medicines": "Mankisi",
+      "supplements": "Vitamines & compléments",
+      "first-aid": "Secours ya liboso",
+      "care": "Soin & hygiène",
+      "orthopedics": "Orthopédie",
+      "wellbeing": "Bomoi malamu",
+      "mother-child": "Mama & mwana",
+      "animals": "Santé ya banyama",
+      "nutrition": "Nutrition médicale",
+      "naturopathy": "Naturopathie",
+      "sports": "Sport & kilo",
+      "offers": "Ba offre & makabo"
+    },
+    "hero": {
+      "title": "Bobateli ya mokolo na mokolo.",
+      "titleAccent": "Nyonso na esika moko.",
+      "description": "Mona vitamini, biloko ya lisalisi ya liboso mpe biloko ya mokolo na mokolo mpo na libota mobimba.",
+      "offers": "Mona baofre",
+      "collectionLabel": "Biloko ya mokolo na mokolo",
+      "collectionTitle": "Mwa bobateli, mokolo nyonso.",
+      "visualNote": "Vitamini · Lisalisi ya liboso · Bobateli",
+      "shortcuts": "Somba biloko ya mokolo na mokolo",
+      "vitaminsTitle": "Mimeseno na yo ya mokolo nyonso.",
+      "vitaminsAccent": "Biloko na yo ya ntina.",
+      "vitaminsDescription": "Mona vitamini mpe biloko ya kobakisa na bilei, ya ndenge mpe ya ba-marque ndenge na ndenge.",
+      "firstAidTitle": "Biloko ya mokolo na mokolo.",
+      "firstAidAccent": "Pene na ndako.",
+      "firstAidDescription": "Tondisa armoire na yo na bapansima, bandaji mpe biloko ya lisalisi ya liboso."
+    }
   }
 }

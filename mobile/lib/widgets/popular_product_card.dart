@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
+import '../data/cosmetics.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/currency_provider.dart';
@@ -16,15 +17,163 @@ class PopularProductCard extends ConsumerWidget {
     super.key,
     required this.product,
     this.onAdd,
+    this.addBelow = false,
+    this.imageSize = 108,
   });
 
   final Product product;
   final VoidCallback? onAdd;
 
+  /// Puts the basket control under the photo, title, and price.
+  final bool addBelow;
+
+  /// Photo frame in logical pixels. Pharmacy passes a larger frame.
+  final double imageSize;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unit = ProductCardDetails.unitLabel(product, context.tr);
     final formatPrice = ref.watch(formatPriceProvider);
+    final cosmetics = addBelow && isCosmeticsProduct(product);
+    final brand = product.details.brand?.trim();
+    final title = context.tr.productTitle(product);
+    final displayTitle = cosmetics ? _titleWithoutBrand(title, brand) : title;
+    final variant = cosmetics ? _cosmeticVariant(product, title) : null;
+    final onSale = product.originalPrice != null && product.originalPrice! > product.price;
+    final fact = !cosmetics
+        ? null
+        : !product.inStock
+            ? context.tr.get('common.outOfStock')
+            : (variant ?? context.tr.get('product.inStock'));
+
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: ProductThumbnail(image: product.image, size: imageSize),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (cosmetics && brand != null && brand.isNotEmpty)
+          Text(
+            brand,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11, height: 1.2, color: AppColors.textMuted),
+          ),
+        Text(
+          displayTitle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: cosmetics ? FontWeight.w500 : FontWeight.w700,
+            fontSize: 13,
+            height: 1.25,
+            color: AppColors.text,
+          ),
+        ),
+        const SizedBox(height: 4),
+        CardRating(product: product, size: 11),
+        const SizedBox(height: 4),
+        if (cosmetics)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                formatPrice(product.price),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: AppColors.text,
+                ),
+              ),
+              if (onSale) ...[
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    formatPrice(product.originalPrice!),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          )
+        else
+          Text(
+            formatPrice(product.price),
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+              color: AppColors.darkGreen,
+            ),
+          ),
+        if (cosmetics && fact != null)
+          Text(
+            fact,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              height: 1.3,
+              color: !product.inStock
+                  ? const Color(0xFFB12704)
+                  : variant == null
+                      ? const Color(0xFF067D62)
+                      : AppColors.textMuted,
+            ),
+          )
+        else if (!cosmetics && unit != null)
+          Text(
+            unit,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+          ),
+      ],
+    );
+
+    final belowButton = onAdd == null
+        ? null
+        : Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FractionallySizedBox(
+                widthFactor: 0.5,
+                child: SizedBox(
+                  height: 36,
+                  child: FilledButton(
+                    onPressed: product.inStock ? onAdd : null,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.darkGreen,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.muted,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                    ),
+                    child: Text(
+                      context.tr.get(product.inStock ? 'common.addToBasket' : 'common.outOfStock'),
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
 
     return Container(
       decoration: BoxDecoration(
@@ -33,91 +182,106 @@ class PopularProductCard extends ConsumerWidget {
         boxShadow: softCardShadow,
       ),
       clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.push('/product/${product.id}'),
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: ProductThumbnail(image: product.image, size: 108),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.tr.productTitle(product),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        height: 1.25,
-                        color: AppColors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    CardRating(product: product, size: 11),
-                    const SizedBox(height: 4),
-                    Text(
-                      formatPrice(product.price),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15,
-                        color: AppColors.darkGreen,
-                      ),
-                    ),
-                    if (unit != null)
-                      Text(
-                        unit,
-                        style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-                      ),
-                  ],
-                ),
-              ),
-              if (onAdd != null)
-                Positioned(
-                  right: 10,
-                  bottom: 10,
+      child: addBelow
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: product.inStock ? onAdd : null,
-                      customBorder: const CircleBorder(),
-                      child: Ink(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          gradient: product.inStock ? AppGradients.brand : null,
-                          color: product.inStock ? null : AppColors.muted,
-                          shape: BoxShape.circle,
-                          boxShadow: product.inStock
-                              ? [
-                                  BoxShadow(
-                                    color: AppColors.darkGreen.withValues(alpha: 0.35),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: const Icon(Icons.add, color: Colors.white, size: 20),
+                      onTap: () => context.push('/product/${product.id}'),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                        child: details,
                       ),
                     ),
                   ),
                 ),
-            ],
-          ),
-        ),
-      ),
+                if (belowButton != null) belowButton,
+              ],
+            )
+          : Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => context.push('/product/${product.id}'),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                      child: details,
+                    ),
+                    if (onAdd != null)
+                      Positioned(
+                        right: 10,
+                        bottom: 10,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: product.inStock ? onAdd : null,
+                            customBorder: const CircleBorder(),
+                            child: Ink(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                gradient: product.inStock ? AppGradients.brand : null,
+                                color: product.inStock ? null : AppColors.muted,
+                                shape: BoxShape.circle,
+                                boxShadow: product.inStock
+                                    ? [
+                                        BoxShadow(
+                                          color: AppColors.darkGreen.withValues(alpha: 0.35),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: const Icon(Icons.add, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
     );
   }
+}
+
+final _measure = RegExp(r'\d+(?:[.,]\d+)?\s?(?:ml|cl|fl\.?\s?oz|oz|kg|g|l|mm|cm)\b', caseSensitive: false);
+final _variantNote = RegExp(r'\(([^)]{2,48})\)\s*$');
+final _variantWords = RegExp(r'shade|colour|color|scent|fragrance|size|pack|pair', caseSensitive: false);
+
+String? _measureLabel(String? value) {
+  final text = value?.replaceAll(RegExp(r'\s+'), ' ').trim() ?? '';
+  if (text.isEmpty || text.toLowerCase() == 'each') return null;
+  final match = _measure.firstMatch(text);
+  return match?.group(0)?.replaceAll(RegExp(r'\s+'), ' ').trim();
+}
+
+String _titleWithoutBrand(String title, String? brand) {
+  final name = brand?.trim();
+  if (name == null || name.isEmpty) return title;
+  final pattern = RegExp('^${RegExp.escape(name)}(?:\\s*[:–—-])?\\s+', caseSensitive: false);
+  final stripped = title.replaceFirst(pattern, '').trim();
+  return stripped.isEmpty ? title : stripped;
+}
+
+String? _cosmeticVariant(Product product, String title) {
+  String? fromSpecs;
+  for (final spec in product.details.specs) {
+    final key = spec.key.toLowerCase();
+    final label = spec.label.toLowerCase();
+    if (key == 'size' || key == 'volume' || key == 'weight' || label == 'size' || label == 'volume') {
+      fromSpecs = spec.value;
+      break;
+    }
+  }
+  final measured = _measureLabel(fromSpecs) ?? _measureLabel(product.unit) ?? _measureLabel(title);
+  if (measured != null) return measured;
+  final note = _variantNote.firstMatch(title)?.group(1)?.trim();
+  if (note != null && _variantWords.hasMatch(note)) return note;
+  return null;
 }

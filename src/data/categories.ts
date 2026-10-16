@@ -30,6 +30,7 @@ export const AGRI_CATEGORIES: CategoryDefinition[] = [
   { id: "export-fresh-produce", name: "Export Fresh Produce", icon: "✈️", group: "specialty" },
   { id: "kitchen-ware", name: "Kitchen Ware", icon: "🍳", group: "specialty" },
   { id: "cosmetics", name: "Cosmetics", icon: "💄", group: "specialty" },
+  { id: "pharmacy", name: "Pharmacy", icon: "💊", group: "specialty" },
 ];
 
 /** Hidden from shop — existing products remap to uncategorized via normalizeCategoryId */

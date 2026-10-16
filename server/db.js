@@ -23,6 +23,9 @@ export function rowToProduct(row) {
     inStock: Boolean(row.in_stock) && row.stock_quantity > 0,
     stockQuantity: row.stock_quantity,
     delivery: row.delivery,
+    ...(Array.isArray(row.details?.images) && row.details.images.length
+      ? { images: row.details.images.filter((src) => typeof src === "string" && src.trim()) }
+      : {}),
     supplierId: row.supplier_id ?? undefined,
     details: row.details && typeof row.details === "object" ? row.details : {},
     published: row.published !== false,

@@ -5,7 +5,7 @@ import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../utils/shop_mode.dart';
 
-/// Animated Fresh ↔ Kitchen ↔ Cosmetics shop switch.
+/// Animated Fresh ↔ Kitchen ↔ Cosmetics ↔ Pharmacy shop switch.
 class ShopModeSwitch extends StatelessWidget {
   const ShopModeSwitch({
     super.key,
@@ -37,6 +37,10 @@ class ShopModeSwitch extends StatelessWidget {
           const [Color(0xFFF2A7C3), _cosmeticsPink, Color(0xFFC25480)],
           _cosmeticsPink,
         ),
+      ShopMode.pharmacy => (
+          const [Color(0xFF8FCBB0), Color(0xFF1F6B4A), Color(0xFF14543A)],
+          Color(0xFF1F6B4A),
+        ),
       ShopMode.fresh => onDark
           ? (
               const [Color(0xFFC6DB6E), AppColors.lemonGreen, Color(0xFF8FB84A)],
@@ -51,6 +55,7 @@ class ShopModeSwitch extends StatelessWidget {
     final thumbFg = switch (mode) {
       ShopMode.kitchen => AppColors.text,
       ShopMode.cosmetics => Colors.white,
+      ShopMode.pharmacy => Colors.white,
       ShopMode.fresh => onDark ? const Color(0xFF1C3D30) : Colors.white,
     };
     final idleFg = onDark
@@ -61,6 +66,7 @@ class ShopModeSwitch extends StatelessWidget {
       (ShopMode.fresh, Icons.eco_rounded, s.or('app.shop.fresh', 'Fresh')),
       (ShopMode.kitchen, Icons.kitchen_outlined, s.or('app.shop.kitchen', 'Kitchen')),
       (ShopMode.cosmetics, Icons.spa_outlined, s.or('app.shop.beauty', 'Beauty')),
+      (ShopMode.pharmacy, Icons.medication_outlined, s.or('header.shopPharmacy', 'Pharmacy')),
     ];
     final index = segments.indexWhere((e) => e.$1 == mode);
 

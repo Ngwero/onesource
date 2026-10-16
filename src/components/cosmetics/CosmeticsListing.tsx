@@ -45,11 +45,12 @@ function loadBrandCounts(query: ProductListQuery): Promise<BrandCounts> {
 }
 
 /** Brand options (with counts) for everything in scope, not just the loaded pages. */
-function useBrandCounts(query: ProductListQuery): BrandCounts {
-  const key = JSON.stringify(query);
+function useBrandCounts(query: ProductListQuery | null): BrandCounts {
+  const key = query ? JSON.stringify(query) : "";
   const [state, setState] = useState<{ key: string; brands: BrandCounts } | null>(null);
 
   useEffect(() => {
+    if (!key) return;
     let cancelled = false;
     loadBrandCounts(JSON.parse(key) as ProductListQuery).then((brands) => {
       if (!cancelled) setState({ key, brands });
@@ -71,7 +72,6 @@ export function CosmeticsListing({ baseQuery, emptyState }: Props) {
   const [offersOnly, setOffersOnly] = useState(false);
 
   const scope: ProductListQuery = { shop: "cosmetics", ...baseQuery };
-  const brands = useBrandCounts(scope);
   const brandPrefixes = brand ? cosmeticBrandTitlePrefixes(brand) : [];
   const list = useInfiniteProducts({
     ...scope,
@@ -80,6 +80,13 @@ export function CosmeticsListing({ baseQuery, emptyState }: Props) {
     titlePrefix: brandPrefixes.length ? brandPrefixes : brand ? [brand] : undefined,
   });
   const { products } = list;
+  // Titles for the brand menu scan the whole aisle. Wait until the first
+  // card page is back so that scan does not share the first paint.
+  const [cardsReady, setCardsReady] = useState(false);
+  useEffect(() => {
+    if (!list.initialLoading) setCardsReady(true);
+  }, [list.initialLoading]);
+  const brands = useBrandCounts(cardsReady ? scope : null);
 
   const setBrand = (next: string) => {
     const nextParams = new URLSearchParams(params);

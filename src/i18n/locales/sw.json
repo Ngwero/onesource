@@ -71,7 +71,10 @@
     "shopFreshHint": "Matunda, mboga, nyama…",
     "shopCosmetics": "Vipodozi",
     "shopCosmeticsHint": "Ngozi, vipodozi & manukato",
-    "cosmeticsSearchPlaceholder": "Tafuta vipodozi, seramu, kinga ya jua..."
+    "cosmeticsSearchPlaceholder": "Tafuta vipodozi, seramu, kinga ya jua...",
+    "shopPharmacy": "Duka la dawa",
+    "shopPharmacyHint": "Dawa, virutubisho na huduma",
+    "pharmacySearchPlaceholder": "Tafuta dawa, vitamini, huduma ya kwanza..."
   },
   "nav": {
     "allCategories": "Jamii zote",
@@ -82,7 +85,8 @@
     "kitchen": "Vifaa vya jikoni",
     "categoriesLabel": "Kategoria",
     "mobileLabel": "Urambazaji wa simu",
-    "cosmetics": "Vipodozi"
+    "cosmetics": "Vipodozi",
+    "pharmacy": "Duka la dawa"
   },
   "kitchen": {
     "brand": "One Source Vifaa vya Jikoni",
@@ -687,7 +691,8 @@
       "berries": "Matunda mapya",
       "citrus": "Matunda mapya",
       "tropical": "Matunda mapya",
-      "cosmetics": "Vipodozi"
+      "cosmetics": "Vipodozi",
+      "pharmacy": "Duka la dawa"
     }
   },
   "categoryTile": {
@@ -2087,5 +2092,54 @@
     "loadError": "Imeshindwa kupakia bidhaa zaidi.",
     "endOfResults_one": "Umeona bidhaa pekee iliyopo hapa",
     "endOfResults_other": "Umeona bidhaa zote {{count}}"
+  },
+  "pharmacy": {
+    "brand": "Duka la dawa One Source",
+    "kicker": "Duka la dawa",
+    "title": "Duka la dawa pekee",
+    "lede": "Dawa, huduma ya kwanza, virutubisho, usafi na mama na mtoto, katika duka lao.",
+    "ctaBrowse": "Vinjari duka la dawa",
+    "ctaCategories": "Angalia vichochoro",
+    "navCategories": "Vichochoro vyote",
+    "navAll": "Bidhaa zote za duka la dawa",
+    "navLabel": "Vichochoro vya duka la dawa",
+    "empty": "Hakuna kitu katika kichochoro hiki bado.",
+    "searchTitle": "Tafuta dukani la dawa",
+    "searchHint": "Jaribu jina la bidhaa au chapa.",
+    "shopByCategory": "Nunua kwa rafu",
+    "home": {
+      "latestTitle": "Mapya katika Duka la dawa",
+      "latestSub": "Bidhaa mpya kwanza — endelea kusogeza uone kila bidhaa."
+    },
+    "aisles": {
+      "medicines": "Dawa",
+      "supplements": "Virutubisho na vitamini",
+      "first-aid": "Huduma ya kwanza",
+      "care": "Huduma na usafi",
+      "orthopedics": "Mifupa",
+      "wellbeing": "Afya njema",
+      "mother-child": "Mama na mtoto",
+      "animals": "Afya ya wanyama",
+      "nutrition": "Lishe ya matibabu",
+      "naturopathy": "Tiba asilia",
+      "sports": "Michezo na uzito",
+      "offers": "Ofa na zawadi"
+    },
+    "hero": {
+      "title": "Huduma ya kila siku.",
+      "titleAccent": "Vyote sehemu moja.",
+      "description": "Gundua vitamini, huduma ya kwanza na mahitaji ya kila siku kwa familia yako yote.",
+      "offers": "Angalia ofa",
+      "collectionLabel": "Mkusanyiko wa kila siku",
+      "collectionTitle": "Jitunze kidogo, kila siku.",
+      "visualNote": "Vitamini · Huduma ya kwanza · Utunzaji",
+      "shortcuts": "Nunua mahitaji ya kila siku",
+      "vitaminsTitle": "Ratiba yako ya kila siku.",
+      "vitaminsAccent": "Mahitaji yako.",
+      "vitaminsDescription": "Gundua vitamini na virutubisho vya aina na chapa mbalimbali.",
+      "firstAidTitle": "Mahitaji ya kila siku.",
+      "firstAidAccent": "Tayari nyumbani.",
+      "firstAidDescription": "Jaza kabati lako la huduma ya nyumbani kwa plasta, bandeji na vifaa vya huduma ya kwanza."
+    }
   }
 }

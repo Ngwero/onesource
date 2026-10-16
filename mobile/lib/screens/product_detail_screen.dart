@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../config/env.dart';
 import '../config/theme.dart';
 import '../data/cosmetics.dart';
+import '../data/pharmacy.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
@@ -106,8 +107,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
         );
         final kitchen = isKitchenProduct(product);
         final cosmetics = isCosmeticsProduct(product);
+        final pharmacy = isPharmacyProduct(product);
         final aisleId = aisleIdFromProductId(product.id);
         final cosmeticsAisleId = cosmeticsAisleIdFromProductId(product.id);
+        final pharmacyAisleId = pharmacyAisleIdFromProductId(product.id);
         final categoryId = normalizeCategoryId(product.category);
         final String categoryName;
         if (cosmetics) {
@@ -115,6 +118,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
           categoryName = aisle != null
               ? s.cosmeticsAisle(aisle.id, aisle.title)
               : s.get('header.shopCosmetics');
+        } else if (pharmacy) {
+          final aisle = pharmacyAisleId == null ? null : pharmacyAisleById(pharmacyAisleId);
+          categoryName = aisle != null
+              ? s.or('pharmacy.aisles.${aisle.id}', aisle.title)
+              : s.or('header.shopPharmacy', 'Pharmacy');
         } else if (kitchen) {
           final aisle = kitchenAisleById(aisleId);
           categoryName = aisle != null
@@ -139,14 +147,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
 
         return Scaffold(
           backgroundColor: AppColors.canvas,
-          bottomNavigationBar: _StickyBuyBar(
-            product: product,
-            quantity: _qty,
-            maxQty: maxQty,
-            formatPrice: formatPrice,
-            onQuantityChanged: (q) => setState(() => _qty = q),
-            onAdd: () => addToCart(product, quantity: _qty),
-          ),
+          bottomNavigationBar: cosmetics
+              ? null
+              : _StickyBuyBar(
+                  product: product,
+                  quantity: _qty,
+                  maxQty: maxQty,
+                  formatPrice: formatPrice,
+                  onQuantityChanged: (q) => setState(() => _qty = q),
+                  onAdd: () => addToCart(product, quantity: _qty),
+                ),
           body: LayoutBuilder(
             builder: (context, constraints) {
               final wide = constraints.maxWidth >= AppBreakpoints.wide;
@@ -201,6 +211,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                           ),
                       ],
                     ),
+                    if (cosmetics) ...[
+                      const SizedBox(height: 16),
+                      _StickyBuyBar(
+                        product: product,
+                        quantity: _qty,
+                        maxQty: maxQty,
+                        formatPrice: formatPrice,
+                        inline: true,
+                        onQuantityChanged: (q) => setState(() => _qty = q),
+                        onAdd: () => addToCart(product, quantity: _qty),
+                      ),
+                    ],
                     const SizedBox(height: 18),
                     _ProductFacts(
                       categoryName: categoryName,
@@ -882,6 +904,7 @@ class _StickyBuyBar extends StatelessWidget {
     required this.formatPrice,
     required this.onQuantityChanged,
     required this.onAdd,
+    this.inline = false,
   });
 
   final Product product;
@@ -890,9 +913,60 @@ class _StickyBuyBar extends StatelessWidget {
   final String Function(double) formatPrice;
   final ValueChanged<int> onQuantityChanged;
   final VoidCallback onAdd;
+  final bool inline;
 
   @override
   Widget build(BuildContext context) {
+    final cartButton = FilledButton(
+      onPressed: product.inStock ? onAdd : null,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(52),
+        backgroundColor: AppColors.darkGreen,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      child: Text(
+        product.inStock
+            ? '${context.tr.get('common.addToBasket')} · ${formatPrice(product.price * quantity)}'
+            : context.tr.get('common.outOfStock'),
+        maxLines: 2,
+        textAlign: TextAlign.center,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+      ),
+    );
+
+    final stepper = QuantityStepper(
+      quantity: quantity,
+      min: 1,
+      max: maxQty,
+      compact: true,
+      onChanged: onQuantityChanged,
+    );
+
+    if (inline) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              stepper,
+              const SizedBox(height: 12),
+              SizedBox(width: constraints.maxWidth * 0.5, child: cartButton),
+            ],
+          );
+        },
+      );
+    }
+
+    final row = Row(
+      children: [
+        stepper,
+        const SizedBox(width: 14),
+        Expanded(child: cartButton),
+      ],
+    );
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
       decoration: BoxDecoration(
@@ -900,37 +974,7 @@ class _StickyBuyBar extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: softCardShadow,
       ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            QuantityStepper(
-              quantity: quantity,
-              min: 1,
-              max: maxQty,
-              compact: true,
-              onChanged: onQuantityChanged,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: FilledButton(
-                onPressed: product.inStock ? onAdd : null,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  backgroundColor: AppColors.darkGreen,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: Text(
-                  product.inStock
-                      ? '${context.tr.get('common.addToBasket')} · ${formatPrice(product.price * quantity)}'
-                      : context.tr.get('common.outOfStock'),
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: SafeArea(top: false, child: row),
     );
   }
 }

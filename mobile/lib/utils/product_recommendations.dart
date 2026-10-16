@@ -1,5 +1,6 @@
 import '../models/product.dart';
 import '../data/kitchen_ware.dart';
+import '../data/pharmacy.dart';
 import 'categories.dart';
 import 'kitchen_mode.dart';
 
@@ -10,9 +11,9 @@ double _popularityScore(Product product) {
 }
 
 List<Product> _scopedCatalog(Product product, List<Product> allProducts) {
-  return isKitchenProduct(product)
-      ? filterKitchenProducts(allProducts)
-      : excludeKitchenProducts(allProducts);
+  if (isKitchenProduct(product)) return filterKitchenProducts(allProducts);
+  if (isPharmacyProduct(product)) return allProducts.where(isPharmacyProduct).toList();
+  return excludeKitchenProducts(allProducts).where((p) => !isPharmacyProduct(p)).toList();
 }
 
 List<Product> pickRelatedProducts(

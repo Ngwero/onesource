@@ -12,8 +12,10 @@ import { AccountMenu } from "./AccountMenu";
 import { isExportOnlyCart } from "../utils/exportOrder";
 import { KITCHEN_WARE_AISLES } from "../data/kitchenWare";
 import { COSMETICS_AISLES } from "../data/cosmetics";
+import { PHARMACY_AISLES } from "../data/pharmacy";
 import { kitchenAislePath } from "../utils/kitchenMode";
 import { cosmeticsAislePath } from "../utils/cosmeticsMode";
+import { pharmacyAislePath } from "../utils/pharmacyMode";
 import { shopModeForPath, SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
 import { DELIVERY_COUNTRIES, useDeliveryCountry } from "../hooks/useDeliveryCountry";
 import { CountryFlag } from "./CountryFlag";
@@ -118,7 +120,8 @@ export function Header() {
   const shopMode = shopModeForPath(location.pathname);
   const kitchenMode = shopMode === "kitchen";
   const cosmeticsMode = shopMode === "cosmetics";
-  const shopHome = kitchenMode ? "/kitchen" : cosmeticsMode ? "/cosmetics" : "/";
+  const pharmacyMode = shopMode === "pharmacy";
+  const shopHome = kitchenMode ? "/kitchen" : cosmeticsMode ? "/cosmetics" : pharmacyMode ? "/pharmacy" : "/";
   const headerRef = useRef<HTMLElement>(null);
   const [spacerHeight, setSpacerHeight] = useState(120);
   const [scrolled, setScrolled] = useState(false);
@@ -214,7 +217,7 @@ export function Header() {
         </div>
 
         <div className="page-container w-full relative">
-          {/* Always-visible shop switcher — Fresh / Kitchen / Cosmetics */}
+          {/* Always-visible shop switcher — Fresh / Kitchen / Cosmetics / Pharmacy */}
           <div
             className="site-shop-switcher"
             role="navigation"
@@ -266,6 +269,20 @@ export function Header() {
                   <span>{t("header.shopCosmeticsHint")}</span>
                 </span>
               </Link>
+              <Link
+                to="/pharmacy"
+                role="tab"
+                aria-selected={pharmacyMode}
+                className={`site-shop-switch${pharmacyMode ? " is-active" : ""}`}
+              >
+                <span className="site-shop-switch-icon" aria-hidden>
+                  💊
+                </span>
+                <span className="site-shop-switch-copy">
+                  <strong>{t("header.shopPharmacy")}</strong>
+                  <span>{t("header.shopPharmacyHint")}</span>
+                </span>
+              </Link>
             </div>
           </div>
 
@@ -288,7 +305,9 @@ export function Header() {
                   ? t("header.shopKitchen")
                   : cosmeticsMode
                     ? t("header.shopCosmetics")
-                    : t("header.shopFresh")}
+                    : pharmacyMode
+                      ? t("header.shopPharmacy")
+                      : t("header.shopFresh")}
               </span>
             </Link>
 
@@ -310,6 +329,23 @@ export function Header() {
                     <option value="all">{t("kitchen.home.allCategories")}</option>
                     {KITCHEN_WARE_AISLES.map((aisle) => (
                       <KitchenAisleOption key={aisle.id} id={aisle.id} />
+                    ))}
+                  </select>
+                ) : pharmacyMode ? (
+                  <select
+                    className="hidden lg:block bg-transparent text-text-muted text-xs px-3 py-2.5 sm:py-3 border-r border-border outline-none cursor-pointer hover:text-text w-[110px] xl:w-[160px] flex-shrink-0"
+                    defaultValue="all"
+                    key="pharmacy-aisle-select"
+                    onChange={(e) => {
+                      if (e.target.value === "all") navigate("/pharmacy/products");
+                      else navigate(pharmacyAislePath(e.target.value));
+                    }}
+                  >
+                    <option value="all">{t("pharmacy.navAll")}</option>
+                    {PHARMACY_AISLES.map((aisle) => (
+                      <option key={aisle.id} value={aisle.id}>
+                        {t(`pharmacy.aisles.${aisle.id}`, { defaultValue: aisle.title })}
+                      </option>
                     ))}
                   </select>
                 ) : cosmeticsMode ? (
@@ -357,7 +393,9 @@ export function Header() {
                       ? t("header.kitchenSearchPlaceholder")
                       : cosmeticsMode
                         ? t("header.cosmeticsSearchPlaceholder")
-                        : t("header.searchPlaceholder")
+                        : pharmacyMode
+                          ? t("header.pharmacySearchPlaceholder")
+                          : t("header.searchPlaceholder")
                   }
                   className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 text-base sm:text-sm bg-transparent outline-none placeholder:text-text-muted/70"
                 />
@@ -438,10 +476,52 @@ export function Header() {
                 ? t("kitchen.home.navLabel")
                 : cosmeticsMode
                   ? t("cosmetics.navLabel")
-                  : t("nav.categoriesLabel")
+                  : pharmacyMode
+                    ? t("pharmacy.navLabel")
+                    : t("nav.categoriesLabel")
             }
           >
-            {cosmeticsMode ? (
+            {pharmacyMode ? (
+              <>
+                <span className="site-header-nav-scope" aria-hidden>
+                  {t("header.shopPharmacy")}
+                </span>
+                <Link to="/pharmacy" className={chipClass(location.pathname === "/pharmacy")}>
+                  {t("kitchen.home.feedBest")}
+                </Link>
+                <Link
+                  to="/pharmacy/categories"
+                  className={chipClass(location.pathname === "/pharmacy/categories")}
+                >
+                  {t("pharmacy.navCategories")}
+                </Link>
+                <Link
+                  to="/pharmacy/products"
+                  className={chipClass(
+                    location.pathname === "/pharmacy/products" && !location.search.includes("sale=1")
+                  )}
+                >
+                  {t("pharmacy.navAll")}
+                </Link>
+                <Link
+                  to="/pharmacy/products?sale=1"
+                  className={chipClass(
+                    location.pathname === "/pharmacy/products" && location.search.includes("sale=1")
+                  )}
+                >
+                  {t("kitchen.home.feedOffers")}
+                </Link>
+                {PHARMACY_AISLES.map((aisle) => (
+                  <Link
+                    key={aisle.id}
+                    to={pharmacyAislePath(aisle.id)}
+                    className={chipClass(location.pathname === pharmacyAislePath(aisle.id))}
+                  >
+                    {aisle.icon} {t(`pharmacy.aisles.${aisle.id}`, { defaultValue: aisle.title })}
+                  </Link>
+                ))}
+              </>
+            ) : cosmeticsMode ? (
               <>
                 <span className="site-header-nav-scope" aria-hidden>
                   {t("header.shopCosmetics")}

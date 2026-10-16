@@ -41,11 +41,14 @@ import { aisleIdFromProductId } from "../data/kitchenWare";
 import { kitchenAislePath, isKitchenProduct } from "../utils/kitchenMode";
 import { cosmeticsAislePath, isCosmeticsProduct } from "../utils/cosmeticsMode";
 import { COSMETICS_AISLES, cosmeticsAisleIdFromProductId } from "../data/cosmetics";
+import { pharmacyAislePath, isPharmacyProduct } from "../utils/pharmacyMode";
+import { PHARMACY_AISLES, pharmacyAisleIdFromProductId } from "../data/pharmacy";
 import { excludeSpecialtyProducts } from "../utils/shopMode";
 
 function sameShopPool(product: Product, products: Product[]) {
   if (isKitchenProduct(product)) return products.filter(isKitchenProduct);
   if (isCosmeticsProduct(product)) return products.filter(isCosmeticsProduct);
+  if (isPharmacyProduct(product)) return products.filter(isPharmacyProduct);
   return excludeSpecialtyProducts(products);
 }
 
@@ -175,6 +178,21 @@ export function ProductPage() {
       crumbs.push({ label: localized.localizedTitle });
       return crumbs;
     }
+    if (isPharmacyProduct(product)) {
+      const aisleId = pharmacyAisleIdFromProductId(product.id);
+      const crumbs: { label: string; href?: string }[] = [
+        { label: t("pharmacy.navCategories"), href: "/pharmacy/categories" },
+      ];
+      if (aisleId) {
+        const fallback = PHARMACY_AISLES.find((a) => a.id === aisleId)?.title;
+        crumbs.push({
+          label: t(`pharmacy.aisles.${aisleId}`, { defaultValue: fallback }),
+          href: pharmacyAislePath(aisleId),
+        });
+      }
+      crumbs.push({ label: localized.localizedTitle });
+      return crumbs;
+    }
     return buildBreadcrumbTrail(
       categoryName,
       categoryId,
@@ -211,6 +229,7 @@ export function ProductPage() {
     );
   }
 
+  const cosmeticsPdp = isCosmeticsProduct(product);
   const maxQty = Math.max(1, Math.min(10, product.stockQuantity ?? 10));
   const qtyOptions = Array.from({ length: maxQty }, (_, i) => i + 1);
   const discount = product.originalPrice
@@ -242,6 +261,22 @@ export function ProductPage() {
     }
   };
 
+  const buyBox = (
+    <ProductBuyBox
+      product={product}
+      localized={localized}
+      quantity={quantity}
+      onQuantityChange={setQuantity}
+      qtyOptions={qtyOptions}
+      onAdd={handleAdd}
+      onToggleList={handleToggleList}
+      onList={onList}
+      formatPrice={formatPrice}
+      freeDeliveryThreshold={freeDeliveryThreshold}
+      actionLabelKey={isExport ? "checkout.placeOrder" : undefined}
+    />
+  );
+
   const openSpecs = () => {
     setShowAllSpecs(true);
     requestAnimationFrame(() => {
@@ -253,13 +288,15 @@ export function ProductPage() {
   };
 
   return (
-    <div className="pdp-page w-full">
+    <div className={`pdp-page w-full${cosmeticsPdp ? " pdp-page--cosmetics" : ""}`}>
       <PageContainer className="py-3 sm:py-5 max-w-[1500px]">
         <nav className="pdp-breadcrumbs" aria-label={t("common.breadcrumb")}>
           {isKitchenProduct(product) ? (
             <Link to="/kitchen">{t("kitchen.brand")}</Link>
           ) : isCosmeticsProduct(product) ? (
             <Link to="/cosmetics">{t("cosmetics.brand")}</Link>
+          ) : isPharmacyProduct(product) ? (
+            <Link to="/pharmacy">{t("pharmacy.brand")}</Link>
           ) : (
             <Link to="/">{t("common.home")}</Link>
           )}
@@ -281,6 +318,7 @@ export function ProductPage() {
           <div className="pdp-gallery-wrap">
             <ProductImageGallery
               imageSrc={resolvedImage}
+              images={product.images}
               alt={localized.localizedTitle}
               discount={discount}
             />
@@ -356,6 +394,8 @@ export function ProductPage() {
               </div>
             </header>
 
+            {cosmeticsPdp && buyBox}
+
             <div className="pdp-details-area">
               <ProductDetailsBlock content={pageContent} onSeeAllSpecs={openSpecs} />
               <ProductSpecificationsFull
@@ -366,21 +406,7 @@ export function ProductPage() {
             </div>
           </div>
 
-          <aside className="pdp-buybox hidden lg:block">
-            <ProductBuyBox
-              product={product}
-              localized={localized}
-              quantity={quantity}
-              onQuantityChange={setQuantity}
-              qtyOptions={qtyOptions}
-              onAdd={handleAdd}
-              onToggleList={handleToggleList}
-              onList={onList}
-              formatPrice={formatPrice}
-              freeDeliveryThreshold={freeDeliveryThreshold}
-              actionLabelKey={isExport ? "checkout.placeOrder" : undefined}
-            />
-          </aside>
+          {!cosmeticsPdp && <aside className="pdp-buybox hidden lg:block">{buyBox}</aside>}
         </div>
 
         <div className="pdp-lower-content">
@@ -405,13 +431,15 @@ export function ProductPage() {
 
       <ProductCustomersAlsoViewedSection products={alsoViewed} />
 
-      <ProductMobileBuyBar
-        productId={product.id}
-        priceLabel={formatPrice(product.price)}
-        inStock={product.inStock}
-        onAdd={handleAdd}
-        actionLabelKey={isExport ? "checkout.placeOrder" : undefined}
-      />
+      {!cosmeticsPdp && (
+        <ProductMobileBuyBar
+          productId={product.id}
+          priceLabel={formatPrice(product.price)}
+          inStock={product.inStock}
+          onAdd={handleAdd}
+          actionLabelKey={isExport ? "checkout.placeOrder" : undefined}
+        />
+      )}
     </div>
   );
 }

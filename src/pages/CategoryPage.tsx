@@ -15,6 +15,7 @@ import {
 } from "../data/categories";
 import { resolveImageUrl } from "../utils/imageUrl";
 import { COSMETICS_CATEGORY_ID } from "../data/cosmetics";
+import { PHARMACY_CATEGORY_ID } from "../data/pharmacy";
 import { SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
 
 export function CategoryPage() {
@@ -39,6 +40,10 @@ export function CategoryPage() {
     }
     if (normalizedId === COSMETICS_CATEGORY_ID) {
       navigate("/cosmetics", { replace: true });
+      return;
+    }
+    if (normalizedId === PHARMACY_CATEGORY_ID) {
+      navigate("/pharmacy", { replace: true });
       return;
     }
     if (

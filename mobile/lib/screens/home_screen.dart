@@ -125,7 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final themedRows = buildHomeThemedRows(catalog, minRows: 10);
     final produceCategories = diversifyFreshCategories(
       (categoriesAsync.valueOrNull ?? [])
-          .where((c) => c.id != 'kitchen-ware' && c.id != 'kitchen-furniture')
+          .where((c) => c.id != 'kitchen-ware' && c.id != 'kitchen-furniture' && c.id != 'cosmetics' && c.id != 'pharmacy')
           .map(
             (c) => Category(
               id: c.id,

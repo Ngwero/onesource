@@ -15,6 +15,7 @@ import '../utils/shop_mode.dart';
 Color homeHeaderColor(ShopMode mode) => switch (mode) {
       ShopMode.kitchen => const Color(0xFF243D32),
       ShopMode.cosmetics => const Color(0xFF3B2A33),
+      ShopMode.pharmacy => const Color(0xFF143D2E),
       ShopMode.fresh => AppColors.darkGreen,
     };
 

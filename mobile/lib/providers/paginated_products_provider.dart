@@ -16,10 +16,10 @@ class ProductsQuery {
 
   final String? categoryId;
 
-  /// `fresh` (default produce), `kitchen`, `cosmetics`, or null for unfiltered.
+  /// `fresh` (default produce), `kitchen`, `cosmetics`, `pharmacy`, or null for unfiltered.
   final String? shop;
 
-  /// Aisle within the kitchen or cosmetics shop.
+  /// Aisle within the kitchen, cosmetics, or pharmacy shop.
   final String? aisle;
 
   /// Only products on sale (`original_price > price`), filtered server-side.

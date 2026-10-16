@@ -3,6 +3,7 @@ import type { Product } from "../types/product";
 import { fetchProductListPage } from "../api/client";
 import { aisleIdFromProductId } from "../data/kitchenWare";
 import { cosmeticsAisleIdFromProductId } from "../data/cosmetics";
+import { pharmacyAisleIdFromProductId } from "../data/pharmacy";
 
 const NEIGHBOUR_PAGE_SIZE = 60;
 
@@ -19,12 +20,16 @@ export function useAisleNeighbours(productId: string | undefined): Product[] {
       ? "kitchen"
       : productId.startsWith("cosmetics-")
         ? "cosmetics"
-        : null;
+        : productId.startsWith("pharmacy-")
+          ? "pharmacy"
+          : null;
     if (!shop) return;
     const aisle =
       shop === "kitchen"
         ? aisleIdFromProductId(productId)
-        : cosmeticsAisleIdFromProductId(productId);
+        : shop === "cosmetics"
+          ? cosmeticsAisleIdFromProductId(productId)
+          : pharmacyAisleIdFromProductId(productId);
 
     const controller = new AbortController();
     fetchProductListPage(

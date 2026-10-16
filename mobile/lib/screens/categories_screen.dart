@@ -32,7 +32,7 @@ class CategoriesScreen extends ConsumerWidget {
         error: (e, _) => ErrorView(message: e, onRetry: () => ref.invalidate(categoriesProvider)),
         data: (categories) {
           final produceCategories = categories
-              .where((c) => c.id != kitchenWareCategoryId && c.id != 'kitchen-furniture')
+              .where((c) => c.id != kitchenWareCategoryId && c.id != 'kitchen-furniture' && c.id != 'cosmetics' && c.id != 'pharmacy')
               .toList();
           if (produceCategories.isEmpty) {
             return Center(child: Text(context.tr.get('app.products.none')));

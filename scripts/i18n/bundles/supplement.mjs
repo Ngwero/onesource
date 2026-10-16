@@ -4,6 +4,22 @@
  * main bundle by scripts/build-locales.mjs.
  */
 const rows = {
+  "pharmacy.hero.vitaminsTitle": ["Votre routine quotidienne.", "Ratiba yako ya kila siku.", "Mimeseno na yo ya mokolo nyonso.", "Gahunda yawe ya buri munsi."],
+  "pharmacy.hero.vitaminsAccent": ["Vos essentiels.", "Mahitaji yako.", "Biloko na yo ya ntina.", "Ibyo ukeneye."],
+  "pharmacy.hero.vitaminsDescription": ["Découvrez les vitamines et compléments, avec un large choix de marques et de formats.", "Gundua vitamini na virutubisho vya aina na chapa mbalimbali.", "Mona vitamini mpe biloko ya kobakisa na bilei, ya ndenge mpe ya ba-marque ndenge na ndenge.", "Reba vitamini n’inyunganiramirire byo mu bwoko n’ingano bitandukanye."],
+  "pharmacy.hero.firstAidTitle": ["Les essentiels du quotidien.", "Mahitaji ya kila siku.", "Biloko ya mokolo na mokolo.", "Ibikenerwa buri munsi."],
+  "pharmacy.hero.firstAidAccent": ["À portée de main.", "Tayari nyumbani.", "Pene na ndako.", "Biri hafi mu rugo."],
+  "pharmacy.hero.firstAidDescription": ["Complétez votre armoire à pharmacie avec des pansements et les essentiels des premiers secours.", "Jaza kabati lako la huduma ya nyumbani kwa plasta, bandeji na vifaa vya huduma ya kwanza.", "Tondisa armoire na yo na bapansima, bandaji mpe biloko ya lisalisi ya liboso.", "Uzuza akabati k’ubutabazi mu rugo n’ibipfuko by’ibikomere n’ibindi bikoresho by’ubutabazi bw’ibanze."],
+
+  "pharmacy.hero.title": ["Les soins au quotidien.", "Huduma ya kila siku.", "Bobateli ya mokolo na mokolo.", "Kwiyitaho buri munsi."],
+  "pharmacy.hero.titleAccent": ["Tout au même endroit.", "Vyote sehemu moja.", "Nyonso na esika moko.", "Byose ahantu hamwe."],
+  "pharmacy.hero.description": ["Découvrez les vitamines, les premiers secours et les essentiels du quotidien pour toute la famille.", "Gundua vitamini, huduma ya kwanza na mahitaji ya kila siku kwa familia yako yote.", "Mona vitamini, biloko ya lisalisi ya liboso mpe biloko ya mokolo na mokolo mpo na libota mobimba.", "Reba vitamini, ibikoresho by’ubutabazi bw’ibanze n’ibikenerwa buri munsi mu muryango wawe."],
+  "pharmacy.hero.offers": ["Voir les offres", "Angalia ofa", "Mona baofre", "Reba poromosiyo"],
+  "pharmacy.hero.collectionLabel": ["La sélection du quotidien", "Mkusanyiko wa kila siku", "Biloko ya mokolo na mokolo", "Ibikenerwa buri munsi"],
+  "pharmacy.hero.collectionTitle": ["Un peu de soin, chaque jour.", "Jitunze kidogo, kila siku.", "Mwa bobateli, mokolo nyonso.", "Iyiteho buri munsi."],
+  "pharmacy.hero.visualNote": ["Vitamines · Premiers secours · Soins", "Vitamini · Huduma ya kwanza · Utunzaji", "Vitamini · Lisalisi ya liboso · Bobateli", "Vitamini · Ubutabazi bw’ibanze · Kwiyitaho"],
+  "pharmacy.hero.shortcuts": ["Acheter les essentiels du quotidien", "Nunua mahitaji ya kila siku", "Somba biloko ya mokolo na mokolo", "Gura ibikenerwa buri munsi"],
+
   "product.safetyNote": [
     "Lisez toujours l'étiquette du produit avant utilisation. Contactez-nous pour plus d'informations sur les allergènes ou l'utilisation en toute sécurité.",
     "Soma lebo ya bidhaa kila wakati kabla ya kutumia. Wasiliana nasi ukihitaji maelezo zaidi kuhusu vizio au matumizi salama.",

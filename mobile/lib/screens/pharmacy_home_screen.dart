@@ -1,0 +1,303 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../config/theme.dart';
+import '../data/pharmacy.dart';
+import '../i18n/app_strings.dart';
+import '../models/product.dart';
+import '../providers/paginated_products_provider.dart';
+import '../providers/pharmacy_provider.dart';
+import '../services/auth_service.dart';
+import '../utils/cart_feedback.dart';
+import '../utils/shop_mode.dart';
+import '../widgets/compact_home_bar.dart';
+import '../widgets/home_header.dart';
+import '../widgets/popular_product_card.dart';
+
+const pharmacyAccent = Color(0xFF1F6B4A);
+
+/// Pharmacy shop home: aisle chips and a sideways row of products per aisle.
+class PharmacyHomeScreen extends ConsumerWidget {
+  const PharmacyHomeScreen({super.key});
+
+  void _addToCart(BuildContext context, WidgetRef ref, Product product) =>
+      addToCartWithFeedback(context, ref, product);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.tr;
+    final offers = ref.watch(pharmacyOffersProvider).valueOrNull ?? const <Product>[];
+    final profile = ref.watch(profileProvider).valueOrNull;
+    final user = ref.watch(authStateProvider).valueOrNull?.session?.user;
+    final greetingName = profile?.fullName?.split(' ').first ??
+        user?.email?.split('@').first ??
+        s.get('app.common.guest');
+
+    return Container(
+      decoration: const BoxDecoration(gradient: AppGradients.canvas),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: CompactHomeBarOverlay(
+          mode: ShopMode.pharmacy,
+          child: RefreshIndicator(
+            color: pharmacyAccent,
+            onRefresh: () async {
+              ref.invalidate(pharmacyOffersProvider);
+              for (final aisle in pharmacyAisles) {
+                ref.invalidate(pharmacyAisleRowProvider(aisle.id));
+              }
+            },
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: HomeHeader(
+                    name: greetingName,
+                    mode: ShopMode.pharmacy,
+                    onAccount: () => context.go('/account'),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 40, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          s.or('header.shopPharmacy', 'Pharmacy'),
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          s.or('pharmacy.lede', 'Medicines, care and supplements.'),
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: _AisleChips()),
+                if (offers.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _ProductRow(
+                      title: s.get('kitchen.home.feedOffers'),
+                      products: offers,
+                      query: const ProductsQuery(shop: 'pharmacy', sale: true, sort: 'top'),
+                      onAdd: (product) => _addToCart(context, ref, product),
+                    ),
+                  ),
+                for (final aisle in pharmacyAisles)
+                  SliverToBoxAdapter(
+                    child: _AisleRow(
+                      aisle: aisle,
+                      onAdd: (product) => _addToCart(context, ref, product),
+                    ),
+                  ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () => context.push('/pharmacy/shop'),
+                        child: Text(s.or('pharmacy.navAll', 'All pharmacy products')),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AisleChips extends StatelessWidget {
+  const _AisleChips();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.tr;
+    return SizedBox(
+      height: 64,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(20, 14, 12, 10),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ActionChip(
+              avatar: const Icon(Icons.grid_view_rounded, size: 16, color: pharmacyAccent),
+              label: Text(s.or('pharmacy.navCategories', 'All aisles')),
+              onPressed: () => context.go('/pharmacy/categories'),
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: AppColors.border),
+            ),
+          ),
+          for (final aisle in pharmacyAisles)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ActionChip(
+                avatar: Text(aisle.icon),
+                label: Text(s.or('pharmacy.aisles.${aisle.id}', aisle.title)),
+                onPressed: () => context.push(pharmacyAislePath(aisle.id)),
+                backgroundColor: Colors.white,
+                side: const BorderSide(color: AppColors.border),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AisleRow extends ConsumerWidget {
+  const _AisleRow({required this.aisle, required this.onAdd});
+
+  final PharmacyAisle aisle;
+  final void Function(Product) onAdd;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final page = ref.watch(pharmacyAisleRowProvider(aisle.id)).valueOrNull;
+    if (page == null || page.products.isEmpty) return const SizedBox.shrink();
+    final s = context.tr;
+    return _ProductRow(
+      title: '${aisle.icon} ${s.or('pharmacy.aisles.${aisle.id}', aisle.title)}',
+      products: page.products,
+      query: ProductsQuery(shop: 'pharmacy', aisle: aisle.id, sort: 'top'),
+      onAdd: onAdd,
+    );
+  }
+}
+
+/// Horizontal row that starts from [products] and pages in more of [query].
+class _ProductRow extends ConsumerStatefulWidget {
+  const _ProductRow({
+    required this.title,
+    required this.products,
+    required this.query,
+    required this.onAdd,
+  });
+
+  final String title;
+  final List<Product> products;
+  final ProductsQuery query;
+  final void Function(Product) onAdd;
+
+  @override
+  ConsumerState<_ProductRow> createState() => _ProductRowState();
+}
+
+class _ProductRowState extends ConsumerState<_ProductRow> {
+  static const _loadAheadPx = 400.0;
+
+  final _controller = ScrollController();
+  late bool _paging = ref.exists(paginatedProductsProvider(widget.query));
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_maybeLoadMore);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _maybeLoadMore() {
+    if (!_controller.hasClients) return;
+    if (_controller.position.extentAfter > _loadAheadPx) return;
+    if (!_paging) {
+      setState(() => _paging = true);
+      return;
+    }
+    final feed = ref.read(paginatedProductsProvider(widget.query));
+    if (feed.hasMore && !feed.isInitialLoading && !feed.isLoadingMore && feed.error == null) {
+      ref.read(paginatedProductsProvider(widget.query).notifier).loadMore();
+    }
+  }
+
+  void _retry() => ref.read(paginatedProductsProvider(widget.query).notifier).retry();
+
+  @override
+  Widget build(BuildContext context) {
+    final feed = _paging ? ref.watch(paginatedProductsProvider(widget.query)) : null;
+    final products = [...widget.products];
+    if (feed != null) {
+      final seen = products.map((p) => p.id).toSet();
+      products.addAll(feed.items.where((p) => seen.add(p.id)));
+    }
+    final loading = feed != null && (feed.isInitialLoading || feed.isLoadingMore);
+    final failed = feed != null && feed.error != null;
+    final trailing = loading || failed;
+    if (feed != null && !trailing && feed.hasMore) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _maybeLoadMore();
+      });
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 0, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: Text(
+              widget.title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 360,
+            child: ListView.separated(
+              controller: _controller,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.only(right: 20),
+              itemCount: products.length + (trailing ? 1 : 0),
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                if (index == products.length) {
+                  return SizedBox(
+                    width: 96,
+                    child: Center(
+                      child: failed
+                          ? IconButton(
+                              tooltip: context.tr.get('common.retry'),
+                              onPressed: _retry,
+                              icon: const Icon(Icons.refresh_rounded, color: pharmacyAccent),
+                            )
+                          : const SizedBox(
+                              width: 26,
+                              height: 26,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: pharmacyAccent,
+                              ),
+                            ),
+                    ),
+                  );
+                }
+                final product = products[index];
+                return SizedBox(
+                  width: 220,
+                  child: PopularProductCard(
+                    product: product,
+                    imageSize: 220,
+                    onAdd: () => widget.onAdd(product),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

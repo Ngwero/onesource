@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../data/cosmetics.dart';
+import '../data/pharmacy.dart';
 import '../i18n/app_strings.dart';
 import '../utils/cart_feedback.dart';
 import '../providers/products_provider.dart';
@@ -86,7 +87,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       return switch (widget.mode) {
         ShopMode.kitchen => isKitchenProduct(p),
         ShopMode.cosmetics => isCosmeticsProduct(p),
-        ShopMode.fresh => !isKitchenProduct(p) && !isCosmeticsProduct(p),
+        ShopMode.pharmacy => isPharmacyProduct(p),
+        ShopMode.fresh => !isKitchenProduct(p) && !isCosmeticsProduct(p) && !isPharmacyProduct(p),
       };
     }).toList();
     final s = context.tr;
@@ -194,6 +196,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 switch (widget.mode) {
                   ShopMode.kitchen => s.get('kitchen.searchHint'),
                   ShopMode.cosmetics => s.get('cosmetics.searchHint'),
+                  ShopMode.pharmacy => s.or('pharmacy.searchHint', 'Try a product name or brand.'),
                   ShopMode.fresh => s.get('search.tryDifferent'),
                 },
                 textAlign: TextAlign.center,

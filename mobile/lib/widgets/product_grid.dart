@@ -85,23 +85,38 @@ class PopularProductSliverGrid extends StatelessWidget {
     required this.products,
     this.onAdd,
     this.padding = EdgeInsets.zero,
+    this.addBelow = false,
+    this.mainAxisExtent,
+    this.imageSize = 108,
   });
 
   final List<Product> products;
   final void Function(Product product)? onAdd;
   final EdgeInsets padding;
+  final bool addBelow;
+  final double? mainAxisExtent;
+  final double imageSize;
 
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
       padding: padding,
       sliver: SliverGrid(
-        gridDelegate: ProductGrid.popularGridDelegateFor(context),
+        gridDelegate: mainAxisExtent == null
+            ? ProductGrid.popularGridDelegateFor(context)
+            : SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: productGridCount(context),
+                mainAxisExtent: mainAxisExtent!,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+              ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final product = products[index];
             final card = PopularProductCard(
               product: product,
+              addBelow: addBelow,
+              imageSize: imageSize,
               onAdd: onAdd == null ? null : () => onAdd!(product),
             );
             // Animating thousands of cells creates too many tickers and can abort.

@@ -167,6 +167,8 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                   PopularProductSliverGrid(
                     products: all.items,
                     onAdd: _addToCart,
+                    addBelow: true,
+                    mainAxisExtent: 348,
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                   ),
                 if (!all.isInitialLoading)
@@ -411,7 +413,7 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 236,
+            height: 348,
             child: ListView.separated(
               controller: _controller,
               scrollDirection: Axis.horizontal,
@@ -443,7 +445,11 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
                 final product = products[index];
                 return SizedBox(
                   width: 156,
-                  child: PopularProductCard(product: product, onAdd: () => widget.onAdd(product)),
+                  child: PopularProductCard(
+                    product: product,
+                    addBelow: true,
+                    onAdd: () => widget.onAdd(product),
+                  ),
                 );
               },
             ),

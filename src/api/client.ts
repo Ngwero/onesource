@@ -15,8 +15,12 @@ function isCosmeticsSku(p: Product): boolean {
   return p.id.startsWith("cosmetics-") || p.category === "cosmetics";
 }
 
+function isPharmacySku(p: Product): boolean {
+  return p.id.startsWith("pharmacy-") || p.category === "pharmacy";
+}
+
 function isFreshSku(p: Product): boolean {
-  return !isKitchenSku(p) && !isCosmeticsSku(p);
+  return !isKitchenSku(p) && !isCosmeticsSku(p) && !isPharmacySku(p);
 }
 
 /**
@@ -75,7 +79,7 @@ async function fetchProductsAttempt(
   params: {
     category?: string;
     q?: string;
-    shop?: "fresh" | "kitchen" | "cosmetics";
+    shop?: "fresh" | "kitchen" | "cosmetics" | "pharmacy";
   } | undefined,
   signal: AbortSignal
 ): Promise<Product[]> {
@@ -98,7 +102,13 @@ async function fetchProductsAttempt(
   }
 
   const matchesShop =
-    shop === "kitchen" ? isKitchenSku : shop === "cosmetics" ? isCosmeticsSku : isFreshSku;
+    shop === "kitchen"
+      ? isKitchenSku
+      : shop === "cosmetics"
+        ? isCosmeticsSku
+        : shop === "pharmacy"
+          ? isPharmacySku
+          : isFreshSku;
   const serverFiltered =
     startPage === 0 && first.total > 0 && first.products.every(matchesShop);
   if (serverFiltered) {
@@ -140,6 +150,10 @@ async function fetchProductsAttempt(
       const cosmetics = batch.filter(isCosmeticsSku);
       products.push(...cosmetics);
       if (cosmetics.length === 0) break;
+    } else if (shop === "pharmacy") {
+      const pharmacy = batch.filter(isPharmacySku);
+      products.push(...pharmacy);
+      if (pharmacy.length === 0) break;
     } else {
       products.push(...batch);
     }
@@ -186,7 +200,7 @@ async function withOneRetry<T>(
 export function fetchProducts(params?: {
   category?: string;
   q?: string;
-  shop?: "fresh" | "kitchen" | "cosmetics";
+  shop?: "fresh" | "kitchen" | "cosmetics" | "pharmacy";
 }): Promise<Product[]> {
   return withOneRetry((signal) => fetchProductsAttempt(params, signal), CATALOG_ATTEMPT_MS);
 }
@@ -239,7 +253,7 @@ export type ProductSort = "newest" | "top" | "price-asc" | "price-desc" | "name"
 
 /** Server-side filters for a paged product listing (GET /api/products). */
 export type ProductListQuery = {
-  shop?: "fresh" | "kitchen" | "cosmetics";
+  shop?: "fresh" | "kitchen" | "cosmetics" | "pharmacy";
   aisle?: string;
   category?: string;
   q?: string;

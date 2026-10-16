@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
-import '../i18n/app_strings.dart';
 import '../models/product.dart';
 
 final _countFormat = NumberFormat('#,##0');
@@ -56,8 +55,7 @@ class RatingStars extends StatelessWidget {
   }
 }
 
-/// One-line star row for product cards. Only products with real reviews
-/// (details.ratingSource) get filled stars; the rest show grey stars + "No reviews yet".
+/// One-line star row for product cards. Products without a real ratingSource show 5 filled stars.
 class CardRating extends StatelessWidget {
   const CardRating({super.key, required this.product, this.size = 12});
 
@@ -71,21 +69,7 @@ class CardRating extends StatelessWidget {
       height: size + 2,
       child: verified
           ? RatingStars(rating: product.rating, reviewCount: product.reviewCount, size: size)
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RatingStars(rating: 0, size: size, color: AppColors.textMuted.withValues(alpha: 0.45)),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    context.tr.get('productCard.noReviews'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: size - 2, color: AppColors.textMuted),
-                  ),
-                ),
-              ],
-            ),
+          : RatingStars(rating: 5, size: size),
     );
   }
 }

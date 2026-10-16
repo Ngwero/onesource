@@ -46,6 +46,9 @@ export function filterLocalProducts({
   if (!admin) {
     filtered = filtered.filter((r) => r.in_stock && r.stock_quantity > 0);
   }
+  if (!admin && (shop === "pharmacy" || category === "pharmacy")) {
+    filtered = filtered.filter((r) => r.details?.pharmacyImageQuality?.status === "verified");
+  }
   if (sale) {
     filtered = filtered.filter(
       (r) => r.original_price != null && Number(r.original_price) > Number(r.price)
@@ -72,8 +75,8 @@ export function filterLocalProducts({
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, "");
-  const shopPrefix = shop === "cosmetics" ? "cosmetics" : "kitchen";
-  const shopCategory = shop === "cosmetics" ? "cosmetics" : "kitchen-ware";
+  const shopPrefix = shop === "pharmacy" ? "pharmacy" : shop === "cosmetics" ? "cosmetics" : "kitchen";
+  const shopCategory = shop === "pharmacy" ? "pharmacy" : shop === "cosmetics" ? "cosmetics" : "kitchen-ware";
   if (shop === "fresh") {
     filtered = filtered.filter((r) => {
       const id = String(r.id);
@@ -91,7 +94,7 @@ export function filterLocalProducts({
       const id = String(r.id);
       return id.startsWith(prefix) && !nested.some((n) => id.startsWith(n));
     });
-  } else if ((shop === "kitchen" || shop === "cosmetics") && !category) {
+  } else if ((shop === "kitchen" || shop === "cosmetics" || shop === "pharmacy") && !category) {
     filtered = filtered.filter(
       (r) => String(r.id).startsWith(`${shopPrefix}-`) || r.category === shopCategory
     );

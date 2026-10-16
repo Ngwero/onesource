@@ -2,12 +2,16 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { ProductImage } from "../components/ProductImage";
+import { COSMETICS_AISLES } from "../data/cosmetics";
 import { useCosmeticsCatalog } from "../hooks/useCosmeticsCatalog";
 import { cosmeticsAislePath } from "../utils/cosmeticsMode";
 
 export function CosmeticsCategoriesPage() {
   const { t } = useTranslation();
-  const { aisles, loading } = useCosmeticsCatalog();
+  const { aisles, settled } = useCosmeticsCatalog();
+  const imageByAisle = new Map(
+    aisles.filter((aisle) => aisle.products[0]?.image).map((aisle) => [aisle.id, aisle.products[0].image])
+  );
 
   return (
     <div className="cos-page">
@@ -23,22 +27,19 @@ export function CosmeticsCategoriesPage() {
           <p>{t("cosmetics.catalogSub")}</p>
         </header>
 
-        {loading ? (
-          <p className="cos-empty">{t("common.loading")}</p>
+        {settled && aisles.every((aisle) => aisle.products.length === 0) ? (
+          <p className="cos-empty">{t("cosmetics.empty")}</p>
         ) : (
           <div className="cos-cat-grid">
-            {aisles
-              .filter((aisle) => aisle.products.length > 0)
-              .map((aisle, index) => (
+            {COSMETICS_AISLES.map((aisle, index) => {
+              const image = imageByAisle.get(aisle.id);
+              return (
                 <Link key={aisle.id} to={cosmeticsAislePath(aisle.id)} className="cos-cat-tile">
-                  <span className="cos-cat-media">
-                    <ProductImage
-                      src={aisle.products[0].image}
-                      alt=""
-                      size="card"
-                      priority={index < 4}
-                    />
-                  </span>
+                  {image ? (
+                    <span className="cos-cat-media">
+                      <ProductImage src={image} alt="" size="card" priority={index < 4} />
+                    </span>
+                  ) : null}
                   <span className="cos-cat-body">
                     <strong>
                       {aisle.icon}{" "}
@@ -47,7 +48,8 @@ export function CosmeticsCategoriesPage() {
                     <span>{t("kitchen.shopCategory")}</span>
                   </span>
                 </Link>
-              ))}
+              );
+            })}
           </div>
         )}
       </PageContainer>

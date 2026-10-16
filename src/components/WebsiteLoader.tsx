@@ -18,13 +18,15 @@ type Props = { children: ReactNode };
 const SELF_LOADING_PATHS = [
   /^\/kitchen(\/|$)/,
   /^\/cosmetics(\/|$)/,
+  /^\/pharmacy(\/|$)/,
 ];
 
 function shopsNeededFor(pathname: string): ProductShop[] {
   // Product pages load that one product by id. They must not sit behind the catalogue.
   if (/^\/product\//.test(pathname)) return [];
   if (SELF_LOADING_PATHS.some((re) => re.test(pathname))) return [];
-  return [shopModeForPath(pathname)];
+  const shop = shopModeForPath(pathname);
+  return shop === "pharmacy" ? [] : [shop];
 }
 
 export function WebsiteLoader({ children }: Props) {
@@ -34,8 +36,11 @@ export function WebsiteLoader({ children }: Props) {
   const neededShops = shopsNeededFor(pathname);
   useEnsureShops(neededShops);
   const loading = neededShops.some((shop) => shopLoading[shop]);
-  // A slow background fill must not replace a shop that already has products.
-  const outage = Boolean(error) && products.length === 0;
+  // Pharmacy, Kitchen and Cosmetics page their own catalogues. A failed Fresh
+  // load must not replace those pages with the shop-wide outage screen.
+  const selfLoading =
+    SELF_LOADING_PATHS.some((re) => re.test(pathname)) || /^\/product\//.test(pathname);
+  const outage = Boolean(error) && products.length === 0 && !selfLoading;
   const mountTime = useRef(Date.now());
   const [phase, setPhase] = useState<Phase>("loading");
 
@@ -44,22 +49,18 @@ export function WebsiteLoader({ children }: Props) {
   }, []);
 
   useEffect(() => {
-    // Stay on the brand loader until the shop's first small batch is in, including a
-    // slow success and the one automatic retry; the rest of the catalogue loads behind
-    // the page. An error only ends the wait once loading stops.
-    if (loading) {
-      setPhase((current) => (current === "loading" ? current : "loading"));
+    // The brand mark stays up briefly, then the shell is visible. A slow catalogue
+    // must not hold the overlay: products fill in behind it, and "Shop unavailable"
+    // is only for a request that actually failed (after the one retry).
+    if (outage) {
+      setPhase("done");
       return;
     }
-
     const elapsed = Date.now() - mountTime.current;
     const delay = Math.max(0, MIN_VISIBLE_MS - elapsed);
-
-    const timer = window.setTimeout(() => {
-      setPhase(outage ? "done" : "exiting");
-    }, delay);
+    const timer = window.setTimeout(() => setPhase("exiting"), delay);
     return () => window.clearTimeout(timer);
-  }, [loading, outage]);
+  }, [outage]);
 
   useEffect(() => {
     if (phase !== "exiting") return;
@@ -67,7 +68,7 @@ export function WebsiteLoader({ children }: Props) {
     return () => window.clearTimeout(timer);
   }, [phase]);
 
-  if (!loading && phase === "done" && outage) {
+  if (!loading && outage) {
     return (
       <div className="site-loader-error page-container">
         <div className="card p-8 max-w-md mx-auto text-center">

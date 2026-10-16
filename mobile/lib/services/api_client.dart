@@ -59,8 +59,12 @@ class ApiClient {
   static bool _isCosmeticsSku(Product p) =>
       p.id.startsWith('cosmetics-') || p.category == 'cosmetics';
 
-  /// Kitchen or Cosmetics item — never shown in the Fresh shop.
-  static bool _isOtherShopSku(Product p) => _isKitchenSku(p) || _isCosmeticsSku(p);
+  static bool _isPharmacySku(Product p) =>
+      p.id.startsWith('pharmacy-') || p.category == 'pharmacy';
+
+  /// Kitchen, Cosmetics or Pharmacy item — never shown in the Fresh shop.
+  static bool _isOtherShopSku(Product p) =>
+      _isKitchenSku(p) || _isCosmeticsSku(p) || _isPharmacySku(p);
 
   Future<bool> checkHealth() async {
     try {
@@ -86,6 +90,8 @@ class ApiClient {
     final params = <String, String>{
       'page': '$page',
       'pageSize': '$pageSize',
+      // Cards only: skip descriptions and details so listings stay small.
+      'fields': 'card',
     };
     if (category != null && category.isNotEmpty) params['category'] = category;
     if (query != null && query.isNotEmpty) params['q'] = query;
@@ -155,9 +161,9 @@ class ApiClient {
     String? query,
     int page = 0,
     int pageSize = 24,
-    /// `fresh` excludes kitchen/cosmetics SKUs; `kitchen` / `cosmetics` return that shop only.
+    /// `fresh` excludes specialty SKUs; `kitchen`, `cosmetics`, and `pharmacy` return that shop only.
     String? shop,
-    /// Aisle id within the kitchen (default) or cosmetics shop — filters `{shop}-{aisle}-%`.
+    /// Aisle id within a specialty shop — filters `{shop}-{aisle}-%`.
     String? aisle,
     /// Server-side filters/sort (`sale=1`, `prime=1`, `sort=…`); older APIs ignore them.
     bool sale = false,
@@ -193,7 +199,7 @@ class ApiClient {
       query: query,
       page: page,
       pageSize: pageSize,
-      shop: hasAisle && scopedShop != 'cosmetics' ? 'kitchen' : scopedShop,
+      shop: hasAisle && scopedShop != 'cosmetics' && scopedShop != 'pharmacy' ? 'kitchen' : scopedShop,
       aisle: scopedAisle,
       sale: sale,
       prime: prime,
@@ -201,7 +207,11 @@ class ApiClient {
     );
 
     if (hasAisle) {
-      final prefix = scopedShop == 'cosmetics' ? 'cosmetics' : 'kitchen';
+      final prefix = scopedShop == 'cosmetics'
+          ? 'cosmetics'
+          : scopedShop == 'pharmacy'
+              ? 'pharmacy'
+              : 'kitchen';
       final nested = _nestedAisles[scopedAisle] ?? const <String>[];
       final matched = raw.products
           .where((p) =>
@@ -211,6 +221,16 @@ class ApiClient {
       return ProductsPageResult(
         products: matched,
         total: matched.isEmpty && page == 0 ? 0 : (raw.total > 0 ? raw.total : matched.length),
+        page: page,
+        pageSize: pageSize,
+        serverHasMore: raw.serverHasMore,
+      );
+    }
+
+    if (scopedShop == 'pharmacy' && !hasCategory) {
+      return ProductsPageResult(
+        products: raw.products.where(_isPharmacySku).toList(),
+        total: raw.total,
         page: page,
         pageSize: pageSize,
         serverHasMore: raw.serverHasMore,

@@ -117,6 +117,7 @@ function titleBase(title: string): string {
 
 const isKitchenId = (id: string) => id.startsWith("kitchen-");
 const isCosmeticsId = (id: string) => id.startsWith("cosmetics-");
+const isPharmacyId = (id: string) => id.startsWith("pharmacy-");
 
 function details(product: Product): ProductInfo {
   return product.details && typeof product.details === "object" ? product.details : {};
@@ -126,7 +127,7 @@ function details(product: Product): ProductInfo {
 export function productBrand(product: Product, t: TFunction = i18n.t.bind(i18n)): string | null {
   const d = details(product);
   if (d.brand) return d.brand === "One Source" ? t("productDetails.values.oneSource") : d.brand;
-  if (!isKitchenId(product.id) && !isCosmeticsId(product.id) && /–\s*One Source$/i.test(product.title)) {
+  if (!isKitchenId(product.id) && !isCosmeticsId(product.id) && !isPharmacyId(product.id) && /–\s*One Source$/i.test(product.title)) {
     return t("productDetails.values.oneSource");
   }
   return null;
@@ -151,7 +152,7 @@ function specRow(spec: ProductSpec): DetailRow {
 
 function itemForm(product: Product, t: TFunction): string | null {
   const d = details(product);
-  if (isKitchenId(product.id) || isCosmeticsId(product.id)) return null;
+  if (isKitchenId(product.id) || isCosmeticsId(product.id) || isPharmacyId(product.id)) return null;
   if (d.form) return d.form;
   const cat = getCategoryById(product.category);
   return cat?.name ? cat.name.replace(/s$/, "") : t("productDetails.forms.freshProduce");
@@ -185,7 +186,7 @@ export function buildAboutItemBullets(
       .filter((s) => s.length > 3);
     bullets.push(...sentences.slice(0, 4));
   }
-  if (!isKitchenId(product.id) && !isCosmeticsId(product.id) && product.unit) {
+  if (!isKitchenId(product.id) && !isCosmeticsId(product.id) && !isPharmacyId(product.id) && product.unit) {
     bullets.push(t("productDetails.values.soldUnit", { unit: product.unit }));
   }
   if (d.suitableFor?.length) {

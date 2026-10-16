@@ -71,7 +71,10 @@
     "shopFreshHint": "Imbuto, imboga, inyama…",
     "shopCosmetics": "Ibirungo by'ubwiza",
     "shopCosmeticsHint": "Uruhu, kwisiga na parfum",
-    "cosmeticsSearchPlaceholder": "Shakisha ibyo kwisiga, serumu, amavuta arinda izuba..."
+    "cosmeticsSearchPlaceholder": "Shakisha ibyo kwisiga, serumu, amavuta arinda izuba...",
+    "shopPharmacy": "Farumasi",
+    "shopPharmacyHint": "Imiti, intungamubiri n'ubuvuzi",
+    "pharmacySearchPlaceholder": "Shakisha imiti, vitamini, ubuvuzi bw'ibanze..."
   },
   "nav": {
     "allCategories": "Ibyiciro byose",
@@ -82,7 +85,8 @@
     "kitchen": "Ibikoresho byo mu gikoni",
     "categoriesLabel": "Ibyiciro",
     "mobileLabel": "Kugenda kuri telefoni",
-    "cosmetics": "Ubwiza"
+    "cosmetics": "Ubwiza",
+    "pharmacy": "Farumasi"
   },
   "kitchen": {
     "brand": "One Source Ibikoresho byo mu Gikoni",
@@ -687,7 +691,8 @@
       "berries": "Imbuto nshya",
       "citrus": "Imbuto nshya",
       "tropical": "Imbuto nshya",
-      "cosmetics": "Ibirungo by'ubwiza"
+      "cosmetics": "Ibirungo by'ubwiza",
+      "pharmacy": "Farumasi"
     }
   },
   "categoryTile": {
@@ -2087,5 +2092,54 @@
     "loadError": "Ntibyashobotse gufungura ibindi bicuruzwa.",
     "endOfResults_one": "Wabonye igicuruzwa kimwe gihari",
     "endOfResults_other": "Wabonye ibicuruzwa byose uko ari {{count}}"
+  },
+  "pharmacy": {
+    "brand": "Farumasi One Source",
+    "kicker": "Farumasi",
+    "title": "Farumasi yihariye",
+    "lede": "Imiti, ubuvuzi bw'ibanze, intungamubiri, kwita no umubyeyi n'umwana, mu iduka ryabo.",
+    "ctaBrowse": "Reba farumasi",
+    "ctaCategories": "Reba inzira",
+    "navCategories": "Inzira zose",
+    "navAll": "Ibicuruzwa byose bya farumasi",
+    "navLabel": "Inzira za farumasi",
+    "empty": "Nta kintu kiri muri iyi nzira.",
+    "searchTitle": "Shakisha muri farumasi",
+    "searchHint": "Gerageza izina ry'igicuruzwa cyangwa ikirango.",
+    "shopByCategory": "Gura ukurikije umurongo",
+    "home": {
+      "latestTitle": "Ibishya muri Farumasi",
+      "latestSub": "Ibyageze vuba mbere — komeza umanure urebe ibicuruzwa byose."
+    },
+    "aisles": {
+      "medicines": "Imiti",
+      "supplements": "Intungamubiri na vitamini",
+      "first-aid": "Ubuvuzi bw'ibanze",
+      "care": "Kwita no isuku",
+      "orthopedics": "Amagufwa",
+      "wellbeing": "Ubuzima bwiza",
+      "mother-child": "Umubyeyi n'umwana",
+      "animals": "Ubuzima bw'inyamaswa",
+      "nutrition": "Imirire y'ubuvuzi",
+      "naturopathy": "Ubuganga bw'akamerere",
+      "sports": "Siporo n'ibiro",
+      "offers": "Ibiciro n'impano"
+    },
+    "hero": {
+      "title": "Kwiyitaho buri munsi.",
+      "titleAccent": "Byose ahantu hamwe.",
+      "description": "Reba vitamini, ibikoresho by’ubutabazi bw’ibanze n’ibikenerwa buri munsi mu muryango wawe.",
+      "offers": "Reba poromosiyo",
+      "collectionLabel": "Ibikenerwa buri munsi",
+      "collectionTitle": "Iyiteho buri munsi.",
+      "visualNote": "Vitamini · Ubutabazi bw’ibanze · Kwiyitaho",
+      "shortcuts": "Gura ibikenerwa buri munsi",
+      "vitaminsTitle": "Gahunda yawe ya buri munsi.",
+      "vitaminsAccent": "Ibyo ukeneye.",
+      "vitaminsDescription": "Reba vitamini n’inyunganiramirire byo mu bwoko n’ingano bitandukanye.",
+      "firstAidTitle": "Ibikenerwa buri munsi.",
+      "firstAidAccent": "Biri hafi mu rugo.",
+      "firstAidDescription": "Uzuza akabati k’ubutabazi mu rugo n’ibipfuko by’ibikomere n’ibindi bikoresho by’ubutabazi bw’ibanze."
+    }
   }
 }

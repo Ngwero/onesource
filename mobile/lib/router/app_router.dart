@@ -5,6 +5,7 @@ import '../i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../data/kitchen_ware.dart';
+import '../data/pharmacy.dart';
 import '../screens/account_screen.dart';
 import '../screens/app_shell.dart';
 import '../screens/auth_screens.dart';
@@ -15,6 +16,8 @@ import '../screens/cosmetics_home_screen.dart';
 import '../screens/exports_screens.dart';
 import '../screens/lists_screens.dart';
 import '../screens/order_confirmation_screen.dart';
+import '../screens/pharmacy_home_screen.dart';
+import '../screens/pharmacy_screens.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/kitchen_aisle_screen.dart';
 import '../screens/kitchen_categories_screen.dart';
@@ -83,6 +86,19 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ),
           ),
+          GoRoute(path: '/pharmacy', builder: (_, __) => const PharmacyHomeScreen()),
+          GoRoute(
+            path: '/pharmacy/categories',
+            builder: (_, __) => const SafeArea(child: PharmacyCategoriesScreen()),
+          ),
+          GoRoute(
+            path: '/pharmacy/shop',
+            builder: (context, state) => SafeArea(
+              child: PharmacyAisleScreen(
+                dealsOnly: state.uri.queryParameters['deals'] == '1',
+              ),
+            ),
+          ),
           GoRoute(path: '/lists', builder: (_, __) => const SafeArea(child: SavedItemsScreen())),
           GoRoute(path: '/history', builder: (_, __) => const SafeArea(child: BrowsingHistoryScreen())),
         ],
@@ -91,6 +107,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/cosmetics/aisle/:aisleId',
         builder: (context, state) => CosmeticsAisleScreen(
           aisleId: state.pathParameters['aisleId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/pharmacy/aisle/:aisleId',
+        redirect: (context, state) =>
+            isValidPharmacyAisleId(state.pathParameters['aisleId']) ? null : '/pharmacy/categories',
+        builder: (context, state) => PharmacyAisleScreen(
+          aisleId: state.pathParameters['aisleId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/pharmacy/search',
+        builder: (context, state) => SearchScreen(
+          initialQuery: state.uri.queryParameters['q'],
+          mode: ShopMode.pharmacy,
         ),
       ),
       GoRoute(
@@ -141,6 +172,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             return '/kitchen';
           }
           if (id == 'cosmetics') return '/cosmetics';
+          if (id == 'pharmacy') return '/pharmacy';
           return null;
         },
         builder: (context, state) => CategoryScreen(categoryId: state.pathParameters['id']!),

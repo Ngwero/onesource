@@ -25,6 +25,7 @@ export const AGRI_CATEGORIES = [
   { id: "export-fresh-produce", name: "Export Fresh Produce", icon: "✈️", group: "specialty" },
   { id: "kitchen-ware", name: "Kitchen Ware", icon: "🍳", group: "specialty" },
   { id: "cosmetics", name: "Cosmetics", icon: "💄", group: "specialty" },
+  { id: "pharmacy", name: "Pharmacy", icon: "💊", group: "specialty" },
 ];
 
 export const REMOVED_CATEGORY_SLUGS = new Set([
@@ -51,6 +52,21 @@ export const LEGACY_CATEGORY_MAP = {
 };
 
 export const UNCATEGORIZED_CATEGORY_ID = "uncategorized";
+
+const SPECIALTY_SHOP_CATEGORY_IDS = new Set(["kitchen-ware", "cosmetics", "pharmacy"]);
+
+/**
+ * Produce / livestock rows for the Fresh shop. A positive `category IN (...)`
+ * uses the category index. Excluding kitchen/cosmetics/pharmacy with `NOT LIKE`
+ * on id walks the newest specialty imports and times out.
+ */
+export const FRESH_SHOP_CATEGORY_IDS = [
+  ...AGRI_CATEGORIES.map((c) => c.id).filter((id) => !SPECIALTY_SHOP_CATEGORY_IDS.has(id)),
+  UNCATEGORIZED_CATEGORY_ID,
+  ...Object.entries(LEGACY_CATEGORY_MAP)
+    .filter(([, target]) => !SPECIALTY_SHOP_CATEGORY_IDS.has(target))
+    .map(([legacy]) => legacy),
+];
 
 export function normalizeCategoryId(raw) {
   if (!raw || !String(raw).trim()) return UNCATEGORIZED_CATEGORY_ID;

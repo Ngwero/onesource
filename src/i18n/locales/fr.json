@@ -71,7 +71,10 @@
     "shopFreshHint": "Fruits, légumes, viande…",
     "shopCosmetics": "Cosmétiques",
     "shopCosmeticsHint": "Soins, maquillage & parfums",
-    "cosmeticsSearchPlaceholder": "Rechercher maquillage, sérums, solaires..."
+    "cosmeticsSearchPlaceholder": "Rechercher maquillage, sérums, solaires...",
+    "shopPharmacy": "Pharmacie",
+    "shopPharmacyHint": "Médicaments, soins & compléments",
+    "pharmacySearchPlaceholder": "Chercher médicaments, vitamines, premiers secours..."
   },
   "nav": {
     "allCategories": "Toutes les catégories",
@@ -82,7 +85,8 @@
     "kitchen": "Cuisine",
     "categoriesLabel": "Catégories",
     "mobileLabel": "Navigation mobile",
-    "cosmetics": "Cosmétiques"
+    "cosmetics": "Cosmétiques",
+    "pharmacy": "Pharmacie"
   },
   "kitchen": {
     "brand": "One Source Cuisine",
@@ -687,7 +691,8 @@
       "berries": "Fruits frais",
       "citrus": "Fruits frais",
       "tropical": "Fruits frais",
-      "cosmetics": "Cosmétiques"
+      "cosmetics": "Cosmétiques",
+      "pharmacy": "Pharmacie"
     }
   },
   "categoryTile": {
@@ -2087,5 +2092,54 @@
     "loadError": "Impossible de charger plus de produits.",
     "endOfResults_one": "Vous avez vu le seul produit disponible",
     "endOfResults_other": "Vous avez vu les {{count}} produits"
+  },
+  "pharmacy": {
+    "brand": "Pharmacie One Source",
+    "kicker": "Pharmacie",
+    "title": "Une pharmacie à part",
+    "lede": "Médicaments, premiers secours, compléments, soins et mère-enfant, dans leur propre boutique.",
+    "ctaBrowse": "Voir la pharmacie",
+    "ctaCategories": "Explorer les rayons",
+    "navCategories": "Tous les rayons",
+    "navAll": "Tous les produits pharmacie",
+    "navLabel": "Rayons pharmacie",
+    "empty": "Rien dans ce rayon pour le moment.",
+    "searchTitle": "Chercher dans la pharmacie",
+    "searchHint": "Essayez un nom de produit ou une marque.",
+    "shopByCategory": "Acheter par rayon",
+    "home": {
+      "latestTitle": "Nouveautés Pharmacie",
+      "latestSub": "Les derniers arrivages d'abord — continuez à défiler pour tout voir."
+    },
+    "aisles": {
+      "medicines": "Médicaments",
+      "supplements": "Compléments & vitamines",
+      "first-aid": "Premiers secours",
+      "care": "Soins & hygiène",
+      "orthopedics": "Orthopédie",
+      "wellbeing": "Bien-être",
+      "mother-child": "Mère & enfant",
+      "animals": "Santé animale",
+      "nutrition": "Nutrition médicale",
+      "naturopathy": "Naturopathie",
+      "sports": "Sport & poids",
+      "offers": "Offres & cadeaux"
+    },
+    "hero": {
+      "title": "Les soins au quotidien.",
+      "titleAccent": "Tout au même endroit.",
+      "description": "Découvrez les vitamines, les premiers secours et les essentiels du quotidien pour toute la famille.",
+      "offers": "Voir les offres",
+      "collectionLabel": "La sélection du quotidien",
+      "collectionTitle": "Un peu de soin, chaque jour.",
+      "visualNote": "Vitamines · Premiers secours · Soins",
+      "shortcuts": "Acheter les essentiels du quotidien",
+      "vitaminsTitle": "Votre routine quotidienne.",
+      "vitaminsAccent": "Vos essentiels.",
+      "vitaminsDescription": "Découvrez les vitamines et compléments, avec un large choix de marques et de formats.",
+      "firstAidTitle": "Les essentiels du quotidien.",
+      "firstAidAccent": "À portée de main.",
+      "firstAidDescription": "Complétez votre armoire à pharmacie avec des pansements et les essentiels des premiers secours."
+    }
   }
 }

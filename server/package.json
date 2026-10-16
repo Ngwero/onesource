@@ -34,6 +34,7 @@
     "reprice:kitchen-uganda": "node scripts/reprice-kitchen-uganda.js",
     "repair:cookwarestore-images": "node scripts/repair-cookwarestore-images.js",
     "import:jumia-kitchen": "node scripts/import-jumia-kitchen-catalog.js",
+    "import:amazon-kitchen-folder": "node scripts/import-amazon-kitchen-folder.js",
     "import:madein-kitchen": "node scripts/import-madein-kitchen-catalog.js",
     "rename:kitchen-titles": "node scripts/rename-kitchen-titles.js",
     "seed:habanero": "node scripts/seed-habanero.js",
@@ -68,7 +69,8 @@
     "repair:images": "node scripts/repair-broken-images.js",
     "i18n:build": "npm run i18n:build --prefix ..",
     "import:lookfantastic": "node scripts/import-lookfantastic-cosmetics.js",
-    "import:lookfantastic-folder": "node scripts/import-lookfantastic-folder.js"
+    "import:lookfantastic-folder": "node scripts/import-lookfantastic-folder.js",
+    "import:pharmamarket-folder": "node scripts/import-pharmamarket-folder.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",

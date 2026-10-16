@@ -71,7 +71,10 @@
     "shopKitchenHint": "Cookware, cabinets & tabletop",
     "shopCosmetics": "Cosmetics",
     "shopCosmeticsHint": "Skincare, makeup & fragrance",
-    "cosmeticsSearchPlaceholder": "Search makeup, serums, sunscreen..."
+    "cosmeticsSearchPlaceholder": "Search makeup, serums, sunscreen...",
+    "shopPharmacy": "Pharmacy",
+    "shopPharmacyHint": "Medicines, care & supplements",
+    "pharmacySearchPlaceholder": "Search medicines, vitamins, first aid..."
   },
   "nav": {
     "allCategories": "All categories",
@@ -82,7 +85,8 @@
     "kitchen": "Kitchen Ware",
     "categoriesLabel": "Categories",
     "mobileLabel": "Mobile navigation",
-    "cosmetics": "Cosmetics"
+    "cosmetics": "Cosmetics",
+    "pharmacy": "Pharmacy"
   },
   "kitchen": {
     "brand": "One Source Kitchen Ware",
@@ -700,7 +704,8 @@
       "berries": "Fresh Fruits",
       "citrus": "Fresh Fruits",
       "tropical": "Fresh Fruits",
-      "cosmetics": "Cosmetics"
+      "cosmetics": "Cosmetics",
+      "pharmacy": "Pharmacy"
     }
   },
   "categoryTile": {
@@ -1331,5 +1336,54 @@
     "loadError": "Couldn't load more products.",
     "endOfResults_one": "You've seen the only product here",
     "endOfResults_other": "You've seen all {{count}} products"
+  },
+  "pharmacy": {
+    "brand": "One Source Pharmacy",
+    "kicker": "Pharmacy",
+    "title": "A pharmacy shop of its own",
+    "lede": "Medicines, first aid, supplements, care and mother-and-child products, kept in their own shop.",
+    "ctaBrowse": "Browse the pharmacy",
+    "ctaCategories": "Explore aisles",
+    "navCategories": "All aisles",
+    "navAll": "All pharmacy products",
+    "navLabel": "Pharmacy aisles",
+    "empty": "Nothing in this aisle yet.",
+    "searchTitle": "Search the pharmacy",
+    "searchHint": "Try a product name or brand.",
+    "shopByCategory": "Shop by aisle",
+    "home": {
+      "latestTitle": "Latest in Pharmacy",
+      "latestSub": "Newest arrivals first — keep scrolling to see every product."
+    },
+    "aisles": {
+      "medicines": "Medicines",
+      "supplements": "Supplements & vitamins",
+      "first-aid": "First aid & home care",
+      "care": "Care & hygiene",
+      "orthopedics": "Orthopedics",
+      "wellbeing": "Well-being",
+      "mother-child": "Mother & child",
+      "animals": "Pet health",
+      "nutrition": "Medical nutrition",
+      "naturopathy": "Naturopathy",
+      "sports": "Sports & weight",
+      "offers": "Offers & gifts"
+    },
+    "hero": {
+      "title": "Everyday care.",
+      "titleAccent": "All in one place.",
+      "description": "Explore vitamins, first aid and everyday essentials for your whole household.",
+      "offers": "Explore offers",
+      "collectionLabel": "The everyday collection",
+      "collectionTitle": "A little care, every day.",
+      "visualNote": "Vitamins · First aid · Daily care",
+      "shortcuts": "Shop everyday essentials",
+      "vitaminsTitle": "Your daily routine.",
+      "vitaminsAccent": "Your essentials.",
+      "vitaminsDescription": "Explore vitamins and supplements, with a wide choice of brands and formats.",
+      "firstAidTitle": "Everyday essentials.",
+      "firstAidAccent": "Ready at home.",
+      "firstAidDescription": "Stock your home care cupboard with plasters, dressings and first aid essentials."
+    }
   }
 }

@@ -6,6 +6,7 @@ export type Product = {
   rating: number;
   reviewCount: number;
   image: string;
+  images?: string[];
   category: string;
   unit: string;
   prime: boolean;
@@ -45,6 +46,7 @@ export type ProductInfo = {
   sourcing?: string;
   /** Where rating / reviewCount came from (e.g. "lookfantastic"); unset means no real reviews. */
   ratingSource?: string;
+  images?: string[];
 };
 
 export type Category = {

@@ -252,7 +252,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                             .where((c) =>
                                 c.id != widget.categoryId &&
                                 c.id != 'kitchen-ware' &&
-                                c.id != 'kitchen-furniture')
+                                c.id != 'kitchen-furniture' &&
+                                c.id != 'cosmetics' &&
+                                c.id != 'pharmacy')
                             .take(8)
                             .toList();
                         if (related.isEmpty) return const SizedBox.shrink();

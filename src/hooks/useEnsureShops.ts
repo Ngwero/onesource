@@ -21,7 +21,8 @@ export function useEnsureProducts(ids: readonly string[]) {
   }, [key, ensureProducts]);
 }
 
-export function shopForProductId(id: string): ProductShop {
+export function shopForProductId(id: string): ProductShop | "pharmacy" {
+  if (id.startsWith("pharmacy-")) return "pharmacy";
   if (id.startsWith("kitchen-")) return "kitchen";
   if (id.startsWith("cosmetics-")) return "cosmetics";
   return "fresh";

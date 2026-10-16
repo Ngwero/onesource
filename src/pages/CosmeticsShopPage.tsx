@@ -17,11 +17,11 @@ import type { Product } from "../types/product";
 const TOP_BRANDS = 14;
 
 const LATEST_QUERY: ProductListQuery = { shop: "cosmetics", sort: "newest" };
-const OFFERS_ROW_QUERY: ProductListQuery = { shop: "cosmetics", sort: "top", sale: true };
+const OFFERS_ROW_QUERY: ProductListQuery = { shop: "cosmetics", sort: "newest", sale: true };
 
 export function CosmeticsShopPage() {
   const { t } = useTranslation();
-  const { aisles, offers, loading } = useCosmeticsCatalog();
+  const { aisles, offers, settled } = useCosmeticsCatalog();
 
   const stocked = useMemo(
     () =>
@@ -58,54 +58,52 @@ export function CosmeticsShopPage() {
       <PageContainer className="cos-shell">
         <CosmeticsHeroCarousel />
 
-        {loading ? (
-          <p className="cos-empty">{t("common.loading")}</p>
-        ) : stocked.length === 0 ? (
-          <p className="cos-empty">{t("cosmetics.empty")}</p>
-        ) : (
-          <>
-            <section className="cos-section">
-              <h2 className="cos-section-title">{t("cosmetics.shopByCategory")}</h2>
-              <CosmeticsCategoryMarquee tiles={categoryTiles} />
-            </section>
-
-            {topBrands.length > 0 && (
-              <section className="cos-section">
-                <h2 className="cos-section-title">{t("cosmetics.topBrands")}</h2>
-                <div className="cos-brands">
-                  {topBrands.map((brand) => (
-                    <Link
-                      key={brand}
-                      to={`/cosmetics/products?brand=${encodeURIComponent(brand)}`}
-                      className="cos-brand-chip"
-                    >
-                      {brand}
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {offers.length > 0 && (
-              <ProductRow
-                title={t("kitchen.home.feedOffers")}
-                products={offers}
-                query={OFFERS_ROW_QUERY}
-              />
-            )}
-
-            {stocked.map((aisle) => (
-              <ProductRow
-                key={aisle.id}
-                title={aisle.label}
-                products={aisle.products}
-                query={{ shop: "cosmetics", sort: "top", aisle: aisle.id }}
-              />
-            ))}
-
-            <CosmeticsLatestFeed />
-          </>
+        {categoryTiles.length > 0 && (
+          <section className="cos-section">
+            <h2 className="cos-section-title">{t("cosmetics.shopByCategory")}</h2>
+            <CosmeticsCategoryMarquee tiles={categoryTiles} />
+          </section>
         )}
+
+        {topBrands.length > 0 && (
+          <section className="cos-section">
+            <h2 className="cos-section-title">{t("cosmetics.topBrands")}</h2>
+            <div className="cos-brands">
+              {topBrands.map((brand) => (
+                <Link
+                  key={brand}
+                  to={`/cosmetics/products?brand=${encodeURIComponent(brand)}`}
+                  className="cos-brand-chip"
+                >
+                  {brand}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {offers.length > 0 && (
+          <ProductRow
+            title={t("kitchen.home.feedOffers")}
+            products={offers}
+            query={OFFERS_ROW_QUERY}
+          />
+        )}
+
+        {stocked.map((aisle) => (
+          <ProductRow
+            key={aisle.id}
+            title={aisle.label}
+            products={aisle.products}
+            query={{ shop: "cosmetics", sort: "newest", aisle: aisle.id }}
+          />
+        ))}
+
+        {settled && stocked.length === 0 && offers.length === 0 && (
+          <p className="cos-empty">{t("cosmetics.empty")}</p>
+        )}
+
+        <CosmeticsLatestFeed />
       </PageContainer>
     </div>
   );

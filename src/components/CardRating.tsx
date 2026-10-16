@@ -10,16 +10,15 @@ type Props = {
   className?: string;
 };
 
-/** One-line star row for product cards; products without real reviews get grey stars + "No reviews yet". */
+/** One-line star row for product cards. Products without a real ratingSource show 5 filled stars. */
 export function CardRating({ product, showAverage = false, className = "" }: Props) {
   const { t, i18n } = useTranslation();
   const verified = getVerifiedRating(product);
 
   if (!verified) {
     return (
-      <div className={`card-rating card-rating--none ${className}`}>
-        <StarRating rating={0} size="xs" variant="brand" decorative />
-        <span className="card-rating-none">{t("productCard.noReviews")}</span>
+      <div className={`card-rating ${className}`}>
+        <StarRating rating={5} size="xs" variant="brand" />
       </div>
     );
   }

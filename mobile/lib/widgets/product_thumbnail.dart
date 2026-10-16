@@ -19,7 +19,7 @@ class ProductThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = resolveImageUrl(image);
+    final imageUrl = resolveImageUrl(image, width: imageWidthCard);
 
     if (imageUrl.isEmpty) {
       return SizedBox(
@@ -45,6 +45,7 @@ class ProductThumbnail extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: imageUrl,
         fit: fit,
+        filterQuality: FilterQuality.medium,
         width: size,
         height: size,
         // Width-only cache keeps aspect correct; height-only square decode can blank some assets.

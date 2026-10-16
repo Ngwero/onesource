@@ -8,10 +8,10 @@ import {
   normalizeCategoryId,
 } from "../db.js";
 import { listCategories } from "../lib/categoriesService.js";
-import { categoryMatchAliases } from "../data/categories.js";
+import { categoryMatchAliases, FRESH_SHOP_CATEGORY_IDS } from "../data/categories.js";
 import { withLocalProductFallback } from "../lib/localSeed.js";
 import { enrichProductsWithSuppliers } from "../lib/suppliersService.js";
-import { nestedAislePrefixes, productIdWithoutAisle } from "../lib/aisles.js";
+import { idPrefixUpperBound, nestedAislePrefixes, productIdWithoutAisle } from "../lib/aisles.js";
 import { productMatchesSearch, rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
 import { hasPublishedColumn } from "../lib/productColumns.js";
 import { dbErrorMessage, isStatementTimeoutError } from "../lib/supabaseErrors.js";
@@ -106,14 +106,17 @@ function parseListRequest(reqQuery) {
   const aisleRaw = String(reqQuery.aisle ?? "").trim().toLowerCase();
   const aisleId = aisleRaw.replace(/[^a-z0-9-]/g, "");
   const categoryId = category ? String(category) : "";
-  const cosmeticsOnly = shopRaw === "cosmetics" || categoryId === "cosmetics";
+  const pharmacyOnly = shopRaw === "pharmacy" || categoryId === "pharmacy";
+  const cosmeticsOnly = !pharmacyOnly && (shopRaw === "cosmetics" || categoryId === "cosmetics");
   const kitchenOnly =
+    !pharmacyOnly &&
     !cosmeticsOnly &&
     (shopRaw === "kitchen" ||
       Boolean(aisleId) ||
       categoryId === "kitchen-ware" ||
       categoryId === "kitchen-furniture");
   const freshOnly =
+    !pharmacyOnly &&
     !cosmeticsOnly &&
     !kitchenOnly &&
     (reqQuery.excludeKitchen === "1" ||
@@ -126,10 +129,11 @@ function parseListRequest(reqQuery) {
     supplierId: reqQuery.supplierId ?? reqQuery.supplier_id,
     search: reqQuery.q?.trim(),
     aisleId,
+    pharmacyOnly,
     cosmeticsOnly,
     kitchenOnly,
     freshOnly,
-    shopPrefix: cosmeticsOnly ? "cosmetics" : "kitchen",
+    shopPrefix: pharmacyOnly ? "pharmacy" : cosmeticsOnly ? "cosmetics" : "kitchen",
     // Local dev only: show hidden cosmetics before they go live.
     previewCosmetics: cosmeticsOnly && process.env.PREVIEW_COSMETICS === "1",
     list: listParams(reqQuery),
@@ -153,6 +157,10 @@ function applyListFilters(query, ctx, { publishedColumn }) {
     query = query.eq("in_stock", true).gt("stock_quantity", 0);
     if (publishedColumn) query = query.eq("published", true);
   }
+  // Filter before pagination so shelves, search, counts and offers agree.
+  if (ctx.pharmacyOnly && !ctx.admin) {
+    query = query.eq("details->pharmacyImageQuality->>status", "verified");
+  }
   if (ctx.category) {
     query = query.in("category", categoryMatchAliases(ctx.category));
   }
@@ -161,19 +169,25 @@ function applyListFilters(query, ctx, { publishedColumn }) {
   }
   // Keep the Fresh, Kitchen and Cosmetics catalogues from drowning each other out.
   if (ctx.freshOnly) {
-    query = query
-      .not("id", "like", "kitchen-%")
-      .not("id", "like", "cosmetics-%")
-      .not("category", "in", "(kitchen-ware,cosmetics)");
+    query = query.in("category", FRESH_SHOP_CATEGORY_IDS);
   } else if (ctx.aisleId) {
-    query = query.like("id", `${ctx.shopPrefix}-${ctx.aisleId}-%`);
+    const prefix = `${ctx.shopPrefix}-${ctx.aisleId}-`;
+    query = query.gte("id", prefix).lt("id", idPrefixUpperBound(prefix));
     for (const nested of nestedAislePrefixes(ctx.shopPrefix, ctx.aisleId)) {
       query = query.not("id", "like", `${nested}%`);
     }
+  } else if (ctx.pharmacyOnly && !ctx.category) {
+    // Primary-key range. `id LIKE 'pharmacy-%'` plus a sort scans the whole table.
+    const prefix = "pharmacy-";
+    query = query.gte("id", prefix).lt("id", idPrefixUpperBound(prefix));
   } else if (ctx.cosmeticsOnly && !ctx.category) {
-    query = query.or("id.like.cosmetics-%,category.eq.cosmetics");
+    // Same as pharmacy: `id LIKE 'cosmetics-%' OR category = cosmetics` is a
+    // sequential scan and is cancelled after most of the ~18k rows.
+    const prefix = "cosmetics-";
+    query = query.gte("id", prefix).lt("id", idPrefixUpperBound(prefix));
   } else if (ctx.kitchenOnly && !ctx.category) {
-    query = query.like("id", "kitchen-%");
+    const prefix = "kitchen-";
+    query = query.gte("id", prefix).lt("id", idPrefixUpperBound(prefix));
   }
   if (ctx.search) {
     const orFilter = buildSearchOrFilter(ctx.search);
@@ -182,7 +196,7 @@ function applyListFilters(query, ctx, { publishedColumn }) {
   return query;
 }
 
-/** Columns a product card needs; `details` is reduced to the one key cards read. */
+/** Columns a product card needs; `details` is reduced to rating source and brand. */
 const CARD_COLUMNS = [
   "id",
   "title",
@@ -202,15 +216,18 @@ const CARD_COLUMNS = [
 
 function cardSelect(publishedColumn) {
   return publishedColumn
-    ? [...CARD_COLUMNS, "published", "ratingSource:details->>ratingSource"].join(",")
+    ? [...CARD_COLUMNS, "published", "ratingSource:details->>ratingSource", "brand:details->>brand"].join(",")
     : CARD_COLUMNS.join(",");
 }
 
 function cardRowToProduct(row) {
-  const { ratingSource, ...rest } = row;
+  const { ratingSource, brand, ...rest } = row;
   const product = rowToProduct(rest);
   product.description = "";
-  product.details = ratingSource ? { ratingSource } : {};
+  const details = {};
+  if (ratingSource) details.ratingSource = ratingSource;
+  if (typeof brand === "string" && brand.trim()) details.brand = brand.trim();
+  product.details = details;
   return product;
 }
 
@@ -261,10 +278,23 @@ function createSwrCache({ freshMs, staleMs, max }) {
       entries.set(key, entry);
       return refresh(key, entry, load);
     },
+    /** Cached value, if it is still inside the stale window. Does not start a load. */
+    peek(key) {
+      const entry = entries.get(key);
+      if (!entry || entry.value === undefined) return undefined;
+      if (entry.freshUntil + staleMs < Date.now()) return undefined;
+      return entry.value;
+    },
     clear() {
       entries.clear();
     },
   };
+}
+
+/** Whole-shop counts scan tens of thousands of rows and must not run on first paint. */
+function countIsBroad(ctx) {
+  if (ctx.aisleId || ctx.category || ctx.supplierId || ctx.search) return false;
+  return ctx.freshOnly || ctx.pharmacyOnly || ctx.cosmeticsOnly || ctx.kitchenOnly;
 }
 
 /** Exact match counts per filter set; counting ~25k rows on every page was the slow part. */
@@ -297,11 +327,13 @@ function fallbackOptions(ctx, extra = {}) {
     aisle: ctx.aisleId || undefined,
     shop: ctx.freshOnly
       ? "fresh"
-      : ctx.cosmeticsOnly
-        ? "cosmetics"
-        : ctx.kitchenOnly
-          ? "kitchen"
-          : undefined,
+      : ctx.pharmacyOnly
+        ? "pharmacy"
+        : ctx.cosmeticsOnly
+          ? "cosmetics"
+          : ctx.kitchenOnly
+            ? "kitchen"
+            : undefined,
     ...ctx.list,
     ...extra,
   };
@@ -309,17 +341,52 @@ function fallbackOptions(ctx, extra = {}) {
 
 /** PostgREST returns at most this many rows per request (Supabase default `max-rows`). */
 const MAX_ROWS = 1000;
-const CARD_COUNT_WAIT_MS = 1500;
 
-/** `promise`'s value, or null if it hasn't settled within `ms`. */
-function withinMs(promise, ms) {
-  let timer;
-  return Promise.race([
-    promise,
-    new Promise((resolve) => {
-      timer = setTimeout(() => resolve(null), ms);
-    }),
-  ]).finally(() => clearTimeout(timer));
+/** Fresh is a few hundred rows spread across produce categories. One `category IN (...)`
+ *  plus a sort is cancelled at ~8s; each category alone is an index lookup. */
+const freshRowsCache = createSwrCache({ freshMs: 30 * 1000, staleMs: 2 * 60 * 1000, max: 30 });
+
+function sortListedProducts(products, sort) {
+  const idOrder = (a, b) => String(a.id).localeCompare(String(b.id));
+  return [...products].sort((a, b) => {
+    if (sort === "price-asc") return a.price - b.price || idOrder(a, b);
+    if (sort === "price-desc") return b.price - a.price || idOrder(a, b);
+    if (sort === "name") return String(a.title).localeCompare(String(b.title)) || idOrder(a, b);
+    if (sort === "top") {
+      const reviews = (b.reviewCount ?? -1) - (a.reviewCount ?? -1);
+      if (reviews) return reviews;
+      const rating = (b.rating ?? -1) - (a.rating ?? -1);
+      if (rating) return rating;
+      return idOrder(a, b);
+    }
+    const created = new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    return created || idOrder(a, b);
+  });
+}
+
+async function loadFreshProducts(db, ctx, { card, publishedColumn }) {
+  const columns = card ? cardSelect(publishedColumn) : "*";
+  const { list, admin } = ctx;
+  const batches = await Promise.all(
+    FRESH_SHOP_CATEGORY_IDS.map(async (category) => {
+      let query = db.from("products").select(columns).eq("category", category);
+      if (list.sale) query = query.not("original_price", "is", null);
+      if (list.prime) query = query.eq("prime", true);
+      if (list.titlePrefixes.length) {
+        const prefixFilter = titlePrefixOrFilter(list.titlePrefixes);
+        if (prefixFilter) query = query.or(prefixFilter);
+      }
+      if (!admin && !ctx.previewCosmetics) {
+        query = query.eq("in_stock", true).gt("stock_quantity", 0);
+        if (publishedColumn) query = query.eq("published", true);
+      }
+      if (ctx.supplierId) query = query.eq("supplier_id", ctx.supplierId);
+      const { data, error } = await query.limit(1000);
+      if (error) throw error;
+      return data ?? [];
+    })
+  );
+  return batches.flat().map(card ? cardRowToProduct : rowToProduct);
 }
 
 async function loadListPage(ctx, { page, pageSize, card }) {
@@ -328,6 +395,30 @@ async function loadListPage(ctx, { page, pageSize, card }) {
     async () => {
       const db = requireSupabase();
       const publishedColumn = await hasPublishedColumn(db);
+
+      // The whole Fresh catalogue is small enough to merge in memory. This avoids
+      // the shop-wide scan that Supabase cancels.
+      if (ctx.freshOnly && !ctx.category && !ctx.aisleId) {
+        const cacheKey = JSON.stringify([listFilterKey(ctx), card && !search]);
+        const all = await freshRowsCache.get(cacheKey, () =>
+          loadFreshProducts(db, ctx, { card: card && !search, publishedColumn })
+        );
+        let products = all.filter((p) => matchesListParams(p, list));
+        if (search) {
+          products = products.filter((p) => productMatchesSearch(p, search));
+          if (list.sort === "newest") products = rankSearchResults(products, search);
+          else products = sortListedProducts(products, list.sort);
+        } else {
+          products = sortListedProducts(products, list.sort);
+        }
+        const from = page * pageSize;
+        const pageRows = products.slice(from, from + pageSize);
+        return {
+          products: await enrichProductsWithSuppliers(db, pageRows, { admin }),
+          total: products.length,
+          hasMore: from + pageSize < products.length,
+        };
+      }
 
       if (search) {
         const from = page * pageSize;
@@ -355,21 +446,27 @@ async function loadListPage(ctx, { page, pageSize, card }) {
 
       // One extra row tells us whether another page exists without counting every match.
       const from = page * pageSize;
+      // Ranking every live pharmacy/kitchen/cosmetics row by reviews has no
+      // supporting index and is cancelled around 8s. Newest-first stays on created_at.
+      const sort = countIsBroad(ctx) && list.sort === "top" ? "newest" : list.sort;
       const pageQuery = applyListFilters(
-        applySort(db.from("products").select(card ? cardSelect(publishedColumn) : "*"), list.sort),
+        applySort(db.from("products").select(card ? cardSelect(publishedColumn) : "*"), sort),
         ctx,
         { publishedColumn }
       ).range(from, from + pageSize);
 
-      // Web card listings page by `hasMore` and never show `total`, so a cold count
-      // (a full scan) must not hold the page; it keeps filling the cache meanwhile.
-      // Other clients (the mobile app shows totals) still wait for the exact count.
-      const countPromise = listingCount(db, ctx, publishedColumn).catch(() => null);
-      const [{ data, error }, count] = await Promise.all([
-        pageQuery,
-        card ? withinMs(countPromise, CARD_COUNT_WAIT_MS) : countPromise,
-      ]);
+      // `hasMore` is the pagination flag. An exact count of a whole shop (Fresh,
+      // Pharmacy, …) is a second full scan and must not share this request.
+      // Aisle counts fill the cache after the page is already in hand.
+      const filterKey = listFilterKey(ctx);
+      let count = countCache.peek(filterKey);
+      const { data, error } = await pageQuery;
       if (error) throw error;
+      if (count == null && ctx.admin) {
+        count = await listingCount(db, ctx, publishedColumn).catch(() => null);
+      } else if (count == null && !countIsBroad(ctx)) {
+        listingCount(db, ctx, publishedColumn).catch(() => {});
+      }
 
       const rows = data ?? [];
       const pageRows = rows.slice(0, pageSize);
@@ -469,6 +566,7 @@ function listFilterKey(ctx) {
   return JSON.stringify([
     ctx.admin,
     ctx.previewCosmetics,
+    ctx.pharmacyOnly,
     ctx.cosmeticsOnly,
     ctx.kitchenOnly,
     ctx.freshOnly,

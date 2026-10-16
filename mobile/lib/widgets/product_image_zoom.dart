@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,10 @@ import 'product_thumbnail.dart';
 const double _kViewerMaxScale = 4;
 const double _kViewerMinScale = 0.8;
 const double _kDoubleTapScale = 2.5;
+
+/// Soft charcoal behind the photo. It only shows when the stage is pulled
+/// away; at rest the light stage fills the screen.
+const Color _kScrim = Color(0xFF1A1C1B);
 
 String productImageHeroTag(String base, int index) => '$base-$index';
 
@@ -61,12 +67,15 @@ Future<void> openProductImageViewer(
   int initialIndex = 0,
   String? heroTag,
 }) {
-  final urls = images.map(resolveImageUrl).where((u) => u.isNotEmpty).toList();
+  final urls = images
+      .map((src) => resolveImageUrl(src, width: imageWidthDetail))
+      .where((u) => u.isNotEmpty)
+      .toList();
   if (urls.isEmpty) return Future.value();
   return Navigator.of(context).push(
     PageRouteBuilder<void>(
       opaque: true,
-      barrierColor: Colors.black,
+      barrierColor: _kScrim,
       transitionDuration: const Duration(milliseconds: 240),
       reverseTransitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (_, __, ___) => ProductImageViewer(
@@ -92,18 +101,29 @@ Future<void> openProductImageViewer(
 /// Full-resolution product image; identical params everywhere so the inline
 /// image and the viewer share one memory-cache entry (no flash on Hero flight).
 class ProductHiResImage extends StatelessWidget {
-  const ProductHiResImage({super.key, required this.url, this.memCacheWidth});
+  const ProductHiResImage({
+    super.key,
+    required this.url,
+    this.memCacheWidth,
+    this.width = double.infinity,
+    this.height = double.infinity,
+  });
 
   final String url;
   final int? memCacheWidth;
+
+  /// Finite viewport size in the full-screen viewer. `double.infinity` is only
+  /// safe inside an already tight box (the product photo).
+  final double width;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.contain,
-      width: double.infinity,
-      height: double.infinity,
+      width: width,
+      height: height,
       memCacheWidth: memCacheWidth,
       fadeInDuration: const Duration(milliseconds: 150),
       placeholder: (_, __) => const Center(
@@ -263,7 +283,9 @@ class _ZoomableProductImageState extends State<ZoomableProductImage>
   @override
   Widget build(BuildContext context) {
     final url =
-        widget.images.isEmpty ? '' : resolveImageUrl(widget.images.first);
+        widget.images.isEmpty
+            ? ''
+            : resolveImageUrl(widget.images.first, width: imageWidthDetail);
     if (url.isEmpty) {
       return ProductThumbnail(image: '', size: widget.size);
     }
@@ -337,20 +359,24 @@ class ProductCardZoomButton extends StatelessWidget {
       return const SizedBox.shrink();
     }
     return Material(
-      color: AppColors.darkGreen,
-      elevation: 2,
-      shadowColor: Colors.black26,
-      shape: const CircleBorder(),
+      color: const Color(0xF7FAF9F6),
+      elevation: 1,
+      shadowColor: const Color(0x29000000),
+      shape: CircleBorder(
+        side: BorderSide(
+            color: AppColors.darkGreen.withValues(alpha: 0.35), width: 1),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => openProductImageViewer(context, images: images),
+        customBorder: const CircleBorder(),
         child: Semantics(
           button: true,
           label: _tapToZoomLabel(context),
           child: const SizedBox(
-            width: 36,
-            height: 36,
-            child: Icon(Icons.zoom_in_rounded, color: Colors.white, size: 20),
+            width: 32,
+            height: 32,
+            child: Icon(Icons.zoom_in_rounded, color: AppColors.ink, size: 17),
           ),
         ),
       ),
@@ -358,7 +384,7 @@ class ProductCardZoomButton extends StatelessWidget {
   }
 }
 
-/// Dark "Tap to zoom" bar shown across the bottom of the product photo.
+/// Small frosted "Tap to zoom" pill on the product photo.
 class ProductZoomHintBadge extends StatelessWidget {
   const ProductZoomHintBadge({super.key, this.onTap});
 
@@ -366,39 +392,116 @@ class ProductZoomHintBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bar = DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.darkGreen,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white, width: 1.5),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x73000000), blurRadius: 12, offset: Offset(0, 3)),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.zoom_in_rounded, size: 20, color: Colors.white),
-            const SizedBox(width: 6),
-            Text(
-              _tapToZoomLabel(context),
-              style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  height: 1.1),
+    final pill = ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: const Color(0xD4FAF9F6),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0x99FFFFFF)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.zoom_in_rounded,
+                    size: 15, color: AppColors.darkGreen),
+                const SizedBox(width: 5),
+                Text(
+                  _tapToZoomLabel(context),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.ink,
+                    height: 1.1,
+                    letterSpacing: 0.1,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
-    if (onTap == null) return bar;
+    if (onTap == null) return pill;
     return Material(
       color: Colors.transparent,
-      child: InkWell(onTap: onTap, child: bar),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: pill,
+      ),
+    );
+  }
+}
+
+class _FrostedCircleButton extends StatelessWidget {
+  const _FrostedCircleButton({
+    required this.label,
+    required this.onTap,
+    required this.child,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipOval(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Material(
+          color: const Color(0xC7FAF9F6),
+          shape: const CircleBorder(
+            side: BorderSide(color: Color(0x73FFFFFF), width: 0.6),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            customBorder: const CircleBorder(),
+            child: Semantics(
+              button: true,
+              label: label,
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Center(child: child),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FrostedPill extends StatelessWidget {
+  const _FrostedPill({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: const Color(0xB8FAF9F6),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0x66FFFFFF), width: 0.6),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: child,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -466,9 +569,9 @@ class _ProductImageViewerState extends State<ProductImageViewer>
     final bgOpacity = 1 - (_dragDy.abs() / 400).clamp(0.0, 0.7);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: Colors.black.withValues(alpha: bgOpacity),
+        backgroundColor: _kScrim.withValues(alpha: bgOpacity),
         body: SizedBox.expand(
           child: Stack(
             fit: StackFit.expand,
@@ -509,91 +612,51 @@ class _ProductImageViewerState extends State<ProductImageViewer>
               ),
               Positioned(
                 top: 0,
-                left: 0,
                 right: 0,
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Row(
-                      children: [
-                        if (count > 1)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.55),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '${_index + 1} / $count',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13),
-                            ),
-                          ),
-                        const Spacer(),
-                        Material(
-                          color: Colors.white,
-                          elevation: 4,
-                          shadowColor: Colors.black54,
-                          borderRadius: BorderRadius.circular(24),
-                          child: InkWell(
-                            onTap: () => Navigator.of(context).maybePop(),
-                            borderRadius: BorderRadius.circular(24),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.close_rounded,
-                                      color: AppColors.ink, size: 22),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    s.get('common.close', fallback: 'Close'),
-                                    style: const TextStyle(
-                                      color: AppColors.ink,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                    child: _FrostedCircleButton(
+                      label: s.get('common.close', fallback: 'Close'),
+                      onTap: () => Navigator.of(context).maybePop(),
+                      child: const Icon(Icons.close_rounded,
+                          color: AppColors.ink, size: 20),
                     ),
                   ),
                 ),
               ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: SafeArea(
-                  top: false,
-                  child: IgnorePointer(
-                    child: AnimatedOpacity(
-                      opacity: _zoomed || _dragDy != 0 ? 0 : 1,
-                      duration: const Duration(milliseconds: 180),
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Text(
-                          s.get('app.product.zoomHint',
-                              fallback: 'Pinch or double-tap to zoom'),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.92),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700),
+              if (count > 1)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SafeArea(
+                    top: false,
+                    child: IgnorePointer(
+                      child: AnimatedOpacity(
+                        opacity: _zoomed || _dragDy != 0 ? 0 : 1,
+                        duration: const Duration(milliseconds: 160),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 18),
+                          child: Center(
+                            child: _FrostedPill(
+                              child: Text(
+                                '${_index + 1} / $count',
+                                style: const TextStyle(
+                                  color: AppColors.ink,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                  letterSpacing: 0.2,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -644,7 +707,7 @@ class _ZoomPageState extends State<_ZoomPage>
   void initState() {
     super.initState();
     _anim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 240))
+        vsync: this, duration: const Duration(milliseconds: 180))
       ..addListener(_tick);
   }
 
@@ -678,7 +741,7 @@ class _ZoomPageState extends State<_ZoomPage>
   }
 
   void _tick() {
-    final t = Curves.easeOutCubic.transform(_anim.value);
+    final t = Curves.easeOut.transform(_anim.value);
     _scale = _fromScale + (_toScale - _fromScale) * t;
     _translate = Offset.lerp(_fromTranslate, _toTranslate, t)!;
     _publish();
@@ -753,10 +816,26 @@ class _ZoomPageState extends State<_ZoomPage>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        _viewport = constraints.biggest;
-        Widget image = ColoredBox(
-          color: Colors.black,
-          child: ProductHiResImage(url: widget.url),
+        final media = MediaQuery.sizeOf(context);
+        final width =
+            constraints.maxWidth.isFinite ? constraints.maxWidth : media.width;
+        final height = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : media.height;
+        _viewport = Size(width, height);
+        // Explicit viewport size. A shrink-wrapped image collapses to the
+        // placeholder (~54px) and sits on an empty scrim.
+        Widget image = SizedBox(
+          width: width,
+          height: height,
+          child: ColoredBox(
+            color: AppColors.surface,
+            child: ProductHiResImage(
+              url: widget.url,
+              width: width,
+              height: height,
+            ),
+          ),
         );
         if (widget.heroTag != null) {
           image = Hero(tag: widget.heroTag!, child: image);

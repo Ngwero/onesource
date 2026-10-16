@@ -248,7 +248,34 @@ body {
     background: #6f2f4f;
   }
 
-  /* Fresh | Kitchen | Cosmetics shop switcher */
+  .site-header--pharmacy {
+    background: linear-gradient(
+      180deg,
+      rgba(226, 242, 234, 0.98) 0%,
+      rgba(255, 255, 255, 0.96) 72%
+    );
+  }
+
+  .site-header--pharmacy.site-header--scrolled {
+    background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  }
+
+  .site-header--pharmacy .site-shop-switch.is-active,
+  .site-header--pharmacy .site-header-chip.is-active {
+    background: #1f6b4a;
+    color: #fff;
+    box-shadow: 0 4px 14px -6px rgba(31, 107, 74, 0.55);
+  }
+
+  .site-header--pharmacy .site-header-shop-badge {
+    color: #1f6b4a;
+  }
+
+  .site-header--pharmacy .site-header-nav-scope {
+    background: #14543a;
+  }
+
+  /* Fresh | Kitchen | Cosmetics | Pharmacy shop switcher */
   .site-shop-switcher {
     display: flex;
     flex-wrap: wrap;
@@ -269,9 +296,9 @@ body {
 
   .site-shop-switcher-track {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.35rem;
-    width: min(100%, 46rem);
+    width: min(100%, 62rem);
     padding: 0.25rem;
     border-radius: 0.9rem;
     background: rgba(15, 23, 42, 0.05);
@@ -9597,6 +9624,224 @@ body {
   object-fit: cover;
 }
 
+/* Pharmacy shots are square product photos. Fill a large frame with
+   contain so a small source file is shown bigger without cropping. */
+.cos-card--shelf .cos-card-image {
+  aspect-ratio: 1 / 1;
+}
+
+.cos-card--shelf .cos-card-image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Pharmacy home: calm green editorial hero with real catalogue photography. */
+.pharmacy-home {
+  background: linear-gradient(180deg, #f0f6f1 0, #fff 42rem);
+}
+
+.pharmacy-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #d9e6da;
+  border-radius: 1.5rem;
+  background: #eaf2e7;
+  color: #183d32;
+  isolation: isolate;
+}
+
+.pharmacy-hero-main {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  min-height: 440px;
+}
+
+.pharmacy-hero-copy {
+  position: relative;
+  z-index: 2;
+  padding: clamp(2rem, 4vw, 4.5rem);
+  padding-right: 0;
+  align-self: center;
+}
+
+.pharmacy-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 0 1.5rem;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.pharmacy-hero-eyebrow > span {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: #255b46;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.pharmacy-hero-title {
+  margin: 0;
+  font-size: clamp(2.5rem, 4.5vw, 4.7rem);
+  font-weight: 750;
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.pharmacy-hero-title > span { color: #52765c; }
+
+.pharmacy-hero-description {
+  max-width: 28rem;
+  margin: 1.35rem 0 1.8rem;
+  color: #4a6254;
+  font-size: clamp(0.95rem, 1.15vw, 1.05rem);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.pharmacy-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1.5rem; }
+.pharmacy-hero-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  min-height: 48px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.pharmacy-hero-shop { padding: 0.9rem 1.3rem; border-radius: 0.5rem; background: #24543f; color: #fff; }
+.pharmacy-hero-shop:hover { background: #173c2c; }
+.pharmacy-hero-offers { padding: 0.75rem 0; color: #244b39; }
+.pharmacy-hero-offers:hover { text-decoration: underline; text-underline-offset: 5px; }
+.pharmacy-hero a:focus-visible { outline: 3px solid #276d53; outline-offset: 5px; }
+
+.pharmacy-hero-visual {
+  position: relative;
+  min-width: 0;
+  min-height: 440px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 52% 58%, #fcfcf0 0, #eff4df 35%, transparent 68%);
+}
+.pharmacy-hero-orbit {
+  position: absolute;
+  width: 85%;
+  aspect-ratio: 1;
+  top: 12%;
+  left: 8%;
+  border: 1px solid #b6c9aa80;
+  border-radius: 50%;
+}
+.pharmacy-hero-orbit::after { content: ""; position: absolute; inset: 7%; border: 1px solid #b6c9aa55; border-radius: 50%; }
+.pharmacy-hero-plus { position: absolute; top: 13%; right: 13%; color: #80a67a; font-size: 3rem; font-weight: 300; line-height: 1; transform: rotate(12deg); }
+.pharmacy-hero-caption { position: absolute; top: 5%; left: 11%; z-index: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+.pharmacy-hero-caption > span { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #5d785d; }
+.pharmacy-hero-caption strong { font-family: Georgia, serif; font-size: 1.45rem; font-weight: 400; font-style: italic; }
+.pharmacy-hero-pedestal { position: absolute; bottom: 13%; left: 12%; width: 78%; height: 16%; border-radius: 50%; background: linear-gradient(180deg, #dce7c9, #c6d5ae); box-shadow: 0 20px 32px -17px #45684145; }
+.pharmacy-hero-product { position: absolute; object-fit: contain; height: auto; mix-blend-mode: multiply; filter: drop-shadow(0 12px 6px #37532e19); }
+.pharmacy-hero-product--vitamins { width: 44%; left: 0; bottom: 17%; transform: rotate(-10deg); z-index: 2; }
+.pharmacy-hero-product--care { width: 50%; left: 27%; bottom: 18%; z-index: 1; transform: rotate(3deg); }
+.pharmacy-hero-product--aid { width: 39%; right: -1%; bottom: 15%; transform: rotate(8deg); z-index: 3; }
+.pharmacy-hero-note { position: absolute; bottom: 5%; left: 12%; width: 78%; text-align: center; font-size: 0.65rem; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase; color: #577051; }
+
+
+@media (min-width: 1600px) {
+  .pharmacy-hero-main { min-height: 500px; }
+}
+
+@media (max-width: 767px) {
+  .pharmacy-hero { border-radius: 1rem; }
+  .pharmacy-hero-main { grid-template-columns: 1fr; }
+  .pharmacy-hero-copy { padding: 1.7rem 1.5rem 0; }
+  .pharmacy-hero-eyebrow { margin-bottom: 1.15rem; font-size: 0.65rem; }
+  .pharmacy-hero-title { font-size: clamp(2.35rem, 8.5vw, 3.7rem); }
+  .pharmacy-hero-description { margin: 1.1rem 0 1.3rem; max-width: 34rem; }
+  .pharmacy-hero-actions { gap: 0.5rem 1.2rem; }
+  .pharmacy-hero-actions a { gap: 0.65rem; font-size: 0.8rem; }
+  .pharmacy-hero-visual { min-height: 0; height: clamp(275px, 74vw, 400px); max-width: 520px; width: 100%; justify-self: center; }
+  .pharmacy-hero-caption { top: 3%; left: 7%; }
+  .pharmacy-hero-caption strong { font-size: 1.15rem; }
+  .pharmacy-hero-caption > span { font-size: 0.5rem; }
+  .pharmacy-hero-plus { top: 8%; right: 11%; font-size: 2.3rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pharmacy-hero a { transition: none; }
+}
+
+/* Pharmacy carousel: slides share a stable track height. */
+.pharmacy-hero-viewport { overflow: hidden; touch-action: pan-y pinch-zoom; }
+.pharmacy-hero-track { display: flex; align-items: stretch; transition: transform 550ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+.pharmacy-hero-slide { flex: 0 0 100%; min-width: 0; }
+.pharmacy-hero-slide--vitamins { background: #f4efde; }
+.pharmacy-hero-slide--first-aid { background: #e7f1f3; }
+.pharmacy-hero-slide--vitamins .pharmacy-hero-visual { background: radial-gradient(ellipse at 52% 58%, #fffaf0, transparent 70%); }
+.pharmacy-hero-slide--first-aid .pharmacy-hero-visual { background: radial-gradient(ellipse at 52% 58%, #faffff, transparent 70%); }
+.pharmacy-hero-product--featured { width: 50%; left: 27%; bottom: 18%; transform: rotate(-5deg); }
+.pharmacy-hero-slide--first-aid .pharmacy-hero-pedestal { background: linear-gradient(180deg, #d4e6e9, #b9d2d8); }
+.pharmacy-hero-slide--vitamins .pharmacy-hero-pedestal { background: linear-gradient(180deg, #e8dfc6, #d7c79e); }
+.pharmacy-hero-rotation { position: absolute; top: 0.75rem; right: 0.75rem; z-index: 4; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #cddbcc; border-radius: 50%; background: #f7faf3e6; color: #244b39; cursor: pointer; }
+.pharmacy-hero-rotation:hover { background: #e3eddc; }
+.pharmacy-hero-rotation:focus-visible { outline: 3px solid #276d53; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .pharmacy-hero-track { transition: none; }
+}
+
+/* Pharmacy shelves and grids show six products on desktop. */
+.pharm-photos .cos-hrow-wrap {
+  --cos-hrow-visible: 1.55;
+}
+
+.pharm-photos .cos-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pharm-photos .cos-hrow-skeleton .kitchen-shelf-skeleton-media {
+  aspect-ratio: 1 / 1;
+}
+
+@media (min-width: 768px) {
+  .pharm-photos .cos-hrow-wrap {
+    --cos-hrow-visible: 2.4;
+  }
+
+  .pharm-photos .cos-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .pharm-photos .cos-hrow-wrap {
+    --cos-hrow-visible: 3.15;
+  }
+}
+
+@media (min-width: 1280px) {
+  .pharm-photos .cos-hrow-wrap {
+    --cos-hrow-gap: 1.1rem;
+    --cos-hrow-visible: 6;
+  }
+
+  .pharm-photos .cos-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
 .cos-card:hover .cos-card-image img {
   transform: scale(1.05);
 }
@@ -9651,6 +9896,18 @@ body {
   }
 }
 
+.cos-card-brand {
+  display: block;
+  margin-top: 0.7rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: #565959;
+}
+
+.cos-card-brand:hover {
+  text-decoration: underline;
+}
+
 .cos-card-name {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -9695,6 +9952,84 @@ body {
   color: #d8381f;
 }
 
+.cos-card-fact {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: #565959;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cos-card-fact.is-stock {
+  color: #067d62;
+}
+
+.cos-card-fact.is-out {
+  color: #b12704;
+}
+
+.cos-card--cart-below .cos-card-brand + .cos-card-name {
+  margin-top: 0.15rem;
+  -webkit-line-clamp: 2;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.cos-card--cart-below .cos-card-name {
+  -webkit-line-clamp: 2;
+}
+
+.cos-card--cart-below .cos-card-price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #0f1111;
+}
+
+.cos-card--cart-below .cos-card-price .is-sale {
+  color: #0f1111;
+}
+
+.cos-card--cart-below .cos-card-price s {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: #565959;
+  text-decoration: line-through;
+  text-decoration-color: #565959;
+}
+
+.cos-card--cart-below .cos-card-add {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  align-self: flex-start;
+  width: 50%;
+  margin-top: 0.75rem;
+  padding: 0.45rem 0.65rem;
+  background: #2e5e4a;
+  color: #fff;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  white-space: normal;
+  opacity: 1;
+  transform: none;
+}
+
+.cos-card--cart-below .cos-card-add:hover:not(:disabled) {
+  background: #244a3b;
+}
+
+@media (hover: hover) {
+  .cos-card--cart-below .cos-card-add,
+  .cos-card--cart-below:hover .cos-card-add {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (max-width: 767px) {
   .cos-card-name {
     font-size: 0.875rem;
@@ -9706,6 +10041,41 @@ body {
     opacity: 1;
     transform: none;
   }
+  .cos-card--cart-below .cos-card-add.cos-card-add {
+    align-self: flex-start;
+    width: 50%;
+    margin-top: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pdp-page--cosmetics .pdp-hero-grid {
+    grid-template-columns: minmax(0, 34%) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .pdp-page--cosmetics .pdp-hero-grid {
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  }
+}
+
+.pdp-page--cosmetics .pdp-center-col .pdp-buy-panel {
+  position: static;
+  margin-top: 1rem;
+}
+
+.pdp-page--cosmetics .pdp-btn-cart {
+  align-self: flex-start;
+  width: 50%;
+  background: #2e5e4a;
+  border-color: #2e5e4a;
+  color: #fff;
+}
+
+.pdp-page--cosmetics .pdp-btn-cart:hover:not(:disabled) {
+  background: #244a3b;
+  border-color: #244a3b;
 }
 
 /* Listing */
@@ -9810,6 +10180,16 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem;
+}
+
+.cos-cat-more {
+  margin: 0.85rem 0 0;
+  font-size: 0.92rem;
+}
+
+.cos-cat-more a {
+  font-weight: 700;
+  color: #1f6b4a;
 }
 
 @media (min-width: 768px) {

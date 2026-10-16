@@ -179,6 +179,8 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
                   PopularProductSliverGrid(
                     products: products,
                     onAdd: (p) => addToCartWithFeedback(context, ref, p),
+                    addBelow: true,
+                    mainAxisExtent: 348,
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                   ),
                 if (!state.isInitialLoading)

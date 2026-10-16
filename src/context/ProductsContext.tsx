@@ -31,7 +31,8 @@ const SHOPS: ProductShop[] = ["fresh", "kitchen", "cosmetics"];
 const FIRST_BATCH_SIZE = 48;
 const BY_ID_CONCURRENCY = 6;
 
-function shopOfProductId(id: string): ProductShop {
+function shopOfProductId(id: string): ProductShop | "pharmacy" {
+  if (id.startsWith("pharmacy-")) return "pharmacy";
   if (id.startsWith("kitchen-")) return "kitchen";
   if (id.startsWith("cosmetics-")) return "cosmetics";
   return "fresh";
@@ -211,7 +212,8 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
   const getProductById = useCallback(
     (id: string) => {
       if (byId[id]) return byId[id];
-      if (!complete[shopOfProductId(id)]) return undefined;
+      const shop = shopOfProductId(id);
+      if (shop === "pharmacy" || !complete[shop]) return undefined;
       return products.find((p) => p.id === id);
     },
     [products, byId, complete]

@@ -38,7 +38,13 @@ export function MobileBottomNav() {
   const { itemCount, openBasket, items: cartItems } = useCart();
   const shopMode = shopModeForPath(pathname);
   const specialtyBase =
-    shopMode === "kitchen" ? "/kitchen" : shopMode === "cosmetics" ? "/cosmetics" : null;
+    shopMode === "kitchen"
+      ? "/kitchen"
+      : shopMode === "cosmetics"
+        ? "/cosmetics"
+        : shopMode === "pharmacy"
+          ? "/pharmacy"
+          : null;
 
   const accountTo = user ? "/account" : "/login";
   const accountState = user ? undefined : { from: "/account" };
@@ -59,7 +65,9 @@ export function MobileBottomNav() {
           ? t("nav.kitchen")
           : shopMode === "cosmetics"
             ? t("nav.cosmetics")
-            : t("common.home"),
+            : shopMode === "pharmacy"
+              ? t("nav.pharmacy")
+              : t("common.home"),
       to: specialtyBase ?? "/",
       match: (p) => p === (specialtyBase ?? "/"),
       icon: (active) => (
