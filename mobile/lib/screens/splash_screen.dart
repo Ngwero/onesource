@@ -70,10 +70,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Preferred handoff (onboarding or home). The unconditional exit is
     // SplashDeadline, armed in main() before runApp — this element must not
     // be the only clock, and it must not start plugins before the first frame.
-    _auto = Timer(const Duration(milliseconds: 1500), () {
+    _auto = Timer(const Duration(milliseconds: 650), () {
       unawaited(_leave());
     });
-    _fallback = Timer(const Duration(seconds: 3), () {
+    _fallback = Timer(const Duration(milliseconds: 1500), () {
       unawaited(_leave(forceHome: true, fromHard: true));
     });
   }
@@ -122,7 +122,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     var home = forceHome;
     if (!home) {
       try {
-        home = await isOnboardingDone().timeout(const Duration(milliseconds: 800));
+        home =
+            await isOnboardingDone().timeout(const Duration(milliseconds: 500));
       } catch (e) {
         debugPrint('[OneSource] onboarding prefs failed: $e');
         home = true;
@@ -244,7 +245,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                       ),
                       const SizedBox(height: 28),
-                      const BrandLoader(size: 44, onDark: true, excludeSemantics: true),
+                      const BrandLoader(
+                          size: 44, onDark: true, excludeSemantics: true),
                     ],
                   ),
                 ),

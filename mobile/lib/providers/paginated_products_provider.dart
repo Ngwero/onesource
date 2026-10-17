@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/product.dart';
 import '../services/api_client.dart';
@@ -31,7 +35,8 @@ class ProductsQuery {
   /// Server sort: `newest` (default when null), `top`, `price-asc`, `price-desc`, `name`.
   final String? sort;
 
-  ProductsQuery copyWith({bool? sale, bool? prime, String? sort, bool clearSort = false}) {
+  ProductsQuery copyWith(
+      {bool? sale, bool? prime, String? sort, bool clearSort = false}) {
     return ProductsQuery(
       categoryId: categoryId,
       shop: shop,
@@ -99,8 +104,11 @@ class PaginatedProductsState {
   }
 }
 
-class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, ProductsQuery> {
+class PaginatedProductsNotifier
+    extends FamilyNotifier<PaginatedProductsState, ProductsQuery> {
   static const pageSize = 48;
+  static const _cachePrefix = 'onesource.catalog.v2:';
+  static const _cacheMaxAge = Duration(days: 7);
 
   /// Pages fetched back-to-back in one [loadMore] when they add no new items
   /// (search relevance filtering or client-side shop filtering on older APIs).
@@ -113,8 +121,70 @@ class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, P
 
   @override
   PaginatedProductsState build(ProductsQuery arg) {
-    Future.microtask(loadFirst);
+    Future.microtask(_loadFirstWithCache);
     return const PaginatedProductsState(isInitialLoading: true);
+  }
+
+  String get _cacheKey => '$_cachePrefix${jsonEncode({
+            'category': arg.categoryId,
+            'shop': arg.shop,
+            'aisle': arg.aisle,
+            'sale': arg.sale,
+            'prime': arg.prime,
+            'sort': arg.sort,
+          })}';
+
+  Future<PaginatedProductsState?> _readCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_cacheKey);
+      if (raw == null) return null;
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final savedAt = DateTime.tryParse(data['savedAt'] as String? ?? '');
+      if (savedAt == null ||
+          DateTime.now().difference(savedAt) > _cacheMaxAge) {
+        unawaited(prefs.remove(_cacheKey));
+        return null;
+      }
+      final products = (data['products'] as List<dynamic>? ?? const [])
+          .map((row) => Product.fromJson(row as Map<String, dynamic>))
+          .toList();
+      if (products.isEmpty) return null;
+      return PaginatedProductsState(
+        items: products,
+        total: (data['total'] as num?)?.toInt() ?? products.length,
+        hasMore: data['hasMore'] as bool? ?? true,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _writeCache(PaginatedProductsState value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _cacheKey,
+        jsonEncode({
+          'savedAt': DateTime.now().toIso8601String(),
+          'products':
+              value.items.take(pageSize).map((p) => p.toJson()).toList(),
+          'total': value.total,
+          'hasMore': value.hasMore,
+        }),
+      );
+    } catch (_) {
+      // A cache write must never affect shopping.
+    }
+  }
+
+  Future<void> _loadFirstWithCache() async {
+    _loadedPage = -1;
+    final gen = ++_generation;
+    final cached = await _readCache();
+    if (gen != _generation) return;
+    if (cached != null) state = cached;
+    await _fetchPage(0, replace: true, gen: gen);
   }
 
   Future<void> loadFirst() async {
@@ -124,7 +194,16 @@ class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, P
     await _fetchPage(0, replace: true, gen: gen);
   }
 
-  Future<void> refresh() => loadFirst();
+  Future<void> refresh() async {
+    _loadedPage = -1;
+    final gen = ++_generation;
+    if (state.items.isEmpty) {
+      state = const PaginatedProductsState(isInitialLoading: true);
+    } else {
+      state = state.copyWith(clearError: true);
+    }
+    await _fetchPage(0, replace: true, gen: gen);
+  }
 
   /// Loads the next page. No-op while a request is in flight, at the end of
   /// the list, or after a failed page (use [retry] so errors don't loop).
@@ -144,12 +223,15 @@ class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, P
   }
 
   bool _matchesQuery(Product p) {
-    if (arg.sale && !(p.originalPrice != null && p.originalPrice! > p.price)) return false;
+    if (arg.sale && !(p.originalPrice != null && p.originalPrice! > p.price)) {
+      return false;
+    }
     if (arg.prime && !p.prime) return false;
     return true;
   }
 
-  Future<void> _fetchPage(int page, {required bool replace, required int gen}) async {
+  Future<void> _fetchPage(int page,
+      {required bool replace, required int gen}) async {
     try {
       var current = page;
       var items = replace ? const <Product>[] : state.items;
@@ -175,13 +257,15 @@ class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, P
           current++;
           continue;
         }
-        state = PaginatedProductsState(
+        final next = PaginatedProductsState(
           items: items,
           total: result.total,
           isInitialLoading: false,
           isLoadingMore: false,
           hasMore: result.hasMore,
         );
+        state = next;
+        if (replace) unawaited(_writeCache(next));
         return;
       }
     } catch (e) {
@@ -194,7 +278,8 @@ class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, P
     }
   }
 
-  List<Product> _mergeProducts(List<Product> existing, Iterable<Product> incoming) {
+  List<Product> _mergeProducts(
+      List<Product> existing, Iterable<Product> incoming) {
     final seen = existing.map((p) => p.id).toSet();
     final merged = [...existing];
     for (final product in incoming) {
@@ -204,7 +289,7 @@ class PaginatedProductsNotifier extends FamilyNotifier<PaginatedProductsState, P
   }
 }
 
-final paginatedProductsProvider =
-    NotifierProvider.family<PaginatedProductsNotifier, PaginatedProductsState, ProductsQuery>(
+final paginatedProductsProvider = NotifierProvider.family<
+    PaginatedProductsNotifier, PaginatedProductsState, ProductsQuery>(
   PaginatedProductsNotifier.new,
 );

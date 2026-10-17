@@ -20,7 +20,7 @@ import 'services/system_notifications.dart';
 class SplashDeadline {
   SplashDeadline._();
 
-  static const limit = Duration(seconds: 3);
+  static const limit = Duration(milliseconds: 1500);
   static bool reached = false;
   static VoidCallback? _listener;
   static Timer? _retry;
@@ -66,7 +66,8 @@ class SplashDeadline {
   }
 }
 
-bool _isSplashPath(String path) => path.isEmpty || path == '/splash' || path == '/splash/';
+bool _isSplashPath(String path) =>
+    path.isEmpty || path == '/splash' || path == '/splash/';
 
 class OneSourceApp extends ConsumerStatefulWidget {
   const OneSourceApp({super.key});
@@ -126,9 +127,11 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
 
   void _startAfterFirstFrame() {
     if (!mounted) return;
+    // Restore the signed-in session before starting lower-priority locale and
+    // geo work, so account-aware UI settles as early as possible.
+    unawaited(_initSupabase());
     unawaited(_loadI18n());
     ref.read(deliveryCountryProvider);
-    unawaited(_initSupabase());
   }
 
   Future<void> _loadI18n() async {
@@ -152,7 +155,8 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
         debugPrint('[OneSource] splash watchdog idle at $path');
         return;
       }
-      debugPrint('[OneSource] splash watchdog → /home (was ${path.isEmpty ? '(empty)' : path})');
+      debugPrint(
+          '[OneSource] splash watchdog → /home (was ${path.isEmpty ? '(empty)' : path})');
       router.go('/home');
       final now = router.routeInformationProvider.value.uri.path;
       left = !_isSplashPath(now);
@@ -162,7 +166,8 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
     }
     if (!mounted || left) return;
     _splashWatch?.cancel();
-    _splashWatch = Timer(const Duration(milliseconds: 300), _leaveSplashIfNeeded);
+    _splashWatch =
+        Timer(const Duration(milliseconds: 300), _leaveSplashIfNeeded);
   }
 
   @override
@@ -180,7 +185,8 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
     await Future<void>.delayed(const Duration(seconds: 4));
     if (!mounted) return;
     try {
-      final path = ref.read(routerProvider).routeInformationProvider.value.uri.path;
+      final path =
+          ref.read(routerProvider).routeInformationProvider.value.uri.path;
       // The permission sheet pauses the engine. Never raise it over the splash.
       if (_isSplashPath(path) && attempt < 4) {
         unawaited(_refreshNotificationsWhenReady(attempt: attempt + 1));
