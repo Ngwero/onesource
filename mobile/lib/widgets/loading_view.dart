@@ -4,6 +4,7 @@ import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../utils/user_facing_error.dart';
 import 'brand_loader.dart';
+import 'offline_view.dart';
 
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key, this.message});
@@ -29,14 +30,17 @@ class LoadingView extends StatelessWidget {
 
 class ErrorView extends StatelessWidget {
   /// [message] may be an [Object] error or an already-built string.
-  ErrorView({super.key, required Object message, this.onRetry})
-      : displayMessage = formatLoadError(message);
+  const ErrorView({super.key, required this.message, this.onRetry});
 
-  final String displayMessage;
+  final Object message;
   final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
+    if (isOfflineError(message)) {
+      return OfflineView(onRetry: onRetry);
+    }
+    final displayMessage = formatLoadError(message);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -48,11 +52,14 @@ class ErrorView extends StatelessWidget {
             Text(
               displayMessage,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, height: 1.4, color: AppColors.text),
+              style: const TextStyle(
+                  fontSize: 15, height: 1.4, color: AppColors.text),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              OutlinedButton(onPressed: onRetry, child: Text(context.tr.get('common.retry'))),
+              OutlinedButton(
+                  onPressed: onRetry,
+                  child: Text(context.tr.get('common.retry'))),
             ],
           ],
         ),

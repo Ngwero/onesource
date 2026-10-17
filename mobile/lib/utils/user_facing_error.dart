@@ -18,6 +18,20 @@ String formatUserFacingError(
 String _t(String key, String en) =>
     AppStrings.current.or('app.errors.$key', en);
 
+/// True only for device/DNS/transport failures. Server and database timeouts
+/// deliberately return false so an online user is never shown as offline.
+bool isOfflineError(Object error) {
+  final lower = error.toString().toLowerCase();
+  return lower.contains('socketexception') ||
+      lower.contains('clientexception') ||
+      lower.contains('failed host lookup') ||
+      lower.contains('connection refused') ||
+      lower.contains('network is unreachable') ||
+      lower.contains('network connection was lost') ||
+      lower.contains('internet connection') ||
+      lower.contains('no route to host');
+}
+
 String _format(Object error, String fallback) {
   if (error is ApiException) {
     return _sanitizeMessage(error.message, fallback: fallback);
@@ -143,11 +157,7 @@ String _humanizeTechnical(String message, {required String fallback}) {
     return _t('signupFailed',
         'We could not finish creating your account right now. Please try again in a moment.');
   }
-  if (lower.contains('socketexception') ||
-      lower.contains('clientexception') ||
-      lower.contains('failed host lookup') ||
-      lower.contains('connection refused') ||
-      lower.contains('network is unreachable')) {
+  if (isOfflineError(message)) {
     return _t(
         'offline', 'Please check your internet connection and try again.');
   }
