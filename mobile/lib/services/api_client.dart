@@ -74,7 +74,26 @@ class ApiClient {
         }
       }
     }
+    // A failed shop request does not prove the device is offline. Check an
+    // independent connectivity endpoint before choosing the offline screen.
+    if (await _internetIsReachable()) {
+      throw ApiException(
+        _t('server',
+            'Our servers are temporarily unavailable. Please try again shortly.'),
+      );
+    }
     Error.throwWithStackTrace(lastError!, StackTrace.current);
+  }
+
+  Future<bool> _internetIsReachable() async {
+    try {
+      final response = await _client
+          .get(Uri.parse('https://connectivitycheck.gstatic.com/generate_204'))
+          .timeout(const Duration(seconds: 5));
+      return response.statusCode == 204 || response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
 
   static bool _isKitchenSku(Product p) =>

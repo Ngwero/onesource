@@ -22,10 +22,7 @@ String _t(String key, String en) =>
 /// deliberately return false so an online user is never shown as offline.
 bool isOfflineError(Object error) {
   final lower = error.toString().toLowerCase();
-  return lower.contains('socketexception') ||
-      lower.contains('clientexception') ||
-      lower.contains('failed host lookup') ||
-      lower.contains('connection refused') ||
+  return lower.contains('failed host lookup') ||
       lower.contains('network is unreachable') ||
       lower.contains('network connection was lost') ||
       lower.contains('internet connection') ||
@@ -88,9 +85,7 @@ String _mapAuthMessage(String message, {required String fallback}) {
     return _t('emailExists',
         'An account with this email already exists. Try logging in instead.');
   }
-  if (lower.contains('network') ||
-      lower.contains('socket') ||
-      lower.contains('failed host lookup')) {
+  if (isOfflineError(message)) {
     return _t(
         'offline', 'Please check your internet connection and try again.');
   }
