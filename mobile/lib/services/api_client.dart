@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -10,7 +11,8 @@ import '../models/order.dart';
 import '../models/product.dart';
 import '../i18n/app_strings.dart';
 
-String _t(String key, String en) => AppStrings.current.or('app.errors.$key', en);
+String _t(String key, String en) =>
+    AppStrings.current.or('app.errors.$key', en);
 
 class ProductsPageResult {
   const ProductsPageResult({
@@ -53,6 +55,28 @@ class ApiClient {
     return Uri.parse('$base$path').replace(queryParameters: query);
   }
 
+  /// GET requests are safe to retry. Mobile radios regularly drop the first
+  /// request while waking or changing between Wi-Fi and cellular data.
+  Future<http.Response> _getWithRetry(
+    Uri uri, {
+    Duration timeout = const Duration(seconds: 25),
+  }) async {
+    Object? lastError;
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await _client.get(uri).timeout(timeout);
+      } catch (error) {
+        lastError = error;
+        if (attempt == 0) {
+          debugPrint(
+              '[OneSource] GET retry after transport error: $uri ($error)');
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+        }
+      }
+    }
+    Error.throwWithStackTrace(lastError!, StackTrace.current);
+  }
+
   static bool _isKitchenSku(Product p) =>
       p.id.startsWith('kitchen-') || p.category == 'kitchen-ware';
 
@@ -68,7 +92,10 @@ class ApiClient {
 
   Future<bool> checkHealth() async {
     try {
-      final res = await _client.get(_uri('/health')).timeout(const Duration(seconds: 10));
+      final res = await _getWithRetry(
+        _uri('/health'),
+        timeout: const Duration(seconds: 10),
+      );
       return res.statusCode == 200;
     } catch (_) {
       return false;
@@ -103,7 +130,7 @@ class ApiClient {
 
     final uri = _uri('/products', params);
     debugPrint('[OneSource] GET $uri');
-    final res = await _client.get(uri).timeout(const Duration(seconds: 25));
+    final res = await _getWithRetry(uri);
     debugPrint('[OneSource] products status=${res.statusCode} page=$page');
     if (res.statusCode != 200) {
       if (allowServerErrorAsEmpty && res.statusCode >= 500) {
@@ -121,7 +148,8 @@ class ApiClient {
     final total = (data['total'] as num?)?.toInt() ?? list.length;
     final hasMore = data['hasMore'];
     return ProductsPageResult(
-      products: list.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList(),
+      products:
+          list.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList(),
       total: total,
       page: page,
       pageSize: pageSize,
@@ -145,9 +173,8 @@ class ApiClient {
       allowServerErrorAsEmpty: true,
     );
     final fresh = mapped.products.where((p) => !_isOtherShopSku(p)).toList();
-    final total = fresh.isEmpty
-        ? logicalPage * pageSize
-        : (logicalPage + 2) * pageSize;
+    final total =
+        fresh.isEmpty ? logicalPage * pageSize : (logicalPage + 2) * pageSize;
     return ProductsPageResult(
       products: fresh,
       total: total,
@@ -161,10 +188,13 @@ class ApiClient {
     String? query,
     int page = 0,
     int pageSize = 24,
+
     /// `fresh` excludes specialty SKUs; `kitchen`, `cosmetics`, and `pharmacy` return that shop only.
     String? shop,
+
     /// Aisle id within a specialty shop — filters `{shop}-{aisle}-%`.
     String? aisle,
+
     /// Server-side filters/sort (`sale=1`, `prime=1`, `sort=…`); older APIs ignore them.
     bool sale = false,
     bool prime = false,
@@ -199,7 +229,9 @@ class ApiClient {
       query: query,
       page: page,
       pageSize: pageSize,
-      shop: hasAisle && scopedShop != 'cosmetics' && scopedShop != 'pharmacy' ? 'kitchen' : scopedShop,
+      shop: hasAisle && scopedShop != 'cosmetics' && scopedShop != 'pharmacy'
+          ? 'kitchen'
+          : scopedShop,
       aisle: scopedAisle,
       sale: sale,
       prime: prime,
@@ -220,7 +252,9 @@ class ApiClient {
           .toList();
       return ProductsPageResult(
         products: matched,
-        total: matched.isEmpty && page == 0 ? 0 : (raw.total > 0 ? raw.total : matched.length),
+        total: matched.isEmpty && page == 0
+            ? 0
+            : (raw.total > 0 ? raw.total : matched.length),
         page: page,
         pageSize: pageSize,
         serverHasMore: raw.serverHasMore,
@@ -344,7 +378,9 @@ class ApiClient {
         if (res.statusCode != 200) continue;
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         final list = data['categories'] as List<dynamic>? ?? [];
-        return list.map((e) => Category.fromJson(e as Map<String, dynamic>)).toList();
+        return list
+            .map((e) => Category.fromJson(e as Map<String, dynamic>))
+            .toList();
       } catch (_) {
         continue;
       }
@@ -355,11 +391,14 @@ class ApiClient {
   /// Country of the device's IP address (no GPS); null when unknown or offline.
   Future<String?> fetchGeoCountry() async {
     try {
-      final res = await _client.get(_uri('/geo')).timeout(const Duration(seconds: 6));
+      final res =
+          await _client.get(_uri('/geo')).timeout(const Duration(seconds: 6));
       if (res.statusCode != 200) return null;
       final data = jsonDecode(res.body);
       final country = data is Map<String, dynamic> ? data['country'] : null;
-      return country is String && RegExp(r'^[A-Z]{2}$').hasMatch(country) ? country : null;
+      return country is String && RegExp(r'^[A-Z]{2}$').hasMatch(country)
+          ? country
+          : null;
     } catch (e) {
       debugPrint('[OneSource] geo lookup failed: $e');
       return null;
@@ -399,13 +438,12 @@ class ApiClient {
       if (res.statusCode != 200) return fallback();
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       final list = data['slides'] as List<dynamic>? ?? [];
-      var slides =
-          list.map((e) => HeroSlide.fromJson(e as Map<String, dynamic>)).toList();
+      var slides = list
+          .map((e) => HeroSlide.fromJson(e as Map<String, dynamic>))
+          .toList();
       // Older APIs may ignore placement=onboarding — keep only matching IDs.
       if (scoped == 'onboarding') {
-        slides = slides
-            .where((s) => s.id.startsWith('onboarding-'))
-            .toList();
+        slides = slides.where((s) => s.id.startsWith('onboarding-')).toList();
       } else if (scoped == 'kitchen') {
         slides = slides.where((s) => s.id.startsWith('kitchen-')).toList();
       } else if (scoped == 'home') {
@@ -462,20 +500,24 @@ class ApiClient {
     return Order.fromJson(data['order'] as Map<String, dynamic>);
   }
 
-  Future<LoginStartResult> requestLoginOtp(String email, String password) async {
+  Future<LoginStartResult> requestLoginOtp(
+      String email, String password) async {
     final res = await _client
         .post(
           _uri('/auth/login/request-otp'),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'email': email.trim().toLowerCase(), 'password': password}),
+          body: jsonEncode(
+              {'email': email.trim().toLowerCase(), 'password': password}),
         )
         .timeout(const Duration(seconds: 45));
 
     if (res.statusCode == 401) {
-      throw ApiException(_t('wrongPassword', 'Incorrect email or password. Please try again.'));
+      throw ApiException(_t(
+          'wrongPassword', 'Incorrect email or password. Please try again.'));
     }
     if (res.statusCode == 429) {
-      throw ApiException(_t('tooMany', 'Too many attempts. Please wait a few minutes and try again.'));
+      throw ApiException(_t('tooMany',
+          'Too many attempts. Please wait a few minutes and try again.'));
     }
     if (res.statusCode == 503) {
       throw ApiException(_errorMessage(res));
@@ -522,7 +564,8 @@ class ApiClient {
     final accessToken = data['accessToken'] as String?;
     final refreshToken = data['refreshToken'] as String?;
     if (accessToken == null || refreshToken == null) {
-      throw ApiException(_t('generic', 'Something went wrong. Please try again.'));
+      throw ApiException(
+          _t('generic', 'Something went wrong. Please try again.'));
     }
     return (accessToken: accessToken, refreshToken: refreshToken);
   }
@@ -532,7 +575,8 @@ class ApiClient {
         .post(
           _uri('/auth/forgot-password'),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'email': email.trim().toLowerCase(), 'redirectTo': redirectTo}),
+          body: jsonEncode(
+              {'email': email.trim().toLowerCase(), 'redirectTo': redirectTo}),
         )
         .timeout(const Duration(seconds: 45));
 
@@ -546,18 +590,17 @@ class ApiClient {
 
   /// Permanently delete the signed-in account (Bearer access token required).
   Future<void> deleteAccount(String accessToken) async {
-    final res = await _client
-        .delete(
-          _uri('/auth/account'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $accessToken',
-          },
-        )
-        .timeout(const Duration(seconds: 45));
+    final res = await _client.delete(
+      _uri('/auth/account'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    ).timeout(const Duration(seconds: 45));
 
     if (res.statusCode == 401) {
-      throw ApiException(_t('signInAgain', 'Please sign in again to continue.'));
+      throw ApiException(
+          _t('signInAgain', 'Please sign in again to continue.'));
     }
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
@@ -565,7 +608,8 @@ class ApiClient {
   }
 
   /// Create account via API (Admin + Brevo welcome) — avoids Supabase confirm email.
-  Future<({String? accessToken, String? refreshToken, bool needsSignIn})> signUp({
+  Future<({String? accessToken, String? refreshToken, bool needsSignIn})>
+      signUp({
     required String email,
     required String password,
     required String fullName,
@@ -615,7 +659,8 @@ class ApiClient {
     } catch (_) {}
 
     if (res.statusCode >= 500) {
-      return _t('server', 'Our servers are temporarily unavailable. Please try again shortly.');
+      return _t('server',
+          'Our servers are temporarily unavailable. Please try again shortly.');
     }
     if (res.statusCode == 404) {
       return _t('notFound', 'We could not find what you were looking for.');
@@ -624,7 +669,8 @@ class ApiClient {
       return _t('signInAgain', 'Please sign in again to continue.');
     }
     if (res.statusCode == 429) {
-      return _t('tooMany', 'Too many attempts. Please wait a few minutes and try again.');
+      return _t('tooMany',
+          'Too many attempts. Please wait a few minutes and try again.');
     }
     return _t('generic', 'Something went wrong. Please try again.');
   }

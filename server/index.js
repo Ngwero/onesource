@@ -18,9 +18,6 @@ import imgRouter from "./routes/img.js";
 import notificationsRouter from "./routes/notifications.js";
 import appVersionRouter from "./routes/appVersion.js";
 import geoRouter from "./routes/geo.js";
-import { requireSupabase } from "./lib/supabase.js";
-import { isSupabaseConnectionError } from "./lib/supabaseErrors.js";
-import { localProductCount } from "./lib/localSeed.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -58,26 +55,13 @@ app.get("/api/health/live", (_req, res) => {
   res.set("Cache-Control", "no-store").json({ ok: true, shop: serveShop });
 });
 
-app.get("/api/health", async (_req, res) => {
-  try {
-    const db = requireSupabase();
-    const { count, error } = await db
-      .from("products")
-      .select("*", { count: "exact", head: true });
-
-    if (error) throw error;
-    res.json({ ok: true, products: count ?? 0, database: "supabase" });
-  } catch (e) {
-    if (isSupabaseConnectionError(e)) {
-      return res.json({
-        ok: true,
-        products: localProductCount(),
-        database: "local-seed",
-        warning: e.message,
-      });
-    }
-    res.status(503).json({ ok: false, error: e.message });
-  }
+app.get("/api/health", (_req, res) => {
+  // This endpoint is used by mobile clients as a connectivity check. A full
+  // COUNT(*) made healthy devices look offline whenever Supabase was busy.
+  res.set("Cache-Control", "no-store").json({
+    ok: true,
+    database: isSupabaseConfigured() ? "supabase" : "local-seed",
+  });
 });
 
 app.use("/api/products", productsRouter);
