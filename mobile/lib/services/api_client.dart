@@ -59,7 +59,7 @@ class ApiClient {
   /// request while waking or changing between Wi-Fi and cellular data.
   Future<http.Response> _getWithRetry(
     Uri uri, {
-    Duration timeout = const Duration(seconds: 25),
+    Duration timeout = const Duration(seconds: 12),
   }) async {
     Object? lastError;
     for (var attempt = 0; attempt < 2; attempt++) {
@@ -70,7 +70,7 @@ class ApiClient {
         if (attempt == 0) {
           debugPrint(
               '[OneSource] GET retry after transport error: $uri ($error)');
-          await Future<void>.delayed(const Duration(milliseconds: 500));
+          await Future<void>.delayed(const Duration(milliseconds: 350));
         }
       }
     }
@@ -89,7 +89,7 @@ class ApiClient {
     try {
       final response = await _client
           .get(Uri.parse('https://connectivitycheck.gstatic.com/generate_204'))
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 3));
       return response.statusCode == 204 || response.statusCode == 200;
     } catch (_) {
       return false;
@@ -112,8 +112,8 @@ class ApiClient {
   Future<bool> checkHealth() async {
     try {
       final res = await _getWithRetry(
-        _uri('/health'),
-        timeout: const Duration(seconds: 10),
+        _uri('/health/live'),
+        timeout: const Duration(seconds: 6),
       );
       return res.statusCode == 200;
     } catch (_) {
@@ -381,7 +381,7 @@ class ApiClient {
   }
 
   Future<Product?> fetchProductById(String id) async {
-    final res = await _client.get(_uri('/products/$id'));
+    final res = await _getWithRetry(_uri('/products/$id'));
     if (res.statusCode == 404) return null;
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
@@ -393,7 +393,10 @@ class ApiClient {
   Future<List<Category>> fetchCategories() async {
     for (final path in ['/categories', '/products/categories']) {
       try {
-        final res = await _client.get(_uri(path));
+        final res = await _getWithRetry(
+          _uri(path),
+          timeout: const Duration(seconds: 8),
+        );
         if (res.statusCode != 200) continue;
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         final list = data['categories'] as List<dynamic>? ?? [];
@@ -426,9 +429,10 @@ class ApiClient {
 
   Future<List<AppNotification>> fetchNotifications() async {
     try {
-      final res = await _client
-          .get(_uri('/notifications'))
-          .timeout(const Duration(seconds: 15));
+      final res = await _getWithRetry(
+        _uri('/notifications'),
+        timeout: const Duration(seconds: 8),
+      );
       if (res.statusCode != 200) return const [];
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       final list = data['notifications'] as List<dynamic>? ?? [];
@@ -451,8 +455,9 @@ class ApiClient {
     }
 
     try {
-      final res = await _client.get(
+      final res = await _getWithRetry(
         _uri('/hero/slides', {'placement': scoped}),
+        timeout: const Duration(seconds: 8),
       );
       if (res.statusCode != 200) return fallback();
       final data = jsonDecode(res.body) as Map<String, dynamic>;
@@ -484,7 +489,7 @@ class ApiClient {
   }
 
   Future<List<Order>> fetchOrders(String userId) async {
-    final res = await _client.get(_uri('/orders', {'userId': userId}));
+    final res = await _getWithRetry(_uri('/orders', {'userId': userId}));
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
     }
@@ -495,7 +500,7 @@ class ApiClient {
 
   Future<Order> fetchOrderById(String id, {String? userId}) async {
     final params = userId != null ? {'userId': userId} : null;
-    final res = await _client.get(_uri('/orders/$id', params));
+    final res = await _getWithRetry(_uri('/orders/$id', params));
     if (res.statusCode == 404) {
       throw ApiException(_t('orderNotFound', 'Order not found'));
     }
