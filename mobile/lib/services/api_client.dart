@@ -62,17 +62,23 @@ class ApiClient {
     Duration timeout = const Duration(seconds: 12),
   }) async {
     Object? lastError;
-    for (var attempt = 0; attempt < 2; attempt++) {
+    const attempts = 3;
+    for (var attempt = 0; attempt < attempts; attempt++) {
       try {
-        return await _client.get(uri).timeout(timeout);
+        final response = await _client.get(uri).timeout(timeout);
+        if (!_retryableStatus(response.statusCode) || attempt == attempts - 1) {
+          return response;
+        }
+        debugPrint('[OneSource] GET retry after ${response.statusCode}: $uri');
       } catch (error) {
         lastError = error;
-        if (attempt == 0) {
-          debugPrint(
-              '[OneSource] GET retry after transport error: $uri ($error)');
-          await Future<void>.delayed(const Duration(milliseconds: 350));
-        }
+        if (attempt == attempts - 1) break;
+        debugPrint(
+            '[OneSource] GET retry after transport error: $uri ($error)');
       }
+      await Future<void>.delayed(
+        Duration(milliseconds: attempt == 0 ? 350 : 900),
+      );
     }
     // A failed shop request does not prove the device is offline. Check an
     // independent connectivity endpoint before choosing the offline screen.
@@ -84,6 +90,14 @@ class ApiClient {
     }
     Error.throwWithStackTrace(lastError!, StackTrace.current);
   }
+
+  static bool _retryableStatus(int status) =>
+      status == 408 ||
+      status == 429 ||
+      status == 500 ||
+      status == 502 ||
+      status == 503 ||
+      status == 504;
 
   Future<bool> _internetIsReachable() async {
     try {
