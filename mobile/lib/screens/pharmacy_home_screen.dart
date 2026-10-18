@@ -208,7 +208,6 @@ class _AisleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (products.isEmpty) return const SizedBox.shrink();
     final s = context.tr;
     return _ProductRow(
       title:
@@ -216,6 +215,7 @@ class _AisleRow extends StatelessWidget {
       products: products,
       query: ProductsQuery(shop: 'pharmacy', aisle: aisle.id, sort: 'top'),
       onAdd: onAdd,
+      loadWhenEmpty: products.isEmpty,
     );
   }
 }
@@ -227,12 +227,14 @@ class _ProductRow extends ConsumerStatefulWidget {
     required this.products,
     required this.query,
     required this.onAdd,
+    this.loadWhenEmpty = false,
   });
 
   final String title;
   final List<Product> products;
   final ProductsQuery query;
   final void Function(Product) onAdd;
+  final bool loadWhenEmpty;
 
   @override
   ConsumerState<_ProductRow> createState() => _ProductRowState();
@@ -242,7 +244,8 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
   static const _loadAheadPx = 400.0;
 
   final _controller = ScrollController();
-  late bool _paging = ref.exists(paginatedProductsProvider(widget.query));
+  late bool _paging = widget.loadWhenEmpty ||
+      ref.exists(paginatedProductsProvider(widget.query));
 
   @override
   void initState() {
