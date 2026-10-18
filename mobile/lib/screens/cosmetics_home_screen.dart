@@ -341,13 +341,20 @@ class _AisleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (products.isEmpty) return const SizedBox.shrink();
+    // The general cosmetics endpoint only contains the latest import batch,
+    // so an aisle can be healthy while being absent from that first page.
+    // Keep the two skincare shelves alive and let them fetch their scoped
+    // feeds instead of disappearing with no way to start a request.
+    final loadWhenEmpty =
+        aisle.id == 'serums-oils' || aisle.id == 'sun-protection';
+    if (products.isEmpty && !loadWhenEmpty) return const SizedBox.shrink();
     final s = context.tr;
     return _ProductRow(
       title: '${aisle.icon} ${s.cosmeticsAisle(aisle.id, aisle.title)}',
       products: products,
       query: ProductsQuery(shop: 'cosmetics', aisle: aisle.id),
       onAdd: onAdd,
+      loadWhenEmpty: loadWhenEmpty,
     );
   }
 }
@@ -360,12 +367,14 @@ class _ProductRow extends ConsumerStatefulWidget {
     required this.products,
     required this.query,
     required this.onAdd,
+    this.loadWhenEmpty = false,
   });
 
   final String title;
   final List<Product> products;
   final ProductsQuery query;
   final void Function(Product) onAdd;
+  final bool loadWhenEmpty;
 
   @override
   ConsumerState<_ProductRow> createState() => _ProductRowState();
@@ -378,7 +387,8 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
 
   /// Paging starts on the first swipe near the end (or straight away if this
   /// row already paged earlier in the session).
-  late bool _paging = ref.exists(paginatedProductsProvider(widget.query));
+  late bool _paging = widget.loadWhenEmpty ||
+      ref.exists(paginatedProductsProvider(widget.query));
 
   @override
   void initState() {
