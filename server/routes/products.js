@@ -18,7 +18,24 @@ import { dbErrorMessage, isStatementTimeoutError } from "../lib/supabaseErrors.j
 
 const router = Router();
 
-const SORTS = new Set(["newest", "top", "price-asc", "price-desc", "name"]);
+const SORTS = new Set(["newest", "top", "price-asc", "price-desc", "name", "aisles"]);
+
+const FRESH_AISLE_ORDER = [
+  "fresh-fruits",
+  "chillies-and-peppers",
+  "legumes-and-pulses",
+  "fresh-vegetables",
+  "poultry-products",
+  "fish-and-aquaculture",
+  "livestock-products",
+  "roots-and-tubers",
+  "herbs-and-spices",
+  "dairy-products",
+  "oilseeds-and-nuts",
+  "cereals-and-grains",
+  "coffee-tea-cocoa",
+  "export-fresh-produce",
+];
 
 function isTruthyParam(value) {
   return value === "1" || value === "true";
@@ -348,6 +365,33 @@ const freshRowsCache = createSwrCache({ freshMs: 30 * 1000, staleMs: 2 * 60 * 10
 
 function sortListedProducts(products, sort) {
   const idOrder = (a, b) => String(a.id).localeCompare(String(b.id));
+  if (sort === "aisles") {
+    const newest = [...products].sort((a, b) => {
+      const created = new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      return created || idOrder(a, b);
+    });
+    const groups = new Map(FRESH_AISLE_ORDER.map((id) => [id, []]));
+    const remainder = [];
+    for (const product of newest) {
+      const group = groups.get(product.category);
+      if (group) group.push(product);
+      else remainder.push(product);
+    }
+    const balanced = [];
+    let index = 0;
+    let added = true;
+    while (added) {
+      added = false;
+      for (const id of FRESH_AISLE_ORDER) {
+        const product = groups.get(id)?.[index];
+        if (!product) continue;
+        balanced.push(product);
+        added = true;
+      }
+      index += 1;
+    }
+    return balanced.concat(remainder);
+  }
   return [...products].sort((a, b) => {
     if (sort === "price-asc") return a.price - b.price || idOrder(a, b);
     if (sort === "price-desc") return b.price - a.price || idOrder(a, b);

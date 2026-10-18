@@ -34,7 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _scrollController = ScrollController();
   InfiniteScrollListener? _scrollListener;
 
-  static const _query = ProductsQuery();
+  static const _query = ProductsQuery(sort: 'aisles');
   static const _popularCount = 12;
 
   @override
