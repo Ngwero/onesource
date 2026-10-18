@@ -57,6 +57,8 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
     final href = slide.ctaHref;
     if (href.startsWith('/category/')) {
       context.push(href);
+    } else if (href.startsWith('/pharmacy/') || href.startsWith('/kitchen/')) {
+      context.push(href);
     } else if (href == '/categories') {
       context.go('/categories');
     } else {
@@ -78,7 +80,8 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
           final slide = widget.slides[index].localized(context.tr);
           final image = slide.image.isNotEmpty
               ? slide.image
-              : HeroSlide.fallbackImages[index % HeroSlide.fallbackImages.length];
+              : HeroSlide
+                  .fallbackImages[index % HeroSlide.fallbackImages.length];
 
           return AnimatedScale(
             scale: index == _active ? 1.0 : 0.96,
@@ -99,16 +102,19 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                       CachedNetworkImage(
                         imageUrl: image,
                         fit: BoxFit.cover,
-                        placeholder: (_, __) => const ColoredBox(color: AppColors.muted),
+                        placeholder: (_, __) =>
+                            const ColoredBox(color: AppColors.muted),
                         errorWidget: (_, __, ___) => ColoredBox(
                           color: AppColors.accentLight,
                           child: Center(
-                            child: Text(slide.badge, textAlign: TextAlign.center),
+                            child:
+                                Text(slide.badge, textAlign: TextAlign.center),
                           ),
                         ),
                       ),
                       DecoratedBox(
-                        decoration: const BoxDecoration(gradient: AppGradients.heroOverlay),
+                        decoration: const BoxDecoration(
+                            gradient: AppGradients.heroOverlay),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(14),
@@ -145,7 +151,8 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.9),
                                       fontSize: 11,
                                     ),
                                   ),
@@ -156,7 +163,8 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.lemonGreen,
                                     foregroundColor: AppColors.text,
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 8),
                                     minimumSize: Size.zero,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(999),

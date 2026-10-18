@@ -33,7 +33,8 @@ class HeroSlide {
       title: json['title'] as String? ?? '',
       subtitle: json['subtitle'] as String? ?? '',
       cta: json['cta'] as String? ?? 'Shop now',
-      ctaHref: json['ctaHref'] as String? ?? json['cta_href'] as String? ?? '/shop',
+      ctaHref:
+          json['ctaHref'] as String? ?? json['cta_href'] as String? ?? '/shop',
       cta2: json['cta2'] as String?,
       cta2Href: json['cta2Href'] as String? ?? json['cta2_href'] as String?,
       sortOrder: json['sortOrder'] as int? ?? json['sort_order'] as int? ?? 0,
@@ -43,7 +44,9 @@ class HeroSlide {
   /// Mirrors the website's `mergeHeroSlideWithI18n`: copy comes from the
   /// active locale when the slide id has an entry; image and links stay.
   HeroSlide localized(AppStrings s) {
-    final prefix = s.has('home.slidesById.$id.title') ? 'home.slidesById.$id' : 'app.slides.$id';
+    final prefix = s.has('home.slidesById.$id.title')
+        ? 'home.slidesById.$id'
+        : 'app.slides.$id';
     if (!s.has('$prefix.title')) return this;
     String pick(String field, String value) => s.or('$prefix.$field', value);
     return HeroSlide(
@@ -93,7 +96,8 @@ class HeroSlide {
     (
       badge: 'Kampala same-day delivery',
       title: 'Fresh produce for Uganda, delivered',
-      subtitle: 'Hand-picked fruit, vegetables & greens — from {{price}} in Kampala',
+      subtitle:
+          'Hand-picked fruit, vegetables & greens — from {{price}} in Kampala',
       cta: 'Shop all categories',
       ctaHref: '/categories',
       cta2: 'Shop fresh fruits',
@@ -120,7 +124,8 @@ class HeroSlide {
     (
       badge: 'Free delivery',
       title: 'Farm-fresh to your door',
-      subtitle: 'FREE delivery on orders over {{amount}} — across Greater Kampala',
+      subtitle:
+          'FREE delivery on orders over {{amount}} — across Greater Kampala',
       cta: 'Start shopping',
       ctaHref: '/categories',
       cta2: null,
@@ -151,7 +156,45 @@ class HeroSlide {
           ),
       ];
 
-      static const _kitchenDefaultData = [
+  static const pharmacyFallbackImages = [
+    'https://www.onesourco.com/pharmacy/hero/daily-care.webp',
+    'https://www.onesourco.com/pharmacy/hero/vitamins.webp',
+    'https://www.onesourco.com/pharmacy/hero/first-aid.webp',
+  ];
+
+  static List<HeroSlide> get pharmacyDefaults => [
+        const HeroSlide(
+          id: 'pharmacy-everyday',
+          image: 'https://www.onesourco.com/pharmacy/hero/daily-care.webp',
+          badge: 'OneSource Pharmacy',
+          title: 'Everyday care, all in one place',
+          subtitle: 'Trusted medicines, wellness and daily essentials.',
+          cta: 'Browse pharmacy',
+          ctaHref: '/pharmacy/shop',
+        ),
+        const HeroSlide(
+          id: 'pharmacy-vitamins',
+          image: 'https://www.onesourco.com/pharmacy/hero/vitamins.webp',
+          badge: 'Vitamins & wellness',
+          title: 'Support your everyday wellness',
+          subtitle: 'Quality supplements and vitamins for the whole family.',
+          cta: 'Shop supplements',
+          ctaHref: '/pharmacy/aisle/supplements',
+          sortOrder: 1,
+        ),
+        const HeroSlide(
+          id: 'pharmacy-first-aid',
+          image: 'https://www.onesourco.com/pharmacy/hero/first-aid.webp',
+          badge: 'First aid',
+          title: 'Be ready for life’s little moments',
+          subtitle: 'First-aid essentials, personal care and family health.',
+          cta: 'Shop first aid',
+          ctaHref: '/pharmacy/aisle/first-aid',
+          sortOrder: 2,
+        ),
+      ];
+
+  static const _kitchenDefaultData = [
     (
       badge: 'Kitchen Ware',
       title: 'Cookware for every kitchen',
@@ -200,7 +243,8 @@ class HeroSlide {
         for (var i = 0; i < _onboardingDefaultData.length; i++)
           HeroSlide(
             id: "onboarding-${i + 1}",
-            image: onboardingFallbackImages[i % onboardingFallbackImages.length],
+            image:
+                onboardingFallbackImages[i % onboardingFallbackImages.length],
             badge: _onboardingDefaultData[i].badge,
             title: _onboardingDefaultData[i].title,
             subtitle: _onboardingDefaultData[i].subtitle,

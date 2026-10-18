@@ -5,12 +5,15 @@ import 'package:go_router/go_router.dart';
 import '../config/theme.dart';
 import '../data/pharmacy.dart';
 import '../i18n/app_strings.dart';
+import '../models/hero_slide.dart';
 import '../models/product.dart';
+import '../providers/hero_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../services/auth_service.dart';
 import '../utils/cart_feedback.dart';
 import '../utils/shop_mode.dart';
 import '../widgets/compact_home_bar.dart';
+import '../widgets/featured_carousel.dart';
 import '../widgets/home_header.dart';
 import '../widgets/popular_product_card.dart';
 import '../widgets/products_load_more.dart';
@@ -54,6 +57,7 @@ class _PharmacyHomeScreenState extends ConsumerState<PharmacyHomeScreen> {
   Widget build(BuildContext context) {
     final s = context.tr;
     final all = ref.watch(paginatedProductsProvider(_query));
+    final heroAsync = ref.watch(heroSlidesProvider('pharmacy'));
     final offers = all.items
         .where((p) => p.originalPrice != null && p.originalPrice! > p.price)
         .take(14)
@@ -77,6 +81,7 @@ class _PharmacyHomeScreenState extends ConsumerState<PharmacyHomeScreen> {
               await ref
                   .read(paginatedProductsProvider(_query).notifier)
                   .refresh();
+              ref.invalidate(heroSlidesProvider('pharmacy'));
             },
             child: CustomScrollView(
               controller: _scrollController,
@@ -107,6 +112,20 @@ class _PharmacyHomeScreenState extends ConsumerState<PharmacyHomeScreen> {
                               color: AppColors.textMuted, fontSize: 13),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                    child: FeaturedCarousel(
+                      slides: heroAsync.when(
+                        loading: () => HeroSlide.pharmacyDefaults,
+                        error: (_, __) => HeroSlide.pharmacyDefaults,
+                        data: (slides) => slides.isEmpty
+                            ? HeroSlide.pharmacyDefaults
+                            : slides,
+                      ),
                     ),
                   ),
                 ),
