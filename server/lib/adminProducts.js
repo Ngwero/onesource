@@ -216,10 +216,15 @@ export async function listAdminProducts(db, params) {
   // `WHERE id IN (...)` forced a second planner pass and regularly exhausted the
   // statement timeout on the production catalogue.
   if (params.sortKey === "id") {
-    const direct = await applyAdminSort(
-      applyAdminFilters(db.from("products").select(columns), params, supplierMatches),
-      params
-    ).range(from, to);
+    const filtered = applyAdminFilters(
+      db.from("products").select(columns),
+      params,
+      supplierMatches
+    );
+    // A filter plus ORDER BY id needs a composite index for every possible
+    // filter. Older production databases do not have all of them. Preserve the
+    // requested filter and page, but use its natural indexed order.
+    const direct = await (hasFilters ? filtered : applyAdminSort(filtered, params)).range(from, to);
     if (direct.error) throw direct.error;
     let products = (direct.data ?? []).map(toListProduct);
     if (params.sale) {
