@@ -46,9 +46,6 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       controller: _scrollController,
       onLoadMore: _loadMore,
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(kitchenCatalogNotifierProvider.notifier).ensureLoaded();
-    });
   }
 
   void _loadMore() {
@@ -62,7 +59,8 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
     super.dispose();
   }
 
-  void _addToCart(Product product) => addToCartWithFeedback(context, ref, product);
+  void _addToCart(Product product) =>
+      addToCartWithFeedback(context, ref, product);
 
   List<Category> get _kitchenCategories => [
         for (final aisle in kitchenWareAisles)
@@ -73,8 +71,12 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
   Widget build(BuildContext context) {
     final query = _query;
     final productsState = ref.watch(paginatedProductsProvider(query));
-    final catalogState = ref.watch(kitchenCatalogNotifierProvider);
-    final catalogAsync = ref.watch(kitchenCatalogProvider);
+    // Paint the cached first page before starting the much larger aisle
+    // catalogue. This gives Kitchen the same instant-return behaviour as Fresh.
+    final catalogAsync =
+        productsState.isInitialLoading && productsState.items.isEmpty
+            ? const AsyncValue<List<Product>>.loading()
+            : ref.watch(kitchenCatalogProvider);
     final heroAsync = ref.watch(heroSlidesProvider('kitchen'));
     final strings = ref.watch(stringsProvider);
     final profile = ref.watch(profileProvider).valueOrNull;
@@ -89,10 +91,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       }
     });
 
-    final waitingForAisles =
-        catalogState.isInitialLoading && catalogState.products.isEmpty;
-    if ((productsState.isInitialLoading && productsState.items.isEmpty) ||
-        waitingForAisles) {
+    if (productsState.isInitialLoading && productsState.items.isEmpty) {
       return Container(
         decoration: const BoxDecoration(gradient: AppGradients.canvas),
         child: Scaffold(
@@ -117,9 +116,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       );
     }
 
-    if (productsState.error != null &&
-        productsState.items.isEmpty &&
-        catalogState.products.isEmpty) {
+    if (productsState.error != null && productsState.items.isEmpty) {
       return Scaffold(
         backgroundColor: AppColors.canvas,
         body: ErrorView(
@@ -137,12 +134,12 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       catalogAsync.valueOrNull ?? const <Product>[],
     );
     final feed = catalog.isNotEmpty ? catalog : products;
-    final popularProducts = diversifyKitchenProducts(feed, limit: _popularCount);
+    final popularProducts =
+        diversifyKitchenProducts(feed, limit: _popularCount);
     final popularIds = popularProducts.map((p) => p.id).toSet();
     // Every kitchen product, newest uploads first, growing endlessly as pages load.
-    final moreProducts = productsState.items
-        .where((p) => !popularIds.contains(p.id))
-        .toList();
+    final moreProducts =
+        productsState.items.where((p) => !popularIds.contains(p.id)).toList();
     _scrollListener?.scheduleCheck();
 
     // Always list every kitchen subcategory row (same idea as Fresh home rows).
@@ -163,7 +160,9 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
           child: RefreshIndicator(
             color: AppColors.leaf,
             onRefresh: () async {
-              await ref.read(paginatedProductsProvider(query).notifier).refresh();
+              await ref
+                  .read(paginatedProductsProvider(query).notifier)
+                  .refresh();
               await ref.read(kitchenCatalogNotifierProvider.notifier).refresh();
               ref.invalidate(heroSlidesProvider('kitchen'));
             },
@@ -202,8 +201,9 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                           slides: heroAsync.when(
                             loading: () => HeroSlide.kitchenDefaults,
                             error: (_, __) => HeroSlide.kitchenDefaults,
-                            data: (slides) =>
-                                slides.isEmpty ? HeroSlide.kitchenDefaults : slides,
+                            data: (slides) => slides.isEmpty
+                                ? HeroSlide.kitchenDefaults
+                                : slides,
                           ),
                         ),
                       ],
@@ -293,8 +293,11 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                   hasMore: productsState.hasMore,
                   itemCount: popularProducts.length + moreProducts.length,
                   total: productsState.total,
-                  error: productsState.hasLoadMoreError ? productsState.error : null,
-                  onRetry: ref.read(paginatedProductsProvider(query).notifier).retry,
+                  error: productsState.hasLoadMoreError
+                      ? productsState.error
+                      : null,
+                  onRetry:
+                      ref.read(paginatedProductsProvider(query).notifier).retry,
                 ),
               ],
             ),
@@ -344,7 +347,8 @@ class _KitchenAisleProductRow extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${products.length}+ pieces in this aisle',
-                      style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.textMuted),
                     ),
                   ],
                 ),

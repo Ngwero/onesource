@@ -11,7 +11,6 @@ import '../config/theme.dart';
 import '../data/cosmetics.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
-import '../providers/cosmetics_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../services/auth_service.dart';
 import '../utils/cart_feedback.dart';
@@ -28,7 +27,8 @@ class CosmeticsHomeScreen extends ConsumerStatefulWidget {
   const CosmeticsHomeScreen({super.key});
 
   @override
-  ConsumerState<CosmeticsHomeScreen> createState() => _CosmeticsHomeScreenState();
+  ConsumerState<CosmeticsHomeScreen> createState() =>
+      _CosmeticsHomeScreenState();
 }
 
 class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
@@ -41,7 +41,8 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
     super.initState();
     _scrollListener = InfiniteScrollListener(
       controller: _scrollController,
-      onLoadMore: () => ref.read(paginatedProductsProvider(_query).notifier).loadMore(),
+      onLoadMore: () =>
+          ref.read(paginatedProductsProvider(_query).notifier).loadMore(),
     );
   }
 
@@ -52,14 +53,18 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
     super.dispose();
   }
 
-  void _addToCart(Product product) => addToCartWithFeedback(context, ref, product);
+  void _addToCart(Product product) =>
+      addToCartWithFeedback(context, ref, product);
 
   @override
   Widget build(BuildContext context) {
     final s = context.tr;
     final all = ref.watch(paginatedProductsProvider(_query));
-    final offers = ref.watch(cosmeticsOffersProvider).valueOrNull ?? const <Product>[];
-    final total = ref.watch(cosmeticsTotalProvider).valueOrNull;
+    final offers = all.items
+        .where((p) => p.originalPrice != null && p.originalPrice! > p.price)
+        .take(14)
+        .toList();
+    final total = all.total > 0 ? all.total : null;
     final profile = ref.watch(profileProvider).valueOrNull;
     final user = ref.watch(authStateProvider).valueOrNull?.session?.user;
     final greetingName = profile?.fullName?.split(' ').first ??
@@ -76,12 +81,9 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
           child: RefreshIndicator(
             color: cosmeticsAccent,
             onRefresh: () async {
-              ref.invalidate(cosmeticsOffersProvider);
-              ref.invalidate(cosmeticsTotalProvider);
-              for (final aisle in cosmeticsAisles) {
-                ref.invalidate(cosmeticsAisleRowProvider(aisle.id));
-              }
-              await ref.read(paginatedProductsProvider(_query).notifier).refresh();
+              await ref
+                  .read(paginatedProductsProvider(_query).notifier)
+                  .refresh();
             },
             child: CustomScrollView(
               controller: _scrollController,
@@ -101,13 +103,15 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                       children: [
                         Text(
                           s.get('cosmetics.title'),
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                          style: const TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.w800),
                         ),
                         if (total != null && total > 0) ...[
                           const SizedBox(height: 4),
                           Text(
                             s.get('cosmetics.catalogSub'),
-                            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                            style: const TextStyle(
+                                color: AppColors.textMuted, fontSize: 13),
                           ),
                         ],
                       ],
@@ -127,7 +131,15 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                   ),
                 for (final aisle in cosmeticsAisles)
                   SliverToBoxAdapter(
-                    child: _AisleRow(aisle: aisle, onAdd: _addToCart),
+                    child: _AisleRow(
+                      aisle: aisle,
+                      products: all.items
+                          .where((p) =>
+                              cosmeticsAisleIdFromProductId(p.id) == aisle.id)
+                          .take(14)
+                          .toList(),
+                      onAdd: _addToCart,
+                    ),
                   ),
                 // Every cosmetics product, newest uploads first, growing endlessly as pages load.
                 SliverToBoxAdapter(
@@ -138,12 +150,14 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                       children: [
                         Text(
                           s.get('cosmetics.home.latestTitle'),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           s.get('cosmetics.home.latestSub'),
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                          style: const TextStyle(
+                              color: AppColors.textMuted, fontSize: 13),
                         ),
                       ],
                     ),
@@ -153,14 +167,17 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                   const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.all(32),
-                      child: Center(child: CircularProgressIndicator(color: cosmeticsAccent)),
+                      child: Center(
+                          child: CircularProgressIndicator(
+                              color: cosmeticsAccent)),
                     ),
                   )
                 else if (all.items.isEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(32),
-                      child: Text(s.get('cosmetics.empty'), textAlign: TextAlign.center),
+                      child: Text(s.get('cosmetics.empty'),
+                          textAlign: TextAlign.center),
                     ),
                   )
                 else
@@ -178,7 +195,9 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                     itemCount: all.items.length,
                     total: all.total,
                     error: all.hasLoadMoreError ? all.error : null,
-                    onRetry: ref.read(paginatedProductsProvider(_query).notifier).retry,
+                    onRetry: ref
+                        .read(paginatedProductsProvider(_query).notifier)
+                        .retry,
                   ),
               ],
             ),
@@ -199,7 +218,8 @@ class _AisleChips extends StatefulWidget {
   State<_AisleChips> createState() => _AisleChipsState();
 }
 
-class _AisleChipsState extends State<_AisleChips> with SingleTickerProviderStateMixin {
+class _AisleChipsState extends State<_AisleChips>
+    with SingleTickerProviderStateMixin {
   /// Logical pixels per second.
   static const _speed = 32.0;
   static const _resumeDelay = Duration(milliseconds: 2500);
@@ -289,7 +309,8 @@ class _AisleChipsState extends State<_AisleChips> with SingleTickerProviderState
   Widget _chip(BuildContext context, AppStrings s, int index) {
     if (index == 0) {
       return ActionChip(
-        avatar: const Icon(Icons.grid_view_rounded, size: 16, color: cosmeticsAccent),
+        avatar: const Icon(Icons.grid_view_rounded,
+            size: 16, color: cosmeticsAccent),
         label: Text(s.get('cosmetics.navCategories')),
         onPressed: () => context.go('/cosmetics/categories'),
         backgroundColor: Colors.white,
@@ -307,20 +328,24 @@ class _AisleChipsState extends State<_AisleChips> with SingleTickerProviderState
   }
 }
 
-class _AisleRow extends ConsumerWidget {
-  const _AisleRow({required this.aisle, required this.onAdd});
+class _AisleRow extends StatelessWidget {
+  const _AisleRow({
+    required this.aisle,
+    required this.products,
+    required this.onAdd,
+  });
 
   final CosmeticsAisle aisle;
+  final List<Product> products;
   final void Function(Product) onAdd;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final page = ref.watch(cosmeticsAisleRowProvider(aisle.id)).valueOrNull;
-    if (page == null || page.products.isEmpty) return const SizedBox.shrink();
+  Widget build(BuildContext context) {
+    if (products.isEmpty) return const SizedBox.shrink();
     final s = context.tr;
     return _ProductRow(
       title: '${aisle.icon} ${s.cosmeticsAisle(aisle.id, aisle.title)}',
-      products: page.products,
+      products: products,
       query: ProductsQuery(shop: 'cosmetics', aisle: aisle.id),
       onAdd: onAdd,
     );
@@ -375,22 +400,28 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
       return;
     }
     final feed = ref.read(paginatedProductsProvider(widget.query));
-    if (feed.hasMore && !feed.isInitialLoading && !feed.isLoadingMore && feed.error == null) {
+    if (feed.hasMore &&
+        !feed.isInitialLoading &&
+        !feed.isLoadingMore &&
+        feed.error == null) {
       ref.read(paginatedProductsProvider(widget.query).notifier).loadMore();
     }
   }
 
-  void _retry() => ref.read(paginatedProductsProvider(widget.query).notifier).retry();
+  void _retry() =>
+      ref.read(paginatedProductsProvider(widget.query).notifier).retry();
 
   @override
   Widget build(BuildContext context) {
-    final feed = _paging ? ref.watch(paginatedProductsProvider(widget.query)) : null;
+    final feed =
+        _paging ? ref.watch(paginatedProductsProvider(widget.query)) : null;
     final products = [...widget.products];
     if (feed != null) {
       final seen = products.map((p) => p.id).toSet();
       products.addAll(feed.items.where((p) => seen.add(p.id)));
     }
-    final loading = feed != null && (feed.isInitialLoading || feed.isLoadingMore);
+    final loading =
+        feed != null && (feed.isInitialLoading || feed.isLoadingMore);
     final failed = feed != null && feed.error != null;
     final trailing = loading || failed;
     if (feed != null && !trailing && feed.hasMore) {
@@ -429,7 +460,8 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
                           ? IconButton(
                               tooltip: context.tr.get('common.retry'),
                               onPressed: _retry,
-                              icon: const Icon(Icons.refresh_rounded, color: cosmeticsAccent),
+                              icon: const Icon(Icons.refresh_rounded,
+                                  color: cosmeticsAccent),
                             )
                           : const SizedBox(
                               width: 26,
@@ -520,8 +552,10 @@ class _CosmeticsHeroCarouselState extends State<CosmeticsHeroCarousel> {
                         CachedNetworkImage(
                           imageUrl: slide.image,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(color: const Color(0xFFF6E7EE)),
-                          errorWidget: (_, __, ___) => Container(color: const Color(0xFFF6E7EE)),
+                          placeholder: (_, __) =>
+                              Container(color: const Color(0xFFF6E7EE)),
+                          errorWidget: (_, __, ___) =>
+                              Container(color: const Color(0xFFF6E7EE)),
                         ),
                         const DecoratedBox(
                           decoration: BoxDecoration(
@@ -539,7 +573,8 @@ class _CosmeticsHeroCarouselState extends State<CosmeticsHeroCarousel> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.9),
                                   borderRadius: BorderRadius.circular(999),
