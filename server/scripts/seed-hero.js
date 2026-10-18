@@ -3,6 +3,8 @@ import {
   DEFAULT_HERO_SLIDES,
   DEFAULT_EXPORT_HERO_SLIDES,
   DEFAULT_KITCHEN_HERO_SLIDES,
+  DEFAULT_COSMETICS_HERO_SLIDES,
+  DEFAULT_PHARMACY_HERO_SLIDES,
   DEFAULT_ONBOARDING_SLIDES,
 } from "../data/defaultHeroSlides.js";
 
@@ -13,6 +15,8 @@ async function main() {
     ...DEFAULT_HERO_SLIDES,
     ...DEFAULT_EXPORT_HERO_SLIDES,
     ...DEFAULT_KITCHEN_HERO_SLIDES,
+    ...DEFAULT_COSMETICS_HERO_SLIDES,
+    ...DEFAULT_PHARMACY_HERO_SLIDES,
     ...DEFAULT_ONBOARDING_SLIDES,
   ].map((s) => ({
     id: s.id,
@@ -28,7 +32,10 @@ async function main() {
     active: true,
   }));
 
-  const { error } = await db.from("hero_slides").upsert(rows, { onConflict: "id" });
+  // Populate missing samples without overwriting slides already edited in Admin.
+  const { error } = await db
+    .from("hero_slides")
+    .upsert(rows, { onConflict: "id", ignoreDuplicates: true });
   if (error) {
     console.error("Seed hero failed:", error.message);
     console.error("Run server/supabase/hero-slides.sql in Supabase SQL Editor first.");
@@ -36,7 +43,7 @@ async function main() {
   }
 
   console.log(
-    `Seeded ${DEFAULT_HERO_SLIDES.length} homepage, ${DEFAULT_EXPORT_HERO_SLIDES.length} export, ${DEFAULT_KITCHEN_HERO_SLIDES.length} kitchen, and ${DEFAULT_ONBOARDING_SLIDES.length} onboarding slides.`
+    `Ensured samples exist for homepage (${DEFAULT_HERO_SLIDES.length}), exports (${DEFAULT_EXPORT_HERO_SLIDES.length}), kitchen (${DEFAULT_KITCHEN_HERO_SLIDES.length}), cosmetics (${DEFAULT_COSMETICS_HERO_SLIDES.length}), pharmacy (${DEFAULT_PHARMACY_HERO_SLIDES.length}), and onboarding (${DEFAULT_ONBOARDING_SLIDES.length}).`
   );
 }
 

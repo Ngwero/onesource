@@ -153,6 +153,80 @@ export const DEFAULT_KITCHEN_HERO_SLIDES = [
   },
 ];
 
+/** Cosmetics carousel. The `cosmetics-` ID prefix identifies placement. */
+export const DEFAULT_COSMETICS_HERO_SLIDES = [
+  {
+    id: "cosmetics-gifts",
+    sortOrder: 0,
+    image: "https://www.onesourco.com/cosmetics/hero/gifts.webp",
+    badge: "Beauty gifts",
+    title: "Beauty for every occasion",
+    subtitle: "Curated skincare, makeup and fragrance favourites.",
+    cta: "Shop gift sets",
+    ctaHref: "/cosmetics/aisle/kits-bundles",
+    active: true,
+  },
+  {
+    id: "cosmetics-skincare",
+    sortOrder: 1,
+    image: "https://www.onesourco.com/cosmetics/hero/skincare.webp",
+    badge: "Skincare",
+    title: "Your daily skincare shelf",
+    subtitle: "Serums, moisturisers and SPF for healthy-looking skin.",
+    cta: "Shop serums",
+    ctaHref: "/cosmetics/aisle/serums-oils",
+    active: true,
+  },
+  {
+    id: "cosmetics-fragrance",
+    sortOrder: 2,
+    image: "https://www.onesourco.com/cosmetics/hero/fragrance.webp",
+    badge: "Fragrance",
+    title: "Find your signature scent",
+    subtitle: "Everyday favourites and memorable gifts in one collection.",
+    cta: "Shop fragrance",
+    ctaHref: "/cosmetics/aisle/fragrance",
+    active: true,
+  },
+];
+
+/** Pharmacy carousel. The `pharmacy-` ID prefix identifies placement. */
+export const DEFAULT_PHARMACY_HERO_SLIDES = [
+  {
+    id: "pharmacy-everyday",
+    sortOrder: 0,
+    image: "https://www.onesourco.com/pharmacy/hero/daily-care.webp",
+    badge: "OneSource Pharmacy",
+    title: "Everyday care, all in one place",
+    subtitle: "Trusted medicines, wellness and daily essentials.",
+    cta: "Browse pharmacy",
+    ctaHref: "/pharmacy/products",
+    active: true,
+  },
+  {
+    id: "pharmacy-vitamins",
+    sortOrder: 1,
+    image: "https://www.onesourco.com/pharmacy/hero/vitamins.webp",
+    badge: "Vitamins & wellness",
+    title: "Support your everyday wellness",
+    subtitle: "Quality supplements and vitamins for the whole family.",
+    cta: "Shop supplements",
+    ctaHref: "/pharmacy/aisle/supplements",
+    active: true,
+  },
+  {
+    id: "pharmacy-first-aid",
+    sortOrder: 2,
+    image: "https://www.onesourco.com/pharmacy/hero/first-aid.webp",
+    badge: "First aid",
+    title: "Be ready for life's little moments",
+    subtitle: "First-aid essentials, personal care and family health.",
+    cta: "Shop first aid",
+    ctaHref: "/pharmacy/aisle/first-aid",
+    active: true,
+  },
+];
+
 /** Mobile app onboarding. The `onboarding-` ID prefix identifies placement.
  *  badge = eyebrow, title, subtitle = body, cta = button label, image = hero photo.
  */

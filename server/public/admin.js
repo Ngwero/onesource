@@ -12,6 +12,13 @@ let SHOP = "http://localhost:5173";
 
 async function detectShopUrl() {
   const host = location.hostname || "localhost";
+  if (host !== "localhost" && host !== "127.0.0.1") {
+    SHOP = location.origin;
+    document.querySelectorAll("[data-shop-link]").forEach((a) => {
+      a.href = SHOP;
+    });
+    return;
+  }
   for (const port of [5173, 5174, 5175]) {
     try {
       await fetch(`http://${host}:${port}/`, {
@@ -1977,6 +1984,14 @@ function heroPlacementLabel(placement) {
   if (placement === "pharmacy") return "Pharmacy";
   if (placement === "onboarding") return "Onboarding";
   return "Homepage";
+}
+
+function heroPlacementPreviewPath(placement) {
+  if (placement === "exports") return "/exports";
+  if (placement === "kitchen") return "/kitchen";
+  if (placement === "cosmetics") return "/cosmetics";
+  if (placement === "pharmacy") return "/pharmacy";
+  return "/";
 }
 
 function heroSlideCardHtml(s) {
@@ -4361,6 +4376,7 @@ $("heroForm").addEventListener("submit", async (e) => {
     resetHeroForm();
     await loadHeroSlides();
     renderHeroSlides();
+    window.location.assign(`${SHOP}${heroPlacementPreviewPath(placement)}`);
   } catch (err) {
     toast(err.message, true);
   } finally {
