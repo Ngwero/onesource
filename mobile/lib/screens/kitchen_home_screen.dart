@@ -10,7 +10,6 @@ import '../models/hero_slide.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../providers/hero_provider.dart';
-import '../providers/kitchen_catalog_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../services/auth_service.dart';
 import '../utils/kitchen_mode.dart';
@@ -71,12 +70,6 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
   Widget build(BuildContext context) {
     final query = _query;
     final productsState = ref.watch(paginatedProductsProvider(query));
-    // Paint the cached first page before starting the much larger aisle
-    // catalogue. This gives Kitchen the same instant-return behaviour as Fresh.
-    final catalogAsync =
-        productsState.isInitialLoading && productsState.items.isEmpty
-            ? const AsyncValue<List<Product>>.loading()
-            : ref.watch(kitchenCatalogProvider);
     final heroAsync = ref.watch(heroSlidesProvider('kitchen'));
     final strings = ref.watch(stringsProvider);
     final profile = ref.watch(profileProvider).valueOrNull;
@@ -121,21 +114,15 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
         backgroundColor: AppColors.canvas,
         body: ErrorView(
           message: productsState.error!,
-          onRetry: () {
-            ref.read(paginatedProductsProvider(query).notifier).refresh();
-            ref.read(kitchenCatalogNotifierProvider.notifier).refresh();
-          },
+          onRetry: () =>
+              ref.read(paginatedProductsProvider(query).notifier).refresh(),
         ),
       );
     }
 
     final products = sortKitchenWithSaucepansFirst(productsState.items);
-    final catalog = sortKitchenWithSaucepansFirst(
-      catalogAsync.valueOrNull ?? const <Product>[],
-    );
-    final feed = catalog.isNotEmpty ? catalog : products;
     final popularProducts =
-        diversifyKitchenProducts(feed, limit: _popularCount);
+        diversifyKitchenProducts(products, limit: _popularCount);
     final popularIds = popularProducts.map((p) => p.id).toSet();
     // Every kitchen product, newest uploads first, growing endlessly as pages load.
     final moreProducts =
@@ -147,7 +134,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       for (final aisle in kitchenWareAisles)
         (
           aisle: aisle,
-          products: filterKitchenAisle(feed, aisle.id).take(14).toList(),
+          products: filterKitchenAisle(products, aisle.id).take(14).toList(),
         ),
     ].where((e) => e.products.isNotEmpty).toList();
 
@@ -163,7 +150,6 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
               await ref
                   .read(paginatedProductsProvider(query).notifier)
                   .refresh();
-              await ref.read(kitchenCatalogNotifierProvider.notifier).refresh();
               ref.invalidate(heroSlidesProvider('kitchen'));
             },
             child: CustomScrollView(
