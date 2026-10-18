@@ -120,15 +120,6 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                 ),
                 const SliverToBoxAdapter(child: _AisleChips()),
                 const SliverToBoxAdapter(child: CosmeticsHeroCarousel()),
-                if (offers.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: _ProductRow(
-                      title: '🏷️ ${s.get('cosmetics.hero.offersCta')}',
-                      products: offers,
-                      query: const ProductsQuery(shop: 'cosmetics', sale: true),
-                      onAdd: _addToCart,
-                    ),
-                  ),
                 for (final aisle in cosmeticsAisles)
                   SliverToBoxAdapter(
                     child: _AisleRow(
@@ -138,6 +129,15 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                               cosmeticsAisleIdFromProductId(p.id) == aisle.id)
                           .take(14)
                           .toList(),
+                      onAdd: _addToCart,
+                    ),
+                  ),
+                if (offers.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _ProductRow(
+                      title: '🏷️ ${s.get('cosmetics.hero.offersCta')}',
+                      products: offers,
+                      query: const ProductsQuery(shop: 'cosmetics', sale: true),
                       onAdd: _addToCart,
                     ),
                   ),

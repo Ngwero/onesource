@@ -130,16 +130,6 @@ class _PharmacyHomeScreenState extends ConsumerState<PharmacyHomeScreen> {
                   ),
                 ),
                 const SliverToBoxAdapter(child: _AisleChips()),
-                if (offers.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: _ProductRow(
-                      title: s.get('kitchen.home.feedOffers'),
-                      products: offers,
-                      query: const ProductsQuery(
-                          shop: 'pharmacy', sale: true, sort: 'top'),
-                      onAdd: (product) => _addToCart(context, ref, product),
-                    ),
-                  ),
                 for (final aisle in pharmacyAisles)
                   SliverToBoxAdapter(
                     child: _AisleRow(
@@ -149,6 +139,16 @@ class _PharmacyHomeScreenState extends ConsumerState<PharmacyHomeScreen> {
                               pharmacyAisleIdFromProductId(p.id) == aisle.id)
                           .take(14)
                           .toList(),
+                      onAdd: (product) => _addToCart(context, ref, product),
+                    ),
+                  ),
+                if (offers.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _ProductRow(
+                      title: s.get('kitchen.home.feedOffers'),
+                      products: offers,
+                      query: const ProductsQuery(
+                          shop: 'pharmacy', sale: true, sort: 'top'),
                       onAdd: (product) => _addToCart(context, ref, product),
                     ),
                   ),
