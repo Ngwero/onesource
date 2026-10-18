@@ -464,6 +464,7 @@ class ApiClient {
     final scoped = placement.trim().isEmpty ? 'home' : placement.trim();
     List<HeroSlide> fallback() {
       if (scoped == 'kitchen') return HeroSlide.kitchenDefaults;
+      if (scoped == 'pharmacy') return HeroSlide.pharmacyDefaults;
       if (scoped == 'onboarding') return HeroSlide.onboardingDefaults;
       return HeroSlide.defaults;
     }
@@ -484,11 +485,15 @@ class ApiClient {
         slides = slides.where((s) => s.id.startsWith('onboarding-')).toList();
       } else if (scoped == 'kitchen') {
         slides = slides.where((s) => s.id.startsWith('kitchen-')).toList();
+      } else if (scoped == 'pharmacy') {
+        slides = slides.where((s) => s.id.startsWith('pharmacy-')).toList();
       } else if (scoped == 'home') {
         slides = slides
             .where(
               (s) =>
                   !s.id.startsWith('kitchen-') &&
+                  !s.id.startsWith('cosmetics-') &&
+                  !s.id.startsWith('pharmacy-') &&
                   !s.id.startsWith('export-') &&
                   !s.id.startsWith('onboarding-'),
             )

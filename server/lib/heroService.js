@@ -28,11 +28,12 @@ const ALL_DEFAULT_HERO_SLIDES = [
   ...DEFAULT_ONBOARDING_SLIDES,
 ];
 
-/** @returns {"home"|"exports"|"kitchen"|"cosmetics"|"onboarding"} */
+/** @returns {"home"|"exports"|"kitchen"|"cosmetics"|"pharmacy"|"onboarding"} */
 export function heroPlacementOf(id = "") {
   if (String(id).startsWith("export-")) return "exports";
   if (String(id).startsWith("kitchen-")) return "kitchen";
   if (String(id).startsWith("cosmetics-")) return "cosmetics";
+  if (String(id).startsWith("pharmacy-")) return "pharmacy";
   if (String(id).startsWith("onboarding-")) return "onboarding";
   return "home";
 }
@@ -42,6 +43,7 @@ export function filterHeroSlidesByPlacement(slides, placement) {
     placement === "exports" ||
     placement === "kitchen" ||
     placement === "cosmetics" ||
+    placement === "pharmacy" ||
     placement === "onboarding"
       ? placement
       : "home";

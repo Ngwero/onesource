@@ -1965,6 +1965,7 @@ function heroPlacementOf(id = "") {
   if (String(id).startsWith("export-")) return "exports";
   if (String(id).startsWith("kitchen-")) return "kitchen";
   if (String(id).startsWith("cosmetics-")) return "cosmetics";
+  if (String(id).startsWith("pharmacy-")) return "pharmacy";
   if (String(id).startsWith("onboarding-")) return "onboarding";
   return "home";
 }
@@ -1973,6 +1974,7 @@ function heroPlacementLabel(placement) {
   if (placement === "exports") return "Exports";
   if (placement === "kitchen") return "Kitchen";
   if (placement === "cosmetics") return "Cosmetics";
+  if (placement === "pharmacy") return "Pharmacy";
   if (placement === "onboarding") return "Onboarding";
   return "Homepage";
 }
@@ -2005,6 +2007,7 @@ function renderHeroSlides() {
   const exportActive = active.filter((s) => heroPlacementOf(s.id) === "exports");
   const kitchenActive = active.filter((s) => heroPlacementOf(s.id) === "kitchen");
   const cosmeticsActive = active.filter((s) => heroPlacementOf(s.id) === "cosmetics");
+  const pharmacyActive = active.filter((s) => heroPlacementOf(s.id) === "pharmacy");
   const onboardingActive = active.filter((s) => heroPlacementOf(s.id) === "onboarding");
   $("heroSlideGrid").innerHTML = homeActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active homepage slides</div>';
   $("exportHeroSlideGrid").innerHTML = exportActive.map(heroSlideCardHtml).join("") || '<div class="empty" style="padding:2rem">No active export slides</div>';
@@ -2017,6 +2020,12 @@ function renderHeroSlides() {
     cosmeticsGrid.innerHTML =
       cosmeticsActive.map(heroSlideCardHtml).join("") ||
       '<div class="empty" style="padding:2rem">No cosmetics slides — the website shows its built-in banners. Add slide → Cosmetics shop</div>';
+  }
+  const pharmacyGrid = $("pharmacyHeroSlideGrid");
+  if (pharmacyGrid) {
+    pharmacyGrid.innerHTML =
+      pharmacyActive.map(heroSlideCardHtml).join("") ||
+      '<div class="empty" style="padding:2rem">No pharmacy slides — Add slide → Pharmacy</div>';
   }
   const onboardingGrid = $("onboardingHeroSlideGrid");
   if (onboardingGrid) {
@@ -4272,6 +4281,8 @@ $("heroPlacement").addEventListener("change", () => {
         ? "Shown on Kitchen Ware home (mobile app)"
         : placement === "cosmetics"
           ? "Shown on the Cosmetics shop home (website)"
+        : placement === "pharmacy"
+          ? "Shown on Pharmacy home (mobile app)"
         : placement === "onboarding"
           ? "Shown on first-launch onboarding (mobile app)"
           : "Shown on the homepage carousel";
@@ -4287,6 +4298,9 @@ $("heroPlacement").addEventListener("change", () => {
   } else if (placement === "cosmetics") {
     $("heroCta").value = "Shop now";
     $("heroCtaHref").value = "/cosmetics/products";
+  } else if (placement === "pharmacy") {
+    $("heroCta").value = "Shop pharmacy";
+    $("heroCtaHref").value = "/pharmacy/shop";
   } else if (placement === "onboarding") {
     $("heroCta").value = "Continue";
     $("heroCtaHref").value = "/home";
@@ -4314,6 +4328,9 @@ $("heroForm").addEventListener("submit", async (e) => {
   }
   if (!editingHeroId && placement === "cosmetics" && !slideId.startsWith("cosmetics-")) {
     slideId = `cosmetics-${slideId || `hero-${Date.now()}`}`;
+  }
+  if (!editingHeroId && placement === "pharmacy" && !slideId.startsWith("pharmacy-")) {
+    slideId = `pharmacy-${slideId || `hero-${Date.now()}`}`;
   }
   if (!editingHeroId && placement === "onboarding" && !slideId.startsWith("onboarding-")) {
     slideId = `onboarding-${slideId || `${Date.now()}`}`;
