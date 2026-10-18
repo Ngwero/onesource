@@ -11,7 +11,12 @@ import { listCategories } from "../lib/categoriesService.js";
 import { categoryMatchAliases, FRESH_SHOP_CATEGORY_IDS } from "../data/categories.js";
 import { withLocalProductFallback } from "../lib/localSeed.js";
 import { enrichProductsWithSuppliers } from "../lib/suppliersService.js";
-import { idPrefixUpperBound, nestedAislePrefixes, productIdWithoutAisle } from "../lib/aisles.js";
+import {
+  aisleIdsForShop,
+  idPrefixUpperBound,
+  nestedAislePrefixes,
+  productIdWithoutAisle,
+} from "../lib/aisles.js";
 import { productMatchesSearch, rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
 import { hasPublishedColumn } from "../lib/productColumns.js";
 import { dbErrorMessage, isStatementTimeoutError } from "../lib/supabaseErrors.js";
@@ -433,6 +438,41 @@ async function loadFreshProducts(db, ctx, { card, publishedColumn }) {
   return batches.flat().map(card ? cardRowToProduct : rowToProduct);
 }
 
+async function loadBalancedAislePage(db, ctx, { page, pageSize, card, publishedColumn }) {
+  const aisleIds = aisleIdsForShop(ctx.shopPrefix).slice(0, 10);
+  const perAisle = Math.max(2, Math.ceil(pageSize / aisleIds.length));
+  const from = page * perAisle;
+  const columns = card ? cardSelect(publishedColumn) : "*";
+  const batches = await Promise.all(
+    aisleIds.map(async (aisleId) => {
+      const aisleCtx = { ...ctx, aisleId };
+      const query = applyListFilters(
+        applySort(db.from("products").select(columns), "newest"),
+        aisleCtx,
+        { publishedColumn }
+      ).range(from, from + perAisle);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []).map(card ? cardRowToProduct : rowToProduct);
+    })
+  );
+
+  const products = [];
+  for (let index = 0; index < perAisle; index += 1) {
+    for (const batch of batches) {
+      if (batch[index]) products.push(batch[index]);
+      if (products.length >= pageSize) break;
+    }
+    if (products.length >= pageSize) break;
+  }
+  const hasMore = batches.some((batch) => batch.length > perAisle);
+  return {
+    products: await enrichProductsWithSuppliers(db, products, { admin: ctx.admin }),
+    total: (page * pageSize) + products.length + (hasMore ? 1 : 0),
+    hasMore,
+  };
+}
+
 async function loadListPage(ctx, { page, pageSize, card }) {
   const { admin, search, list } = ctx;
   return withLocalProductFallback(
@@ -462,6 +502,21 @@ async function loadListPage(ctx, { page, pageSize, card }) {
           total: products.length,
           hasMore: from + pageSize < products.length,
         };
+      }
+
+      if (
+        list.sort === "aisles" &&
+        !search &&
+        !ctx.category &&
+        !ctx.aisleId &&
+        (ctx.kitchenOnly || ctx.cosmeticsOnly || ctx.pharmacyOnly)
+      ) {
+        return loadBalancedAislePage(db, ctx, {
+          page,
+          pageSize,
+          card,
+          publishedColumn,
+        });
       }
 
       if (search) {

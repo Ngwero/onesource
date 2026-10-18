@@ -29,7 +29,7 @@ class PharmacyHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _PharmacyHomeScreenState extends ConsumerState<PharmacyHomeScreen> {
-  static const _query = ProductsQuery(shop: 'pharmacy', sort: 'top');
+  static const _query = ProductsQuery(shop: 'pharmacy', sort: 'aisles');
   final _scrollController = ScrollController();
   InfiniteScrollListener? _scrollListener;
 

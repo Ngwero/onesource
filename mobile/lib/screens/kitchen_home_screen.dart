@@ -35,7 +35,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
   final _scrollController = ScrollController();
   InfiniteScrollListener? _scrollListener;
 
-  static const _query = ProductsQuery(shop: 'kitchen', sort: 'newest');
+  static const _query = ProductsQuery(shop: 'kitchen', sort: 'aisles');
   static const _popularCount = 12;
 
   @override

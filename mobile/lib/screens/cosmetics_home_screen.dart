@@ -32,7 +32,7 @@ class CosmeticsHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
-  static const _query = ProductsQuery(shop: 'cosmetics', sort: 'newest');
+  static const _query = ProductsQuery(shop: 'cosmetics', sort: 'aisles');
   final _scrollController = ScrollController();
   InfiniteScrollListener? _scrollListener;
 

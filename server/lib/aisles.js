@@ -49,6 +49,10 @@ const AISLE_IDS = {
   ],
 };
 
+export function aisleIdsForShop(shopPrefix) {
+  return [...(AISLE_IDS[shopPrefix] ?? [])];
+}
+
 /** `cosmetics-fragrance-boots-123` → `boots-123` (the part that survives an aisle move). */
 export function productIdWithoutAisle(shopPrefix, id) {
   const aisle = [...(AISLE_IDS[shopPrefix] ?? [])]
