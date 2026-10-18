@@ -64,7 +64,7 @@ String? cosmeticsAisleIdFromProductId(String id) {
   return null;
 }
 
-const _heroBase = 'https://onesourco.com/cosmetics/hero';
+const _heroBase = 'https://www.onesourco.com/cosmetics/hero';
 
 /// Built-in Cosmetics hero banners (same artwork as the website).
 const cosmeticsHeroSlides =

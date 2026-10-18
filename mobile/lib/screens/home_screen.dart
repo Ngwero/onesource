@@ -10,10 +10,8 @@ import '../models/hero_slide.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../providers/hero_provider.dart';
-import '../providers/home_aisle_catalog_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../providers/products_provider.dart';
-import '../providers/search_catalog_provider.dart';
 import '../services/auth_service.dart';
 import '../utils/fresh_categories.dart';
 import '../widgets/category_marquee.dart';
@@ -59,7 +57,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
-  void _addToCart(Product product) => addToCartWithFeedback(context, ref, product);
+  void _addToCart(Product product) =>
+      addToCartWithFeedback(context, ref, product);
 
   @override
   Widget build(BuildContext context) {
@@ -110,22 +109,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         backgroundColor: AppColors.canvas,
         body: ErrorView(
           message: productsState.error!,
-          onRetry: () => ref.read(paginatedProductsProvider(query).notifier).refresh(),
+          onRetry: () =>
+              ref.read(paginatedProductsProvider(query).notifier).refresh(),
         ),
       );
     }
 
     _scrollListener?.scheduleCheck();
     final products = productsState.items;
-    // Seed chicken/meat/fish/etc. so aisle rows under Special Offers stay full.
-    final aisleSeed = ref.watch(homeAisleCatalogProvider).valueOrNull ?? const [];
-    final catalog = mergeProductPools(products, aisleSeed);
     final popularProducts = products.take(_popularCount).toList();
-    final moreProducts = products.length > _popularCount ? products.skip(_popularCount).toList() : <Product>[];
-    final themedRows = buildHomeThemedRows(catalog, minRows: 10);
+    final moreProducts = products.length > _popularCount
+        ? products.skip(_popularCount).toList()
+        : <Product>[];
+    final themedRows = buildHomeThemedRows(products, minRows: 4);
     final produceCategories = diversifyFreshCategories(
       (categoriesAsync.valueOrNull ?? [])
-          .where((c) => c.id != 'kitchen-ware' && c.id != 'kitchen-furniture' && c.id != 'cosmetics' && c.id != 'pharmacy')
+          .where((c) =>
+              c.id != 'kitchen-ware' &&
+              c.id != 'kitchen-furniture' &&
+              c.id != 'cosmetics' &&
+              c.id != 'pharmacy')
           .map(
             (c) => Category(
               id: c.id,
@@ -145,11 +148,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: RefreshIndicator(
             color: AppColors.leaf,
             onRefresh: () async {
-              await ref.read(paginatedProductsProvider(query).notifier).refresh();
+              await ref
+                  .read(paginatedProductsProvider(query).notifier)
+                  .refresh();
               ref.invalidate(categoriesProvider);
               ref.invalidate(heroSlidesProvider('home'));
-              ref.invalidate(homeAisleCatalogProvider);
-              ref.invalidate(searchCatalogProvider('fresh'));
             },
             child: CustomScrollView(
               controller: _scrollController,
@@ -170,12 +173,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SizedBox(height: 22),
                         Text(
                           strings.specialOffers,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text),
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.text),
                         ),
                         const SizedBox(height: 12),
                         heroAsync.when(
                           loading: () => const SizedBox(height: 220),
-                          error: (_, __) => FeaturedCarousel(slides: HeroSlide.defaults),
+                          error: (_, __) =>
+                              FeaturedCarousel(slides: HeroSlide.defaults),
                           data: (slides) => slides.isEmpty
                               ? const SizedBox.shrink()
                               : FeaturedCarousel(slides: slides),
@@ -210,7 +217,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         Text(
                           strings.popularItems,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text),
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.text),
                         ),
                         TextButton(
                           onPressed: () => context.go('/shop'),
@@ -223,7 +233,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 if (popularProducts.isEmpty && themedRows.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(child: Text(context.tr.get('app.products.none'))),
+                    child: Center(
+                        child: Text(context.tr.get('app.products.none'))),
                   )
                 else if (popularProducts.isNotEmpty)
                   PopularProductSliverGrid(
@@ -240,7 +251,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         children: [
                           Text(
                             strings.moreToExplore,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text),
+                            style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.text),
                           ),
                           TextButton(
                             onPressed: () => context.go('/shop'),
@@ -261,8 +275,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   hasMore: productsState.hasMore,
                   itemCount: productsState.items.length,
                   total: productsState.total,
-                  error: productsState.hasLoadMoreError ? productsState.error : null,
-                  onRetry: ref.read(paginatedProductsProvider(query).notifier).retry,
+                  error: productsState.hasLoadMoreError
+                      ? productsState.error
+                      : null,
+                  onRetry:
+                      ref.read(paginatedProductsProvider(query).notifier).retry,
                 ),
               ],
             ),

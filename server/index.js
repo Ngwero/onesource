@@ -23,20 +23,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = env.port;
 
-/**
- * Keep browser pages on one origin, but serve the mobile API and its static
- * hero artwork directly from the Cloudflare-backed bare domain. Some mobile
- * networks intermittently fail to resolve the single-address `www` record.
- */
+/** Bare domain → www, so carts/logins (stored per origin) stay on one site. */
 app.use((req, res, next) => {
   const host = String(req.headers["x-forwarded-host"] || req.get("host") || "")
     .split(",")[0]
     .trim()
     .toLowerCase();
-  const mobileResource =
-    req.path.startsWith("/api/") ||
-    req.path.startsWith("/cosmetics/hero/");
-  if (host === "onesourco.com" && !mobileResource) {
+  if (host === "onesourco.com") {
     return res.redirect(301, `https://www.onesourco.com${req.originalUrl}`);
   }
   next();

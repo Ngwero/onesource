@@ -20,10 +20,10 @@ class Env {
   /// Shop API base URL including `/api` suffix.
   /// Android emulator: use http://10.0.2.2:3001/api
   /// iOS simulator: use http://localhost:3001/api
-  /// Production: https://onesourco.com/api (Cloudflare-backed mobile endpoint)
+  /// Production: https://www.onesourco.com/api
   static const apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://onesourco.com/api',
+    defaultValue: 'https://www.onesourco.com/api',
   );
 
   static const storageBucket = String.fromEnvironment(
