@@ -209,7 +209,7 @@ export async function listAdminProducts(db, params) {
   const hasFilters = Boolean(
     params.ids.length || params.q || params.category || params.supplier || params.stock || params.prime || params.sale
   );
-  const fastTotalPromise = hasFilters ? null : getFastProductCount(db);
+  const fastTotalPromise = hasFilters ? null : getFastProductCount(db).catch(() => null);
 
   // The common Products and Inventory views sort by the indexed text primary
   // key. Fetch their slim card rows directly. The previous ID query followed by
@@ -224,17 +224,24 @@ export async function listAdminProducts(db, params) {
     // A filter plus ORDER BY id needs a composite index for every possible
     // filter. Older production databases do not have all of them. Preserve the
     // requested filter and page, but use its natural indexed order.
-    const direct = await (hasFilters ? filtered : applyAdminSort(filtered, params)).range(from, to);
+    const direct = await filtered.range(from, to);
     if (direct.error) throw direct.error;
     let products = (direct.data ?? []).map(toListProduct);
     if (params.sale) {
       products = products.filter((p) => p.originalPrice != null && p.originalPrice > p.price);
     }
-    const fastTotal = fastTotalPromise ? await fastTotalPromise : null;
+    const fastTotal = fastTotalPromise
+      ? await Promise.race([
+          fastTotalPromise,
+          new Promise((resolve) => setTimeout(() => resolve(null), 250)),
+        ])
+      : null;
     return {
       products,
-      total: hasFilters ? from + products.length + (products.length === params.pageSize ? 1 : 0) : fastTotal.value,
-      totalExact: !hasFilters && fastTotal.exact,
+      total: hasFilters
+        ? from + products.length + (products.length === params.pageSize ? 1 : 0)
+        : fastTotal?.value ?? from + products.length + (products.length === params.pageSize ? 1 : 0),
+      totalExact: !hasFilters && fastTotal?.exact === true,
       page: params.page,
       pageSize: params.pageSize,
     };
