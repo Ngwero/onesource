@@ -1,7 +1,8 @@
 import '../models/product.dart';
 
 class CosmeticsAisle {
-  const CosmeticsAisle({required this.id, required this.title, required this.icon});
+  const CosmeticsAisle(
+      {required this.id, required this.title, required this.icon});
 
   final String id;
   final String title;
@@ -13,9 +14,11 @@ const cosmeticsAisles = <CosmeticsAisle>[
   CosmeticsAisle(id: 'fragrance', title: 'Perfume & fragrance', icon: '🌸'),
   CosmeticsAisle(id: 'hair-care', title: 'Hair care', icon: '💇'),
   CosmeticsAisle(id: 'mens', title: "Men's grooming", icon: '🧔'),
-  CosmeticsAisle(id: 'home-fragrance', title: 'Candles & home fragrance', icon: '🕯️'),
+  CosmeticsAisle(
+      id: 'home-fragrance', title: 'Candles & home fragrance', icon: '🕯️'),
   CosmeticsAisle(id: 'wellness', title: 'Wellness & supplements', icon: '🌿'),
-  CosmeticsAisle(id: 'beauty-tech-home', title: 'Beauty tech & home', icon: '🛏️'),
+  CosmeticsAisle(
+      id: 'beauty-tech-home', title: 'Beauty tech & home', icon: '🛏️'),
   CosmeticsAisle(id: 'sexual-wellness', title: 'Sexual wellness', icon: '💗'),
   CosmeticsAisle(id: 'face-makeup', title: 'Face makeup', icon: '💄'),
   CosmeticsAisle(id: 'eye-makeup', title: 'Eye makeup', icon: '👁️'),
@@ -61,11 +64,17 @@ String? cosmeticsAisleIdFromProductId(String id) {
   return null;
 }
 
-const _heroBase = 'https://www.onesourco.com/cosmetics/hero';
+const _heroBase = 'https://onesourco.com/cosmetics/hero';
 
 /// Built-in Cosmetics hero banners (same artwork as the website).
-const cosmeticsHeroSlides = <({String key, String image, String href, String? href2})>[
-  (key: 'gifts', image: '$_heroBase/gifts.webp', href: '/cosmetics/aisle/kits-bundles', href2: null),
+const cosmeticsHeroSlides =
+    <({String key, String image, String href, String? href2})>[
+  (
+    key: 'gifts',
+    image: '$_heroBase/gifts.webp',
+    href: '/cosmetics/aisle/kits-bundles',
+    href2: null
+  ),
   (
     key: 'makeup',
     image: '$_heroBase/makeup.webp',
@@ -78,5 +87,10 @@ const cosmeticsHeroSlides = <({String key, String image, String href, String? hr
     href: '/cosmetics/aisle/serums-oils',
     href2: '/cosmetics/aisle/sun-protection',
   ),
-  (key: 'fragrance', image: '$_heroBase/fragrance.webp', href: '/cosmetics/aisle/fragrance', href2: null),
+  (
+    key: 'fragrance',
+    image: '$_heroBase/fragrance.webp',
+    href: '/cosmetics/aisle/fragrance',
+    href2: null
+  ),
 ];
