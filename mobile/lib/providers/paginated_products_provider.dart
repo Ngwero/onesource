@@ -16,6 +16,7 @@ class ProductsQuery {
     this.sale = false,
     this.prime = false,
     this.sort,
+    this.pageSize,
   });
 
   final String? categoryId;
@@ -35,6 +36,9 @@ class ProductsQuery {
   /// Server sort: `newest` (default when null), `top`, `price-asc`, `price-desc`, `name`.
   final String? sort;
 
+  /// Optional smaller page for home shelves. Full catalogue screens use 48.
+  final int? pageSize;
+
   ProductsQuery copyWith(
       {bool? sale, bool? prime, String? sort, bool clearSort = false}) {
     return ProductsQuery(
@@ -44,6 +48,7 @@ class ProductsQuery {
       sale: sale ?? this.sale,
       prime: prime ?? this.prime,
       sort: clearSort ? null : (sort ?? this.sort),
+      pageSize: pageSize,
     );
   }
 
@@ -56,10 +61,12 @@ class ProductsQuery {
           other.aisle == aisle &&
           other.sale == sale &&
           other.prime == prime &&
-          other.sort == sort;
+          other.sort == sort &&
+          other.pageSize == pageSize;
 
   @override
-  int get hashCode => Object.hash(categoryId, shop, aisle, sale, prime, sort);
+  int get hashCode =>
+      Object.hash(categoryId, shop, aisle, sale, prime, sort, pageSize);
 }
 
 class PaginatedProductsState {
@@ -106,7 +113,7 @@ class PaginatedProductsState {
 
 class PaginatedProductsNotifier
     extends FamilyNotifier<PaginatedProductsState, ProductsQuery> {
-  static const pageSize = 48;
+  static const defaultPageSize = 48;
   static const _cachePrefix = 'onesource.catalog.v2:';
   static const _cacheMaxAge = Duration(days: 7);
 
@@ -132,6 +139,7 @@ class PaginatedProductsNotifier
             'sale': arg.sale,
             'prime': arg.prime,
             'sort': arg.sort,
+            'pageSize': arg.pageSize,
           })}';
 
   Future<PaginatedProductsState?> _readCache() async {
@@ -168,7 +176,7 @@ class PaginatedProductsNotifier
         jsonEncode({
           'savedAt': DateTime.now().toIso8601String(),
           'products':
-              value.items.take(pageSize).map((p) => p.toJson()).toList(),
+              value.items.take(_pageSize).map((p) => p.toJson()).toList(),
           'total': value.total,
           'hasMore': value.hasMore,
         }),
@@ -245,7 +253,7 @@ class PaginatedProductsNotifier
           prime: arg.prime,
           sort: arg.sort,
           page: current,
-          pageSize: pageSize,
+          pageSize: _pageSize,
         );
         if (gen != _generation) return;
         _loadedPage = current;
@@ -277,6 +285,8 @@ class PaginatedProductsNotifier
       );
     }
   }
+
+  int get _pageSize => arg.pageSize ?? defaultPageSize;
 
   List<Product> _mergeProducts(
       List<Product> existing, Iterable<Product> incoming) {

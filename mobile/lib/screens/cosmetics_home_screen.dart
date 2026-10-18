@@ -352,7 +352,7 @@ class _AisleRow extends StatelessWidget {
     return _ProductRow(
       title: '${aisle.icon} ${s.cosmeticsAisle(aisle.id, aisle.title)}',
       products: products,
-      query: ProductsQuery(shop: 'cosmetics', aisle: aisle.id),
+      query: ProductsQuery(shop: 'cosmetics', aisle: aisle.id, pageSize: 6),
       onAdd: onAdd,
       loadWhenEmpty: loadWhenEmpty,
     );
@@ -434,6 +434,7 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
         feed != null && (feed.isInitialLoading || feed.isLoadingMore);
     final failed = feed != null && feed.error != null;
     final trailing = loading || failed;
+    final skeletons = products.isEmpty && loading ? 3 : 0;
     if (feed != null && !trailing && feed.hasMore) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _maybeLoadMore();
@@ -459,9 +460,14 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
               controller: _controller,
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(right: 20),
-              itemCount: products.length + (trailing ? 1 : 0),
+              itemCount: products.length +
+                  skeletons +
+                  (trailing && skeletons == 0 ? 1 : 0),
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
+                if (index >= products.length && skeletons > 0) {
+                  return const _ShelfCardSkeleton(width: 156);
+                }
                 if (index == products.length) {
                   return SizedBox(
                     width: 96,
@@ -500,6 +506,54 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
       ),
     );
   }
+}
+
+class _ShelfCardSkeleton extends StatelessWidget {
+  const _ShelfCardSkeleton({required this.width});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: width,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: softCardShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.leafPale,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const SizedBox.expand(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(height: 12, decoration: _skeletonDecoration()),
+            const SizedBox(height: 8),
+            FractionallySizedBox(
+              widthFactor: .68,
+              child: Container(height: 12, decoration: _skeletonDecoration()),
+            ),
+            const SizedBox(height: 12),
+            FractionallySizedBox(
+              widthFactor: .5,
+              child: Container(height: 16, decoration: _skeletonDecoration()),
+            ),
+          ],
+        ),
+      );
+
+  static BoxDecoration _skeletonDecoration() => BoxDecoration(
+        color: AppColors.muted,
+        borderRadius: BorderRadius.circular(8),
+      );
 }
 
 /// Auto-playing banner carousel using the website's Cosmetics hero artwork.
