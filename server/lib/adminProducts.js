@@ -133,7 +133,10 @@ export function parseAdminListQuery(query) {
     MAX_ADMIN_PAGE_SIZE,
     Math.max(1, parseInt(query.pageSize ?? "50", 10) || 50)
   );
-  const sortKey = SORT_COLUMNS[query.sort] ? String(query.sort) : "updatedAt";
+  // The primary key is guaranteed to be indexed. Defaulting to updated_at made
+  // a cold admin page wait for a full-table sort on databases where the optional
+  // performance indexes have not been installed yet.
+  const sortKey = SORT_COLUMNS[query.sort] ? String(query.sort) : "id";
   const dir = String(query.dir ?? "").toLowerCase() === "asc" ? "asc" : "desc";
   const ids = String(query.ids ?? "")
     .split(",")
@@ -207,6 +210,31 @@ export async function listAdminProducts(db, params) {
     params.ids.length || params.q || params.category || params.supplier || params.stock || params.prime || params.sale
   );
   const fastTotalPromise = hasFilters ? null : getFastProductCount(db);
+
+  // The common Products and Inventory views sort by the indexed text primary
+  // key. Fetch their slim card rows directly. The previous ID query followed by
+  // `WHERE id IN (...)` forced a second planner pass and regularly exhausted the
+  // statement timeout on the production catalogue.
+  if (params.sortKey === "id") {
+    const direct = await applyAdminSort(
+      applyAdminFilters(db.from("products").select(columns), params, supplierMatches),
+      params
+    ).range(from, to);
+    if (direct.error) throw direct.error;
+    let products = (direct.data ?? []).map(toListProduct);
+    if (params.sale) {
+      products = products.filter((p) => p.originalPrice != null && p.originalPrice > p.price);
+    }
+    const fastTotal = fastTotalPromise ? await fastTotalPromise : null;
+    return {
+      products,
+      total: hasFilters ? from + products.length + (products.length === params.pageSize ? 1 : 0) : fastTotal.value,
+      totalExact: !hasFilters && fastTotal.exact,
+      page: params.page,
+      pageSize: params.pageSize,
+    };
+  }
+
   // Unfiltered admin views share one exact count. Filtered lists keep their count
   // attached to the query, falling back to the planner if Postgres reaches its limit.
   // Attach the rejection handler immediately: the page query may fail before the
