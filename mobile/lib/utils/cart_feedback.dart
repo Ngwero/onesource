@@ -14,7 +14,10 @@ void addToCartWithFeedback(
   Product product, {
   int quantity = 1,
 }) {
-  ref.read(cartProvider.notifier).add(product, quantity: quantity);
+  final cart = ref.read(cartProvider.notifier);
+  final before = cart.quantityFor(product.id);
+  cart.add(product, quantity: quantity);
+  if (cart.quantityFor(product.id) <= before) return;
   final s = context.tr;
   final title = s.productTitle(product);
   final message = quantity > 1

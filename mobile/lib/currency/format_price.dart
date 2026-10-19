@@ -27,7 +27,14 @@ String formatConvertedPrice({
 }
 
 String _formatAmount(CurrencyInfo info, double amount) {
-  final locale = info.locale.replaceAll('_', '-');
+  // intl does not bundle every country's locale (notably rw_RW). Resolve
+  // supported language fallbacks before formatting, including whole currencies.
+  // Keep the selected currency symbol and precision even when using English.
+  final locale = Intl.verifiedLocale(
+    info.locale,
+    NumberFormat.localeExists,
+    onFailure: (_) => 'en',
+  );
 
   if (info.decimals == 0) {
     return NumberFormat.currency(

@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product.dart';
 import '../services/api_client.dart';
 
+final catalogApiClientProvider = Provider<ApiClient>((ref) => apiClientProvider);
+
 /// Identifies a paginated product feed.
 class ProductsQuery {
   const ProductsQuery({
@@ -122,6 +124,7 @@ class PaginatedProductsNotifier
   static const _maxEmptyPagesPerLoad = 4;
 
   int _loadedPage = -1;
+  bool _firstPagePending = true;
 
   /// Bumped on every reset so responses for a superseded feed are dropped.
   int _generation = 0;
@@ -187,6 +190,7 @@ class PaginatedProductsNotifier
   }
 
   Future<void> _loadFirstWithCache() async {
+    _firstPagePending = true;
     _loadedPage = -1;
     final gen = ++_generation;
     final cached = await _readCache();
@@ -196,6 +200,7 @@ class PaginatedProductsNotifier
   }
 
   Future<void> loadFirst() async {
+    _firstPagePending = true;
     _loadedPage = -1;
     final gen = ++_generation;
     state = const PaginatedProductsState(isInitialLoading: true);
@@ -203,12 +208,13 @@ class PaginatedProductsNotifier
   }
 
   Future<void> refresh() async {
+    _firstPagePending = true;
     _loadedPage = -1;
     final gen = ++_generation;
     if (state.items.isEmpty) {
       state = const PaginatedProductsState(isInitialLoading: true);
     } else {
-      state = state.copyWith(clearError: true);
+      state = state.copyWith(clearError: true, isLoadingMore: false);
     }
     await _fetchPage(0, replace: true, gen: gen);
   }
@@ -216,6 +222,7 @@ class PaginatedProductsNotifier
   /// Loads the next page. No-op while a request is in flight, at the end of
   /// the list, or after a failed page (use [retry] so errors don't loop).
   Future<void> loadMore() async {
+    if (_firstPagePending) return;
     if (state.isInitialLoading || state.isLoadingMore || !state.hasMore) return;
     if (state.error != null) return;
     state = state.copyWith(isLoadingMore: true);
@@ -224,6 +231,8 @@ class PaginatedProductsNotifier
 
   /// Retries after an error: the first page if nothing loaded, else the next page.
   Future<void> retry() async {
+    if (_firstPagePending) return;
+    if (_loadedPage < 0) return refresh();
     if (state.items.isEmpty) return loadFirst();
     if (state.isLoadingMore) return;
     state = state.copyWith(clearError: true, isLoadingMore: true);
@@ -245,7 +254,7 @@ class PaginatedProductsNotifier
       var items = replace ? const <Product>[] : state.items;
       var emptyPages = 0;
       while (true) {
-        final result = await apiClientProvider.fetchProductsPage(
+        final result = await ref.read(catalogApiClientProvider).fetchProductsPage(
           category: arg.categoryId,
           shop: arg.shop,
           aisle: arg.aisle,
@@ -283,6 +292,8 @@ class PaginatedProductsNotifier
         isLoadingMore: false,
         error: e,
       );
+    } finally {
+      if (replace && gen == _generation) _firstPagePending = false;
     }
   }
 

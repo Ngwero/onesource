@@ -17,6 +17,7 @@ import '../utils/cart_feedback.dart';
 import '../utils/shop_mode.dart';
 import '../widgets/compact_home_bar.dart';
 import '../widgets/home_header.dart';
+import '../widgets/loading_view.dart';
 import '../widgets/popular_product_card.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/products_load_more.dart';
@@ -60,6 +61,17 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
   Widget build(BuildContext context) {
     final s = context.tr;
     final all = ref.watch(paginatedProductsProvider(_query));
+    if (all.items.isEmpty && all.error != null && !all.isInitialLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.canvas,
+        body: ErrorView(
+          message: all.error!,
+          onRetry: () => ref
+              .read(paginatedProductsProvider(_query).notifier)
+              .retry(),
+        ),
+      );
+    }
     final offers = all.items
         .where((p) => p.originalPrice != null && p.originalPrice! > p.price)
         .take(14)

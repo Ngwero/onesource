@@ -15,6 +15,8 @@ import 'exports_screens.dart' show isExportProduct;
 
 enum _Payment { cash, mobileMoney }
 
+final checkoutApiClientProvider = Provider<ApiClient>((ref) => apiClientProvider);
+
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
 
@@ -40,6 +42,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final user = ref.read(authServiceProvider).user;
       _email.text = user?.email ?? '';
       final meta = user?.userMetadata?['full_name'];
@@ -57,11 +60,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _submit() async {
+    if (_submitting) return;
     if (!_formKey.currentState!.validate()) return;
 
     final items = ref.read(cartProvider).where((i) => !isExportProduct(i.product)).toList();
     if (items.isEmpty) return;
     final s = context.tr;
+    final cart = ref.read(cartProvider.notifier);
+    final payment = _payment;
 
     setState(() {
       _submitting = true;
@@ -73,7 +79,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       final totals = calcOrderTotal(subtotal);
       final user = ref.read(authServiceProvider).user;
       String? opt(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
-      final paymentNote = _payment == _Payment.mobileMoney
+      final paymentNote = payment == _Payment.mobileMoney
           ? s.get('checkout.mobileMoney')
           : s.get('checkout.payOnDelivery');
       final notes = [opt(_notes), '${s.get('checkout.payment')}: $paymentNote']
@@ -106,17 +112,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             .toList(),
       );
 
-      final order = await apiClientProvider.placeOrder(payload);
-      final cart = ref.read(cartProvider.notifier);
-      for (final i in items) {
-        cart.remove(i.product.id);
+      final order = await ref.read(checkoutApiClientProvider).placeOrder(payload);
+      // The cart outlives this route. Complete a successful order even when
+      // the shopper has left checkout, without accessing a disposed widget ref.
+      if (cart.mounted) {
+        for (final i in items) {
+          cart.setQuantity(i.product.id, cart.quantityFor(i.product.id) - i.quantity);
+        }
       }
 
       if (!mounted) return;
-      final pay = _payment == _Payment.mobileMoney ? 'momo' : 'cod';
+      final pay = payment == _Payment.mobileMoney ? 'momo' : 'cod';
       context.go('/checkout/confirmation/${order.id}?pay=$pay');
     } catch (e) {
-      setState(() => _error = formatCheckoutError(e));
+      if (mounted) setState(() => _error = formatCheckoutError(e));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

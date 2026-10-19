@@ -71,6 +71,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
 
   void add(Product product, {int quantity = 1}) {
     final max = product.stockQuantity ?? 99;
+    if (!product.inStock || max <= 0 || quantity <= 0) return;
     final existing = state.indexWhere((i) => i.product.id == product.id);
     if (existing >= 0) {
       final next = (state[existing].quantity + quantity).clamp(1, max);
@@ -92,6 +93,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
         .map((i) {
           if (i.product.id != productId) return i;
           final max = i.product.stockQuantity ?? 99;
+          if (!i.product.inStock || max <= 0) return i;
           return i.copyWith(quantity: quantity.clamp(1, max));
         })
         .toList();
@@ -118,9 +120,9 @@ final cartProvider = StateNotifierProvider<CartNotifier, List<CartItem>>((ref) {
 });
 
 final cartSubtotalProvider = Provider<double>((ref) {
-  return ref.watch(cartProvider.notifier).subtotal;
+  return ref.watch(cartProvider).fold(0.0, (sum, item) => sum + item.lineTotal);
 });
 
 final cartItemCountProvider = Provider<int>((ref) {
-  return ref.watch(cartProvider.notifier).itemCount;
+  return ref.watch(cartProvider).fold(0, (sum, item) => sum + item.quantity);
 });

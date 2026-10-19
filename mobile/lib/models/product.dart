@@ -105,7 +105,7 @@ class Product {
         if (stockQuantity != null) 'stockQuantity': stockQuantity,
         if (delivery != null) 'delivery': delivery,
         if (supplierName != null) 'supplierName': supplierName,
-        if (details.ratingSource != null) 'details': {'ratingSource': details.ratingSource},
+        'details': details.toJson(),
       };
 }
 
@@ -115,6 +115,8 @@ class ProductSpec {
   final String key;
   final String label;
   final String value;
+
+  Map<String, dynamic> toJson() => {'key': key, 'label': label, 'value': value};
 }
 
 class ProductInfo {
@@ -154,6 +156,24 @@ class ProductInfo {
 
   bool get fromManufacturer => source == 'manufacturer';
   bool get hasSafety => (allergenStatement?.isNotEmpty ?? false) || warnings.isNotEmpty;
+
+  Map<String, dynamic> toJson() => {
+        if (source != null) 'source': source,
+        if (brand != null) 'brand': brand,
+        if (origin != null) 'origin': origin,
+        if (temperature != null) 'temperature': temperature,
+        if (ingredients != null) 'ingredients': ingredients,
+        'allergens': allergens,
+        if (allergenStatement != null) 'allergenStatement': allergenStatement,
+        if (howToUse != null) 'howToUse': howToUse,
+        if (storage != null) 'storage': storage,
+        if (care != null) 'care': care,
+        'warnings': warnings,
+        'highlights': highlights,
+        'suitableFor': suitableFor,
+        'specs': specs.map((spec) => spec.toJson()).toList(),
+        if (ratingSource != null) 'ratingSource': ratingSource,
+      };
 
   static List<String> _strings(Object? v) =>
       v is List ? v.whereType<String>().where((s) => s.trim().isNotEmpty).toList() : const [];
