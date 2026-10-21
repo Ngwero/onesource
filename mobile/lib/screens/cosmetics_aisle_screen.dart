@@ -10,6 +10,7 @@ import '../utils/cart_feedback.dart';
 import '../utils/responsive.dart';
 import '../utils/shop_mode.dart';
 import '../widgets/loading_view.dart';
+import '../widgets/available_categories.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/products_load_more.dart';
 import '../widgets/shop_mode_switch.dart';
@@ -25,7 +26,8 @@ class CosmeticsAisleScreen extends ConsumerStatefulWidget {
   final bool dealsOnly;
 
   @override
-  ConsumerState<CosmeticsAisleScreen> createState() => _CosmeticsAisleScreenState();
+  ConsumerState<CosmeticsAisleScreen> createState() =>
+      _CosmeticsAisleScreenState();
 }
 
 class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
@@ -53,7 +55,8 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
     super.initState();
     _scrollListener = InfiniteScrollListener(
       controller: _scrollController,
-      onLoadMore: () => ref.read(paginatedProductsProvider(_query).notifier).loadMore(),
+      onLoadMore: () =>
+          ref.read(paginatedProductsProvider(_query).notifier).loadMore(),
     );
   }
 
@@ -70,13 +73,15 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
     final query = _query;
     final state = ref.watch(paginatedProductsProvider(query));
     final notifier = ref.read(paginatedProductsProvider(query).notifier);
-    final aisle = widget.aisleId == null ? null : cosmeticsAisleById(widget.aisleId!);
+    final aisle =
+        widget.aisleId == null ? null : cosmeticsAisleById(widget.aisleId!);
     final title = aisle == null
         ? s.get('cosmetics.navAll')
         : '${aisle.icon} ${s.cosmeticsAisle(aisle.id, aisle.title)}';
     final products = state.items;
     final isTab = widget.aisleId == null;
-    final feedPending = state.isInitialLoading || (state.hasMore && state.error == null);
+    final feedPending =
+        state.isInitialLoading || (state.hasMore && state.error == null);
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -127,8 +132,10 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
                               FilterChip(
                                 label: Text(s.get('kitchen.offersOnly')),
                                 selected: _dealsOnly,
-                                selectedColor: cosmeticsAccent.withValues(alpha: 0.18),
-                                onSelected: (v) => setState(() => _dealsOnly = v),
+                                selectedColor:
+                                    cosmeticsAccent.withValues(alpha: 0.18),
+                                onSelected: (v) =>
+                                    setState(() => _dealsOnly = v),
                               ),
                               const SizedBox(width: 8),
                               for (final (sort, key) in const [
@@ -140,8 +147,10 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
                                 ChoiceChip(
                                   label: Text(s.get(key)),
                                   selected: _sort == sort,
-                                  selectedColor: cosmeticsAccent.withValues(alpha: 0.18),
-                                  onSelected: (_) => setState(() => _sort = sort),
+                                  selectedColor:
+                                      cosmeticsAccent.withValues(alpha: 0.18),
+                                  onSelected: (_) =>
+                                      setState(() => _sort = sort),
                                 ),
                                 const SizedBox(width: 8),
                               ],
@@ -160,7 +169,8 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
                 else if (state.error != null && products.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
-                    child: ErrorView(message: state.error!, onRetry: notifier.refresh),
+                    child: ErrorView(
+                        message: state.error!, onRetry: notifier.refresh),
                   )
                 else if (products.isEmpty && !feedPending)
                   SliverFillRemaining(
@@ -169,7 +179,9 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Text(
-                          s.get(_dealsOnly ? 'kitchen.noFilterResults' : 'cosmetics.empty'),
+                          s.get(_dealsOnly
+                              ? 'kitchen.noFilterResults'
+                              : 'cosmetics.empty'),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -214,63 +226,80 @@ class CosmeticsCategoriesScreen extends StatelessWidget {
         backgroundColor: AppColors.canvas,
         automaticallyImplyLeading: false,
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(16, 8, 16, shellBottomPadding(context)),
-        children: [
-          const ShopModeSwitch(mode: ShopMode.cosmetics),
-          const SizedBox(height: 16),
-          Text(
-            s.get('cosmetics.zonesTitle'),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 16),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: categoryGridCount(context),
-              mainAxisExtent: 104,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            itemCount: cosmeticsAisles.length + 1,
-            itemBuilder: (context, index) {
-              final isAll = index == cosmeticsAisles.length;
-              final aisle = isAll ? null : cosmeticsAisles[index];
-              return Card(
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: () => isAll
-                      ? context.go('/cosmetics/shop')
-                      : context.push(cosmeticsAislePath(aisle!.id)),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [cosmeticsAccent.withValues(alpha: 0.12), AppColors.surface],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+      body: AvailableCategories(
+        shop: 'cosmetics',
+        builder: (pages) {
+          final aisles =
+              cosmeticsAisles.where((a) => pages.containsKey(a.id)).toList();
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding:
+                EdgeInsets.fromLTRB(16, 8, 16, shellBottomPadding(context)),
+            children: [
+              const ShopModeSwitch(mode: ShopMode.cosmetics),
+              const SizedBox(height: 16),
+              Text(
+                s.get('cosmetics.zonesTitle'),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 16),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: categoryGridCount(context),
+                  mainAxisExtent: 104,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: aisles.length + 1,
+                itemBuilder: (context, index) {
+                  final isAll = index == aisles.length;
+                  final aisle = isAll ? null : aisles[index];
+                  return Card(
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () => isAll
+                          ? context.go('/cosmetics/shop')
+                          : context.push(cosmeticsAislePath(aisle!.id)),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              cosmeticsAccent.withValues(alpha: 0.12),
+                              AppColors.surface
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(isAll ? '🛍️' : aisle!.icon,
+                                style: const TextStyle(fontSize: 26)),
+                            Text(
+                              isAll
+                                  ? s.get('cosmetics.navAll')
+                                  : s.cosmeticsAisle(aisle!.id, aisle.title),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800, fontSize: 14),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(isAll ? '🛍️' : aisle!.icon, style: const TextStyle(fontSize: 26)),
-                        Text(
-                          isAll ? s.get('cosmetics.navAll') : s.cosmeticsAisle(aisle!.id, aisle.title),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+                  );
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }

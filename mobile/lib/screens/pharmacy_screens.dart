@@ -8,6 +8,7 @@ import '../i18n/app_strings.dart';
 import '../providers/paginated_products_provider.dart';
 import '../utils/cart_feedback.dart';
 import '../widgets/loading_view.dart';
+import '../widgets/available_categories.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/products_load_more.dart';
 import '../widgets/shop_mode_switch.dart';
@@ -25,7 +26,8 @@ class PharmacyAisleScreen extends ConsumerStatefulWidget {
   final bool dealsOnly;
 
   @override
-  ConsumerState<PharmacyAisleScreen> createState() => _PharmacyAisleScreenState();
+  ConsumerState<PharmacyAisleScreen> createState() =>
+      _PharmacyAisleScreenState();
 }
 
 class _PharmacyAisleScreenState extends ConsumerState<PharmacyAisleScreen> {
@@ -51,7 +53,8 @@ class _PharmacyAisleScreenState extends ConsumerState<PharmacyAisleScreen> {
     super.initState();
     _scrollListener = InfiniteScrollListener(
       controller: _scrollController,
-      onLoadMore: () => ref.read(paginatedProductsProvider(_query).notifier).loadMore(),
+      onLoadMore: () =>
+          ref.read(paginatedProductsProvider(_query).notifier).loadMore(),
     );
   }
 
@@ -68,7 +71,8 @@ class _PharmacyAisleScreenState extends ConsumerState<PharmacyAisleScreen> {
     final query = _query;
     final state = ref.watch(paginatedProductsProvider(query));
     final notifier = ref.read(paginatedProductsProvider(query).notifier);
-    final aisle = widget.aisleId == null ? null : pharmacyAisleById(widget.aisleId!);
+    final aisle =
+        widget.aisleId == null ? null : pharmacyAisleById(widget.aisleId!);
     final title = aisle == null
         ? s.or('pharmacy.navAll', 'All pharmacy products')
         : '${aisle.icon} ${s.or('pharmacy.aisles.${aisle.id}', aisle.title)}';
@@ -134,12 +138,15 @@ class _PharmacyAisleScreenState extends ConsumerState<PharmacyAisleScreen> {
             else if (state.error != null && products.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: ErrorView(message: state.error!, onRetry: notifier.refresh),
+                child:
+                    ErrorView(message: state.error!, onRetry: notifier.refresh),
               )
             else if (products.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: Center(child: Text(s.or('pharmacy.empty', 'Nothing in this aisle yet.'))),
+                child: Center(
+                    child: Text(
+                        s.or('pharmacy.empty', 'Nothing in this aisle yet.'))),
               )
             else
               PopularProductSliverGrid(
@@ -177,19 +184,24 @@ class PharmacyCategoriesScreen extends StatelessWidget {
         title: Text(s.or('pharmacy.navCategories', 'All aisles')),
         backgroundColor: AppColors.canvas,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
-          const ShopModeSwitch(mode: ShopMode.pharmacy),
-          const SizedBox(height: 12),
-          for (final aisle in pharmacyAisles)
-            ListTile(
-              leading: Text(aisle.icon, style: const TextStyle(fontSize: 22)),
-              title: Text(s.or('pharmacy.aisles.${aisle.id}', aisle.title)),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(pharmacyAislePath(aisle.id)),
-            ),
-        ],
+      body: AvailableCategories(
+        shop: 'pharmacy',
+        builder: (pages) => ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+            const ShopModeSwitch(mode: ShopMode.pharmacy),
+            const SizedBox(height: 12),
+            for (final aisle
+                in pharmacyAisles.where((a) => pages.containsKey(a.id)))
+              ListTile(
+                leading: Text(aisle.icon, style: const TextStyle(fontSize: 22)),
+                title: Text(s.or('pharmacy.aisles.${aisle.id}', aisle.title)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(pharmacyAislePath(aisle.id)),
+              ),
+          ],
+        ),
       ),
     );
   }
