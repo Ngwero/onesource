@@ -161,8 +161,8 @@
       "welcomeBody": "Kuva ku bikoresho n'amakabati kugera ku mahood, amasinki n'ububiko — igikoni ni iduka ryacyo. Hitamo icyiciro, hanyuma wongere mu gitebo kimwe n'ibiribwa byawe.",
       "dealsTitle": "Amafere y’igikoni mu byiciro byose",
       "dealsSeeAll": "Reba amafere yose",
-      "latestTitle": "Ibishya muri Kitchen Ware",
-      "latestSub": "Ibyageze vuba mbere — komeza umanure urebe byose."
+      "latestTitle": "Menya ibikoresho byo mu gikoni",
+      "latestSub": "Ibicuruzwa bitandukanye byo mu byiciro byacu — komeza umanure urebe ibindi."
     },
     "moreOptions": "Hariho ubundi buryo",
     "searchTitle": "Shakisha ibikoresho by'igikoni",
@@ -2056,8 +2056,8 @@
     "shopByCategory": "Gura ukurikije icyiciro",
     "topBrands": "Ibirango bikunzwe",
     "home": {
-      "latestTitle": "Ibishya mu birungo by'ubwiza",
-      "latestSub": "Ibyageze vuba mbere — komeza umanure urebe ibicuruzwa byose."
+      "latestTitle": "Menya ibicuruzwa by’ubwiza",
+      "latestSub": "Ibicuruzwa bitandukanye byo mu byiciro byacu — komeza umanure urebe ibindi."
     },
     "seeAll": "Reba byose",
     "hero": {
@@ -2108,8 +2108,8 @@
     "searchHint": "Gerageza izina ry'igicuruzwa cyangwa ikirango.",
     "shopByCategory": "Gura ukurikije umurongo",
     "home": {
-      "latestTitle": "Ibishya muri Farumasi",
-      "latestSub": "Ibyageze vuba mbere — komeza umanure urebe ibicuruzwa byose."
+      "latestTitle": "Menya ibicuruzwa bya farumasi",
+      "latestSub": "Ibicuruzwa bitandukanye byo mu byiciro byacu — komeza umanure urebe ibindi."
     },
     "aisles": {
       "medicines": "Imiti",

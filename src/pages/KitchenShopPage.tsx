@@ -1,3 +1,4 @@
+import { uniquePreviewProducts } from "../utils/uniquePreviewProducts";
 import { Fragment, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
@@ -25,7 +26,7 @@ const DEALS_LIMIT = 24;
 
 const ALL_AISLE_IDS = KITCHEN_WARE_AISLES.map((aisle) => aisle.id);
 
-const LATEST_QUERY: ProductListQuery = { shop: "kitchen", sort: "newest" };
+const MIXED_QUERY: ProductListQuery = { shop: "kitchen", sort: "aisles" };
 
 function isOnOffer(product: Product) {
   return product.originalPrice != null && product.originalPrice > product.price;
@@ -108,14 +109,11 @@ function KitchenDealsShelf() {
   );
 }
 
-/**
- * Every kitchen product, newest first. The first page is fetched on mount so it is ready
- * by the time the user scrolls past the shelves; later pages page in endlessly.
- */
-function KitchenLatestFeed() {
+/** A varied feed drawn from every aisle, with distinct preview images. */
+function KitchenMixedFeed() {
   const { t } = useTranslation();
-  const list = useInfiniteProducts(LATEST_QUERY);
-  const { products } = list;
+  const list = useInfiniteProducts(MIXED_QUERY);
+  const products = uniquePreviewProducts(list.products);
   const title = t("kitchen.home.latestTitle");
 
   if (!list.initialLoading && products.length === 0 && !list.hasMore && !list.error) {
@@ -173,7 +171,7 @@ export function KitchenShopPage() {
                   />
                 </Fragment>
               ))}
-              <KitchenLatestFeed />
+              <KitchenMixedFeed />
             </div>
           </PageContainer>
         </main>

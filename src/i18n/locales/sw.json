@@ -161,8 +161,8 @@
       "welcomeBody": "Kutoka vyombo na kabati hadi hood, sinki na uhifadhi — jikoni ni duka lake. Chagua kategoria, kisha ongeza kwenye kikapu kimoja na mazao yako.",
       "dealsTitle": "Ofa za jikoni katika kila kundi",
       "dealsSeeAll": "Tazama ofa zote",
-      "latestTitle": "Mapya katika Kitchen Ware",
-      "latestSub": "Bidhaa mpya kwanza — endelea kusogeza uone kila kitu."
+      "latestTitle": "Gundua vifaa vya jikoni",
+      "latestSub": "Mchanganyiko kutoka sehemu mbalimbali — endelea kusogeza ugundue zaidi."
     },
     "moreOptions": "Chaguo zaidi zinapatikana",
     "searchTitle": "Tafuta vifaa vya jikoni",
@@ -2056,8 +2056,8 @@
     "shopByCategory": "Nunua kwa kundi",
     "topBrands": "Chapa maarufu",
     "home": {
-      "latestTitle": "Mapya katika Vipodozi",
-      "latestSub": "Bidhaa mpya kwanza — endelea kusogeza uone kila bidhaa."
+      "latestTitle": "Gundua vipodozi",
+      "latestSub": "Mchanganyiko kutoka sehemu mbalimbali — endelea kusogeza ugundue zaidi."
     },
     "seeAll": "Tazama zote",
     "hero": {
@@ -2108,8 +2108,8 @@
     "searchHint": "Jaribu jina la bidhaa au chapa.",
     "shopByCategory": "Nunua kwa rafu",
     "home": {
-      "latestTitle": "Mapya katika Duka la dawa",
-      "latestSub": "Bidhaa mpya kwanza — endelea kusogeza uone kila bidhaa."
+      "latestTitle": "Gundua bidhaa za duka la dawa",
+      "latestSub": "Mchanganyiko kutoka sehemu mbalimbali — endelea kusogeza ugundue zaidi."
     },
     "aisles": {
       "medicines": "Dawa",

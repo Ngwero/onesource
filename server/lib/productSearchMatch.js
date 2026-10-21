@@ -19,22 +19,28 @@ function queryVariants(query) {
   return [...variants];
 }
 
-/** Supabase .or() filter for ilike across title, description, category. */
-export function buildSearchOrFilter(rawQuery) {
-  const variants = queryVariants(rawQuery).filter((v) => v.length >= 2);
-  const seen = new Set();
-  const parts = [];
-  for (const v of variants) {
-    const esc = v.replace(/[%_,]/g, "");
-    if (!esc) continue;
-    for (const field of ["title", "description", "category"]) {
-      const key = `${field}:${esc}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      parts.push(`${field}.ilike.%${esc}%`);
-    }
-  }
-  return parts.join(",");
+/** Normalize punctuation so "face-wash" and "face wash" share search terms. */
+export function searchTokens(rawQuery) {
+  return [...new Set(String(rawQuery).toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])];
+}
+
+/** Match every word, in any order and across fields, before pagination. */
+export function buildSearchOrFilter(rawQuery, fields = ["title", "description", "category", "unit", "details->>brand"]) {
+  const groups = searchTokens(rawQuery).map((token) => {
+    // A substring pattern for "mango" already covers "mangoes". Keep only
+    // the broadest distinct stems instead of repeating redundant OR clauses.
+    const variants = queryVariants(token);
+    const stems = variants.filter((variant) => !variants.some((other) =>
+      other !== variant && variant.includes(other)
+    ));
+    const parts = stems.flatMap((variant) =>
+      fields.map(
+        (field) => `${field}.ilike."%${variant}%"`
+      )
+    );
+    return `or(${parts.join(",")})`;
+  });
+  return groups.length ? `and(${groups.join(",")})` : 'id.eq.""';
 }
 
 export { queryVariants };
@@ -48,17 +54,18 @@ export function productMatchesSearch(product, rawQuery) {
     product.category,
     product.supplierName,
     product.unit,
+    product.details?.brand,
   ]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
 
-  const tokens = query.split(/\s+/).filter((t) => t.length >= 2);
+  const tokens = searchTokens(query);
   if (!tokens.length) return false;
 
   return tokens.every((token) => {
     const variants = queryVariants(token);
-    return variants.some((v) => v.length >= 2 && hay.includes(v));
+    return variants.some((v) => hay.includes(v));
   });
 }
 

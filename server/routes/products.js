@@ -1,3 +1,5 @@
+import { collectSearchPage } from "../lib/productSearchPage.js";
+import { mixedAislePage, interleaveAislePage } from "../lib/mixedAislePage.js";
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { requireSupabase } from "../lib/supabase.js";
@@ -17,7 +19,7 @@ import {
   nestedAislePrefixes,
   productIdWithoutAisle,
 } from "../lib/aisles.js";
-import { productMatchesSearch, rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
+import { rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
 import { hasPublishedColumn } from "../lib/productColumns.js";
 import { dbErrorMessage, isStatementTimeoutError } from "../lib/supabaseErrors.js";
 
@@ -163,7 +165,7 @@ function parseListRequest(reqQuery) {
 }
 
 /** Sync on purpose: Supabase builders are thenable, so an async helper would run the query. */
-function applyListFilters(query, ctx, { publishedColumn }) {
+function applyListFilters(query, ctx, { publishedColumn, searchCandidates = false }) {
   const { list } = ctx;
   if (list.sale) {
     query = query.not("original_price", "is", null);
@@ -180,7 +182,7 @@ function applyListFilters(query, ctx, { publishedColumn }) {
     if (publishedColumn) query = query.eq("published", true);
   }
   // Filter before pagination so shelves, search, counts and offers agree.
-  if (ctx.pharmacyOnly && !ctx.admin) {
+  if (ctx.pharmacyOnly && !ctx.admin && !searchCandidates) {
     query = query.eq("details->pharmacyImageQuality->>status", "verified");
   }
   if (ctx.category) {
@@ -212,13 +214,14 @@ function applyListFilters(query, ctx, { publishedColumn }) {
     query = query.gte("id", prefix).lt("id", idPrefixUpperBound(prefix));
   }
   if (ctx.search) {
-    const orFilter = buildSearchOrFilter(ctx.search);
+    const orFilter = buildSearchOrFilter(ctx.search, searchCandidates
+      ? ["title", "category", "unit"] : undefined);
     if (orFilter) query = query.or(orFilter);
   }
   return query;
 }
 
-/** Columns a product card needs; `details` is reduced to rating source and brand. */
+/** Listing facts without descriptions or the full details JSON. */
 const CARD_COLUMNS = [
   "id",
   "title",
@@ -232,23 +235,30 @@ const CARD_COLUMNS = [
   "prime",
   "in_stock",
   "stock_quantity",
+  "delivery",
   "supplier_id",
   "created_at",
 ];
 
 function cardSelect(publishedColumn) {
   return publishedColumn
-    ? [...CARD_COLUMNS, "published", "ratingSource:details->>ratingSource", "brand:details->>brand"].join(",")
+    ? [...CARD_COLUMNS, "published", "ratingSource:details->>ratingSource", "brand:details->>brand", "specs:details->specs"].join(",")
     : CARD_COLUMNS.join(",");
 }
 
 function cardRowToProduct(row) {
-  const { ratingSource, brand, ...rest } = row;
+  const { ratingSource, brand, specs, ...rest } = row;
   const product = rowToProduct(rest);
   product.description = "";
   const details = {};
   if (ratingSource) details.ratingSource = ratingSource;
   if (typeof brand === "string" && brand.trim()) details.brand = brand.trim();
+  if (Array.isArray(specs)) {
+    details.specs = specs.filter((spec) =>
+      spec && typeof spec.key === "string" && typeof spec.value === "string" &&
+      ["size", "volume", "weight", "shade", "colour", "color"].includes(spec.key.toLowerCase())
+    );
+  }
   product.details = details;
   return product;
 }
@@ -439,33 +449,25 @@ async function loadFreshProducts(db, ctx, { card, publishedColumn }) {
 }
 
 async function loadBalancedAislePage(db, ctx, { page, pageSize, card, publishedColumn }) {
-  const aisleIds = aisleIdsForShop(ctx.shopPrefix).slice(0, 10);
-  const perAisle = Math.max(2, Math.ceil(pageSize / aisleIds.length));
-  const from = page * perAisle;
+  const aisleIds = aisleIdsForShop(ctx.shopPrefix);
+  const plans = mixedAislePage(aisleIds, page, pageSize);
   const columns = card ? cardSelect(publishedColumn) : "*";
   const batches = await Promise.all(
-    aisleIds.map(async (aisleId) => {
+    plans.map(async ({ aisleId, from, take }) => {
       const aisleCtx = { ...ctx, aisleId };
       const query = applyListFilters(
-        applySort(db.from("products").select(columns), "newest"),
+        db.from("products").select(columns).order("id", { ascending: true }),
         aisleCtx,
         { publishedColumn }
-      ).range(from, from + perAisle);
+      ).range(from, from + take);
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(card ? cardRowToProduct : rowToProduct);
     })
   );
 
-  const products = [];
-  for (let index = 0; index < perAisle; index += 1) {
-    for (const batch of batches) {
-      if (batch[index]) products.push(batch[index]);
-      if (products.length >= pageSize) break;
-    }
-    if (products.length >= pageSize) break;
-  }
-  const hasMore = batches.some((batch) => batch.length > perAisle);
+  const products = interleaveAislePage(plans, batches, aisleIds.length);
+  const hasMore = batches.some((batch, index) => batch.length > plans[index].take);
   return {
     products: await enrichProductsWithSuppliers(db, products, { admin: ctx.admin }),
     total: (page * pageSize) + products.length + (hasMore ? 1 : 0),
@@ -482,19 +484,12 @@ async function loadListPage(ctx, { page, pageSize, card }) {
 
       // The whole Fresh catalogue is small enough to merge in memory. This avoids
       // the shop-wide scan that Supabase cancels.
-      if (ctx.freshOnly && !ctx.category && !ctx.aisleId) {
-        const cacheKey = JSON.stringify([listFilterKey(ctx), card && !search]);
+      if (ctx.freshOnly && !ctx.category && !ctx.aisleId && !search) {
+        const cacheKey = JSON.stringify([listFilterKey(ctx), card]);
         const all = await freshRowsCache.get(cacheKey, () =>
-          loadFreshProducts(db, ctx, { card: card && !search, publishedColumn })
+          loadFreshProducts(db, ctx, { card, publishedColumn })
         );
-        let products = all.filter((p) => matchesListParams(p, list));
-        if (search) {
-          products = products.filter((p) => productMatchesSearch(p, search));
-          if (list.sort === "newest") products = rankSearchResults(products, search);
-          else products = sortListedProducts(products, list.sort);
-        } else {
-          products = sortListedProducts(products, list.sort);
-        }
+        const products = sortListedProducts(all.filter((p) => matchesListParams(p, list)), list.sort);
         const from = page * pageSize;
         const pageRows = products.slice(from, from + pageSize);
         return {
@@ -520,26 +515,40 @@ async function loadListPage(ctx, { page, pageSize, card }) {
       }
 
       if (search) {
-        const from = page * pageSize;
-        const to = from + pageSize - 1;
-        const query = applyListFilters(
-          applySort(db.from("products").select("*", { count: "exact" }), list.sort),
-          ctx,
-          { publishedColumn }
-        ).range(from, to);
-
-        const { data: rows, error, count } = await query;
-        if (error) throw error;
-
-        let products = (rows ?? [])
-          .map(rowToProduct)
-          .filter((p) => productMatchesSearch(p, search) && matchesListParams(p, list));
-        if (list.sort === "newest") products = rankSearchResults(products, search);
-
+        // Find names, categories and units using small table columns first.
+        // Scanning descriptions/details (large JSON) for every shop product
+        // repeatedly hits the database statement timeout, even for zero matches.
+        // Fetch rich cards and validate pharmacy photos only for these candidates.
+        const searchSort = list.sort === "newest" || list.sort === "top";
+        const result = await collectSearchPage({
+          page, pageSize,
+          loadCandidates: async (offset, batchSize) => {
+            const base = db.from("products").select("id,title");
+            const query = applyListFilters(
+              searchSort ? base.order("id", { ascending: true }) : applySort(base, list.sort),
+              ctx, { publishedColumn, searchCandidates: true }
+            ).range(offset, offset + batchSize - 1);
+            const { data, error } = await query;
+            if (error) throw error;
+            return data ?? [];
+          },
+          loadCards: async (candidates) => {
+            const needsVerifiedImage = ctx.pharmacyOnly && !admin;
+            const columns = card ? cardSelect(publishedColumn) : "*";
+            const { data: rows, error } = await db.from("products")
+              .select(needsVerifiedImage ? `${columns},pharmacyImageStatus:details->pharmacyImageQuality->>status` : columns)
+              .in("id", candidates.map((p) => p.id));
+            if (error) throw error;
+            return (rows ?? [])
+              .filter((row) => !needsVerifiedImage || row.pharmacyImageStatus === "verified")
+              .map(card ? cardRowToProduct : rowToProduct)
+              .filter((product) => matchesListParams(product, list));
+          },
+        });
+        const products = searchSort ? rankSearchResults(result.products, search) : result.products;
         return {
+          ...result,
           products: await enrichProductsWithSuppliers(db, products, { admin }),
-          total: count ?? products.length,
-          hasMore: from + (rows ?? []).length < (count ?? 0),
         };
       }
 
@@ -598,12 +607,12 @@ async function loadListOnceOrRetry(load) {
 router.get("/", async (req, res) => {
   try {
     const ctx = parseListRequest(req.query);
-    const { admin, search, previewCosmetics } = ctx;
+    const { admin, previewCosmetics } = ctx;
     const page = Math.max(0, parseInt(req.query.page ?? "0", 10) || 0);
     const pageSize = Math.min(1000, Math.max(1, parseInt(req.query.pageSize ?? "1000", 10) || 1000));
     // `fields=card` (web listings) drops descriptions and the full details JSON.
     const card = String(req.query.fields ?? "").toLowerCase() === "card";
-    const shopperList = !admin && !search && !previewCosmetics;
+    const shopperList = !admin && !previewCosmetics;
 
     // Supabase cancels a cold statement (often around 8s). The same query is
     // usually fast immediately after, so one retry stays on this request

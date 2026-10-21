@@ -82,11 +82,11 @@ export function CosmeticsListing({ baseQuery, emptyState }: Props) {
   const { products } = list;
   // Titles for the brand menu scan the whole aisle. Wait until the first
   // card page is back so that scan does not share the first paint.
-  const [cardsReady, setCardsReady] = useState(false);
-  useEffect(() => {
-    if (!list.initialLoading) setCardsReady(true);
-  }, [list.initialLoading]);
-  const brands = useBrandCounts(cardsReady ? scope : null);
+  const catalogueBrands = useBrandCounts(!list.initialLoading && !baseQuery.q ? scope : null);
+  const brands: BrandCounts = baseQuery.q
+    ? [...new Set(products.map((p) => splitCosmeticTitle(p.title).brand).filter((name): name is string => Boolean(name)))]
+        .sort().map((name) => [name, 0])
+    : catalogueBrands;
 
   const setBrand = (next: string) => {
     const nextParams = new URLSearchParams(params);

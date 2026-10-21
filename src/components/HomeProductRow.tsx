@@ -165,18 +165,13 @@ export function HomeProductRow({ row, products }: Props) {
 
   if (products.length === 0) return null;
 
-  const seeAllTo = row.seeAllHref
-    ? row.seeAllHref
-    : row.seeAllCategoryId
-      ? `/category/${row.seeAllCategoryId}`
-      : `/search?q=${encodeURIComponent(row.seeAllSearch ?? "")}`;
+  const seeAllTo = `/category/${encodeURIComponent(row.seeAllCategoryId)}`;
 
   return (
     <ScrollReveal variant="fade-up">
       <div ref={hoverRef} className="home-product-row-hover-zone">
         <Section
-          title={t(row.titleKey)}
-          subtitle={t(row.subtitleKey)}
+          title={t(row.titleKey, { defaultValue: row.title })}
           action={
             <Link
               to={seeAllTo}

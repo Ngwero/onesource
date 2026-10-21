@@ -249,7 +249,7 @@ export async function fetchKitchenAislePage(
   return fetchProductsPageRaw(search, 0);
 }
 
-export type ProductSort = "newest" | "top" | "price-asc" | "price-desc" | "name";
+export type ProductSort = "aisles" | "newest" | "top" | "price-asc" | "price-desc" | "name";
 
 /** Server-side filters for a paged product listing (GET /api/products). */
 export type ProductListQuery = {

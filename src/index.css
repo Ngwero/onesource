@@ -10318,3 +10318,139 @@ body {
 .product-skeleton-card {
   min-width: 0;
 }
+
+/* Shared detailed product cards across Fresh, Kitchen, Cosmetics and Pharmacy. */
+.product-card {
+  flex: 1;
+  border: 1px solid #ededed;
+  border-radius: 0.375rem;
+  background: #fff;
+}
+
+.product-card .product-card-image {
+  background: #f7f7f7;
+  padding: 0.75rem;
+}
+
+.product-card .product-card-title {
+  color: #0f1111;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  -webkit-line-clamp: 3;
+  overflow-wrap: anywhere;
+}
+
+.product-card .product-card-body {
+  gap: 0.375rem;
+  padding: 0.625rem;
+}
+
+.product-card .product-card-price {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0f1111;
+}
+
+.product-card .product-card-unit-price {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+  color: #565959;
+}
+
+.product-card .star-rating-fill {
+  color: #ff9900;
+}
+
+.product-card-brand,
+.product-card-size,
+.product-card-seller {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #565959;
+  overflow-wrap: anywhere;
+}
+
+.product-card .product-card-delivery {
+  align-items: flex-start;
+  flex-direction: column;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.product-card .product-card-prime {
+  padding: 0;
+  background: transparent;
+  color: #007185;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.product-card .product-card-delivery-text {
+  color: #0f1111;
+  overflow-wrap: anywhere;
+}
+
+.product-card-in-stock,
+.product-card-low-stock {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #067d62;
+}
+
+.product-card-low-stock {
+  color: #b12704;
+}
+
+.product-card .product-card-actions {
+  padding: 0.5rem 0.625rem 0.75rem;
+}
+
+.product-card .product-card-basket-btn {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.5rem 0.75rem;
+  background: #ffdf00;
+  color: #0f1111;
+  border: 1px solid #ffdf00;
+  border-radius: 999px;
+  box-shadow: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.product-card .product-card-basket-btn:hover:not(:disabled) {
+  background: #f7ca00;
+  border-color: #f7ca00;
+}
+
+.product-card .product-card-basket-btn:focus-visible {
+  outline: 3px solid #007185;
+  outline-offset: 3px;
+}
+
+.product-card .product-card-basket-btn:disabled {
+  background: #ededed;
+  border-color: #d5d9d9;
+  color: #6f7373;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .product-card .product-card-basket-btn {
+    min-height: 2.75rem;
+  }
+  .product-card .product-card-title {
+    font-size: 0.8125rem;
+  }
+  .product-card .product-card-price {
+    font-size: 1.25rem;
+  }
+}

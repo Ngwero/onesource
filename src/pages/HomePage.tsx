@@ -3,26 +3,15 @@ import { PageContainer } from "../components/PageContainer";
 import { HeroSlider } from "../components/HeroSlider";
 import { PromoMarquee } from "../components/PromoMarquee";
 import { HomeProductRow } from "../components/HomeProductRow";
-import { HomeAdminProductsSection } from "../components/HomeAdminProductsSection";
 import { ScrollReveal } from "../components/ScrollReveal";
 import { useProducts } from "../context/ProductsContext";
-import { HOME_PRODUCT_ROWS, productsForHomeRow } from "../data/homeRows";
-import { excludeSpecialtyProducts } from "../utils/shopMode";
+import { buildHomeCategoryRows } from "../data/homeRows";
 
 export function HomePage() {
-  const { products } = useProducts();
-  const produceProducts = useMemo(
-    () => excludeSpecialtyProducts(products),
-    [products]
-  );
-
+  const { products, categories } = useProducts();
   const rows = useMemo(
-    () =>
-      HOME_PRODUCT_ROWS.map((row) => ({
-        row,
-        products: productsForHomeRow(produceProducts, row),
-      })),
-    [produceProducts]
+    () => buildHomeCategoryRows(products, categories),
+    [products, categories]
   );
 
   return (
@@ -42,7 +31,6 @@ export function HomePage() {
           <HomeProductRow key={row.id} row={row} products={rowProducts} />
         ))}
 
-        <HomeAdminProductsSection products={produceProducts} />
       </PageContainer>
     </div>
   );

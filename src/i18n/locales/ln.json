@@ -161,8 +161,8 @@
       "welcomeBody": "Uta batterie tii na ba meubles, hottes, éviers mpe rangement : cuisine ezali boutique na yango. Pona catégorie, sima bakisa na panier moko na biloko ya sika.",
       "dealsTitle": "Ba offres ya cuisine na ba catégorie nyonso",
       "dealsSeeAll": "Tala ba offres nyonso",
-      "latestTitle": "Ya sika na Kitchen Ware",
-      "latestSub": "Biloko ya sika liboso — kende se na nse mpo na komona nyonso."
+      "latestTitle": "Mona biloko ya kuku",
+      "latestSub": "Biloko ndenge na ndenge ya biteni na biso — kende se na nse mpo na komona mosusu."
     },
     "moreOptions": "Ba options mingi ezali",
     "searchTitle": "Luka na cuisine",
@@ -2056,8 +2056,8 @@
     "shopByCategory": "Somba na catégorie",
     "topBrands": "Ba marques ya liboso",
     "home": {
-      "latestTitle": "Ya sika na Cosmétiques",
-      "latestSub": "Biloko ya sika liboso — kende se na nse mpo na komona nyonso."
+      "latestTitle": "Mona biloko ya kitoko",
+      "latestSub": "Biloko ndenge na ndenge ya biteni na biso — kende se na nse mpo na komona mosusu."
     },
     "seeAll": "Tala nyonso",
     "hero": {
@@ -2108,8 +2108,8 @@
     "searchHint": "Meka kombo ya biloko to marque.",
     "shopByCategory": "Somba na rayon",
     "home": {
-      "latestTitle": "Ya sika na Pharmacie",
-      "latestSub": "Biloko ya sika liboso — kende se na nse mpo na komona nyonso."
+      "latestTitle": "Mona biloko ya pharmacie",
+      "latestSub": "Biloko ndenge na ndenge ya biteni na biso — kende se na nse mpo na komona mosusu."
     },
     "aisles": {
       "medicines": "Mankisi",

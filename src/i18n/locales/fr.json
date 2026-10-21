@@ -161,8 +161,8 @@
       "welcomeBody": "De la batterie de cuisine aux meubles modulaires, hottes, éviers et rangement : la boutique cuisine est un espace à part. Choisissez une catégorie, puis ajoutez au même panier que vos produits frais.",
       "dealsTitle": "Promos cuisine dans tous les rayons",
       "dealsSeeAll": "Voir toutes les promos",
-      "latestTitle": "Nouveautés Kitchen Ware",
-      "latestSub": "Les derniers arrivages d'abord — continuez à défiler pour tout voir."
+      "latestTitle": "Découvrez Kitchen Ware",
+      "latestSub": "Un choix varié de nos rayons — continuez à défiler pour en découvrir plus."
     },
     "moreOptions": "Plus d'options disponibles",
     "searchTitle": "Rechercher dans la cuisine",
@@ -2056,8 +2056,8 @@
     "shopByCategory": "Acheter par catégorie",
     "topBrands": "Marques phares",
     "home": {
-      "latestTitle": "Nouveautés Cosmétiques",
-      "latestSub": "Les derniers arrivages d'abord — continuez à défiler pour tout voir."
+      "latestTitle": "Découvrez les cosmétiques",
+      "latestSub": "Un choix varié de nos rayons — continuez à défiler pour en découvrir plus."
     },
     "seeAll": "Tout voir",
     "hero": {
@@ -2108,8 +2108,8 @@
     "searchHint": "Essayez un nom de produit ou une marque.",
     "shopByCategory": "Acheter par rayon",
     "home": {
-      "latestTitle": "Nouveautés Pharmacie",
-      "latestSub": "Les derniers arrivages d'abord — continuez à défiler pour tout voir."
+      "latestTitle": "Découvrez la pharmacie",
+      "latestSub": "Un choix varié de nos rayons — continuez à défiler pour en découvrir plus."
     },
     "aisles": {
       "medicines": "Médicaments",

@@ -148,8 +148,8 @@
       "welcomeBody": "From cookware and modular cabinets to extractors, sinks and organisation, Kitchen Ware is set up like a room shop of its own. Pick a category above, then add pieces to the same basket as your fresh produce for one delivery.",
       "dealsTitle": "Kitchen deals across every aisle",
       "dealsSeeAll": "See all deals",
-      "latestTitle": "Latest in Kitchen Ware",
-      "latestSub": "Newest arrivals first — keep scrolling to see every piece."
+      "latestTitle": "Explore Kitchen Ware",
+      "latestSub": "A mix from across our aisles — keep scrolling to discover more."
     },
     "pdp": {
       "regularPrice": "Regular price",
@@ -1300,8 +1300,8 @@
     "shopByCategory": "Shop by category",
     "topBrands": "Top brands",
     "home": {
-      "latestTitle": "Latest in Cosmetics",
-      "latestSub": "Newest arrivals first — keep scrolling to see every product."
+      "latestTitle": "Explore Cosmetics",
+      "latestSub": "A mix from across our aisles — keep scrolling to discover more."
     },
     "seeAll": "See all",
     "hero": {
@@ -1352,8 +1352,8 @@
     "searchHint": "Try a product name or brand.",
     "shopByCategory": "Shop by aisle",
     "home": {
-      "latestTitle": "Latest in Pharmacy",
-      "latestSub": "Newest arrivals first — keep scrolling to see every product."
+      "latestTitle": "Explore Pharmacy",
+      "latestSub": "A mix from across our aisles — keep scrolling to discover more."
     },
     "aisles": {
       "medicines": "Medicines",

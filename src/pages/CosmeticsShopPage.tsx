@@ -1,3 +1,4 @@
+import { uniquePreviewProducts } from "../utils/uniquePreviewProducts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -16,8 +17,8 @@ import type { Product } from "../types/product";
 
 const TOP_BRANDS = 14;
 
-const LATEST_QUERY: ProductListQuery = { shop: "cosmetics", sort: "newest" };
-const OFFERS_ROW_QUERY: ProductListQuery = { shop: "cosmetics", sort: "newest", sale: true };
+const MIXED_QUERY: ProductListQuery = { shop: "cosmetics", sort: "aisles" };
+const OFFERS_ROW_QUERY: ProductListQuery = { shop: "cosmetics", sort: "aisles", sale: true };
 
 export function CosmeticsShopPage() {
   const { t } = useTranslation();
@@ -95,7 +96,7 @@ export function CosmeticsShopPage() {
             key={aisle.id}
             title={aisle.label}
             products={aisle.products}
-            query={{ shop: "cosmetics", sort: "newest", aisle: aisle.id }}
+            query={{ shop: "cosmetics", sort: "aisles", aisle: aisle.id }}
           />
         ))}
 
@@ -103,7 +104,7 @@ export function CosmeticsShopPage() {
           <p className="cos-empty">{t("cosmetics.empty")}</p>
         )}
 
-        <CosmeticsLatestFeed />
+        <CosmeticsMixedFeed />
       </PageContainer>
     </div>
   );
@@ -210,14 +211,11 @@ function ProductRow({
   );
 }
 
-/**
- * Every cosmetics product, newest first. The first page is fetched on mount so it is ready
- * by the time the user scrolls past the rows; later pages page in endlessly.
- */
-function CosmeticsLatestFeed() {
+/** A varied feed drawn from every aisle, with distinct preview images. */
+function CosmeticsMixedFeed() {
   const { t } = useTranslation();
-  const list = useInfiniteProducts(LATEST_QUERY);
-  const { products } = list;
+  const list = useInfiniteProducts(MIXED_QUERY);
+  const products = uniquePreviewProducts(list.products);
 
   if (!list.initialLoading && products.length === 0 && !list.hasMore && !list.error) {
     return null;
