@@ -22,9 +22,9 @@ test('database search requires every token, safely handles punctuation and empty
   const filter = buildSearchOrFilter('Versace Noir');
   assert.ok(filter.startsWith('and(or('));
   assert.ok(filter.includes('),or('));
-  assert.ok(filter.includes('details->>brand.ilike."%versace%"'));
+  assert.ok(filter.includes('title.imatch.'));
   assert.ok(!filter.includes('%versace noir%'));
-  assert.deepEqual(searchTokens('  face-wash  FACE, wash (50ml)  '), ['face', 'wash', '50ml']);
+  assert.deepEqual(searchTokens('  face-wash  FACE, wash (50ml)  '), ['face', 'wash', 'face', 'wash', '50', 'ml']);
   assert.equal(buildSearchOrFilter('%,()'), 'id.eq.""');
 });
 

@@ -1,3 +1,4 @@
+import { getProductSearchTags } from "../shared/productSearch.mjs";
 import {
   categories,
   normalizeCategoryId,
@@ -11,6 +12,7 @@ export function rowToProduct(row) {
   return {
     id: row.id,
     title: row.title,
+    searchTags: getProductSearchTags(row),
     price: Number(row.price),
     originalPrice: row.original_price != null ? Number(row.original_price) : undefined,
     rating: Number(row.rating),

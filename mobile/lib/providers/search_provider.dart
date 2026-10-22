@@ -6,7 +6,6 @@ import '../models/product.dart';
 import '../services/api_client.dart';
 import '../utils/search_match.dart';
 import 'products_provider.dart';
-import 'search_catalog_provider.dart';
 
 const popularSearchTerms = [
   'Mango',
@@ -49,6 +48,8 @@ const popularCosmeticsSearchTerms = [
 ];
 
 /// Which shop the active search screen is querying.
+final searchApiProvider = Provider<ApiClient>((ref) => apiClientProvider);
+
 final searchShopProvider = StateProvider<String>((ref) => 'fresh');
 
 class SearchState {
@@ -102,7 +103,8 @@ class SearchState {
       total: total ?? this.total,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      loadMoreError: clearLoadMoreError ? null : (loadMoreError ?? this.loadMoreError),
+      loadMoreError:
+          clearLoadMoreError ? null : (loadMoreError ?? this.loadMoreError),
     );
   }
 }
@@ -149,7 +151,8 @@ class SearchNotifier extends Notifier<SearchState> {
 
   /// Only page the server when it reports `hasMore`; older APIs may ignore `q`
   /// and would otherwise walk the entire catalogue.
-  static bool _canPageServer(ProductsPageResult page) => page.serverHasMore == true;
+  static bool _canPageServer(ProductsPageResult page) =>
+      page.serverHasMore == true;
 
   @override
   SearchState build() {
@@ -191,38 +194,25 @@ class SearchNotifier extends Notifier<SearchState> {
       return;
     }
 
-    _debounce = Timer(const Duration(milliseconds: 280), () => _runSearch(query));
+    _debounce =
+        Timer(const Duration(milliseconds: 280), () => _runSearch(query));
   }
 
   Future<void> _runSearch(String query) async {
     final id = ++_requestId;
     try {
       final shop = ref.read(searchShopProvider);
-      final catalog = await ref.read(searchCatalogProvider(shop).future);
+      // Search the catalogue directly; do not download thousands of unrelated
+      // products before showing a small page of matching results.
+      final page = await ref.read(searchApiProvider).fetchProductsPage(
+            query: query,
+            shop: shop,
+            page: 0,
+            pageSize: pageSize,
+          );
       if (id != _requestId) return;
-
-      var results = filterAndRankProducts(catalog, query);
-      var serverHasMore = false;
-
-      // Merge any extra API hits (when server search is deployed).
-      try {
-        final page = await apiClientProvider.fetchProductsPage(
-          query: query,
-          shop: shop,
-          page: 0,
-          pageSize: pageSize,
-        );
-        if (id != _requestId) return;
-        final seen = results.map((p) => p.id).toSet();
-        for (final p in page.products) {
-          if (seen.add(p.id) && productMatchesSearch(p, query)) {
-            results.add(p);
-          }
-        }
-        results = rankSearchResults(results, query);
-        serverHasMore = _canPageServer(page);
-      } catch (_) {}
-      if (id != _requestId) return;
+      final results = filterAndRankProducts(page.products, query);
+      final serverHasMore = _canPageServer(page);
 
       _pool = results;
       _poolIds = results.map((p) => p.id).toSet();
@@ -249,7 +239,9 @@ class SearchNotifier extends Notifier<SearchState> {
 
   /// Reveals the next batch of buffered matches, or fetches the next server page.
   Future<void> loadMore() async {
-    if (state.isLoading || state.isLoadingMore || state.loadMoreError != null) return;
+    if (state.isLoading || state.isLoadingMore || state.loadMoreError != null) {
+      return;
+    }
     if (state.query.length < 2 || !_hasMore) return;
 
     if (_visible < _pool.length) {
@@ -269,12 +261,12 @@ class SearchNotifier extends Notifier<SearchState> {
     try {
       var emptyPages = 0;
       while (true) {
-        final page = await apiClientProvider.fetchProductsPage(
-          query: query,
-          shop: shop,
-          page: _serverPage + 1,
-          pageSize: pageSize,
-        );
+        final page = await ref.read(searchApiProvider).fetchProductsPage(
+              query: query,
+              shop: shop,
+              page: _serverPage + 1,
+              pageSize: pageSize,
+            );
         if (id != _requestId) return;
         _serverPage++;
         _serverHasMore = _canPageServer(page);
@@ -316,14 +308,12 @@ class SearchNotifier extends Notifier<SearchState> {
   List<String> _matchingSuggestions(String query) {
     final q = query.toLowerCase();
     final popular = _defaultSuggestions();
-    final fromPopular = popular
-        .where((t) {
-          final tl = t.toLowerCase();
-          return tl.contains(q) ||
-              q.contains(tl) ||
-              queryVariants(q).any((v) => tl.contains(v));
-        })
-        .take(6);
+    final fromPopular = popular.where((t) {
+      final tl = t.toLowerCase();
+      return tl.contains(q) ||
+          q.contains(tl) ||
+          queryVariants(q).any((v) => tl.contains(v));
+    }).take(6);
 
     final categories = ref.read(categoriesProvider).valueOrNull ?? [];
     final fromCategories = categories
@@ -342,4 +332,5 @@ class SearchNotifier extends Notifier<SearchState> {
   }
 }
 
-final searchProvider = NotifierProvider<SearchNotifier, SearchState>(SearchNotifier.new);
+final searchProvider =
+    NotifierProvider<SearchNotifier, SearchState>(SearchNotifier.new);

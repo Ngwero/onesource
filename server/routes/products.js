@@ -1,3 +1,5 @@
+import { preferredSearchAisles } from "../../shared/productSearch.mjs";
+import { createSearchCandidatePager } from "../lib/searchCandidatePager.js";
 import { collectSearchPage } from "../lib/productSearchPage.js";
 import { mixedAislePage, interleaveAislePage } from "../lib/mixedAislePage.js";
 import { Router } from "express";
@@ -19,7 +21,7 @@ import {
   nestedAislePrefixes,
   productIdWithoutAisle,
 } from "../lib/aisles.js";
-import { rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
+import { productMatchesSearch, rankSearchResults, buildSearchOrFilter } from "../lib/productSearchMatch.js";
 import { hasPublishedColumn } from "../lib/productColumns.js";
 import { dbErrorMessage, isStatementTimeoutError } from "../lib/supabaseErrors.js";
 
@@ -165,7 +167,7 @@ function parseListRequest(reqQuery) {
 }
 
 /** Sync on purpose: Supabase builders are thenable, so an async helper would run the query. */
-function applyListFilters(query, ctx, { publishedColumn, searchCandidates = false }) {
+function applyListFilters(query, ctx, { publishedColumn, searchCandidates = false, expandSearchTags = true }) {
   const { list } = ctx;
   if (list.sale) {
     query = query.not("original_price", "is", null);
@@ -215,7 +217,7 @@ function applyListFilters(query, ctx, { publishedColumn, searchCandidates = fals
   }
   if (ctx.search) {
     const orFilter = buildSearchOrFilter(ctx.search, searchCandidates
-      ? ["title", "category", "unit"] : undefined);
+      ? ["title"] : undefined, expandSearchTags);
     if (orFilter) query = query.or(orFilter);
   }
   return query;
@@ -332,11 +334,13 @@ function countIsBroad(ctx) {
 /** Exact match counts per filter set; counting ~25k rows on every page was the slow part. */
 const countCache = createSwrCache({ freshMs: 5 * 60 * 1000, staleMs: 30 * 60 * 1000, max: 300 });
 /** Whole list pages for shoppers (never admin/search), so feed pages are served from memory. */
+const searchCandidatesCache = createSwrCache({ freshMs: 60 * 1000, staleMs: 2 * 60 * 1000, max: 100 });
 const listPageCache = createSwrCache({ freshMs: 30 * 1000, staleMs: 2 * 60 * 1000, max: 400 });
 
 function forgetListings() {
   countCache.clear();
   listPageCache.clear();
+  searchCandidatesCache.clear();
 }
 
 function listingCount(db, ctx, publishedColumn) {
@@ -475,6 +479,30 @@ async function loadBalancedAislePage(db, ctx, { page, pageSize, card, publishedC
   };
 }
 
+/** Share candidate batches and keep exact product names ahead of related tags. */
+async function loadSearchCandidates(db, ctx, publishedColumn) {
+  const relevance = ctx.list.sort === "newest" || ctx.list.sort === "top";
+  const key = JSON.stringify([listFilterKey(ctx), ctx.list.sort]);
+  const preferred = !ctx.aisleId && !ctx.freshOnly
+    ? preferredSearchAisles(ctx.search, ctx.shopPrefix) : [];
+  return searchCandidatesCache.get(key, async () => createSearchCandidatePager({
+    phases: relevance ? [...preferred.map((aisle) => `preferred:${aisle}`), "direct", "related"] : ["related"],
+    matches: (product) => productMatchesSearch(product, ctx.search),
+    rank: relevance ? (rows) => rankSearchResults(rows, ctx.search) : (rows) => rows,
+    loadBatch: async (phase, offset, batchSize) => {
+      const scope = phase.startsWith("preferred:") ? { ...ctx, aisleId: phase.slice(10) } : ctx;
+      const base = db.from("products").select("id,title,category,unit");
+      const query = applyListFilters(
+        relevance ? base.order("id", { ascending: true }) : applySort(base, ctx.list.sort),
+        scope, { publishedColumn, searchCandidates: true, expandSearchTags: phase !== "direct" }
+      ).range(offset, offset + batchSize - 1);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data ?? [];
+    },
+  }));
+}
+
 async function loadListPage(ctx, { page, pageSize, card }) {
   const { admin, search, list } = ctx;
   return withLocalProductFallback(
@@ -520,18 +548,10 @@ async function loadListPage(ctx, { page, pageSize, card }) {
         // repeatedly hits the database statement timeout, even for zero matches.
         // Fetch rich cards and validate pharmacy photos only for these candidates.
         const searchSort = list.sort === "newest" || list.sort === "top";
+        const loadCandidates = await loadSearchCandidates(db, ctx, publishedColumn);
         const result = await collectSearchPage({
           page, pageSize,
-          loadCandidates: async (offset, batchSize) => {
-            const base = db.from("products").select("id,title");
-            const query = applyListFilters(
-              searchSort ? base.order("id", { ascending: true }) : applySort(base, list.sort),
-              ctx, { publishedColumn, searchCandidates: true }
-            ).range(offset, offset + batchSize - 1);
-            const { data, error } = await query;
-            if (error) throw error;
-            return data ?? [];
-          },
+          loadCandidates,
           loadCards: async (candidates) => {
             const needsVerifiedImage = ctx.pharmacyOnly && !admin;
             const columns = card ? cardSelect(publishedColumn) : "*";

@@ -1,100 +1,27 @@
-/** Server-side search matching + ranking (keep in sync with mobile lib/utils/search_match.dart). */
+export { productMatchesSearch, rankSearchResults, queryVariants, searchTokens, getProductSearchTags } from '../../shared/productSearch.mjs';
+import { queryGroups, queryVariants, normalizedWords } from '../../shared/productSearch.mjs';
 
-function queryVariants(query) {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  const variants = new Set([q]);
-  if (q.length > 4 && q.endsWith("oes")) {
-    variants.add(q.slice(0, -2));
-    variants.add(q.slice(0, -1));
-  } else if (q.length > 3 && q.endsWith("es")) {
-    variants.add(q.slice(0, -2));
-    variants.add(q.slice(0, -1));
-  } else if (q.length > 3 && q.endsWith("s") && !q.endsWith("ss")) {
-    variants.add(q.slice(0, -1));
-  } else if (q.length > 2) {
-    variants.add(`${q}s`);
-    if (!q.endsWith("e")) variants.add(`${q}es`);
-  }
-  return [...variants];
+function wordForms(word) {
+  const plural = /[^aeiou]y$/.test(word) ? `${word.slice(0, -1)}ies`
+    : /(?:s|x|z|ch|sh)$/.test(word) ? `${word}es` : `${word}s`;
+  return [...new Set([...queryVariants(word), plural])];
 }
 
-/** Normalize punctuation so "face-wash" and "face wash" share search terms. */
-export function searchTokens(rawQuery) {
-  return [...new Set(String(rawQuery).toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])];
-}
-
-/** Match every word, in any order and across fields, before pagination. */
-export function buildSearchOrFilter(rawQuery, fields = ["title", "description", "category", "unit", "details->>brand"]) {
-  const groups = searchTokens(rawQuery).map((token) => {
-    // A substring pattern for "mango" already covers "mangoes". Keep only
-    // the broadest distinct stems instead of repeating redundant OR clauses.
-    const variants = queryVariants(token);
-    const stems = variants.filter((variant) => !variants.some((other) =>
-      other !== variant && variant.includes(other)
-    ));
-    const parts = stems.flatMap((variant) =>
-      fields.map(
-        (field) => `${field}.ilike."%${variant}%"`
-      )
-    );
-    return `or(${parts.join(",")})`;
+/** Word boundaries prevent "plates" from matching hotplates or splatter guards.
+ * PostgREST imatch uses PostgreSQL case-insensitive regular expressions.
+ * https://docs.postgrest.org/en/stable/references/api/tables_views.html#operators
+ */
+export function buildSearchOrFilter(rawQuery, fields = ['title', 'category', 'unit'], expandTags = true) {
+  const terms = queryGroups(rawQuery).map(({ direct, alternatives: related }) => {
+    const alternatives = expandTags ? related : [direct];
+    const phrases = alternatives.map((phrase) => normalizedWords(phrase).map((word) => {
+      const forms = wordForms(word).filter((form) => /^[\p{L}\p{N}]+$/u.test(form));
+      return `(${forms.join('|')})`;
+    }).join('[^[:alnum:]]*'));
+    const body = `(${[...new Set(phrases)].join('|')})`;
+    const unitOrNumber = alternatives.every((term) => /^(?:[0-9]+|g|kg|mg|ml|l|cm|mm)$/.test(term));
+    const pattern = unitOrNumber ? body : `\\m${body}\\M`;
+    return `or(${fields.map((field) => `${field}.imatch.${JSON.stringify(pattern)}`).join(',')})`;
   });
-  return groups.length ? `and(${groups.join(",")})` : 'id.eq.""';
-}
-
-export { queryVariants };
-
-export function productMatchesSearch(product, rawQuery) {
-  const query = rawQuery.trim().toLowerCase();
-  if (!query) return false;
-  const hay = [
-    product.title,
-    product.description,
-    product.category,
-    product.supplierName,
-    product.unit,
-    product.details?.brand,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  const tokens = searchTokens(query);
-  if (!tokens.length) return false;
-
-  return tokens.every((token) => {
-    const variants = queryVariants(token);
-    return variants.some((v) => hay.includes(v));
-  });
-}
-
-function searchScore(product, query) {
-  const variants = queryVariants(query);
-  const title = String(product.title ?? "").toLowerCase();
-  const category = String(product.category ?? "").toLowerCase();
-  const description = String(product.description ?? "").toLowerCase();
-  const supplier = String(product.supplierName ?? "").toLowerCase();
-  let score = 0;
-
-  for (const v of variants) {
-    if (v.length < 2) continue;
-    if (title === v) score += 200;
-    else if (title.startsWith(v)) score += 120;
-    else if (title.includes(v)) score += 70;
-    if (category.includes(v)) score += 40;
-    if (description.includes(v)) score += 20;
-    if (supplier.includes(v)) score += 15;
-  }
-
-  score += Math.min((product.reviewCount ?? 0) / 80, 15);
-  score += (product.rating ?? 0) * 2;
-  if (product.prime) score += 3;
-  return score;
-}
-
-export function rankSearchResults(products, rawQuery) {
-  const query = rawQuery.trim().toLowerCase();
-  if (!query) return products;
-  return [...products].sort((a, b) => searchScore(b, query) - searchScore(a, query));
+  return terms.length ? `and(${terms.join(',')})` : 'id.eq.""';
 }

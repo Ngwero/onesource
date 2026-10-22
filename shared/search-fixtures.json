@@ -1,0 +1,335 @@
+[
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Dinner Plate Blomus Vahlo Moonbeam 26.5 cm"
+    },
+    "matches": true,
+    "tags": [
+      "plates",
+      "tableware"
+    ]
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-tabletop-2",
+      "title": "16 Piece Dinnerware Set"
+    },
+    "matches": true
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-cookware-1",
+      "title": "Splatter Shield Frying Pan Guard"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-appliances-1",
+      "title": "Electric Hotplates"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-appliances-2",
+      "title": "Electric Hot Plate"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-organization-1",
+      "title": "China Storage Containers for Plates and Dinnerware"
+    },
+    "matches": false
+  },
+  {
+    "query": "hot plate",
+    "product": {
+      "id": "kitchen-appliances-1",
+      "title": "Electric Hotplates"
+    },
+    "matches": true
+  },
+  {
+    "query": "dishes",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Ceramic Dinner Plate"
+    },
+    "matches": true
+  },
+  {
+    "query": "tableware",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Porcelain Bowls Set of 4"
+    },
+    "matches": true
+  },
+  {
+    "query": "red plates",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Red Dinner Plate"
+    },
+    "matches": true
+  },
+  {
+    "query": "red plates",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Blue Dinner Plate"
+    },
+    "matches": false
+  },
+  {
+    "query": "mug",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Crystal Wine Glass"
+    },
+    "matches": false
+  },
+  {
+    "query": "pan",
+    "product": {
+      "id": "kitchen-cookware-1",
+      "title": "Saucepan"
+    },
+    "matches": false
+  },
+  {
+    "query": "skillet",
+    "product": {
+      "id": "kitchen-cookware-1",
+      "title": "Cast Iron Frying Pan"
+    },
+    "matches": true
+  },
+  {
+    "query": "knives",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Chef Knife 20cm"
+    },
+    "matches": true
+  },
+  {
+    "query": "moisturizer",
+    "product": {
+      "id": "cosmetics-face-1",
+      "title": "Daily Moisturiser"
+    },
+    "matches": true
+  },
+  {
+    "query": "moisturizing cream",
+    "product": {
+      "id": "cosmetics-face-1",
+      "title": "Daily Moisturising Cream"
+    },
+    "matches": true
+  },
+  {
+    "query": "face-wash",
+    "product": {
+      "id": "cosmetics-face-1",
+      "title": "Gentle Facial Cleanser"
+    },
+    "matches": true
+  },
+  {
+    "query": "perfume",
+    "product": {
+      "id": "cosmetics-fragrance-1",
+      "title": "Versace Crystal Noir Eau de Toilette"
+    },
+    "matches": true
+  },
+  {
+    "query": "Noir Versace",
+    "product": {
+      "id": "cosmetics-fragrance-1",
+      "title": "Versace Crystal Noir Eau de Toilette"
+    },
+    "matches": true
+  },
+  {
+    "query": "skin care",
+    "product": {
+      "id": "cosmetics-hair-care-1",
+      "title": "Hair Serum"
+    },
+    "matches": false
+  },
+  {
+    "query": "fruit",
+    "product": {
+      "id": "cosmetics-face-1",
+      "title": "Mango Face Mask"
+    },
+    "matches": false
+  },
+  {
+    "query": "eggplant",
+    "product": {
+      "id": "fresh-1",
+      "title": "Aubergines"
+    },
+    "matches": true
+  },
+  {
+    "query": "mangoes",
+    "product": {
+      "id": "fresh-1",
+      "title": "Green Mango"
+    },
+    "matches": true
+  },
+  {
+    "query": "berries",
+    "product": {
+      "id": "fresh-1",
+      "title": "Fresh Berries"
+    },
+    "matches": true
+  },
+  {
+    "query": "500 ml",
+    "product": {
+      "id": "fresh-1",
+      "title": "Orange Juice 500ml"
+    },
+    "matches": true
+  },
+  {
+    "query": "sanitizer",
+    "product": {
+      "id": "pharmacy-care-1",
+      "title": "Hand Sanitiser"
+    },
+    "matches": true
+  },
+  {
+    "query": "dental care",
+    "product": {
+      "id": "pharmacy-care-1",
+      "title": "Fluoride Toothpaste"
+    },
+    "matches": true
+  },
+  {
+    "query": "vitamins",
+    "product": {
+      "id": "pharmacy-supplements-1",
+      "title": "Multivitamin Tablets"
+    },
+    "matches": true
+  },
+  {
+    "query": "dental",
+    "product": {
+      "id": "pharmacy-care-1",
+      "title": "Accidental Damage Cover"
+    },
+    "matches": false
+  },
+  {
+    "query": "%(),",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Plate"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-cookware-1",
+      "title": "Carbon Steel Pan",
+      "description": "Serve your food on dinner plates."
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-cast-iron-1",
+      "title": "Grill Plate Cast Iron Skillet"
+    },
+    "matches": false
+  },
+  {
+    "query": "grill plate",
+    "product": {
+      "id": "kitchen-cast-iron-1",
+      "title": "Grill Plate Cast Iron Skillet"
+    },
+    "matches": true
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Stainless Steel Cutlery Set Dinnerware Set"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Baking Pie Crust Protector Shield for Pie Plates"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Camco Pop-A-Plate"
+    },
+    "matches": false
+  },
+  {
+    "query": "plate protector",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Baking Pie Crust Protector Shield for Pie Plates"
+    },
+    "matches": true
+  },
+  {
+    "query": "fruits",
+    "product": {
+      "id": "fresh-1",
+      "title": "Passion Fruit Juice"
+    },
+    "matches": false
+  },
+  {
+    "query": "fruit juice",
+    "product": {
+      "id": "fresh-1",
+      "title": "Passion Fruit Juice"
+    },
+    "matches": true
+  },
+  {
+    "query": "fruits",
+    "product": {
+      "id": "fresh-1",
+      "title": "Mixed Passion Fruits"
+    },
+    "matches": true
+  }
+]

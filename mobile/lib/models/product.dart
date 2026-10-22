@@ -2,6 +2,7 @@ class Product {
   const Product({
     required this.id,
     required this.title,
+    this.searchTags = const [],
     required this.price,
     this.originalPrice,
     required this.rating,
@@ -21,6 +22,7 @@ class Product {
 
   final String id;
   final String title;
+  final List<String> searchTags;
   final double price;
   final double? originalPrice;
   final double rating;
@@ -42,7 +44,8 @@ class Product {
   final ProductInfo details;
 
   /// True only when [rating] / [reviewCount] come from real customer reviews.
-  bool get hasVerifiedRating => details.ratingSource != null && rating > 0 && reviewCount > 0;
+  bool get hasVerifiedRating =>
+      details.ratingSource != null && rating > 0 && reviewCount > 0;
 
   /// Every product photo, cover first, with blanks and duplicates removed.
   List<String> get gallery {
@@ -63,6 +66,7 @@ class Product {
     return Product(
       id: json['id'] as String,
       title: json['title'] as String? ?? '',
+      searchTags: _imageList(json['searchTags']),
       price: (json['price'] as num?)?.toDouble() ?? 0,
       originalPrice: (json['originalPrice'] as num?)?.toDouble(),
       rating: (json['rating'] as num?)?.toDouble() ?? 0,
@@ -85,12 +89,17 @@ class Product {
 
   static List<String> _imageList(Object? raw) {
     if (raw is! List) return const [];
-    return raw.whereType<String>().map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    return raw
+        .whereType<String>()
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
+        if (searchTags.isNotEmpty) 'searchTags': searchTags,
         'price': price,
         if (originalPrice != null) 'originalPrice': originalPrice,
         'rating': rating,
@@ -110,7 +119,8 @@ class Product {
 }
 
 class ProductSpec {
-  const ProductSpec({required this.key, required this.label, required this.value});
+  const ProductSpec(
+      {required this.key, required this.label, required this.value});
 
   final String key;
   final String label;
@@ -155,7 +165,8 @@ class ProductInfo {
   final String? ratingSource;
 
   bool get fromManufacturer => source == 'manufacturer';
-  bool get hasSafety => (allergenStatement?.isNotEmpty ?? false) || warnings.isNotEmpty;
+  bool get hasSafety =>
+      (allergenStatement?.isNotEmpty ?? false) || warnings.isNotEmpty;
 
   Map<String, dynamic> toJson() => {
         if (source != null) 'source': source,
@@ -175,10 +186,12 @@ class ProductInfo {
         if (ratingSource != null) 'ratingSource': ratingSource,
       };
 
-  static List<String> _strings(Object? v) =>
-      v is List ? v.whereType<String>().where((s) => s.trim().isNotEmpty).toList() : const [];
+  static List<String> _strings(Object? v) => v is List
+      ? v.whereType<String>().where((s) => s.trim().isNotEmpty).toList()
+      : const [];
 
-  static String? _string(Object? v) => v is String && v.trim().isNotEmpty ? v.trim() : null;
+  static String? _string(Object? v) =>
+      v is String && v.trim().isNotEmpty ? v.trim() : null;
 
   factory ProductInfo.fromJson(Map<String, dynamic> json) {
     final specs = json['specs'] is List

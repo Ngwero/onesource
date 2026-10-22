@@ -1,6 +1,7 @@
 export type Product = {
   id: string;
   title: string;
+  searchTags?: string[];
   price: number;
   originalPrice?: number;
   rating: number;
