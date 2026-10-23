@@ -110,8 +110,9 @@ class KitchenCatalogNotifier extends Notifier<KitchenCatalogState> {
 
     // Production still ignores `aisle=` — title search is the reliable path.
     // Only trust aisle filter when a non-tabletop aisle (cookware) returns hits.
+    final visibleAisles = kitchenVisibleAisles();
     final aislePages = await Future.wait(
-      kitchenWareAisles.map(
+      visibleAisles.map(
         (aisle) => apiClientProvider.fetchProductsPage(
           shop: 'kitchen',
           aisle: aisle.id,
@@ -122,8 +123,8 @@ class KitchenCatalogNotifier extends Notifier<KitchenCatalogState> {
     );
 
     var distinctAisles = 0;
-    for (var i = 0; i < kitchenWareAisles.length; i++) {
-      final expected = kitchenWareAisles[i].id;
+    for (var i = 0; i < visibleAisles.length; i++) {
+      final expected = visibleAisles[i].id;
       final matched = aislePages[i]
           .products
           .where((p) => aisleIdFromProductId(p.id) == expected)

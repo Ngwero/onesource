@@ -61,6 +61,65 @@ export const KITCHEN_WARE_AISLES = [
 
 export type KitchenAisleId = (typeof KITCHEN_WARE_AISLES)[number]["id"];
 
+/** Retired aisles that must never appear as Kitchen categories or home rows. */
+export const KITCHEN_HOME_HIDDEN_AISLES = [
+  "small-furniture",
+  "extractor-hoods",
+  "countertops-sinks",
+] as const;
+
+/** First Kitchen home aisle rows, before the plates and cups shelves. */
+export const KITCHEN_HOME_PINNED_AISLES = [
+  "non-stick",
+  "carbon-steel",
+  "small-appliances",
+] as const;
+
+/** Remaining home aisles after plates/cups, packed first (live size desc). */
+export const KITCHEN_HOME_PACKED_AISLE_ORDER = [
+  "cookware-accessories",
+  "tabletop",
+  "organization",
+  "cookware",
+  "stainless-clad",
+  "cast-iron",
+] as const;
+
+export function isKitchenHomeHiddenAisle(id: string) {
+  return (KITCHEN_HOME_HIDDEN_AISLES as readonly string[]).includes(id);
+}
+
+/** Kitchen Ware aisles shown in home, chips, tiles, and See-all lists. */
+export function kitchenVisibleAisles() {
+  return KITCHEN_WARE_AISLES.filter((aisle) => !isKitchenHomeHiddenAisle(aisle.id));
+}
+
+export function kitchenHomePinnedAisles() {
+  return KITCHEN_HOME_PINNED_AISLES.map(
+    (id) => KITCHEN_WARE_AISLES.find((aisle) => aisle.id === id)!,
+  );
+}
+
+export function kitchenHomePackedAisles() {
+  const pinned = new Set<string>(KITCHEN_HOME_PINNED_AISLES);
+  const hidden = new Set<string>(KITCHEN_HOME_HIDDEN_AISLES);
+  const rank = new Map<string, number>(
+    KITCHEN_HOME_PACKED_AISLE_ORDER.map((id, index) => [id, index]),
+  );
+  return KITCHEN_WARE_AISLES.filter(
+    (aisle) => !pinned.has(aisle.id) && !hidden.has(aisle.id),
+  ).sort(
+    (a, b) => (rank.get(a.id) ?? rank.size) - (rank.get(b.id) ?? rank.size),
+  );
+}
+
+export const KITCHEN_HOME_CLAIM_KEYS: readonly string[] = [
+  ...KITCHEN_HOME_PINNED_AISLES,
+  "plates",
+  "cups",
+  ...kitchenHomePackedAisles().map((aisle) => aisle.id),
+];
+
 export function aisleIdFromProductId(productId: string): KitchenAisleId | null {
   const ordered = [...KITCHEN_WARE_AISLES].sort(
     (a, b) => b.id.length - a.id.length

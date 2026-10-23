@@ -90,17 +90,18 @@ class KitchenAisleGroup {
 }
 
 List<KitchenAisleGroup> groupKitchenByAisle(List<Product> products) {
+  final visible = kitchenVisibleAisles();
   final groups = <String, List<Product>>{
-    for (final aisle in kitchenWareAisles) aisle.id: <Product>[],
+    for (final aisle in visible) aisle.id: <Product>[],
   };
 
   for (final product in products) {
     final id = aisleIdFromProductId(product.id);
-    if (id == null) continue;
+    if (id == null || !groups.containsKey(id)) continue;
     groups.putIfAbsent(id, () => <Product>[]).add(product);
   }
 
-  return kitchenWareAisles
+  return visible
       .map(
         (aisle) => KitchenAisleGroup(
           aisle: aisle,

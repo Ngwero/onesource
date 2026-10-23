@@ -1,6 +1,6 @@
 import { KitchenPlatesCupsShelf } from "../components/kitchen/KitchenPlatesCupsShelf";
-import { uniquePreviewProducts, excludePreviewProducts } from "../utils/uniquePreviewProducts";
-import { Fragment, useMemo, useState } from "react";
+import { uniquePreviewProducts } from "../utils/uniquePreviewProducts";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { KitchenAisleCarousel } from "../components/kitchen/KitchenAisleCarousel";
@@ -15,19 +15,32 @@ import {
 } from "../hooks/useKitchenAisleShelf";
 import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
 import type { ProductListQuery } from "../api/client";
-import { KITCHEN_WARE_AISLES } from "../data/kitchenWare";
+import {
+  KITCHEN_HOME_CLAIM_KEYS,
+  kitchenHomePackedAisles,
+  kitchenHomePinnedAisles,
+  kitchenVisibleAisles,
+} from "../data/kitchenWare";
 import { kitchenAislePath } from "../utils/kitchenMode";
 import type { Product } from "../types/product";
 
+const PINNED_AISLES = kitchenHomePinnedAisles();
+const PACKED_AISLES = kitchenHomePackedAisles();
 /** Aisle shelves fetched straight away; the rest load as they near the viewport. */
-const EAGER_SHELVES = 2;
-/** The cross-aisle deals row sits after this many aisle shelves. */
-const DEALS_AFTER = 2;
+const EAGER_PINNED = PINNED_AISLES.length;
+/** Packed aisles are well stocked; load them with the first screen so uniqueness can settle. */
+const EAGER_PACKED = PACKED_AISLES.length;
 const DEALS_LIMIT = 24;
 
-const ALL_AISLE_IDS = KITCHEN_WARE_AISLES.map((aisle) => aisle.id);
+const ALL_AISLE_IDS = kitchenVisibleAisles().map((aisle) => aisle.id);
 
 const MIXED_QUERY: ProductListQuery = { shop: "kitchen", sort: "aisles" };
+
+function samePreviewRow(a: Product[] | undefined, b: Product[]): boolean {
+  if (a === b) return true;
+  if (!a || a.length !== b.length) return false;
+  return a.every((product, index) => product.id === b[index].id && product.image === b[index].image);
+}
 
 function isOnOffer(product: Product) {
   return product.originalPrice != null && product.originalPrice > product.price;
@@ -56,17 +69,27 @@ function KitchenAisleShelf({
   fallbackTitle,
   eager,
   featured,
+  onClaim,
 }: {
   aisleId: string;
   fallbackTitle: string;
   eager: boolean;
   featured: Product[];
+  onClaim: (key: string, products: Product[]) => void;
 }) {
   const { t } = useTranslation();
   const { ref, near } = useNearViewport<HTMLDivElement>();
   const { shelves, loading } = useKitchenAisleShelves([aisleId], eager || near);
-  const products = excludePreviewProducts(shelves[0] ?? [], featured);
+  const products = useMemo(
+    () => uniquePreviewProducts(shelves[0] ?? [], featured),
+    [shelves, featured],
+  );
   const title = getKitchenAisleTitle(aisleId, t, fallbackTitle);
+
+  useEffect(() => {
+    if (loading) return;
+    onClaim(aisleId, products);
+  }, [aisleId, loading, onClaim, products]);
 
   if (!loading && products.length === 0) return null;
 
@@ -90,7 +113,10 @@ function KitchenDealsShelf({ featured }: { featured: Product[] }) {
   const { t } = useTranslation();
   const { ref, near } = useNearViewport<HTMLDivElement>();
   const { shelves, loading } = useKitchenAisleShelves(ALL_AISLE_IDS, near);
-  const deals = useMemo(() => excludePreviewProducts(interleaveOffers(shelves, DEALS_LIMIT), featured), [shelves, featured]);
+  const deals = useMemo(
+    () => uniquePreviewProducts(interleaveOffers(shelves, DEALS_LIMIT), featured),
+    [shelves, featured],
+  );
   const title = t("kitchen.home.dealsTitle");
 
   if (!loading && deals.length === 0) return null;
@@ -116,7 +142,7 @@ function KitchenDealsShelf({ featured }: { featured: Product[] }) {
 function KitchenMixedFeed({ featured }: { featured: Product[] }) {
   const { t } = useTranslation();
   const list = useInfiniteProducts(MIXED_QUERY);
-  const products = uniquePreviewProducts(excludePreviewProducts(list.products, featured));
+  const products = uniquePreviewProducts(list.products, featured);
   const title = t("kitchen.home.latestTitle");
 
   if (!list.initialLoading && products.length === 0 && !list.hasMore && !list.error) {
@@ -124,9 +150,9 @@ function KitchenMixedFeed({ featured }: { featured: Product[] }) {
   }
 
   return (
-    <section className="kitchen-ikea-row kitchen-latest-feed" aria-labelledby="kitchen-latest-title">
-      <div className="kitchen-ikea-row-head">
-        <h2 id="kitchen-latest-title" className="kitchen-ikea-row-title">
+    <section className="w-full min-w-0 kitchen-latest-feed" aria-labelledby="kitchen-latest-title">
+      <div className="mb-3">
+        <h2 id="kitchen-latest-title" className="section-title text-xl sm:text-2xl">
           {title}
         </h2>
       </div>
@@ -156,32 +182,61 @@ function KitchenMixedFeed({ featured }: { featured: Product[] }) {
 }
 
 export function KitchenShopPage() {
-  const [featured, setFeatured] = useState<Product[]>([]);
-  return (
-    <div className="categories-fresh-page kitchen-fresh-layout">
-      <div className="categories-fresh-layout">
-        <main className="categories-fresh-main">
-          <PageContainer className="categories-fresh-container">
-            <KitchenInspirationCollage />
+  const [claimedByKey, setClaimedByKey] = useState<Record<string, Product[]>>({});
+  const onClaim = useCallback((key: string, products: Product[]) => {
+    setClaimedByKey((prev) => {
+      if (samePreviewRow(prev[key], products)) return prev;
+      return { ...prev, [key]: products };
+    });
+  }, []);
+  const excludeBefore = useCallback(
+    (key: string) => {
+      const out: Product[] = [];
+      for (const id of KITCHEN_HOME_CLAIM_KEYS) {
+        if (id === key) break;
+        const row = claimedByKey[id];
+        if (row?.length) out.push(...row);
+      }
+      return out;
+    },
+    [claimedByKey],
+  );
+  const allClaimed = useMemo(
+    () => KITCHEN_HOME_CLAIM_KEYS.flatMap((key) => claimedByKey[key] ?? []),
+    [claimedByKey],
+  );
 
-            <div className="categories-fresh-carousels kitchen-ikea-rows">
-              <KitchenPlatesCupsShelf onProducts={setFeatured} />
-              {KITCHEN_WARE_AISLES.map((aisle, index) => (
-                <Fragment key={aisle.id}>
-                  {index === DEALS_AFTER ? <KitchenDealsShelf featured={featured} /> : null}
-                  <KitchenAisleShelf
-                    aisleId={aisle.id}
-                    fallbackTitle={aisle.title}
-                    eager={index < EAGER_SHELVES}
-                    featured={featured}
-                  />
-                </Fragment>
-              ))}
-              <KitchenMixedFeed featured={featured} />
-            </div>
-          </PageContainer>
-        </main>
-      </div>
+  return (
+    <div className="kitchen-fresh-layout w-full pb-8 sm:pb-16">
+      <PageContainer className="pt-4 sm:pt-6">
+        <KitchenInspirationCollage />
+      </PageContainer>
+
+      <PageContainer className="mt-6 sm:mt-8 space-y-7 sm:space-y-9">
+        {PINNED_AISLES.map((aisle, index) => (
+          <KitchenAisleShelf
+            key={aisle.id}
+            aisleId={aisle.id}
+            fallbackTitle={aisle.title}
+            eager={index < EAGER_PINNED}
+            featured={excludeBefore(aisle.id)}
+            onClaim={onClaim}
+          />
+        ))}
+        <KitchenPlatesCupsShelf exclude={excludeBefore("plates")} onClaim={onClaim} />
+        {PACKED_AISLES.map((aisle, index) => (
+          <KitchenAisleShelf
+            key={aisle.id}
+            aisleId={aisle.id}
+            fallbackTitle={aisle.title}
+            eager={index < EAGER_PACKED}
+            featured={excludeBefore(aisle.id)}
+            onClaim={onClaim}
+          />
+        ))}
+        <KitchenDealsShelf featured={allClaimed} />
+        <KitchenMixedFeed featured={allClaimed} />
+      </PageContainer>
     </div>
   );
 }

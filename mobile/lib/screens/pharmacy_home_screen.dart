@@ -150,6 +150,7 @@ class _PharmacyHomeScreenState extends ConsumerState<PharmacyHomeScreen> {
                       query: const ProductsQuery(
                           shop: 'pharmacy', sale: true, sort: 'top'),
                       onAdd: (product) => _addToCart(context, ref, product),
+                      seeAllPath: '/pharmacy/products?sale=1',
                     ),
                   ),
                 SliverToBoxAdapter(
@@ -229,13 +230,13 @@ class _AisleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.tr;
     return _ProductRow(
-      title:
-          '${aisle.icon} ${s.or('pharmacy.aisles.${aisle.id}', aisle.title)}',
+      title: s.or('pharmacy.aisles.${aisle.id}', aisle.title),
       products: products,
       query: ProductsQuery(
           shop: 'pharmacy', aisle: aisle.id, sort: 'top', pageSize: 8),
       onAdd: onAdd,
       loadWhenEmpty: products.isEmpty,
+      seeAllPath: pharmacyAislePath(aisle.id),
     );
   }
 }
@@ -248,6 +249,7 @@ class _ProductRow extends ConsumerStatefulWidget {
     required this.query,
     required this.onAdd,
     this.loadWhenEmpty = false,
+    this.seeAllPath,
   });
 
   final String title;
@@ -255,6 +257,7 @@ class _ProductRow extends ConsumerStatefulWidget {
   final ProductsQuery query;
   final void Function(Product) onAdd;
   final bool loadWhenEmpty;
+  final String? seeAllPath;
 
   @override
   ConsumerState<_ProductRow> createState() => _ProductRowState();
@@ -318,32 +321,54 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
       });
     }
 
+    final strings = ref.watch(stringsProvider);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 18, 0, 4),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: Text(
-              widget.title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.text,
+                  ),
+                ),
+              ),
+              if (widget.seeAllPath != null)
+                TextButton(
+                  onPressed: () => context.push(widget.seeAllPath!),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.darkGreen,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    strings.seeAll,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           SizedBox(
-            height: 416,
+            height: 284,
             child: ListView.separated(
               controller: _controller,
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(right: 20),
               itemCount: products.length +
                   skeletons +
                   (trailing && skeletons == 0 ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 16),
               itemBuilder: (context, index) {
                 if (index >= products.length && skeletons > 0) {
-                  return const _ShelfCardSkeleton(width: 220);
+                  return const _ShelfCardSkeleton(width: 156);
                 }
                 if (index == products.length) {
                   return SizedBox(
@@ -369,10 +394,9 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
                 }
                 final product = products[index];
                 return SizedBox(
-                  width: 220,
+                  width: 156,
                   child: PopularProductCard(
                     product: product,
-                    imageSize: 220,
                     onAdd: () => widget.onAdd(product),
                   ),
                 );

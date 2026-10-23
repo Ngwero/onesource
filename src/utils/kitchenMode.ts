@@ -1,7 +1,9 @@
 import {
   aisleIdFromProductId,
+  isKitchenHomeHiddenAisle,
   KITCHEN_WARE_AISLES,
   KITCHEN_WARE_CATEGORY_ID,
+  kitchenVisibleAisles,
   type KitchenAisleId,
 } from "../data/kitchenWare";
 import { productMatchesCategory } from "../data/categories";
@@ -30,18 +32,19 @@ export function kitchenAislePath(aisleId: string): string {
 }
 
 export function groupKitchenByAisle(products: Product[]) {
+  const visible = kitchenVisibleAisles();
   const groups = new Map<string, Product[]>();
-  for (const aisle of KITCHEN_WARE_AISLES) groups.set(aisle.id, []);
+  for (const aisle of visible) groups.set(aisle.id, []);
 
   for (const product of products) {
     const id = aisleIdFromProductId(product.id);
-    if (!id) continue;
+    if (!id || !groups.has(id)) continue;
     const list = groups.get(id) ?? [];
     list.push(product);
     groups.set(id, list);
   }
 
-  return KITCHEN_WARE_AISLES.map((aisle) => ({
+  return visible.map((aisle) => ({
     ...aisle,
     products: groups.get(aisle.id) ?? [],
   }));
@@ -62,5 +65,5 @@ export function filterKitchenAisle(
 
 export function isValidKitchenAisleId(id: string | undefined | null): id is KitchenAisleId {
   if (!id) return false;
-  return KITCHEN_WARE_AISLES.some((a) => a.id === id);
+  return KITCHEN_WARE_AISLES.some((a) => a.id === id) && !isKitchenHomeHiddenAisle(id);
 }

@@ -8,7 +8,6 @@ import '../data/kitchen_ware.dart';
 import '../providers/products_provider.dart';
 import '../utils/responsive.dart';
 import '../widgets/loading_view.dart';
-import '../widgets/available_categories.dart';
 import '../utils/shop_mode.dart';
 import '../widgets/shop_mode_switch.dart';
 
@@ -25,28 +24,27 @@ class CategoriesScreen extends ConsumerWidget {
         title: Text(context.tr.get('nav.categoriesLabel')),
         backgroundColor: AppColors.canvas,
       ),
-      body: AvailableCategories(
-        shop: 'fresh',
-        builder: (pages) => categoriesAsync.when(
-          loading: () => LoadingView(message: context.tr.get('common.loading')),
-          error: (e, _) => ErrorView(
-              message: e, onRetry: () => ref.invalidate(categoriesProvider)),
-          data: (categories) {
-            final produceCategories = categories
-                .where((c) =>
-                    pages.containsKey(c.id) &&
-                    c.id != kitchenWareCategoryId &&
-                    c.id != 'kitchen-furniture' &&
-                    c.id != 'cosmetics' &&
-                    c.id != 'pharmacy')
-                .toList();
-            if (produceCategories.isEmpty) {
-              return Center(child: Text(context.tr.get('app.products.none')));
-            }
+      body: categoriesAsync.when(
+        loading: () => LoadingView(message: context.tr.get('common.loading')),
+        error: (e, _) => ErrorView(
+            message: e, onRetry: () => ref.invalidate(categoriesProvider)),
+        data: (categories) {
+          final produceCategories = categories
+              .where((c) =>
+                  c.id != kitchenWareCategoryId &&
+                  c.id != 'kitchen-furniture' &&
+                  c.id != 'cosmetics' &&
+                  c.id != 'pharmacy')
+              .toList();
+          if (produceCategories.isEmpty) {
+            return Center(child: Text(context.tr.get('app.products.none')));
+          }
 
-            final bottomPad = shellBottomPadding(context);
-            final catCols = categoryGridCount(context);
-            return ListView(
+          final bottomPad = shellBottomPadding(context);
+          final catCols = categoryGridCount(context);
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(categoriesProvider),
+            child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPad),
               children: [
@@ -154,9 +152,9 @@ class CategoriesScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

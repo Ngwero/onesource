@@ -147,10 +147,11 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
                 if (offers.isNotEmpty)
                   SliverToBoxAdapter(
                     child: _ProductRow(
-                      title: '🏷️ ${s.get('cosmetics.hero.offersCta')}',
+                      title: s.get('cosmetics.hero.offersCta'),
                       products: offers,
                       query: const ProductsQuery(shop: 'cosmetics', sale: true),
                       onAdd: _addToCart,
+                      seeAllPath: '/cosmetics/products?sale=1',
                     ),
                   ),
                 // Every cosmetics product, newest uploads first, growing endlessly as pages load.
@@ -362,11 +363,12 @@ class _AisleRow extends StatelessWidget {
     if (products.isEmpty && !loadWhenEmpty) return const SizedBox.shrink();
     final s = context.tr;
     return _ProductRow(
-      title: '${aisle.icon} ${s.cosmeticsAisle(aisle.id, aisle.title)}',
+      title: s.cosmeticsAisle(aisle.id, aisle.title),
       products: products,
       query: ProductsQuery(shop: 'cosmetics', aisle: aisle.id, pageSize: 6),
       onAdd: onAdd,
       loadWhenEmpty: loadWhenEmpty,
+      seeAllPath: cosmeticsAislePath(aisle.id),
     );
   }
 }
@@ -380,6 +382,7 @@ class _ProductRow extends ConsumerStatefulWidget {
     required this.query,
     required this.onAdd,
     this.loadWhenEmpty = false,
+    this.seeAllPath,
   });
 
   final String title;
@@ -387,6 +390,7 @@ class _ProductRow extends ConsumerStatefulWidget {
   final ProductsQuery query;
   final void Function(Product) onAdd;
   final bool loadWhenEmpty;
+  final String? seeAllPath;
 
   @override
   ConsumerState<_ProductRow> createState() => _ProductRowState();
@@ -453,29 +457,51 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
       });
     }
 
+    final strings = ref.watch(stringsProvider);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 18, 0, 4),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: Text(
-              widget.title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.text,
+                  ),
+                ),
+              ),
+              if (widget.seeAllPath != null)
+                TextButton(
+                  onPressed: () => context.push(widget.seeAllPath!),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.darkGreen,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    strings.seeAll,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           SizedBox(
-            height: 348,
+            height: 284,
             child: ListView.separated(
               controller: _controller,
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(right: 20),
               itemCount: products.length +
                   skeletons +
                   (trailing && skeletons == 0 ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 16),
               itemBuilder: (context, index) {
                 if (index >= products.length && skeletons > 0) {
                   return const _ShelfCardSkeleton(width: 156);
@@ -507,7 +533,6 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
                   width: 156,
                   child: PopularProductCard(
                     product: product,
-                    addBelow: true,
                     onAdd: () => widget.onAdd(product),
                   ),
                 );

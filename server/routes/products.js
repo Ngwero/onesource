@@ -195,7 +195,7 @@ function applyListFilters(query, ctx, { publishedColumn, searchCandidates = fals
     query = query.eq("supplier_id", ctx.supplierId);
   }
   // Keep the Fresh, Kitchen and Cosmetics catalogues from drowning each other out.
-  if (ctx.freshOnly) {
+  if (ctx.freshOnly && !ctx.category) {
     query = query.in("category", FRESH_SHOP_CATEGORY_IDS);
   } else if (ctx.aisleId) {
     const prefix = `${ctx.shopPrefix}-${ctx.aisleId}-`;
@@ -216,7 +216,10 @@ function applyListFilters(query, ctx, { publishedColumn, searchCandidates = fals
     const prefix = "kitchen-";
     query = query.gte("id", prefix).lt("id", idPrefixUpperBound(prefix));
   }
-  if (ctx.search) {
+  if (ctx.search && !(searchCandidates && ctx.aisleId)) {
+    // Aisle pages already use an id range. Adding title regex on top of that
+    // is the sequential scan that times out around 8s; candidate paging
+    // matches titles in memory instead.
     const orFilter = buildSearchOrFilter(ctx.search, searchCandidates
       ? (searchMetadata ? ["title", "category", "unit", "details->>brand"] : ["title"]) : undefined, expandSearchTags, { diacritics: searchDiacritics });
     if (orFilter) query = query.or(orFilter);
@@ -329,9 +332,11 @@ function createSwrCache({ freshMs, staleMs, max }) {
   };
 }
 
-/** Whole-shop counts scan tens of thousands of rows and must not run on first paint. */
+/** Exact counts of a shop, aisle or search scan too many rows for first paint.
+ *  Category clicks only need the first page plus `hasMore`. */
 function countIsBroad(ctx) {
-  if (ctx.aisleId || ctx.category || ctx.supplierId || ctx.search) return false;
+  if (ctx.supplierId) return false;
+  if (ctx.search || ctx.aisleId || ctx.category) return true;
   return ctx.freshOnly || ctx.pharmacyOnly || ctx.cosmeticsOnly || ctx.kitchenOnly;
 }
 

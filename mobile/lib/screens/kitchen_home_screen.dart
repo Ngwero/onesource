@@ -63,7 +63,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       addToCartWithFeedback(context, ref, product);
 
   List<Category> get _kitchenCategories => [
-        for (final aisle in kitchenWareAisles)
+        for (final aisle in kitchenVisibleAisles())
           Category(id: aisle.id, name: aisle.title, icon: aisle.icon),
       ];
 
@@ -121,16 +121,15 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       );
     }
 
-    final featured =
-        ref.watch(platesCupsShelvesProvider).valueOrNull?.featured ??
-            <Product>[];
-    final featuredIds = featured.map((p) => p.id).toSet();
-    final featuredImages =
-        featured.map((p) => p.image).where((image) => image.isNotEmpty).toSet();
-    final products = sortKitchenWithSaucepansFirst(productsState.items
-        .where((p) =>
-            !featuredIds.contains(p.id) && !featuredImages.contains(p.image))
-        .toList());
+    final homeShelves =
+        ref.watch(kitchenHomeShelvesProvider).valueOrNull ?? const [];
+    final featured = [
+      for (final shelf in homeShelves) ...shelf.products,
+    ];
+    final products = uniqueShelfProducts(
+      sortKitchenWithSaucepansFirst(productsState.items),
+      exclude: featured,
+    );
     final popularProducts =
         diversifyKitchenProducts(products, limit: _popularCount);
     final popularIds = popularProducts.map((p) => p.id).toSet();
@@ -138,15 +137,6 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
     final moreProducts =
         products.where((p) => !popularIds.contains(p.id)).toList();
     _scrollListener?.scheduleCheck();
-
-    // Always list every kitchen subcategory row (same idea as Fresh home rows).
-    final themedRows = <({KitchenAisle aisle, List<Product> products})>[
-      for (final aisle in kitchenWareAisles)
-        (
-          aisle: aisle,
-          products: filterKitchenAisle(products, aisle.id).take(14).toList(),
-        ),
-    ].where((e) => e.products.isNotEmpty).toList();
 
     return Container(
       decoration: const BoxDecoration(gradient: AppGradients.canvas),
@@ -161,7 +151,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                   .read(paginatedProductsProvider(query).notifier)
                   .refresh();
               ref.invalidate(heroSlidesProvider('kitchen'));
-              ref.invalidate(platesCupsShelvesProvider);
+              ref.invalidate(kitchenHomeShelvesProvider);
             },
             child: CustomScrollView(
               controller: _scrollController,
@@ -210,25 +200,9 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                    child: _PlatesCupsRows(onAdd: _addToCart),
+                    child: _KitchenHomeRows(onAdd: _addToCart),
                   ),
                 ),
-                if (themedRows.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                      child: Column(
-                        children: [
-                          for (final entry in themedRows)
-                            _KitchenAisleProductRow(
-                              aisle: entry.aisle,
-                              products: entry.products,
-                              onAdd: _addToCart,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -251,7 +225,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                     ),
                   ),
                 ),
-                if (popularProducts.isEmpty && themedRows.isEmpty)
+                if (popularProducts.isEmpty && homeShelves.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(child: Text(context.tr.get('kitchen.empty'))),
@@ -380,7 +354,7 @@ class _KitchenAisleProductRow extends ConsumerWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: products.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 16),
               itemBuilder: (context, index) {
                 final product = products[index];
                 return SizedBox(
@@ -399,50 +373,55 @@ class _KitchenAisleProductRow extends ConsumerWidget {
   }
 }
 
-class _PlatesCupsRows extends ConsumerWidget {
-  const _PlatesCupsRows({required this.onAdd});
+class _KitchenHomeRows extends ConsumerWidget {
+  const _KitchenHomeRows({required this.onAdd});
   final void Function(Product product) onAdd;
+
+  KitchenAisle _displayAisle(BuildContext context, KitchenHomeShelf shelf) {
+    if (shelf.id == 'plates') {
+      return KitchenAisle(
+        id: shelf.aisle.id,
+        title: context.tr.get('kitchen.home.platesTitle', fallback: 'Plates'),
+        icon: shelf.aisle.icon,
+        accentArgb: shelf.aisle.accentArgb,
+      );
+    }
+    if (shelf.id == 'cups') {
+      return KitchenAisle(
+        id: shelf.aisle.id,
+        title: context.tr.get('kitchen.home.cupsTitle', fallback: 'Cups'),
+        icon: shelf.aisle.icon,
+        accentArgb: shelf.aisle.accentArgb,
+      );
+    }
+    return shelf.aisle;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final platesTitle =
+    final title =
         context.tr.get('kitchen.home.platesTitle', fallback: 'Plates');
-    final cupsTitle =
-        context.tr.get('kitchen.home.cupsTitle', fallback: 'Cups');
-    return ref.watch(platesCupsShelvesProvider).when(
-          loading: () => SizedBox(
-              height: 100, child: LoadingView(message: platesTitle)),
+    return ref.watch(kitchenHomeShelvesProvider).when(
+          loading: () =>
+              SizedBox(height: 100, child: LoadingView(message: title)),
           error: (_, __) => Row(children: [
             Expanded(
-                child: Text(platesTitle,
+                child: Text(title,
                     style: const TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 18))),
             TextButton(
-                onPressed: () => ref.invalidate(platesCupsShelvesProvider),
+                onPressed: () => ref.invalidate(kitchenHomeShelvesProvider),
                 child: Text(context.tr.get('common.retry', fallback: 'Retry'))),
           ]),
           data: (shelves) => Column(
             children: [
-              _KitchenAisleProductRow(
-                aisle: KitchenAisle(
-                    id: 'tabletop',
-                    title: platesTitle,
-                    icon: '🍽️',
-                    accentArgb: 0xFFB7A99A),
-                products: shelves.plates,
-                onAdd: onAdd,
-                seeMorePath: '/kitchen/search?q=plates',
-              ),
-              _KitchenAisleProductRow(
-                aisle: KitchenAisle(
-                    id: 'tabletop',
-                    title: cupsTitle,
-                    icon: '☕',
-                    accentArgb: 0xFFB7A99A),
-                products: shelves.cups,
-                onAdd: onAdd,
-                seeMorePath: '/kitchen/search?q=cups',
-              ),
+              for (final shelf in shelves)
+                _KitchenAisleProductRow(
+                  aisle: _displayAisle(context, shelf),
+                  products: shelf.products,
+                  onAdd: onAdd,
+                  seeMorePath: shelf.seeMorePath,
+                ),
             ],
           ),
         );

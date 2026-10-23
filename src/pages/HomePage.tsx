@@ -26,7 +26,7 @@ export function HomePage() {
         </ScrollReveal>
       </PageContainer>
 
-      <PageContainer className="mt-6 sm:mt-8 space-y-4 sm:space-y-5">
+      <PageContainer className="mt-6 sm:mt-8 space-y-7 sm:space-y-9">
         {rows.map(({ row, products: rowProducts }) => (
           <HomeProductRow key={row.id} row={row} products={rowProducts} />
         ))}

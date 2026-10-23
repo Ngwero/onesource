@@ -8,7 +8,6 @@ import '../i18n/app_strings.dart';
 import '../providers/paginated_products_provider.dart';
 import '../utils/cart_feedback.dart';
 import '../widgets/loading_view.dart';
-import '../widgets/available_categories.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/products_load_more.dart';
 import '../widgets/shop_mode_switch.dart';
@@ -184,16 +183,13 @@ class PharmacyCategoriesScreen extends StatelessWidget {
         title: Text(s.or('pharmacy.navCategories', 'All aisles')),
         backgroundColor: AppColors.canvas,
       ),
-      body: AvailableCategories(
-        shop: 'pharmacy',
-        builder: (pages) => ListView(
+      body: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
             const ShopModeSwitch(mode: ShopMode.pharmacy),
             const SizedBox(height: 12),
-            for (final aisle
-                in pharmacyAisles.where((a) => pages.containsKey(a.id)))
+            for (final aisle in pharmacyAisles)
               ListTile(
                 leading: Text(aisle.icon, style: const TextStyle(fontSize: 22)),
                 title: Text(s.or('pharmacy.aisles.${aisle.id}', aisle.title)),
@@ -202,7 +198,6 @@ class PharmacyCategoriesScreen extends StatelessWidget {
               ),
           ],
         ),
-      ),
     );
   }
 }

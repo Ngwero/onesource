@@ -151,7 +151,7 @@ class PopularProductCard extends ConsumerWidget {
 
     final belowButton = showPair
         ? Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
             child: ProductCheckoutActions(
               inStock: product.inStock,
               onAdd: onAdd!,
@@ -177,7 +177,7 @@ class PopularProductCard extends ConsumerWidget {
                     child: InkWell(
                       onTap: () => context.push('/product/${product.id}'),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                        padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
                         child: details,
                       ),
                     ),
@@ -193,7 +193,7 @@ class PopularProductCard extends ConsumerWidget {
                 child: Stack(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
                       child: details,
                     ),
                     if (onAdd != null)

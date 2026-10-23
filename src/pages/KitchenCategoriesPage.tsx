@@ -3,19 +3,14 @@ import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { ProductImage } from "../components/ProductImage";
 import { getKitchenAisleTitle } from "../i18n/useLocalizedProduct";
-import { KITCHEN_WARE_AISLES } from "../data/kitchenWare";
-import { useKitchenAisleShelves } from "../hooks/useKitchenAisleShelf";
+import { kitchenVisibleAisles } from "../data/kitchenWare";
+import { useKitchenAisleShelves, useNearViewport } from "../hooks/useKitchenAisleShelf";
 import { kitchenAislePath } from "../utils/kitchenMode";
 
-const AISLE_IDS = KITCHEN_WARE_AISLES.map((a) => a.id);
+const EAGER_TILES = 4;
 
 export function KitchenCategoriesPage() {
   const { t } = useTranslation();
-  const { shelves, loading } = useKitchenAisleShelves(AISLE_IDS, true);
-  const aisles = KITCHEN_WARE_AISLES.map((aisle, i) => ({
-    ...aisle,
-    products: shelves[i] ?? [],
-  }));
 
   return (
     <div className="kitchen-home kitchen-subpage w-full pb-20">
@@ -41,49 +36,54 @@ export function KitchenCategoriesPage() {
           </div>
         </header>
 
-        {loading ? (
-          <p className="kitchen-home-empty">{t("common.loading")}</p>
-        ) : (
-          <div className="kitchen-cat-grid">
-            {aisles.map((aisle, index) => {
-              const cover = aisle.products[0];
-              return (
-                <Link
-                  key={aisle.id}
-                  to={kitchenAislePath(aisle.id)}
-                  className="kitchen-cat-tile"
-                >
-                  <div className="kitchen-cat-tile-media">
-                    {cover ? (
-                      <ProductImage
-                        src={cover.image}
-                        alt=""
-                        size="card"
-                        className="kitchen-cat-tile-image"
-                        priority={index < 4}
-                      />
-                    ) : (
-                      <span className="kitchen-cat-tile-fallback" aria-hidden>
-                        {aisle.icon}
-                      </span>
-                    )}
-                  </div>
-                  <div className="kitchen-cat-tile-body">
-                    <strong>
-                      {getKitchenAisleTitle(aisle.id, t, aisle.title)}
-                    </strong>
-                    <span>
-                      {aisle.products.length > 0
-                        ? t("kitchen.shopCategory")
-                        : t("kitchen.categorySoon")}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        <div className="kitchen-cat-grid">
+          {kitchenVisibleAisles().map((aisle, index) => (
+            <KitchenCategoryTile key={aisle.id} aisleId={aisle.id} icon={aisle.icon} title={aisle.title} index={index} />
+          ))}
+        </div>
       </PageContainer>
     </div>
+  );
+}
+
+function KitchenCategoryTile({
+  aisleId,
+  icon,
+  title,
+  index,
+}: {
+  aisleId: string;
+  icon: string;
+  title: string;
+  index: number;
+}) {
+  const { t } = useTranslation();
+  const { ref, near } = useNearViewport<HTMLAnchorElement>();
+  const { shelves } = useKitchenAisleShelves([aisleId], index < EAGER_TILES || near);
+  const cover = shelves[0]?.[0];
+  const label = getKitchenAisleTitle(aisleId, t, title);
+
+  return (
+    <Link ref={ref} to={kitchenAislePath(aisleId)} className="kitchen-cat-tile">
+      <div className="kitchen-cat-tile-media">
+        {cover ? (
+          <ProductImage
+            src={cover.image}
+            alt=""
+            size="card"
+            className="kitchen-cat-tile-image"
+            priority={index < 4}
+          />
+        ) : (
+          <span className="kitchen-cat-tile-fallback" aria-hidden>
+            {icon}
+          </span>
+        )}
+      </div>
+      <div className="kitchen-cat-tile-body">
+        <strong>{label}</strong>
+        <span>{t("kitchen.shopCategory")}</span>
+      </div>
+    </Link>
   );
 }

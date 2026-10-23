@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
@@ -9,15 +9,19 @@ import { useCart } from "../context/CartContext";
 import { useCategoryName } from "../i18n/useLocalizedProduct";
 import { isExportOnlyCart } from "../utils/exportOrder";
 import { SPECIALTY_SHOP_CATEGORY_IDS } from "../utils/shopMode";
+import { fetchProductListPage } from "../api/client";
+import { useNearViewport } from "../hooks/useKitchenAisleShelf";
+import type { Product } from "../types/product";
 
 const FEATURED_AISLE = "featured";
 const PRODUCTS_PER_ROW = 14;
+const EAGER_ROWS = 2;
 
 export function CategoriesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { categories, getProductsByCategory } = useProducts();
+  const { categories } = useProducts();
   const { itemCount, openBasket, items } = useCart();
 
   const openCartOrExport = () => {
@@ -58,15 +62,6 @@ export function CategoriesPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeAisle, aisleIds, setAisle]);
 
-  const categoriesWithProducts = useMemo(() => {
-    return list
-      .map((cat) => ({
-        cat,
-        products: getProductsByCategory(cat.id).slice(0, PRODUCTS_PER_ROW),
-      }))
-      .filter((row) => row.products.length > 0);
-  }, [list, getProductsByCategory]);
-
   const activeCategory = list.find((c) => c.id === activeAisle);
 
   const headerTitle =
@@ -81,64 +76,12 @@ export function CategoriesPage() {
       ? "🛒"
       : activeCategory?.icon ?? AGRI_CATEGORIES.find((a) => a.id === activeAisle)?.icon ?? "📦";
 
-  const aisleCarousels = useMemo(() => {
-    if (activeAisle === FEATURED_AISLE) {
-      return categoriesWithProducts.map(({ cat, products: rowProducts }, index) => ({
-        key: cat.id,
-        title: getCategoryDisplayName(cat.id, (key, opts) =>
-          t(key, { defaultValue: opts?.defaultValue ?? cat.name })
-        ),
-        badge: index === 0 ? t("categories.fresh.newBadge") : undefined,
-        seeMoreHref: `/category/${cat.id}`,
-        seeMoreLabel: t("categories.fresh.seeCategory", {
-          category: getCategoryDisplayName(cat.id, (key, opts) =>
-            t(key, { defaultValue: opts?.defaultValue ?? cat.name })
-          ),
-        }),
-        products: rowProducts,
-      }));
-    }
-
-    const inCategory = getProductsByCategory(activeAisle);
-    const deals = inCategory
-      .filter((p) => p.originalPrice != null && p.originalPrice > p.price)
-      .slice(0, PRODUCTS_PER_ROW);
-    const all = inCategory.slice(0, PRODUCTS_PER_ROW);
-    const name = getCategoryDisplayName(activeAisle, (key, opts) =>
-      t(key, { defaultValue: opts?.defaultValue })
-    );
-
-    const rows: {
-      key: string;
-      title: string;
-      badge?: string;
-      seeMoreHref: string;
-      seeMoreLabel?: string;
-      products: typeof inCategory;
-    }[] = [];
-
-    if (deals.length >= 3) {
-      rows.push({
-        key: `${activeAisle}-deals`,
-        title: t("categories.fresh.dealsRow", { category: name }),
-        badge: t("categories.fresh.newBadge"),
-        seeMoreHref: `/category/${activeAisle}`,
-        products: deals,
-      });
-    }
-
-    if (all.length > 0) {
-      rows.push({
-        key: `${activeAisle}-all`,
-        title: name,
-        seeMoreHref: `/category/${activeAisle}`,
-        seeMoreLabel: t("categories.fresh.seeCategory", { category: name }),
-        products: all,
-      });
-    }
-
-    return rows;
-  }, [activeAisle, categoriesWithProducts, getProductsByCategory, t]);
+  const selectedName =
+    activeAisle === FEATURED_AISLE
+      ? ""
+      : getCategoryDisplayName(activeAisle, (key, opts) =>
+          t(key, { defaultValue: opts?.defaultValue })
+        );
 
   return (
     <div className="categories-fresh-page">
@@ -173,24 +116,36 @@ export function CategoriesPage() {
             </header>
 
             <div className="categories-fresh-carousels">
-              {aisleCarousels.length === 0 ? (
-                <div className="categories-fresh-empty card p-8 text-center">
-                  <p className="text-text-muted">{t("category.noProducts")}</p>
-                  <Link to="/products" className="btn-primary mt-4 inline-flex">
-                    {t("products.viewCatalogue")}
-                  </Link>
-                </div>
-              ) : (
-                aisleCarousels.map((row) => (
-                  <CategoriesAisleCarousel
-                    key={row.key}
-                    title={row.title}
-                    badge={row.badge}
-                    seeMoreHref={row.seeMoreHref}
-                    seeMoreLabel={row.seeMoreLabel}
-                    products={row.products}
+              {activeAisle === FEATURED_AISLE ? (
+                list.map((cat, index) => (
+                  <FreshCategoryRow
+                    key={cat.id}
+                    categoryId={cat.id}
+                    title={getCategoryDisplayName(cat.id, (key, opts) =>
+                      t(key, { defaultValue: opts?.defaultValue ?? cat.name })
+                    )}
+                    badge={index === 0 ? t("categories.fresh.newBadge") : undefined}
+                    eager={index < EAGER_ROWS}
                   />
                 ))
+              ) : (
+                <>
+                  <FreshCategoryRow
+                    categoryId={activeAisle}
+                    title={t("categories.fresh.dealsRow", { category: selectedName })}
+                    seeMoreName={selectedName}
+                    badge={t("categories.fresh.newBadge")}
+                    eager
+                    sale
+                    minCount={3}
+                  />
+                  <FreshCategoryRow
+                    categoryId={activeAisle}
+                    title={selectedName}
+                    eager
+                    emptyLabel
+                  />
+                </>
               )}
             </div>
           </PageContainer>
@@ -226,5 +181,93 @@ function CategoryTab({ id, active }: { id: string; active: boolean }) {
     >
       {name}
     </Link>
+  );
+}
+
+function FreshCategoryRow({
+  categoryId,
+  title,
+  seeMoreName,
+  badge,
+  eager = false,
+  sale = false,
+  minCount = 1,
+  emptyLabel = false,
+}: {
+  categoryId: string;
+  title: string;
+  seeMoreName?: string;
+  badge?: string;
+  eager?: boolean;
+  sale?: boolean;
+  minCount?: number;
+  emptyLabel?: boolean;
+}) {
+  const { t } = useTranslation();
+  const { ref, near } = useNearViewport<HTMLDivElement>();
+  const enabled = eager || near;
+  const [products, setProducts] = useState<Product[]>([]);
+  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+
+  useEffect(() => {
+    if (!enabled) return;
+    const controller = new AbortController();
+    setStatus("loading");
+    fetchProductListPage(
+      { shop: "fresh", category: categoryId, ...(sale ? { sale: true } : {}) },
+      0,
+      PRODUCTS_PER_ROW,
+      controller.signal
+    )
+      .then((page) => {
+        if (controller.signal.aborted) return;
+        setProducts(page.products);
+        setStatus("ready");
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setStatus("error");
+      });
+    return () => controller.abort();
+  }, [categoryId, enabled, sale]);
+
+  if (!enabled) return <div ref={ref} />;
+
+  if (status === "loading" || status === "idle") {
+    return (
+      <div ref={ref} className="fresh-aisle-carousel" aria-busy="true">
+        <div className="fresh-aisle-carousel-head">
+          <h2 className="fresh-aisle-carousel-title">{title}</h2>
+        </div>
+        <p className="text-text-muted text-sm px-1">{t("common.loading")}</p>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return <div ref={ref} />;
+  }
+
+  if (products.length < minCount) {
+    if (!emptyLabel) return <div ref={ref} />;
+    return (
+      <div ref={ref} className="categories-fresh-empty card p-8 text-center">
+        <p className="text-text-muted">{t("category.noProducts")}</p>
+        <Link to="/products" className="btn-primary mt-4 inline-flex">
+          {t("products.viewCatalogue")}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={ref}>
+      <CategoriesAisleCarousel
+        title={title}
+        badge={badge}
+        seeMoreHref={`/category/${categoryId}`}
+        seeMoreLabel={t("categories.fresh.seeCategory", { category: seeMoreName ?? title })}
+        products={products}
+      />
+    </div>
   );
 }

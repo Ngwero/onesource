@@ -5,6 +5,8 @@ import { ProductGrid } from "../components/ProductGrid";
 import { ScrollReveal } from "../components/ScrollReveal";
 import { PageContainer } from "../components/PageContainer";
 import { ShopListingLayout } from "../components/shop/ShopListingLayout";
+import { InfiniteScrollFooter, ProductGridSkeleton } from "../components/InfiniteScrollFooter";
+import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
 import { useProducts } from "../context/ProductsContext";
 import { useCategoryName } from "../i18n/useLocalizedProduct";
 import {
@@ -22,16 +24,24 @@ export function CategoryPage() {
   const { t } = useTranslation();
   const { categoryId: rawId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
-  const { categories, getProductsByCategory } = useProducts();
+  const { categories } = useProducts();
 
   const normalizedId = rawId ? normalizeCategoryId(rawId) : "";
   const isRemovedSlug = Boolean(rawId && REMOVED_CATEGORY_SLUGS.has(rawId));
   const listingId = rawId ?? "";
   const categoryDef = normalizedId ? getCategoryById(normalizedId) : undefined;
   const category = categories.find((c) => c.id === normalizedId) ?? categoryDef;
-  const categoryProducts = listingId ? getProductsByCategory(listingId) : [];
   const displayCategoryId = isRemovedSlug ? rawId! : normalizedId;
   const categoryName = useCategoryName(displayCategoryId);
+  const isSpecialtyRedirect =
+    normalizedId === "kitchen-ware" ||
+    rawId === "kitchen-ware" ||
+    normalizedId === COSMETICS_CATEGORY_ID ||
+    normalizedId === PHARMACY_CATEGORY_ID;
+
+  const list = useInfiniteProducts(
+    listingId && !isSpecialtyRedirect ? { shop: "fresh", category: listingId } : null
+  );
 
   useEffect(() => {
     if (normalizedId === "kitchen-ware" || rawId === "kitchen-ware") {
@@ -66,8 +76,10 @@ export function CategoryPage() {
   );
 
   const hasCategoryMeta = Boolean(category ?? categoryDef ?? isRemovedSlug);
+  const noProducts =
+    !list.initialLoading && !list.error && !list.hasMore && list.products.length === 0;
 
-  if (!rawId || (!hasCategoryMeta && categoryProducts.length === 0)) {
+  if (!rawId || (!hasCategoryMeta && noProducts)) {
     return (
       <PageContainer className="py-16 sm:py-20 text-center">
         <div className="card p-8 sm:p-12 max-w-md mx-auto w-full">
@@ -81,7 +93,7 @@ export function CategoryPage() {
     );
   }
 
-  const preview = categoryProducts[0];
+  const preview = list.products[0];
   const icon = category?.icon ?? categoryDef?.icon ?? "📦";
   const heroImage = resolveImageUrl(
     getCategoryBannerImage(
@@ -133,23 +145,37 @@ export function CategoryPage() {
           </Link>
         </div>
 
-        <ShopListingLayout
-          key={displayCategoryId}
-          products={categoryProducts}
-          header={null}
-          lockCategoryId={displayCategoryId}
-          showCategoryFilter={false}
-          emptyState={
-            <div className="card p-8 sm:p-12 text-center w-full">
-              <p className="text-text-muted">{t("category.noProducts")}</p>
-              <Link to="/products" className="btn-primary mt-6 inline-flex">
-                {t("common.browseAll")}
-              </Link>
-            </div>
-          }
-        >
-          {(filtered) => <ProductGrid products={filtered} />}
-        </ShopListingLayout>
+        {list.initialLoading ? (
+          <ProductGridSkeleton gridClassName="product-grid" />
+        ) : (
+          <>
+            <ShopListingLayout
+              key={displayCategoryId}
+              products={list.products}
+              header={null}
+              lockCategoryId={displayCategoryId}
+              showCategoryFilter={false}
+              emptyState={
+                <div className="card p-8 sm:p-12 text-center w-full">
+                  <p className="text-text-muted">{t("category.noProducts")}</p>
+                  <Link to="/products" className="btn-primary mt-6 inline-flex">
+                    {t("common.browseAll")}
+                  </Link>
+                </div>
+              }
+            >
+              {(filtered) => <ProductGrid products={filtered} />}
+            </ShopListingLayout>
+            <InfiniteScrollFooter
+              sentinelRef={list.sentinelRef}
+              hasMore={list.hasMore}
+              loading={list.loading}
+              error={list.error}
+              onRetry={list.retry}
+              count={list.products.length}
+            />
+          </>
+        )}
       </PageContainer>
     </div>
   );

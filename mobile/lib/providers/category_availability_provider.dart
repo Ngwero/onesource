@@ -22,7 +22,7 @@ final categoryAvailabilityProvider =
     case 'cosmetics':
       ids = cosmeticsAisles.map((aisle) => aisle.id).toList();
     case 'kitchen':
-      ids = kitchenWareAisles.map((aisle) => aisle.id).toList();
+      ids = kitchenVisibleAisles().map((aisle) => aisle.id).toList();
     case 'pharmacy':
       ids = pharmacyAisles.map((aisle) => aisle.id).toList();
     default:

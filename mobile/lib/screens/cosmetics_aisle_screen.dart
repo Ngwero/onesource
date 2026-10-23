@@ -10,7 +10,6 @@ import '../utils/cart_feedback.dart';
 import '../utils/responsive.dart';
 import '../utils/shop_mode.dart';
 import '../widgets/loading_view.dart';
-import '../widgets/available_categories.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/products_load_more.dart';
 import '../widgets/shop_mode_switch.dart';
@@ -226,12 +225,7 @@ class CosmeticsCategoriesScreen extends StatelessWidget {
         backgroundColor: AppColors.canvas,
         automaticallyImplyLeading: false,
       ),
-      body: AvailableCategories(
-        shop: 'cosmetics',
-        builder: (pages) {
-          final aisles =
-              cosmeticsAisles.where((a) => pages.containsKey(a.id)).toList();
-          return ListView(
+      body: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding:
                 EdgeInsets.fromLTRB(16, 8, 16, shellBottomPadding(context)),
@@ -253,10 +247,10 @@ class CosmeticsCategoriesScreen extends StatelessWidget {
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                 ),
-                itemCount: aisles.length + 1,
+                itemCount: cosmeticsAisles.length + 1,
                 itemBuilder: (context, index) {
-                  final isAll = index == aisles.length;
-                  final aisle = isAll ? null : aisles[index];
+                  final isAll = index == cosmeticsAisles.length;
+                  final aisle = isAll ? null : cosmeticsAisles[index];
                   return Card(
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
@@ -298,9 +292,7 @@ class CosmeticsCategoriesScreen extends StatelessWidget {
                 },
               ),
             ],
-          );
-        },
-      ),
+          ),
     );
   }
 }

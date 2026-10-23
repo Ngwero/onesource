@@ -10,7 +10,7 @@ import { useCategoryName, useKitchenAisleTitle } from "../i18n/useLocalizedProdu
 import { BrandLogo } from "./BrandLogo";
 import { AccountMenu } from "./AccountMenu";
 import { isExportOnlyCart } from "../utils/exportOrder";
-import { KITCHEN_WARE_AISLES } from "../data/kitchenWare";
+import { kitchenVisibleAisles } from "../data/kitchenWare";
 import { COSMETICS_AISLES } from "../data/cosmetics";
 import { PHARMACY_AISLES } from "../data/pharmacy";
 import { kitchenAislePath } from "../utils/kitchenMode";
@@ -327,7 +327,7 @@ export function Header() {
                     }}
                   >
                     <option value="all">{t("kitchen.home.allCategories")}</option>
-                    {KITCHEN_WARE_AISLES.map((aisle) => (
+                    {kitchenVisibleAisles().map((aisle) => (
                       <KitchenAisleOption key={aisle.id} id={aisle.id} />
                     ))}
                   </select>
@@ -597,7 +597,7 @@ export function Header() {
                 >
                   {t("kitchen.home.feedOffers")}
                 </Link>
-                {KITCHEN_WARE_AISLES.map((aisle) => (
+                {kitchenVisibleAisles().map((aisle) => (
                   <KitchenAisleChip
                     key={aisle.id}
                     id={aisle.id}

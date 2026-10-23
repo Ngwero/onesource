@@ -1,21 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fetchProductListPage } from '../../api/client';
-import { excludePreviewProducts, uniquePreviewProducts } from '../../utils/uniquePreviewProducts';
+import { uniquePreviewProducts } from '../../utils/uniquePreviewProducts';
 import type { Product } from '../../types/product';
 import { KitchenAisleCarousel } from './KitchenAisleCarousel';
 import { KitchenShelfSkeleton } from './KitchenShelfSkeleton';
 
 const SHELF_SIZE = 24;
 
-export function KitchenPlatesCupsShelf({ onProducts }: { onProducts: (products: Product[]) => void }) {
+export function KitchenPlatesCupsShelf({
+  exclude = [],
+  onClaim,
+}: {
+  exclude?: Product[];
+  onClaim: (key: string, products: Product[]) => void;
+}) {
   const { t } = useTranslation();
-  const [plates, setPlates] = useState<Product[]>([]);
-  const [cups, setCups] = useState<Product[]>([]);
+  const [platesRaw, setPlatesRaw] = useState<Product[]>([]);
+  const [cupsRaw, setCupsRaw] = useState<Product[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
   const platesTitle = t('kitchen.home.platesTitle', { defaultValue: 'Plates' });
   const cupsTitle = t('kitchen.home.cupsTitle', { defaultValue: 'Cups' });
+  const plates = useMemo(
+    () => uniquePreviewProducts(platesRaw, exclude),
+    [platesRaw, exclude],
+  );
+  const cups = useMemo(
+    () => uniquePreviewProducts(cupsRaw, [...exclude, ...plates]),
+    [cupsRaw, exclude, plates],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -26,18 +40,21 @@ export function KitchenPlatesCupsShelf({ onProducts }: { onProducts: (products: 
     )
       .then(([platesPage, cupsPage]) => {
         if (controller.signal.aborted) return;
-        const plateRow = uniquePreviewProducts(platesPage.products);
-        const cupRow = uniquePreviewProducts(excludePreviewProducts(cupsPage.products, plateRow));
-        setPlates(plateRow);
-        setCups(cupRow);
-        onProducts([...plateRow, ...cupRow]);
+        setPlatesRaw(platesPage.products);
+        setCupsRaw(cupsPage.products);
         setStatus('ready');
       })
       .catch(() => {
         if (!controller.signal.aborted) setStatus('error');
       });
     return () => controller.abort();
-  }, [attempt, onProducts]);
+  }, [attempt]);
+
+  useEffect(() => {
+    if (status !== 'ready') return;
+    onClaim('plates', plates);
+    onClaim('cups', cups);
+  }, [status, plates, cups, onClaim]);
 
   const retry = () => {
     setStatus('loading');
@@ -55,8 +72,8 @@ export function KitchenPlatesCupsShelf({ onProducts }: { onProducts: (products: 
 
   if (status === 'error') {
     return (
-      <section className="kitchen-ikea-row">
-        <h2 className="kitchen-ikea-row-title">{platesTitle}</h2>
+      <section className="w-full min-w-0">
+        <h2 className="section-title text-xl sm:text-2xl">{platesTitle}</h2>
         <button className="btn-primary mt-3" onClick={retry}>
           {t('common.retry', { defaultValue: 'Retry' })}
         </button>

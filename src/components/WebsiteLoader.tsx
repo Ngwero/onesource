@@ -19,6 +19,7 @@ const SELF_LOADING_PATHS = [
   /^\/kitchen(\/|$)/,
   /^\/cosmetics(\/|$)/,
   /^\/pharmacy(\/|$)/,
+  /^\/categor(y|ies)(\/|$)/,
 ];
 
 function shopsNeededFor(pathname: string): ProductShop[] {
