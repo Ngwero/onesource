@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
+import '../utils/cart_feedback.dart';
 import 'product_card_details.dart';
+import 'product_checkout_actions.dart';
 import 'product_image_zoom.dart';
 import 'product_thumbnail.dart';
 import 'rating_stars.dart';
 
-class ProductCard extends StatelessWidget {
+class ProductCard extends ConsumerWidget {
   const ProductCard({
     super.key,
     required this.product,
@@ -25,7 +28,7 @@ class ProductCard extends StatelessWidget {
   final bool showImageZoom;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final category = ProductCardDetails.categoryLabel(product, context.tr);
     final social = ProductCardDetails.socialProof(product, context.tr);
     final stock = ProductCardDetails.stockLabel(product, context.tr);
@@ -145,21 +148,10 @@ class ProductCard extends StatelessWidget {
                     ],
                     if (onAdd != null) ...[
                       const SizedBox(height: 10),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 36,
-                        child: FilledButton.icon(
-                          onPressed: product.inStock ? onAdd : null,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.darkGreen,
-                            disabledBackgroundColor: AppColors.muted,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                          ),
-                          icon: const Icon(Icons.add_shopping_cart_outlined, size: 16),
-                          label: Text(context.tr.get(product.inStock ? 'common.addToBasket' : 'app.product.unavailableShort')),
-                        ),
+                      ProductCheckoutActions(
+                        inStock: product.inStock,
+                        onAdd: onAdd!,
+                        onPayNow: () => payNowAndCheckout(context, ref, product),
                       ),
                     ],
                   ],

@@ -122,7 +122,8 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
     }
 
     final featured =
-        ref.watch(platesCupsShelfProvider).valueOrNull ?? <Product>[];
+        ref.watch(platesCupsShelvesProvider).valueOrNull?.featured ??
+            <Product>[];
     final featuredIds = featured.map((p) => p.id).toSet();
     final featuredImages =
         featured.map((p) => p.image).where((image) => image.isNotEmpty).toSet();
@@ -160,7 +161,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                   .read(paginatedProductsProvider(query).notifier)
                   .refresh();
               ref.invalidate(heroSlidesProvider('kitchen'));
-              ref.invalidate(platesCupsShelfProvider);
+              ref.invalidate(platesCupsShelvesProvider);
             },
             child: CustomScrollView(
               controller: _scrollController,
@@ -209,7 +210,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                    child: _PlatesCupsRow(onAdd: _addToCart),
+                    child: _PlatesCupsRows(onAdd: _addToCart),
                   ),
                 ),
                 if (themedRows.isNotEmpty)
@@ -375,7 +376,7 @@ class _KitchenAisleProductRow extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 228,
+            height: 284,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: products.length,
@@ -398,35 +399,51 @@ class _KitchenAisleProductRow extends ConsumerWidget {
   }
 }
 
-class _PlatesCupsRow extends ConsumerWidget {
-  const _PlatesCupsRow({required this.onAdd});
+class _PlatesCupsRows extends ConsumerWidget {
+  const _PlatesCupsRows({required this.onAdd});
   final void Function(Product product) onAdd;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final title = context.tr
-        .get('kitchen.home.platesCupsTitle', fallback: 'Plates & Cups');
-    return ref.watch(platesCupsShelfProvider).when(
-          loading: () =>
-              SizedBox(height: 100, child: LoadingView(message: title)),
+    final platesTitle =
+        context.tr.get('kitchen.home.platesTitle', fallback: 'Plates');
+    final cupsTitle =
+        context.tr.get('kitchen.home.cupsTitle', fallback: 'Cups');
+    return ref.watch(platesCupsShelvesProvider).when(
+          loading: () => SizedBox(
+              height: 100, child: LoadingView(message: platesTitle)),
           error: (_, __) => Row(children: [
             Expanded(
-                child: Text(title,
+                child: Text(platesTitle,
                     style: const TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 18))),
             TextButton(
-                onPressed: () => ref.invalidate(platesCupsShelfProvider),
+                onPressed: () => ref.invalidate(platesCupsShelvesProvider),
                 child: Text(context.tr.get('common.retry', fallback: 'Retry'))),
           ]),
-          data: (products) => _KitchenAisleProductRow(
-            aisle: KitchenAisle(
-                id: 'tabletop',
-                title: title,
-                icon: '🍽️',
-                accentArgb: 0xFFB7A99A),
-            products: products,
-            onAdd: onAdd,
-            seeMorePath: '/kitchen/search?q=plates%20and%20cups',
+          data: (shelves) => Column(
+            children: [
+              _KitchenAisleProductRow(
+                aisle: KitchenAisle(
+                    id: 'tabletop',
+                    title: platesTitle,
+                    icon: '🍽️',
+                    accentArgb: 0xFFB7A99A),
+                products: shelves.plates,
+                onAdd: onAdd,
+                seeMorePath: '/kitchen/search?q=plates',
+              ),
+              _KitchenAisleProductRow(
+                aisle: KitchenAisle(
+                    id: 'tabletop',
+                    title: cupsTitle,
+                    icon: '☕',
+                    accentArgb: 0xFFB7A99A),
+                products: shelves.cups,
+                onAdd: onAdd,
+                seeMorePath: '/kitchen/search?q=cups',
+              ),
+            ],
           ),
         );
   }

@@ -163,7 +163,8 @@
       "dealsSeeAll": "Tala ba offres nyonso",
       "latestTitle": "Mona biloko ya kuku",
       "latestSub": "Biloko ndenge na ndenge ya biteni na biso — kende se na nse mpo na komona mosusu.",
-      "platesCupsTitle": "Assiettes mpe tasses"
+      "platesTitle": "Assiettes",
+      "cupsTitle": "Tasses"
     },
     "moreOptions": "Ba options mingi ezali",
     "searchTitle": "Luka na cuisine",
@@ -1673,6 +1674,7 @@
     "quantityLabel": "Motango:",
     "addToCart": "Bakisa na panier",
     "buyNow": "Somba sikoyo",
+    "payNow": "Futa sikoyo",
     "secureTransaction": "Transaction ya sécurité",
     "shipFrom": "Ekotisami na",
     "soldBy": "Etɛkami na",

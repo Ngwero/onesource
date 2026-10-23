@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
+import '../utils/cart_feedback.dart';
 import 'product_card_details.dart';
+import 'product_checkout_actions.dart';
 import 'product_image_zoom.dart';
 import 'product_thumbnail.dart';
 import 'quantity_stepper.dart';
 import 'rating_stars.dart';
 
-class HorizontalProductCard extends StatelessWidget {
+class HorizontalProductCard extends ConsumerWidget {
   const HorizontalProductCard({
     super.key,
     required this.product,
@@ -30,7 +33,7 @@ class HorizontalProductCard extends StatelessWidget {
   final bool showImageZoom;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final category = ProductCardDetails.categoryLabel(product, context.tr);
     final desc = context.tr.productDescription(product).trim();
     final subtitle = desc.isNotEmpty
@@ -151,17 +154,12 @@ class HorizontalProductCard extends StatelessWidget {
                             )
                           else if (onBuy != null)
                             Expanded(
-                              child: SizedBox(
+                              child: ProductCheckoutActions(
+                                inStock: product.inStock,
+                                onAdd: onBuy!,
+                                onPayNow: () => payNowAndCheckout(context, ref, product),
+                                widthFactor: 1,
                                 height: 40,
-                                child: FilledButton.icon(
-                                  onPressed: product.inStock ? onBuy : null,
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.darkGreen,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                  icon: const Icon(Icons.add_shopping_cart_outlined, size: 18),
-                                  label: Text(context.tr.get(product.inStock ? 'common.addToBasket' : 'app.product.unavailableShort')),
-                                ),
                               ),
                             ),
                         ],

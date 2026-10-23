@@ -332,7 +332,7 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 360,
+            height: 416,
             child: ListView.separated(
               controller: _controller,
               scrollDirection: Axis.horizontal,

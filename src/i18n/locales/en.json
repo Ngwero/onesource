@@ -150,7 +150,8 @@
       "dealsSeeAll": "See all deals",
       "latestTitle": "Explore Kitchen Ware",
       "latestSub": "A mix from across our aisles — keep scrolling to discover more.",
-      "platesCupsTitle": "Plates & Cups"
+      "platesTitle": "Plates",
+      "cupsTitle": "Cups"
     },
     "pdp": {
       "regularPrice": "Regular price",
@@ -909,6 +910,7 @@
     "quantityLabel": "Quantity:",
     "addToCart": "Add to basket",
     "buyNow": "Buy Now",
+    "payNow": "Pay now",
     "secureTransaction": "Secure transaction",
     "shipFrom": "Ships from",
     "soldBy": "Sold by",

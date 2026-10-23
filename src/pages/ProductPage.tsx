@@ -242,6 +242,10 @@ export function ProductPage() {
     addToCart(product, quantity, { openBasket: !isExport });
     if (isExport) navigate("/exports/confirmation");
   };
+  const handlePayNow = () => {
+    addToCart(product, quantity, { openBasket: false });
+    navigate("/checkout");
+  };
   const handleToggleList = () => {
     setOnList(toggleSavedListItem(user?.id, product.id));
   };
@@ -269,6 +273,7 @@ export function ProductPage() {
       onQuantityChange={setQuantity}
       qtyOptions={qtyOptions}
       onAdd={handleAdd}
+      onPayNow={isExport ? undefined : handlePayNow}
       onToggleList={handleToggleList}
       onList={onList}
       formatPrice={formatPrice}
@@ -437,6 +442,7 @@ export function ProductPage() {
           priceLabel={formatPrice(product.price)}
           inStock={product.inStock}
           onAdd={handleAdd}
+          onPayNow={isExport ? undefined : handlePayNow}
           actionLabelKey={isExport ? "checkout.placeOrder" : undefined}
         />
       )}

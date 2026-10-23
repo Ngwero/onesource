@@ -3,7 +3,7 @@ import { ProductCard } from "../ProductCard";
 
 type Props = { product: Product; priority?: boolean };
 
-/** Cosmetics and pharmacy use the same complete listing details as Fresh. */
+/** Cosmetics listing card: same shared cart + Pay now pair as every shop. */
 export function CosmeticsProductCard(props: Props) {
   return <ProductCard {...props} />;
 }

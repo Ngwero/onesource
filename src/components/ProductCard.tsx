@@ -10,10 +10,11 @@ import { SaveProductButton } from "./SaveProductButton";
 import { isExportProduct } from "../utils/exportOrder";
 import { formatCardUnitPrice } from "../utils/productDetails";
 import { productCardFacts } from "../utils/productCardFacts";
+import { ProductCheckoutActions } from "./product/ProductCheckoutActions";
 
 type Props = {
   product: Product;
-  /** i18n key for the action button label (defaults to "Add to basket"). */
+  /** i18n key for the export Place order button. */
   actionLabelKey?: string;
   priority?: boolean;
 };
@@ -75,17 +76,28 @@ export function ProductCard({ product, actionLabelKey, priority = false }: Props
         </div>
       </Link>
       <div className="product-card-actions">
-        <button
-          type="button"
-          disabled={!available}
-          onClick={() => {
-            addToCart(product, 1, { openBasket: !exportProduct });
-            if (exportProduct) navigate("/exports/confirmation");
-          }}
-          className="product-card-basket-btn"
-        >
-          {t(available ? resolvedActionLabel : "common.outOfStock")}
-        </button>
+        {exportProduct ? (
+          <button
+            type="button"
+            disabled={!available}
+            onClick={() => {
+              addToCart(product, 1, { openBasket: false });
+              navigate("/exports/confirmation");
+            }}
+            className="product-card-basket-btn"
+          >
+            {t(available ? resolvedActionLabel : "common.outOfStock")}
+          </button>
+        ) : (
+          <ProductCheckoutActions
+            disabled={!available}
+            onAdd={() => addToCart(product, 1)}
+            onPayNow={() => {
+              addToCart(product, 1, { openBasket: false });
+              navigate("/checkout");
+            }}
+          />
+        )}
       </div>
     </article>
   );

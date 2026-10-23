@@ -72,7 +72,7 @@ class HomeProductRow extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 228,
+            height: 284,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: products.length,

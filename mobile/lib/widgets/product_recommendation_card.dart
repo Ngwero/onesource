@@ -6,7 +6,9 @@ import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/currency_provider.dart';
+import '../utils/cart_feedback.dart';
 import 'product_card_details.dart';
+import 'product_checkout_actions.dart';
 import 'product_thumbnail.dart';
 import 'rating_stars.dart';
 
@@ -25,7 +27,6 @@ class ProductRecommendationCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unit = ProductCardDetails.unitLabel(product, context.tr);
     final formatPrice = ref.watch(formatPriceProvider);
-    final strings = ref.watch(stringsProvider);
 
     return Container(
       width: 168,
@@ -78,20 +79,12 @@ class ProductRecommendationCard extends ConsumerWidget {
                 const Spacer(),
                 if (onAdd != null) ...[
                   const SizedBox(height: 8),
-                  SizedBox(
+                  ProductCheckoutActions(
+                    inStock: product.inStock,
+                    onAdd: onAdd!,
+                    onPayNow: () => payNowAndCheckout(context, ref, product),
+                    widthFactor: 1,
                     height: 34,
-                    child: FilledButton.icon(
-                      onPressed: product.inStock ? onAdd : null,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.darkGreen,
-                        disabledBackgroundColor: AppColors.muted,
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-                      ),
-                      icon: const Icon(Icons.add_shopping_cart_outlined, size: 14),
-                      label: Text(product.inStock ? strings.add : 'N/A'),
-                    ),
                   ),
                 ],
               ],

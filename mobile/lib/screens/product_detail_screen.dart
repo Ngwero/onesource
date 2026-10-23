@@ -21,6 +21,7 @@ import '../utils/product_recommendations.dart';
 import '../utils/responsive.dart';
 import '../utils/user_facing_error.dart';
 import '../data/kitchen_ware.dart';
+import '../widgets/product_checkout_actions.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_card_details.dart';
 import '../widgets/product_image_zoom.dart';
@@ -147,16 +148,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
 
         return Scaffold(
           backgroundColor: AppColors.canvas,
-          bottomNavigationBar: cosmetics
-              ? null
-              : _StickyBuyBar(
-                  product: product,
-                  quantity: _qty,
-                  maxQty: maxQty,
-                  formatPrice: formatPrice,
-                  onQuantityChanged: (q) => setState(() => _qty = q),
-                  onAdd: () => addToCart(product, quantity: _qty),
-                ),
           body: LayoutBuilder(
             builder: (context, constraints) {
               final wide = constraints.maxWidth >= AppBreakpoints.wide;
@@ -211,18 +202,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                           ),
                       ],
                     ),
-                    if (cosmetics) ...[
-                      const SizedBox(height: 16),
-                      _StickyBuyBar(
-                        product: product,
-                        quantity: _qty,
-                        maxQty: maxQty,
-                        formatPrice: formatPrice,
-                        inline: true,
-                        onQuantityChanged: (q) => setState(() => _qty = q),
-                        onAdd: () => addToCart(product, quantity: _qty),
-                      ),
-                    ],
+                    const SizedBox(height: 16),
+                    _StickyBuyBar(
+                      product: product,
+                      quantity: _qty,
+                      maxQty: maxQty,
+                      formatPrice: formatPrice,
+                      inline: true,
+                      onQuantityChanged: (q) => setState(() => _qty = q),
+                      onAdd: () => addToCart(product, quantity: _qty),
+                      onPayNow: () => payNowAndCheckout(context, ref, product, quantity: _qty),
+                    ),
                     const SizedBox(height: 18),
                     _ProductFacts(
                       categoryName: categoryName,
@@ -904,6 +894,7 @@ class _StickyBuyBar extends StatelessWidget {
     required this.formatPrice,
     required this.onQuantityChanged,
     required this.onAdd,
+    this.onPayNow,
     this.inline = false,
   });
 
@@ -913,6 +904,7 @@ class _StickyBuyBar extends StatelessWidget {
   final String Function(double) formatPrice;
   final ValueChanged<int> onQuantityChanged;
   final VoidCallback onAdd;
+  final VoidCallback? onPayNow;
   final bool inline;
 
   @override
@@ -945,17 +937,25 @@ class _StickyBuyBar extends StatelessWidget {
     );
 
     if (inline) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              stepper,
-              const SizedBox(height: 12),
-              SizedBox(width: constraints.maxWidth * 0.5, child: cartButton),
-            ],
-          );
-        },
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          stepper,
+          const SizedBox(height: 12),
+          if (onPayNow != null)
+            ProductCheckoutActions(
+              inStock: product.inStock,
+              onAdd: onAdd,
+              onPayNow: onPayNow!,
+              height: 44,
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return SizedBox(width: constraints.maxWidth * 0.5, child: cartButton);
+              },
+            ),
+        ],
       );
     }
 

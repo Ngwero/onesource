@@ -153,7 +153,7 @@ class _PharmacyAisleScreenState extends ConsumerState<PharmacyAisleScreen> {
                 products: products,
                 onAdd: (p) => addToCartWithFeedback(context, ref, p),
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                mainAxisExtent: 360,
+                mainAxisExtent: 416,
                 imageSize: 220,
               ),
             if (!state.isInitialLoading)

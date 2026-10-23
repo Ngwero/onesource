@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useInfiniteProducts } from "../../hooks/useInfiniteProducts";
 import { InfiniteScrollFooter, ProductGridSkeleton } from "../InfiniteScrollFooter";
-import { CosmeticsProductCard } from "../cosmetics/CosmeticsProductCard";
+import { ProductCard } from "../ProductCard";
 
 type SortKey = "top" | "price-asc" | "price-desc" | "name";
 
@@ -11,7 +11,7 @@ type Props = {
   emptyState?: ReactNode;
 };
 
-/** Scrollable pharmacy grid. Reuses the cosmetics card layout. */
+/** Scrollable pharmacy grid. Uses the shared listing card. */
 export function PharmacyListing({ baseQuery, emptyState }: Props) {
   const { t } = useTranslation();
   const [sort, setSort] = useState<SortKey>("top");
@@ -55,7 +55,7 @@ export function PharmacyListing({ baseQuery, emptyState }: Props) {
         <>
           <div className="cos-grid">
             {products.map((product) => (
-              <CosmeticsProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
           <InfiniteScrollFooter

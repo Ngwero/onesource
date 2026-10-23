@@ -163,7 +163,8 @@
       "dealsSeeAll": "Reba amafere yose",
       "latestTitle": "Menya ibikoresho byo mu gikoni",
       "latestSub": "Ibicuruzwa bitandukanye byo mu byiciro byacu — komeza umanure urebe ibindi.",
-      "platesCupsTitle": "Amasahani n'ibikombe"
+      "platesTitle": "Amasahani",
+      "cupsTitle": "Ibikombe"
     },
     "moreOptions": "Hariho ubundi buryo",
     "searchTitle": "Shakisha ibikoresho by'igikoni",
@@ -1673,6 +1674,7 @@
     "quantityLabel": "Umubare:",
     "addToCart": "Ongeraho mu gafuka",
     "buyNow": "Gura ubu",
+    "payNow": "Ishyura ubu",
     "secureTransaction": "Gucuruza kwizewe",
     "shipFrom": "Byoherejwe na",
     "soldBy": "Byaguzwe na",

@@ -163,7 +163,8 @@
       "dealsSeeAll": "Tazama ofa zote",
       "latestTitle": "Gundua vifaa vya jikoni",
       "latestSub": "Mchanganyiko kutoka sehemu mbalimbali — endelea kusogeza ugundue zaidi.",
-      "platesCupsTitle": "Sahani na vikombe"
+      "platesTitle": "Sahani",
+      "cupsTitle": "Vikombe"
     },
     "moreOptions": "Chaguo zaidi zinapatikana",
     "searchTitle": "Tafuta vifaa vya jikoni",
@@ -1673,6 +1674,7 @@
     "quantityLabel": "Kiasi:",
     "addToCart": "Ongeza kwenye kikapu",
     "buyNow": "Nunua sasa",
+    "payNow": "Lipa sasa",
     "secureTransaction": "Muamala salama",
     "shipFrom": "Inatumwa kutoka",
     "soldBy": "Inauzwa na",

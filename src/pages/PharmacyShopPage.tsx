@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PharmacyHero } from "../components/pharmacy/PharmacyHero";
 import { PageContainer } from "../components/PageContainer";
-import { CosmeticsProductCard } from "../components/cosmetics/CosmeticsProductCard";
+import { ProductCard } from "../components/ProductCard";
 import { useInfiniteRow } from "../hooks/useInfiniteRow";
 import { useNearViewport } from "../hooks/useKitchenAisleShelf";
 import { usePharmacyCatalog } from "../hooks/usePharmacyCatalog";
@@ -115,7 +115,7 @@ function ProductRow({
         <div ref={setScroller} className="cos-hrow" onScroll={updateEdges}>
           {products.map((product) => (
             <div key={product.id} className="cos-hrow-item">
-              <CosmeticsProductCard product={product} />
+              <ProductCard product={product} />
             </div>
           ))}
           {error ? (

@@ -5,6 +5,7 @@ import type { Product } from "../../types/product";
 import type { LocalizedProduct } from "../../i18n/useLocalizedProduct";
 import { useDeliveryCountry } from "../../hooks/useDeliveryCountry";
 import { CountryFlag } from "../CountryFlag";
+import { ProductCheckoutActions } from "./ProductCheckoutActions";
 
 type Props = {
   product: Product;
@@ -19,6 +20,7 @@ type Props = {
   freeDeliveryThreshold: number;
   variant?: "sidebar" | "compact";
   actionLabelKey?: string;
+  onPayNow?: () => void;
 };
 
 export function ProductBuyBox({
@@ -34,6 +36,7 @@ export function ProductBuyBox({
   freeDeliveryThreshold,
   variant = "sidebar",
   actionLabelKey = "common.addToBasket",
+  onPayNow,
 }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -99,9 +102,17 @@ export function ProductBuyBox({
       </div>
 
       <div className="pdp-buy-actions">
-        <button type="button" disabled={!product.inStock} onClick={onAdd} className="pdp-btn-cart">
-          {t(actionLabelKey)}
-        </button>
+        {onPayNow ? (
+          <ProductCheckoutActions
+            disabled={!product.inStock}
+            onAdd={onAdd}
+            onPayNow={onPayNow}
+          />
+        ) : (
+          <button type="button" disabled={!product.inStock} onClick={onAdd} className="pdp-btn-cart">
+            {t(actionLabelKey)}
+          </button>
+        )}
         {!compact && (
           <button
             type="button"

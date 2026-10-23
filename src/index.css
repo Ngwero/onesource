@@ -10078,6 +10078,102 @@ body {
   border-color: #244a3b;
 }
 
+.cos-checkout-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 64%;
+  max-width: 15rem;
+}
+
+.cos-checkout-basket,
+.cos-checkout-pay {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  background: #ffdf00;
+  border: 1px solid #ffdf00;
+  color: #0f1111;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.cos-checkout-basket:hover:not(:disabled),
+.cos-checkout-pay:hover:not(:disabled) {
+  background: #f7ca00;
+  border-color: #f7ca00;
+}
+
+.cos-checkout-basket:focus-visible,
+.cos-checkout-pay:focus-visible {
+  outline: 3px solid #007185;
+  outline-offset: 3px;
+}
+
+.cos-checkout-basket:disabled,
+.cos-checkout-pay:disabled {
+  background: #ededed;
+  border-color: #d5d9d9;
+  color: #6f7373;
+  cursor: not-allowed;
+}
+
+.cos-checkout-basket {
+  flex: 0 0 2.25rem;
+  width: 2.25rem;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.cos-checkout-basket svg {
+  display: block;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.cos-checkout-pay {
+  flex: 1 1 auto;
+  min-width: 5.75rem;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.product-card .product-card-actions:has(.cos-checkout-actions) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.pdp-buy-actions .cos-checkout-actions,
+.pdp-page--cosmetics .cos-checkout-actions {
+  align-self: flex-start;
+}
+
+.pdp-mobile-bar .cos-checkout-actions {
+  flex: 0 1 auto;
+  width: auto;
+  max-width: 15rem;
+}
+
+@media (max-width: 767px) {
+  .cos-checkout-actions {
+    width: 70%;
+  }
+  .cos-checkout-pay {
+    height: auto;
+    white-space: normal;
+  }
+}
+
 /* Listing */
 .cos-toolbar {
   position: sticky;

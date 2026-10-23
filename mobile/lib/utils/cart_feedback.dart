@@ -7,6 +7,18 @@ import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 
+/// Adds [product] and opens the existing checkout screen.
+void payNowAndCheckout(
+  BuildContext context,
+  WidgetRef ref,
+  Product product, {
+  int quantity = 1,
+}) {
+  if (!product.inStock) return;
+  ref.read(cartProvider.notifier).add(product, quantity: quantity);
+  context.push('/checkout');
+}
+
 /// Adds [product] to the basket and shows a translated confirmation.
 void addToCartWithFeedback(
   BuildContext context,

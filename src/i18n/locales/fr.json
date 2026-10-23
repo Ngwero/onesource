@@ -163,7 +163,8 @@
       "dealsSeeAll": "Voir toutes les promos",
       "latestTitle": "Découvrez Kitchen Ware",
       "latestSub": "Un choix varié de nos rayons — continuez à défiler pour en découvrir plus.",
-      "platesCupsTitle": "Assiettes et tasses"
+      "platesTitle": "Assiettes",
+      "cupsTitle": "Tasses"
     },
     "moreOptions": "Plus d'options disponibles",
     "searchTitle": "Rechercher dans la cuisine",
@@ -1673,6 +1674,7 @@
     "quantityLabel": "Quantité :",
     "addToCart": "Ajouter au panier",
     "buyNow": "Acheter maintenant",
+    "payNow": "Payer maintenant",
     "secureTransaction": "Transaction sécurisée",
     "shipFrom": "Expédié par",
     "soldBy": "Vendu par",

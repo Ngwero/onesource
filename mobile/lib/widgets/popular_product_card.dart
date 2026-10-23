@@ -7,7 +7,10 @@ import '../data/cosmetics.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/currency_provider.dart';
+import '../utils/cart_feedback.dart';
+import '../utils/categories.dart';
 import 'product_card_details.dart';
+import 'product_checkout_actions.dart';
 import 'product_thumbnail.dart';
 import 'rating_stars.dart';
 
@@ -35,6 +38,9 @@ class PopularProductCard extends ConsumerWidget {
     final unit = ProductCardDetails.unitLabel(product, context.tr);
     final formatPrice = ref.watch(formatPriceProvider);
     final cosmetics = addBelow && isCosmeticsProduct(product);
+    final exportProduct = productMatchesCategory(product.category, 'export-fresh-produce');
+    final showPair = onAdd != null && !exportProduct;
+    final useColumn = addBelow || showPair;
     final brand = product.details.brand?.trim();
     final title = context.tr.productTitle(product);
     final displayTitle = cosmetics ? _titleWithoutBrand(title, brand) : title;
@@ -143,37 +149,16 @@ class PopularProductCard extends ConsumerWidget {
       ],
     );
 
-    final belowButton = onAdd == null
-        ? null
-        : Padding(
+    final belowButton = showPair
+        ? Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: FractionallySizedBox(
-                widthFactor: 0.5,
-                child: SizedBox(
-                  height: 36,
-                  child: FilledButton(
-                    onPressed: product.inStock ? onAdd : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.darkGreen,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: AppColors.muted,
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                    ),
-                    child: Text(
-                      context.tr.get(product.inStock ? 'common.addToBasket' : 'common.outOfStock'),
-                      maxLines: 2,
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ),
+            child: ProductCheckoutActions(
+              inStock: product.inStock,
+              onAdd: onAdd!,
+              onPayNow: () => payNowAndCheckout(context, ref, product),
             ),
-          );
+          )
+        : null;
 
     return Container(
       decoration: BoxDecoration(
@@ -182,7 +167,7 @@ class PopularProductCard extends ConsumerWidget {
         boxShadow: softCardShadow,
       ),
       clipBehavior: Clip.antiAlias,
-      child: addBelow
+      child: useColumn
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
