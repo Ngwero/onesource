@@ -8,7 +8,6 @@ import '../data/pharmacy.dart';
 import '../i18n/app_strings.dart';
 import '../utils/cart_feedback.dart';
 import '../providers/products_provider.dart';
-import '../providers/search_catalog_provider.dart';
 import '../providers/search_provider.dart';
 import '../utils/kitchen_mode.dart';
 import '../utils/responsive.dart';
@@ -48,7 +47,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _focusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(searchShopProvider.notifier).state = widget.mode.name;
-      ref.read(searchCatalogProvider(widget.mode.name).future);
       ref.read(searchProvider.notifier).setQuery(_controller.text);
       _focusNode.requestFocus();
     });

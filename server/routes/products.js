@@ -1,6 +1,7 @@
-import { preferredSearchAisles } from "../../shared/productSearch.mjs";
+import { createProgressiveCatalogueIndex, fastestSearchSource } from "../lib/catalogueSearchIndex.js";
+import { preferredSearchAisles, queryGroups } from "../../shared/productSearch.mjs";
 import { createSearchCandidatePager } from "../lib/searchCandidatePager.js";
-import { collectSearchPage } from "../lib/productSearchPage.js";
+import { createSearchPageLoader } from "../lib/productSearchPage.js";
 import { mixedAislePage, interleaveAislePage } from "../lib/mixedAislePage.js";
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
@@ -153,7 +154,7 @@ function parseListRequest(reqQuery) {
     admin: reqQuery.admin === "true",
     category,
     supplierId: reqQuery.supplierId ?? reqQuery.supplier_id,
-    search: reqQuery.q?.trim(),
+    search: typeof reqQuery.q === "string" ? reqQuery.q.trim().replace(/\s+/g, " ").toLowerCase() : undefined,
     aisleId,
     pharmacyOnly,
     cosmeticsOnly,
@@ -167,7 +168,7 @@ function parseListRequest(reqQuery) {
 }
 
 /** Sync on purpose: Supabase builders are thenable, so an async helper would run the query. */
-function applyListFilters(query, ctx, { publishedColumn, searchCandidates = false, expandSearchTags = true }) {
+function applyListFilters(query, ctx, { publishedColumn, searchCandidates = false, expandSearchTags = true, searchMetadata = false, searchDiacritics = false }) {
   const { list } = ctx;
   if (list.sale) {
     query = query.not("original_price", "is", null);
@@ -217,7 +218,7 @@ function applyListFilters(query, ctx, { publishedColumn, searchCandidates = fals
   }
   if (ctx.search) {
     const orFilter = buildSearchOrFilter(ctx.search, searchCandidates
-      ? ["title"] : undefined, expandSearchTags);
+      ? (searchMetadata ? ["title", "category", "unit", "details->>brand"] : ["title"]) : undefined, expandSearchTags, { diacritics: searchDiacritics });
     if (orFilter) query = query.or(orFilter);
   }
   return query;
@@ -297,6 +298,9 @@ function createSwrCache({ freshMs, staleMs, max }) {
   return {
     get(key, load) {
       const now = Date.now();
+      for (const [expiredKey, cached] of entries) {
+        if (!cached.pending && cached.freshUntil + staleMs < now) entries.delete(expiredKey);
+      }
       let entry = entries.get(key);
       if (entry?.value !== undefined && entry.freshUntil + staleMs < now) entry = undefined;
       if (entry) {
@@ -334,13 +338,19 @@ function countIsBroad(ctx) {
 /** Exact match counts per filter set; counting ~25k rows on every page was the slow part. */
 const countCache = createSwrCache({ freshMs: 5 * 60 * 1000, staleMs: 30 * 60 * 1000, max: 300 });
 /** Whole list pages for shoppers (never admin/search), so feed pages are served from memory. */
+const warmingSearchIndexes = new Map();
+const searchIndexCache = createSwrCache({ freshMs: 5 * 60 * 1000, staleMs: 60 * 1000, max: 4 });
 const searchCandidatesCache = createSwrCache({ freshMs: 60 * 1000, staleMs: 2 * 60 * 1000, max: 100 });
+const searchPagesCache = createSwrCache({ freshMs: 30 * 1000, staleMs: 2 * 60 * 1000, max: 100 });
 const listPageCache = createSwrCache({ freshMs: 30 * 1000, staleMs: 2 * 60 * 1000, max: 400 });
 
 function forgetListings() {
   countCache.clear();
   listPageCache.clear();
   searchCandidatesCache.clear();
+  searchIndexCache.clear();
+  searchPagesCache.clear();
+  freshRowsCache.clear();
 }
 
 function listingCount(db, ctx, publishedColumn) {
@@ -479,28 +489,96 @@ async function loadBalancedAislePage(db, ctx, { page, pageSize, card, publishedC
   };
 }
 
+/** Reuse lightweight searchable facts across every query in the shop. */
+async function shopSearchIndex(db, ctx, publishedColumn) {
+  const shop = ctx.shopPrefix;
+  const key = JSON.stringify([shop, publishedColumn]);
+  return searchIndexCache.get(key, () => {
+    const prefix = `${shop}-`;
+    const boundaries = [...new Set([prefix, ...aisleIdsForShop(shop).map((aisle) => `${prefix}${aisle}-`)])].sort();
+    boundaries.push(idPrefixUpperBound(prefix));
+    const preferred = shop === "kitchen" ? ["tabletop", "stainless-clad", "small-appliances"]
+      : shop === "cosmetics" ? ["fragrance", "face-eye-care", "hair-care"] : ["care", "mother-child", "supplements"];
+    const task = createProgressiveCatalogueIndex({ boundaries,
+      priority: preferred.map((aisle) => `${prefix}${aisle}-`),
+      loadBatch: async ({ low, high, after, size }) => {
+        let query = db.from("products")
+          .select("id,title,category,unit,price,original_price,prime,rating,review_count,created_at,supplier_id,brand:details->>brand,pharmacyImageStatus:details->pharmacyImageQuality->>status")
+          .gte("id", low).lt("id", high).eq("in_stock", true).gt("stock_quantity", 0)
+          .order("id", { ascending: true }).limit(size);
+        if (publishedColumn) query = query.eq("published", true);
+        if (after) query = query.gt("id", after);
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data ?? []).map((row) => ({
+          ...row, price: Number(row.price), originalPrice: row.original_price == null ? undefined : Number(row.original_price),
+          reviewCount: row.review_count, createdAt: row.created_at,
+        }));
+      },
+    });
+    warmingSearchIndexes.set(key, task);
+    return task.ready.finally(() => {
+      if (warmingSearchIndexes.get(key) === task) warmingSearchIndexes.delete(key);
+    });
+  });
+}
+
+function matchesSearchScope(product, ctx) {
+  if (ctx.pharmacyOnly && !ctx.admin && product.pharmacyImageStatus !== "verified") return false;
+  if (ctx.category && !categoryMatchAliases(ctx.category).includes(product.category)) return false;
+  if (ctx.supplierId && product.supplier_id !== ctx.supplierId) return false;
+  if (ctx.aisleId) {
+    if (!product.id.startsWith(`${ctx.shopPrefix}-${ctx.aisleId}-`)) return false;
+    if (nestedAislePrefixes(ctx.shopPrefix, ctx.aisleId).some((prefix) => product.id.startsWith(prefix))) return false;
+  }
+  return matchesListParams(product, ctx.list);
+}
+
 /** Share candidate batches and keep exact product names ahead of related tags. */
 async function loadSearchCandidates(db, ctx, publishedColumn) {
   const relevance = ctx.list.sort === "newest" || ctx.list.sort === "top";
   const key = JSON.stringify([listFilterKey(ctx), ctx.list.sort]);
   const preferred = !ctx.aisleId && !ctx.freshOnly
     ? preferredSearchAisles(ctx.search, ctx.shopPrefix) : [];
-  return searchCandidatesCache.get(key, async () => createSearchCandidatePager({
-    phases: relevance ? [...preferred.map((aisle) => `preferred:${aisle}`), "direct", "related"] : ["related"],
-    matches: (product) => productMatchesSearch(product, ctx.search),
+  const hasRelated = queryGroups(ctx.search).some((group) => group.alternatives.length > 1);
+  return searchCandidatesCache.get(key, async () => {
+    const indexReady = searchIndexCache.peek(JSON.stringify([ctx.shopPrefix, publishedColumn]));
+    const indexed = !ctx.admin && !ctx.previewCosmetics && (ctx.kitchenOnly || ctx.cosmeticsOnly || ctx.pharmacyOnly)
+      ? shopSearchIndex(db, ctx, publishedColumn).then((index) => {
+          const matches = index.search(ctx.search).filter((product) => matchesSearchScope(product, ctx));
+          const products = relevance ? matches : sortListedProducts(matches, ctx.list.sort);
+          return async (from, size) => products.slice(from, from + size);
+        }) : null;
+    if (indexed && indexReady) return indexed;
+    const live = createSearchCandidatePager({
+    phases: relevance
+      ? [...preferred.map((aisle) => `preferred:${aisle}`), "direct", ...(hasRelated ? ["related"] : []), "folded", "metadata"]
+      : ["metadata"],
+    matches: (product) => (!ctx.pharmacyOnly || ctx.admin || product.pharmacyImageStatus === "verified") && productMatchesSearch(product, ctx.search),
     rank: relevance ? (rows) => rankSearchResults(rows, ctx.search) : (rows) => rows,
     loadBatch: async (phase, offset, batchSize) => {
       const scope = phase.startsWith("preferred:") ? { ...ctx, aisleId: phase.slice(10) } : ctx;
-      const base = db.from("products").select("id,title,category,unit");
+      const metadata = phase === "metadata";
+      const columns = metadata ? "id,title,category,unit,brand:details->>brand" : "id,title,category,unit";
+      const base = db.from("products").select(ctx.pharmacyOnly && !ctx.admin
+        ? `${columns},pharmacyImageStatus:details->pharmacyImageQuality->>status` : columns);
       const query = applyListFilters(
         relevance ? base.order("id", { ascending: true }) : applySort(base, ctx.list.sort),
-        scope, { publishedColumn, searchCandidates: true, expandSearchTags: phase !== "direct" }
+        scope, { publishedColumn, searchCandidates: true, searchMetadata: metadata, searchDiacritics: metadata || phase === "folded", expandSearchTags: phase !== "direct" }
       ).range(offset, offset + batchSize - 1);
       const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
     },
-  }));
+    });
+    if (!indexed) return live;
+    const progressive = Promise.resolve().then(async () => {
+      const task = warmingSearchIndexes.get(JSON.stringify([ctx.shopPrefix, publishedColumn]));
+      return relevance && task ? task.candidates(ctx.search, (p) => matchesSearchScope(p, ctx),
+        (p) => !preferred.length || preferred.some((aisle) => p.id.startsWith(`${ctx.shopPrefix}-${aisle}-`))) : indexed;
+    });
+    return fastestSearchSource([indexed, progressive, Promise.resolve(live)]);
+  });
 }
 
 async function loadListPage(ctx, { page, pageSize, card }) {
@@ -512,12 +590,14 @@ async function loadListPage(ctx, { page, pageSize, card }) {
 
       // The whole Fresh catalogue is small enough to merge in memory. This avoids
       // the shop-wide scan that Supabase cancels.
-      if (ctx.freshOnly && !ctx.category && !ctx.aisleId && !search) {
-        const cacheKey = JSON.stringify([listFilterKey(ctx), card]);
+      if (ctx.freshOnly && !ctx.category && !ctx.aisleId) {
+        const cacheKey = JSON.stringify([listFilterKey({ ...ctx, search: undefined }), card]);
         const all = await freshRowsCache.get(cacheKey, () =>
           loadFreshProducts(db, ctx, { card, publishedColumn })
         );
-        const products = sortListedProducts(all.filter((p) => matchesListParams(p, list)), list.sort);
+        const matching = all.filter((p) => matchesListParams(p, list) && (!search || productMatchesSearch(p, search)));
+        const products = search && (list.sort === "newest" || list.sort === "top")
+          ? rankSearchResults(matching, search) : sortListedProducts(matching, list.sort);
         const from = page * pageSize;
         const pageRows = products.slice(from, from + pageSize);
         return {
@@ -549,8 +629,9 @@ async function loadListPage(ctx, { page, pageSize, card }) {
         // Fetch rich cards and validate pharmacy photos only for these candidates.
         const searchSort = list.sort === "newest" || list.sort === "top";
         const loadCandidates = await loadSearchCandidates(db, ctx, publishedColumn);
-        const result = await collectSearchPage({
-          page, pageSize,
+        const loadPage = await searchPagesCache.get(
+          JSON.stringify([listFilterKey(ctx), list.sort, card]),
+          async () => createSearchPageLoader({
           loadCandidates,
           loadCards: async (candidates) => {
             const needsVerifiedImage = ctx.pharmacyOnly && !admin;
@@ -560,11 +641,13 @@ async function loadListPage(ctx, { page, pageSize, card }) {
               .in("id", candidates.map((p) => p.id));
             if (error) throw error;
             return (rows ?? [])
-              .filter((row) => !needsVerifiedImage || row.pharmacyImageStatus === "verified")
+              .filter((row) => (admin || (row.in_stock && row.stock_quantity > 0 && (!publishedColumn || row.published))) &&
+                (!needsVerifiedImage || row.pharmacyImageStatus === "verified"))
               .map(card ? cardRowToProduct : rowToProduct)
               .filter((product) => matchesListParams(product, list));
           },
-        });
+        }));
+        const result = await loadPage({ page, pageSize });
         const products = searchSort ? rankSearchResults(result.products, search) : result.products;
         return {
           ...result,
@@ -657,6 +740,10 @@ router.get("/", async (req, res) => {
       hasMore: Boolean(result.hasMore),
       ...(result.source === "local-seed" ? { source: "local-seed" } : {}),
     });
+    if (shopperList && page === 0 && !ctx.search && !ctx.freshOnly && countIsBroad(ctx) && result.source !== "local-seed") {
+      const db = requireSupabase();
+      hasPublishedColumn(db).then((published) => shopSearchIndex(db, ctx, published)).catch(() => {});
+    }
   } catch (e) {
     res.status(500).json({ error: dbErrorMessage(e) });
   }

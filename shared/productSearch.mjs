@@ -1,7 +1,12 @@
 import taxonomy from './search-taxonomy.json' with { type: 'json' };
 
+const folds = new Map(Object.entries(taxonomy.folds).flatMap(([plain, chars]) => [...chars].map((char) => [char, plain])));
+export function foldSearchText(value) {
+  return [...String(value ?? '').toLowerCase()].map((char) => folds.get(char) ?? char).join('');
+}
+
 export function searchTokens(value) {
-  return String(value ?? '').toLowerCase().replace(/<[^>]*>/g, ' ')
+  return foldSearchText(value).replace(/\p{M}/gu, '').replace(/<[^>]*>/g, ' ').replace(/\bl['’]oreal\b/g, 'loreal').replace(/(\p{L})['’]s\b/gu, '$1')
     .replace(/(\d)(\p{L})/gu, '$1 $2').replace(/(\p{L})(\d)/gu, '$1 $2')
     .match(/[\p{L}\p{N}]+/gu) ?? [];
 }
@@ -14,8 +19,12 @@ export function singular(token) {
   return token;
 }
 
-export function normalizedWords(value) { return searchTokens(value).map(singular); }
+export function normalizedWords(value) {
+  return searchTokens(value).map((word) => singular(taxonomy.corrections[word] ?? taxonomy.corrections[singular(word)] ?? word));
+}
 const phraseKey = (value) => normalizedWords(value).join(' ');
+
+export function searchAlternatives(query) { return taxonomy.collections[phraseKey(query)] ?? [query]; }
 
 export function queryVariants(query) {
   const key = phraseKey(query);
@@ -39,14 +48,16 @@ const groups = taxonomy.groups.map((group) => ({ ...group,
   excludeWords: (group.exclude ?? []).map(normalizedWords),
   aliases: [...new Set([...group.sources, ...group.tags].map(phraseKey))],
 }));
+const groupsByAlias = new Map();
+const groupsByShop = new Map();
+for (const group of groups) {
+  for (const alias of group.aliases) groupsByAlias.set(alias, [...(groupsByAlias.get(alias) ?? []), group]);
+  groupsByShop.set(group.shop, [...(groupsByShop.get(group.shop) ?? []), group]);
+}
 
-/** Tags describe the named product, never incidental words in a long description. */
-export function getProductSearchTags(product) {
-  const title = normalizedWords(product.title);
-  const shop = shopOf(product);
+function tagsFor(title, shop) {
   const tags = new Set();
-  for (const group of groups) {
-    if (shop && group.shop !== shop) continue;
+  for (const group of (shop ? groupsByShop.get(shop) ?? [] : groups)) {
     if (group.excludeWords.some((phrase) => includesPhrase(title, phrase))) continue;
     if (group.sourceWords.some((phrase) => includesPhrase(title, phrase))) {
       for (const tag of group.tags) tags.add(tag);
@@ -55,65 +66,79 @@ export function getProductSearchTags(product) {
   return [...tags];
 }
 
-/** Longest known phrases stay together: e.g. "sun cream" is one concept. */
-export function queryGroups(query) {
-  const words = normalizedWords(query);
-  const result = [];
+/** Tags describe the named product, never incidental words in a long description. */
+export function getProductSearchTags(product) {
+  return tagsFor(normalizedWords(product.title), shopOf(product));
+}
+
+// A bounded cache compiles each query once, rather than for every sort comparison.
+const queryCache = new Map();
+function compileQuery(query) {
+  const key = String(query ?? '');
+  if (queryCache.has(key)) return queryCache.get(key);
+  const words = normalizedWords(key);
+  const terms = [];
   for (let i = 0; i < words.length;) {
     let size = 1;
     for (let length = Math.min(4, words.length - i); length > 1; length--) {
-      const phrase = words.slice(i, i + length).join(' ');
-      if (groups.some((group) => group.aliases.includes(phrase))) { size = length; break; }
+      if (groupsByAlias.has(words.slice(i, i + length).join(' '))) { size = length; break; }
     }
     const direct = words.slice(i, i + size).join(' ');
-    const related = groups.filter((group) => group.aliases.includes(direct));
-    result.push({ direct, alternatives: [...new Set([direct, ...related.flatMap((group) => group.sources.map(phraseKey))])] });
+    const related = groupsByAlias.get(direct) ?? [];
+    terms.push({ direct, words: direct.split(' '), groups: related,
+      alternatives: [...new Set([direct, ...related.filter((group) => group.tags.some((tag) => phraseKey(tag) === direct))
+        .flatMap((group) => group.sourceWords.map((phrase) => phrase.join(' ')))])],
+    });
     i += size;
   }
-  return result;
+  const compiled = { words, terms };
+  if (queryCache.size >= 256) queryCache.delete(queryCache.keys().next().value);
+  queryCache.set(key, compiled);
+  return compiled;
 }
 
-function searchableWords(product, includeTags) {
-  const fields = [product.title, product.details?.brand, product.category, product.unit, product.supplierName];
-  if (includeTags) fields.push(...getProductSearchTags(product), ...(product.searchTags ?? []));
-  // A delimiter prevents a phrase spanning unrelated fields.
-  return fields.filter(Boolean).flatMap((field) => [...normalizedWords(field), '|']);
+/** Longest known phrases stay together: e.g. "sun cream" is one concept. */
+export function queryGroups(query) {
+  return compileQuery(query).terms.map(({ direct, alternatives }) => ({ direct, alternatives }));
 }
 
-export function productMatchesSearch(product, query) {
-  const terms = queryGroups(query);
-  if (!terms.length) return false;
-  const words = searchableWords(product, true);
+function evaluate(product, query) {
+  const alternatives = searchAlternatives(query);
+  if (alternatives.length > 1) return Math.max(...alternatives.map((term) => evaluate(product, term)));
+  const { terms, words: phrase } = compileQuery(query);
+  if (!terms.length) return -1;
   const title = normalizedWords(product.title);
   const shop = shopOf(product);
-  return terms.every(({ direct }) => {
-    const excluded = groups.some((group) => (!shop || group.shop === shop) &&
-      group.aliases.includes(direct) && group.excludeWords.some((phrase) => includesPhrase(title, phrase)) &&
-      !group.excludeWords.some((phrase) => includesPhrase(title, phrase) &&
-        phrase.every((word) => normalizedWords(query).includes(word))));
-    return !excluded && includesPhrase(words, direct.split(' '));
-  });
-}
-
-export function searchScore(product, query) {
-  if (!productMatchesSearch(product, query)) return -1;
-  const title = normalizedWords(product.title);
-  const phrase = normalizedWords(query);
-  let score = includesPhrase(title, phrase) ? 1000 : 0;
-  if (title.join(' ') === phrase.join(' ')) score += 1000;
-  for (const { direct } of queryGroups(query)) {
-    if (includesPhrase(title, direct.split(' '))) score += 100;
+  const fields = [product.details?.brand, product.brand, product.category, product.unit, product.supplierName,
+    ...tagsFor(title, shop), ...(product.searchTags ?? [])];
+  const words = [...title, '|', ...fields.filter(Boolean).flatMap((field) => [...normalizedWords(field), '|'])];
+  for (const term of terms) {
+    if (!includesPhrase(words, term.words)) return -1;
+    const excluded = term.groups.some((group) => (!shop || group.shop === shop) &&
+      group.excludeWords.some((excludedPhrase) => includesPhrase(title, excludedPhrase)) &&
+      !group.excludeWords.some((excludedPhrase) => includesPhrase(title, excludedPhrase) &&
+        excludedPhrase.every((word) => phrase.includes(word))));
+    if (excluded) return -1;
   }
+  const preferred = terms.some((term) => term.groups.some((group) =>
+    group.shop === shop && (group.aisles ?? []).some((aisle) => String(product.id ?? '').startsWith(`${shop}-${aisle}-`))));
+  let score = (preferred ? 1500 : 0) + (includesPhrase(title, phrase) ? 1000 : 0);
+  if (title.join(' ') === phrase.join(' ')) score += 1000;
+  for (const term of terms) if (includesPhrase(title, term.words)) score += 100;
   return score;
 }
 
+export function productMatchesSearch(product, query) { return evaluate(product, query) >= 0; }
+export function searchScore(product, query) { return evaluate(product, query); }
+
 export function rankSearchResults(products, query) {
-  return [...products].sort((a, b) => searchScore(b, query) - searchScore(a, query) || String(a.id ?? '').localeCompare(String(b.id ?? '')));
+  return products.map((product) => ({ product, score: evaluate(product, query) }))
+    .sort((a, b) => b.score - a.score || String(a.product.id ?? '').localeCompare(String(b.product.id ?? '')))
+    .map(({ product }) => product);
 }
 
 /** Prefer the relevant aisle, then continue searching the rest of the shop. */
 export function preferredSearchAisles(query, shop) {
-  const terms = queryGroups(query).map(({ direct }) => direct);
-  return [...new Set(groups.filter((group) => group.shop === shop &&
-    terms.some((term) => group.aliases.includes(term))).flatMap((group) => group.aisles ?? []))];
+  return [...new Set(searchAlternatives(query).flatMap((alternative) => compileQuery(alternative).terms).flatMap((term) => term.groups)
+    .filter((group) => group.shop === shop).flatMap((group) => group.aisles ?? []))];
 }

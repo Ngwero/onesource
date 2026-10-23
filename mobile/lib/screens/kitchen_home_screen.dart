@@ -9,6 +9,7 @@ import '../i18n/app_strings.dart';
 import '../models/hero_slide.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
+import '../providers/plates_cups_provider.dart';
 import '../providers/hero_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../services/auth_service.dart';
@@ -120,13 +121,21 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
       );
     }
 
-    final products = sortKitchenWithSaucepansFirst(productsState.items);
+    final featured =
+        ref.watch(platesCupsShelfProvider).valueOrNull ?? <Product>[];
+    final featuredIds = featured.map((p) => p.id).toSet();
+    final featuredImages =
+        featured.map((p) => p.image).where((image) => image.isNotEmpty).toSet();
+    final products = sortKitchenWithSaucepansFirst(productsState.items
+        .where((p) =>
+            !featuredIds.contains(p.id) && !featuredImages.contains(p.image))
+        .toList());
     final popularProducts =
         diversifyKitchenProducts(products, limit: _popularCount);
     final popularIds = popularProducts.map((p) => p.id).toSet();
     // Every kitchen product, newest uploads first, growing endlessly as pages load.
     final moreProducts =
-        productsState.items.where((p) => !popularIds.contains(p.id)).toList();
+        products.where((p) => !popularIds.contains(p.id)).toList();
     _scrollListener?.scheduleCheck();
 
     // Always list every kitchen subcategory row (same idea as Fresh home rows).
@@ -151,6 +160,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                   .read(paginatedProductsProvider(query).notifier)
                   .refresh();
               ref.invalidate(heroSlidesProvider('kitchen'));
+              ref.invalidate(platesCupsShelfProvider);
             },
             child: CustomScrollView(
               controller: _scrollController,
@@ -194,6 +204,12 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                         ),
                       ],
                     ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: _PlatesCupsRow(onAdd: _addToCart),
                   ),
                 ),
                 if (themedRows.isNotEmpty)
@@ -299,8 +315,10 @@ class _KitchenAisleProductRow extends ConsumerWidget {
     required this.aisle,
     required this.products,
     required this.onAdd,
+    this.seeMorePath,
   });
 
+  final String? seeMorePath;
   final KitchenAisle aisle;
   final List<Product> products;
   final void Function(Product product) onAdd;
@@ -340,7 +358,8 @@ class _KitchenAisleProductRow extends ConsumerWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => context.push(kitchenAislePath(aisle.id)),
+                onPressed: () =>
+                    context.push(seeMorePath ?? kitchenAislePath(aisle.id)),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.darkGreen,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -376,5 +395,39 @@ class _KitchenAisleProductRow extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _PlatesCupsRow extends ConsumerWidget {
+  const _PlatesCupsRow({required this.onAdd});
+  final void Function(Product product) onAdd;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final title = context.tr
+        .get('kitchen.home.platesCupsTitle', fallback: 'Plates & Cups');
+    return ref.watch(platesCupsShelfProvider).when(
+          loading: () =>
+              SizedBox(height: 100, child: LoadingView(message: title)),
+          error: (_, __) => Row(children: [
+            Expanded(
+                child: Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 18))),
+            TextButton(
+                onPressed: () => ref.invalidate(platesCupsShelfProvider),
+                child: Text(context.tr.get('common.retry', fallback: 'Retry'))),
+          ]),
+          data: (products) => _KitchenAisleProductRow(
+            aisle: KitchenAisle(
+                id: 'tabletop',
+                title: title,
+                icon: '🍽️',
+                accentArgb: 0xFFB7A99A),
+            products: products,
+            onAdd: onAdd,
+            seeMorePath: '/kitchen/search?q=plates%20and%20cups',
+          ),
+        );
   }
 }

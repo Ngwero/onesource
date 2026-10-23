@@ -14,6 +14,8 @@ type Props = {
   products: Product[];
   /** Hide the Best sellers / Offers switch (e.g. a deals-only row). */
   hideTabs?: boolean;
+  /** Keep a deliberately mixed shelf in its supplied order. */
+  preserveOrder?: boolean;
 };
 
 const ROW_LIMIT = 24;
@@ -30,6 +32,7 @@ export function KitchenAisleCarousel({
   seeMoreLabel,
   products,
   hideTabs = false,
+  preserveOrder = false,
 }: Props) {
   const { t } = useTranslation();
   const hoverRef = useRef<HTMLElement>(null);
@@ -43,8 +46,8 @@ export function KitchenAisleCarousel({
       feedTab === "offers"
         ? products.filter((p) => p.originalPrice != null && p.originalPrice > p.price)
         : products;
-    return sortBestSellers(pool).slice(0, ROW_LIMIT);
-  }, [products, feedTab]);
+    return (preserveOrder ? pool : sortBestSellers(pool)).slice(0, ROW_LIMIT);
+  }, [products, feedTab, preserveOrder]);
 
   useAutoScrollByItems(trackRef, feedProducts.length, {
     pauseRootRef: hoverRef,

@@ -13,3 +13,10 @@ export function uniquePreviewProducts(products: Product[]): Product[] {
     return true;
   });
 }
+
+/** Reserve a featured row's cards and images so surrounding shelves stay varied. */
+export function excludePreviewProducts(products: Product[], featured: Product[]): Product[] {
+  const ids = new Set(featured.map(p => p.id));
+  const photos = new Set(featured.map(p => homeImageKey(p.image)).filter(Boolean));
+  return products.filter(p => !ids.has(p.id) && !photos.has(homeImageKey(p.image)));
+}

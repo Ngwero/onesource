@@ -103,7 +103,7 @@
     "query": "pan",
     "product": {
       "id": "kitchen-cookware-1",
-      "title": "Saucepan"
+      "title": "Panasonic Mixer"
     },
     "matches": false
   },
@@ -331,5 +331,917 @@
       "title": "Mixed Passion Fruits"
     },
     "matches": true
+  },
+  {
+    "query": "airfryer",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Digital Air Fryer 5L"
+    },
+    "matches": true
+  },
+  {
+    "query": "air fryer",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Compact Airfryer 5L"
+    },
+    "matches": true
+  },
+  {
+    "query": "nonstick pan",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Non-stick Frying Pan"
+    },
+    "matches": true
+  },
+  {
+    "query": "nonstick pan",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Stainless Steel Pan"
+    },
+    "matches": false
+  },
+  {
+    "query": "sauce pan",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Stainless Steel Saucepan"
+    },
+    "matches": true
+  },
+  {
+    "query": "stock pot",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Large Stockpot"
+    },
+    "matches": true
+  },
+  {
+    "query": "tea pot",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Ceramic Teapot"
+    },
+    "matches": true
+  },
+  {
+    "query": "paltes",
+    "product": {
+      "id": "kitchen-test",
+      "title": "White Dinner Plates"
+    },
+    "matches": true
+  },
+  {
+    "query": "knife",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Wood Knife Block with Knives"
+    },
+    "matches": true
+  },
+  {
+    "query": "knife",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Knife Block Only"
+    },
+    "matches": false
+  },
+  {
+    "query": "lip stick",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Matte Lipstick"
+    },
+    "matches": true
+  },
+  {
+    "query": "lip gloss",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Shimmer Lipgloss"
+    },
+    "matches": true
+  },
+  {
+    "query": "eye liner",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Black Eyeliner"
+    },
+    "matches": true
+  },
+  {
+    "query": "eye shadow",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Eyeshadow Palette"
+    },
+    "matches": true
+  },
+  {
+    "query": "blusher",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Cream Blush"
+    },
+    "matches": true
+  },
+  {
+    "query": "nail varnish",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Red Nail Polish"
+    },
+    "matches": true
+  },
+  {
+    "query": "sun screen",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "SPF 50 Sunscreen"
+    },
+    "matches": true
+  },
+  {
+    "query": "shampo",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Daily Shampoo"
+    },
+    "matches": true
+  },
+  {
+    "query": "shampu",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Hair Conditioner"
+    },
+    "matches": false
+  },
+  {
+    "query": "moisterizer",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Daily Moisturizer"
+    },
+    "matches": true
+  },
+  {
+    "query": "lancome",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Lancôme Eye Cream"
+    },
+    "matches": true
+  },
+  {
+    "query": "LanCÔme",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Lancome Eye Cream"
+    },
+    "matches": true
+  },
+  {
+    "query": "loreal",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "L’Oréal Paris Mascara"
+    },
+    "matches": true
+  },
+  {
+    "query": "L'Oreal",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "L’Oréal Paris Mascara"
+    },
+    "matches": true
+  },
+  {
+    "query": "mascara black",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Black Volume Mascara"
+    },
+    "matches": true
+  },
+  {
+    "query": "mascara red",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Black Volume Mascara"
+    },
+    "matches": false
+  },
+  {
+    "query": "mens perfume",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Men’s Cologne"
+    },
+    "matches": true
+  },
+  {
+    "query": "shampoo 500ml",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Shampoo 250ml"
+    },
+    "matches": false
+  },
+  {
+    "query": "tooth paste",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Whitening Toothpaste 75ml"
+    },
+    "matches": true
+  },
+  {
+    "query": "tooth brush",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Soft Toothbrush"
+    },
+    "matches": true
+  },
+  {
+    "query": "mouth wash",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Fresh Mouthwash"
+    },
+    "matches": true
+  },
+  {
+    "query": "toothpast",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Sensitive Toothpaste"
+    },
+    "matches": true
+  },
+  {
+    "query": "toothpaste",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Dental Floss"
+    },
+    "matches": false
+  },
+  {
+    "query": "diapers",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Baby Nappies Size 3"
+    },
+    "matches": true
+  },
+  {
+    "query": "avacado",
+    "product": {
+      "id": "fresh-test",
+      "title": "Fresh Avocados"
+    },
+    "matches": true
+  },
+  {
+    "query": "brocolli",
+    "product": {
+      "id": "fresh-test",
+      "title": "Fresh Broccoli"
+    },
+    "matches": true
+  },
+  {
+    "query": "peanuts",
+    "product": {
+      "id": "fresh-test",
+      "title": "Roasted Groundnuts"
+    },
+    "matches": true
+  },
+  {
+    "query": "scallions",
+    "product": {
+      "id": "fresh-test",
+      "title": "Spring Onions"
+    },
+    "matches": true
+  },
+  {
+    "query": "matoke",
+    "product": {
+      "id": "fresh-test",
+      "title": "Fresh Matooke"
+    },
+    "matches": true
+  },
+  {
+    "query": "yogurt",
+    "product": {
+      "id": "fresh-test",
+      "title": "Plain Yoghurt"
+    },
+    "matches": true
+  },
+  {
+    "query": "chick peas",
+    "product": {
+      "id": "fresh-test",
+      "title": "Dried Chickpeas"
+    },
+    "matches": true
+  },
+  {
+    "query": "bell peppers",
+    "product": {
+      "id": "fresh-test",
+      "title": "Fresh Capsicum"
+    },
+    "matches": true
+  },
+  {
+    "query": "sweetcorn",
+    "product": {
+      "id": "fresh-test",
+      "title": "Sweet Corn"
+    },
+    "matches": true
+  },
+  {
+    "query": "tomatos",
+    "product": {
+      "id": "fresh-test",
+      "title": "Fresh Tomatoes"
+    },
+    "matches": true
+  },
+  {
+    "query": "strawberies",
+    "product": {
+      "id": "fresh-test",
+      "title": "Fresh Strawberries"
+    },
+    "matches": true
+  },
+  {
+    "query": "coffee",
+    "product": {
+      "id": "fresh-test",
+      "title": "Café Coffee Beans"
+    },
+    "matches": true
+  },
+  {
+    "query": "rice",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Daily Moisturizer"
+    },
+    "matches": false
+  },
+  {
+    "query": "toothpaste",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Kitchen Paste Brush"
+    },
+    "matches": false
+  },
+  {
+    "query": "versace noir",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Crystal Noir",
+      "details": {
+        "brand": "Versace"
+      }
+    },
+    "matches": true
+  },
+  {
+    "query": "shampoo 500ml",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Daily Shampoo",
+      "unit": "500ml"
+    },
+    "matches": true
+  },
+  {
+    "query": "fruits",
+    "product": {
+      "id": "fresh-test",
+      "title": "Fresh Grapes"
+    },
+    "matches": true
+  },
+  {
+    "query": "vegetables",
+    "product": {
+      "id": "fresh-test",
+      "title": "Fresh Okra"
+    },
+    "matches": true
+  },
+  {
+    "query": "meat",
+    "product": {
+      "id": "fresh-test",
+      "title": "Beef Mince"
+    },
+    "matches": true
+  },
+  {
+    "query": "meat",
+    "product": {
+      "id": "fresh-test",
+      "title": "Chicken Stock Cubes"
+    },
+    "matches": false
+  },
+  {
+    "query": "dairy",
+    "product": {
+      "id": "fresh-test",
+      "title": "Full Cream Milk"
+    },
+    "matches": true
+  },
+  {
+    "query": "dairy",
+    "product": {
+      "id": "fresh-test",
+      "title": "Coconut Milk"
+    },
+    "matches": false
+  },
+  {
+    "query": "pulses",
+    "product": {
+      "id": "fresh-test",
+      "title": "Red Lentils"
+    },
+    "matches": true
+  },
+  {
+    "query": "pulses",
+    "product": {
+      "id": "fresh-test",
+      "title": "Coffee Beans"
+    },
+    "matches": false
+  },
+  {
+    "query": "grains",
+    "product": {
+      "id": "fresh-test",
+      "title": "White Rice"
+    },
+    "matches": true
+  },
+  {
+    "query": "utensils",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Silicone Spatula"
+    },
+    "matches": true
+  },
+  {
+    "query": "silverware",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Stainless Steel Flatware Set"
+    },
+    "matches": true
+  },
+  {
+    "query": "moisturizer",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Daily Moisturiser"
+    },
+    "matches": true
+  },
+  {
+    "query": "lancôme",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Lancôme Mascara"
+    },
+    "matches": true
+  },
+  {
+    "query": "vitamins",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Protein Supplement"
+    },
+    "matches": false
+  },
+  {
+    "query": "supplements",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Vitamin C"
+    },
+    "matches": true
+  },
+  {
+    "query": "knife",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Knife Sharpener"
+    },
+    "matches": false
+  },
+  {
+    "query": "knife sharpener",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Knife Sharpener"
+    },
+    "matches": true
+  },
+  {
+    "query": "air fryer",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Oven Air Fryer Pan and Mesh Basket"
+    },
+    "matches": false
+  },
+  {
+    "query": "air fryer",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Air Fryer Silicone Liners"
+    },
+    "matches": false
+  },
+  {
+    "query": "air fryer liner",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Air Fryer Silicone Liners"
+    },
+    "matches": true
+  },
+  {
+    "query": "air fryer",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Digital Air Fryer with Removable Basket"
+    },
+    "matches": true
+  },
+  {
+    "query": "blender",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Blender Bottle Shaker"
+    },
+    "matches": false
+  },
+  {
+    "query": "blender",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Blender Replacement Blade"
+    },
+    "matches": false
+  },
+  {
+    "query": "blender",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Countertop Blender with Glass Jug"
+    },
+    "matches": true
+  },
+  {
+    "query": "food processor",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Food Processor Blade Replacement"
+    },
+    "matches": false
+  },
+  {
+    "query": "food processor blade",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Food Processor Blade Replacement"
+    },
+    "matches": true
+  },
+  {
+    "query": "shampoo",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Massaging Shampoo Brush"
+    },
+    "matches": false
+  },
+  {
+    "query": "shampoo brush",
+    "product": {
+      "id": "cosmetics-test",
+      "title": "Massaging Shampoo Brush"
+    },
+    "matches": true
+  },
+  {
+    "query": "diapers",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Restorative Diaper Cream"
+    },
+    "matches": false
+  },
+  {
+    "query": "diaper cream",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Restorative Diaper Cream"
+    },
+    "matches": true
+  },
+  {
+    "query": "air fryer",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Air Fryer Silicone Pot and Cooking Mat"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Coffee Mug"
+    },
+    "matches": true
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Measuring Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates and cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Dinner Plate"
+    },
+    "matches": true
+  },
+  {
+    "query": "plates and cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Tea Cup"
+    },
+    "matches": true
+  },
+  {
+    "query": "plates and cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Ceramic Coffee Mug"
+    },
+    "matches": true
+  },
+  {
+    "query": "plates and cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Coffee Maker 12 Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates and cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Plate Holder"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Electric Coffee Percolator 8 Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates and cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Electric Coffee Percolator 8 Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Wooden Mug Tree"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Dinner Plate"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Coffee Mug"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Waffle Maker with Removable Plates"
+    },
+    "matches": false
+  },
+  {
+    "query": "pots",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Espresso Coffee Maker Moka Pot"
+    },
+    "matches": false
+  },
+  {
+    "query": "diapers",
+    "product": {
+      "id": "pharmacy-test",
+      "title": "Diaper Change Spray"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Coffee Cup Warmer Heating Plate"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Component Cross Plate for Coffee Maker"
+    },
+    "matches": false
+  },
+  {
+    "query": "plates",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Idli Steamer 7 Plate"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "1.5 Cup Electric Food Chopper"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "16 Cup Popcorn Maker"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-tabletop-test",
+      "title": "Quiche Tart Pan 7.5 Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-tabletop-test",
+      "title": "Fleur De Lis 10 Cup Bundt Pan"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-tabletop-test",
+      "title": "Food Storage Container 4 Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-tabletop-test",
+      "title": "Mixing Bowl 8 Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Nordic Ware Formed Bundt, 12 Cup, Red"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "GSI Outdoors Enamel Coffee Pot to Store Hot Coffee, Tea for Camping & Farmhouse - 6 Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Chemex Pour-Over Glass Coffeemaker - Classic Series - 8-Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "IMUSA USA Stainless Steel Stovetop Espresso Coffeemaker 6-Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Harold Imports Demi Spoon - Cup"
+    },
+    "matches": false
+  },
+  {
+    "query": "mugs",
+    "product": {
+      "id": "kitchen-tabletop-1",
+      "title": "Ceramic Coffee Mug"
+    },
+    "matches": true,
+    "tags": [
+      "mugs",
+      "cups"
+    ]
+  },
+  {
+    "query": "mugs",
+    "product": {
+      "id": "kitchen-test",
+      "title": "Nordic Ware Formed Bundt, 12 Cup, Red"
+    },
+    "matches": false
+  },
+  {
+    "query": "cups",
+    "product": {
+      "id": "kitchen-test",
+      "title": "NESCAFÉ Dolce Gusto Coffee Capsules Espresso 48 Single Serve Pods, (Makes 48 Cups) 48 Count"
+    },
+    "matches": false
   }
 ]

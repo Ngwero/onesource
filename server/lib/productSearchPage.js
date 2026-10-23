@@ -1,26 +1,43 @@
-/** Page only eligible products, even when an entire candidate batch is excluded. */
-export async function collectSearchPage({ page, pageSize, loadCandidates, loadCards }) {
-  const from = page * pageSize;
-  const target = from + pageSize + 1;
-  const batchSize = Math.min(1000, Math.max(64, pageSize + 1));
-  const matches = [];
+/** Share hydrated matches between pages; never refetch every preceding card on scroll. */
+export function createSearchPageLoader({ loadCandidates, loadCards }) {
+  const products = [];
+  const seen = new Set();
   let offset = 0;
-  while (matches.length < target) {
-    const candidates = await loadCandidates(offset, batchSize);
-    if (!candidates.length) break;
-    const cards = await loadCards(candidates);
+  let exhausted = false;
+  let pending;
+  let skipNoise = false;
+  async function advance(needed) {
+    const take = Math.min(64, skipNoise ? Math.max(needed, 64) : needed);
+    const candidates = await loadCandidates(offset, take);
+    // Commit the cursor only after hydration succeeds, so failures can be retried.
+    const cards = candidates.length ? await loadCards(candidates) : [];
     const byId = new Map(cards.map((product) => [product.id, product]));
+    const before = products.length;
     for (const candidate of candidates) {
       const product = byId.get(candidate.id);
-      if (product) matches.push(product);
+      if (product && !seen.has(product.id)) {
+        products.push(product);
+        seen.add(product.id);
+      }
     }
-    if (candidates.length < batchSize) break;
-    offset += batchSize;
+    skipNoise = products.length - before < candidates.length;
+    offset += candidates.length;
+    exhausted = candidates.length < take;
   }
-  const hasMore = matches.length > from + pageSize;
-  return {
-    products: matches.slice(from, from + pageSize),
-    total: hasMore ? from + pageSize + 1 : matches.length,
-    hasMore,
+  return async ({ page, pageSize }) => {
+    const from = page * pageSize;
+    const target = from + pageSize + 1;
+    while (!exhausted && products.length < target) {
+      if (!pending) pending = advance(target - products.length).finally(() => { pending = undefined; });
+      await pending;
+    }
+    const hasMore = products.length > from + pageSize;
+    return { products: products.slice(from, from + pageSize),
+      total: hasMore ? from + pageSize + 1 : products.length, hasMore };
   };
+}
+
+/** One-off adapter for callers that do not keep a paging session. */
+export async function collectSearchPage({ page, pageSize, loadCandidates, loadCards }) {
+  return createSearchPageLoader({ loadCandidates, loadCards })({ page, pageSize });
 }

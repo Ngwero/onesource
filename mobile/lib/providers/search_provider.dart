@@ -28,6 +28,8 @@ const popularKitchenSearchTerms = [
   'Spatula',
   'Bowl',
   'Plate',
+  'Cup',
+  'Mug',
   'Whisk',
   'Cast iron',
   'Non-stick',
@@ -45,6 +47,17 @@ const popularCosmeticsSearchTerms = [
   'Perfume',
   'Gift set',
   'Hair oil',
+];
+
+const popularPharmacySearchTerms = [
+  'Vitamins',
+  'Toothpaste',
+  'First aid',
+  'Nappies',
+  'Thermometer',
+  'Mouthwash',
+  'Supplements',
+  'Sanitizer',
 ];
 
 /// Which shop the active search screen is querying.
@@ -117,6 +130,8 @@ class SearchNotifier extends Notifier<SearchState> {
 
   Timer? _debounce;
   int _requestId = 0;
+  final _firstPages =
+      <String, ({DateTime fetchedAt, ProductsPageResult page})>{};
 
   /// Every match found so far, ranked; [SearchState.results] reveals a prefix.
   List<Product> _pool = const [];
@@ -156,7 +171,12 @@ class SearchNotifier extends Notifier<SearchState> {
 
   @override
   SearchState build() {
-    ref.onDispose(() => _debounce?.cancel());
+    ref.watch(searchShopProvider);
+    ref.onDispose(() {
+      _debounce?.cancel();
+      _requestId++;
+    });
+    _resetPaging();
     return SearchState(suggestions: _defaultSuggestions());
   }
 
@@ -172,12 +192,11 @@ class SearchNotifier extends Notifier<SearchState> {
       return;
     }
 
-    state = state.copyWith(
+    _resetPaging();
+    state = SearchState(
       query: query,
       isLoading: true,
-      isLoadingMore: false,
-      clearError: true,
-      clearLoadMoreError: true,
+      suggestions: _matchingSuggestions(query),
     );
 
     if (query.length < 2) {
@@ -204,13 +223,26 @@ class SearchNotifier extends Notifier<SearchState> {
       final shop = ref.read(searchShopProvider);
       // Search the catalogue directly; do not download thousands of unrelated
       // products before showing a small page of matching results.
-      final page = await ref.read(searchApiProvider).fetchProductsPage(
-            query: query,
-            shop: shop,
-            page: 0,
-            pageSize: pageSize,
-          );
+      final key = '$shop:${query.toLowerCase()}';
+      final cached = _firstPages[key];
+      final page = cached != null &&
+              DateTime.now().difference(cached.fetchedAt) <
+                  const Duration(seconds: 30)
+          ? cached.page
+          : await ref.read(searchApiProvider).fetchProductsPage(
+                query: query,
+                shop: shop,
+                page: 0,
+                pageSize: pageSize,
+              );
       if (id != _requestId) return;
+      if (cached == null || !identical(cached.page, page)) {
+        _firstPages.remove(key);
+        if (_firstPages.length >= 12) {
+          _firstPages.remove(_firstPages.keys.first);
+        }
+        _firstPages[key] = (fetchedAt: DateTime.now(), page: page);
+      }
       final results = filterAndRankProducts(page.products, query);
       final serverHasMore = _canPageServer(page);
 
@@ -301,6 +333,7 @@ class SearchNotifier extends Notifier<SearchState> {
     return switch (shop) {
       'kitchen' => popularKitchenSearchTerms,
       'cosmetics' => popularCosmeticsSearchTerms,
+      'pharmacy' => popularPharmacySearchTerms,
       _ => popularSearchTerms,
     };
   }
