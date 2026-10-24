@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { Product } from "../../types/product";
 import { FreshAisleProductCard } from "./FreshAisleProductCard";
 import { useAutoScrollByItems } from "../../hooks/useAutoScrollByItems";
+import { bindHorizontalScroll } from "../../utils/horizontalScroll";
 
 type Props = {
   title: string;
@@ -50,6 +51,7 @@ export function CategoriesAisleCarousel({
     const el = trackRef.current;
     if (!el) return;
     updateArrows();
+    const unbindHorizontalScroll = bindHorizontalScroll(el);
     let raf = 0;
     const onScroll = () => {
       if (raf) return;
@@ -63,6 +65,7 @@ export function CategoriesAisleCarousel({
     ro.observe(el);
     return () => {
       el.removeEventListener("scroll", onScroll);
+      unbindHorizontalScroll();
       ro.disconnect();
       if (raf) cancelAnimationFrame(raf);
     };

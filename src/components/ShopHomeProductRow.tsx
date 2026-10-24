@@ -6,6 +6,7 @@ import { ProductCard } from "./ProductCard";
 import { ScrollReveal } from "./ScrollReveal";
 import { Section } from "./Section";
 import { useAutoScrollByItems } from "../hooks/useAutoScrollByItems";
+import { bindHorizontalScroll } from "../utils/horizontalScroll";
 
 type Props = {
   title: string;
@@ -36,14 +37,6 @@ export function ShopHomeProductRow({
   const trackRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
-  const dragRef = useRef<{
-    active: boolean;
-    moved: boolean;
-    startX: number;
-    startScroll: number;
-    pointerId: number | null;
-  }>({ active: false, moved: false, startX: 0, startScroll: 0, pointerId: null });
-
   const setTrack = useCallback(
     (el: HTMLDivElement | null) => {
       trackRef.current = el;
@@ -87,97 +80,14 @@ export function ShopHomeProductRow({
       });
     };
 
-    const onWheel = (e: WheelEvent) => {
-      // Leave vertical scrolling and browser pinch-to-zoom to the page.
-      if (e.ctrlKey || (!e.shiftKey && Math.abs(e.deltaY) >= Math.abs(e.deltaX))) return;
-      const max = el.scrollWidth - el.clientWidth;
-      if (max <= 1) return;
-
-      // Only an explicit horizontal gesture (or Shift+wheel) moves the row.
-      const delta = e.deltaX || e.deltaY;
-      if (delta === 0) return;
-
-      const next = el.scrollLeft + delta;
-      const clamped = Math.max(0, Math.min(max, next));
-      if (clamped === el.scrollLeft) return;
-
-      e.preventDefault();
-      el.scrollLeft = clamped;
-    };
-
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType === "touch") return;
-      if (e.button !== 0) return;
-      const target = e.target as HTMLElement | null;
-      if (target?.closest("button, a, input, select, textarea")) {
-        if (target.closest("button, input, select, textarea")) return;
-      }
-
-      dragRef.current = {
-        active: true,
-        moved: false,
-        startX: e.clientX,
-        startScroll: el.scrollLeft,
-        pointerId: e.pointerId,
-      };
-      try {
-        el.setPointerCapture(e.pointerId);
-      } catch {
-        /* pointer capture is optional — window listeners still drag */
-      }
-      el.classList.add("is-dragging");
-    };
-
-    const onPointerMove = (e: PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag.active || drag.pointerId !== e.pointerId) return;
-      const dx = e.clientX - drag.startX;
-      if (!drag.moved && Math.abs(dx) < 6) return;
-      drag.moved = true;
-      e.preventDefault();
-      el.scrollLeft = drag.startScroll - dx;
-    };
-
-    const endDrag = (e: PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag.active || drag.pointerId !== e.pointerId) return;
-      const wasMoved = drag.moved;
-      if (el.hasPointerCapture?.(e.pointerId)) {
-        try {
-          el.releasePointerCapture(e.pointerId);
-        } catch {
-          /* already released */
-        }
-      }
-      drag.active = false;
-      drag.pointerId = null;
-      el.classList.remove("is-dragging");
-      if (wasMoved) {
-        const suppress = (ev: Event) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-        };
-        el.addEventListener("click", suppress, true);
-        window.setTimeout(() => el.removeEventListener("click", suppress, true), 0);
-      }
-    };
-
+    const unbindHorizontalScroll = bindHorizontalScroll(el);
     el.addEventListener("scroll", onScroll, { passive: true });
-    el.addEventListener("wheel", onWheel, { passive: false });
-    el.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", endDrag);
-    window.addEventListener("pointercancel", endDrag);
     const ro = new ResizeObserver(updateArrows);
     ro.observe(el);
 
     return () => {
       el.removeEventListener("scroll", onScroll);
-      el.removeEventListener("wheel", onWheel);
-      el.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", endDrag);
-      window.removeEventListener("pointercancel", endDrag);
+      unbindHorizontalScroll();
       ro.disconnect();
       if (raf) cancelAnimationFrame(raf);
       el.classList.remove("is-dragging");
@@ -193,8 +103,6 @@ export function ShopHomeProductRow({
     const gap = parseFloat(style.columnGap || style.gap || "0") || 0;
     const step = item ? (item.offsetWidth + gap) * 2 : Math.max(el.clientWidth * 0.8, 200);
     const max = Math.max(0, el.scrollWidth - el.clientWidth);
-    // Assign scrollLeft — scrollBy({ behavior: "smooth" }) no-ops when an
-    // ancestor uses overflow-x clip/hidden (site-main / html / body).
     el.scrollLeft = Math.max(0, Math.min(max, el.scrollLeft + dir * step));
   };
 

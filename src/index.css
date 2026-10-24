@@ -1034,8 +1034,8 @@ body {
     overflow-x: auto;
     overflow-y: hidden;
     padding: 0.15rem 0.15rem 0.45rem;
-    /* proximity (not mandatory) — mandatory snap was freezing mid-scroll */
-    scroll-snap-type: x proximity;
+    /* Small mouse/trackpad movements must not snap back to the same card. */
+    scroll-snap-type: none;
     scroll-behavior: auto;
     overscroll-behavior-x: contain;
     touch-action: pan-x pan-y pinch-zoom;
@@ -1076,10 +1076,6 @@ body {
     .home-product-row {
       gap: 0.8rem;
       padding-bottom: 0.35rem;
-    }
-
-    .home-product-row-arrow {
-      display: none;
     }
   }
 
@@ -1557,7 +1553,7 @@ body {
     gap: 0.625rem;
     overflow-x: auto;
     overflow-y: hidden;
-    scroll-snap-type: x proximity;
+    scroll-snap-type: none;
     scroll-behavior: auto;
     overscroll-behavior-x: contain;
     touch-action: pan-x pan-y pinch-zoom;
@@ -1598,6 +1594,16 @@ body {
     contain-intrinsic-size: auto 20rem;
   }
 
+  .fresh-aisle-carousel-track {
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .fresh-aisle-carousel-track.is-dragging {
+    cursor: grabbing;
+  }
+
   .fresh-aisle-carousel-arrow {
     flex-shrink: 0;
     align-self: center;
@@ -1607,7 +1613,7 @@ body {
     border: 1px solid var(--color-border);
     background: var(--color-surface);
     color: var(--color-text-muted);
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -1615,9 +1621,20 @@ body {
     transition: border-color 0.15s ease, color 0.15s ease;
   }
 
-  @media (min-width: 768px) {
+  @media (max-width: 767px) {
     .fresh-aisle-carousel-arrow {
-      display: flex;
+      position: absolute;
+      top: 42%;
+      transform: translateY(-50%);
+      z-index: 2;
+    }
+
+    .fresh-aisle-carousel-arrow--prev {
+      left: 0;
+    }
+
+    .fresh-aisle-carousel-arrow--next {
+      right: 0;
     }
   }
 
