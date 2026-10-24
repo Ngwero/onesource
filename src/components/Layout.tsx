@@ -10,7 +10,7 @@ export function Layout() {
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col bg-white w-full">
       <Header />
-      <main className="site-main flex-1 w-full min-w-0 overflow-x-hidden">
+      <main className="site-main flex-1 w-full min-w-0 overflow-x-clip">
         <WebsiteLoader>
           <Outlet />
         </WebsiteLoader>

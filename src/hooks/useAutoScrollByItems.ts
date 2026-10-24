@@ -86,9 +86,9 @@ export function useAutoScrollByItems(
 
       const step = cachedStep || el.clientWidth * 0.5;
       if (el.scrollLeft >= maxScroll - 4) {
-        el.scrollTo({ left: 0, behavior: "auto" });
+        el.scrollLeft = 0;
       } else {
-        el.scrollBy({ left: step, behavior: "auto" });
+        el.scrollLeft = Math.min(maxScroll, el.scrollLeft + step);
       }
     };
 

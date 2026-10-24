@@ -88,13 +88,13 @@ export function ShopHomeProductRow({
     };
 
     const onWheel = (e: WheelEvent) => {
+      // Leave vertical scrolling and browser pinch-to-zoom to the page.
+      if (e.ctrlKey || (!e.shiftKey && Math.abs(e.deltaY) >= Math.abs(e.deltaX))) return;
       const max = el.scrollWidth - el.clientWidth;
       if (max <= 1) return;
 
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-      if (e.shiftKey) return;
-
-      const delta = e.deltaY;
+      // Only an explicit horizontal gesture (or Shift+wheel) moves the row.
+      const delta = e.deltaX || e.deltaY;
       if (delta === 0) return;
 
       const next = el.scrollLeft + delta;
@@ -120,6 +120,11 @@ export function ShopHomeProductRow({
         startScroll: el.scrollLeft,
         pointerId: e.pointerId,
       };
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        /* pointer capture is optional — window listeners still drag */
+      }
       el.classList.add("is-dragging");
     };
 
@@ -137,6 +142,13 @@ export function ShopHomeProductRow({
       const drag = dragRef.current;
       if (!drag.active || drag.pointerId !== e.pointerId) return;
       const wasMoved = drag.moved;
+      if (el.hasPointerCapture?.(e.pointerId)) {
+        try {
+          el.releasePointerCapture(e.pointerId);
+        } catch {
+          /* already released */
+        }
+      }
       drag.active = false;
       drag.pointerId = null;
       el.classList.remove("is-dragging");
@@ -180,14 +192,17 @@ export function ShopHomeProductRow({
     const style = getComputedStyle(el);
     const gap = parseFloat(style.columnGap || style.gap || "0") || 0;
     const step = item ? (item.offsetWidth + gap) * 2 : Math.max(el.clientWidth * 0.8, 200);
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
+    const max = Math.max(0, el.scrollWidth - el.clientWidth);
+    // Assign scrollLeft — scrollBy({ behavior: "smooth" }) no-ops when an
+    // ancestor uses overflow-x clip/hidden (site-main / html / body).
+    el.scrollLeft = Math.max(0, Math.min(max, el.scrollLeft + dir * step));
   };
 
   if (products.length === 0 && !extra) return null;
 
   return (
-    <ScrollReveal variant="fade-up">
-      <div ref={hoverRef} className="home-product-row-hover-zone">
+    <ScrollReveal variant="fade-up" className="w-full min-w-0">
+      <div ref={hoverRef} className="home-product-row-hover-zone w-full min-w-0">
         <Section
           title={title}
           action={
