@@ -91,7 +91,7 @@ class AppShell extends ConsumerWidget {
     if (wide) {
       final railIndex = index.clamp(0, 4);
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         body: Row(
           children: [
             NavigationRail(
@@ -176,7 +176,7 @@ class AppShell extends ConsumerWidget {
     // Phone: bottom bar + docked cart FAB
     final phoneNavIndex = index == 4 ? -1 : index;
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.white,
       body: pageBody,
       extendBody: true,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

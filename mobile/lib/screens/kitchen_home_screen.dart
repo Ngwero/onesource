@@ -87,7 +87,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
 
     if (productsState.isInitialLoading && productsState.items.isEmpty) {
       return Container(
-        decoration: const BoxDecoration(gradient: AppGradients.canvas),
+        decoration: const BoxDecoration(color: Colors.white),
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: CustomScrollView(
@@ -112,7 +112,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
 
     if (productsState.error != null && productsState.items.isEmpty) {
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         body: ErrorView(
           message: productsState.error!,
           onRetry: () =>
@@ -139,7 +139,7 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
     _scrollListener?.scheduleCheck();
 
     return Container(
-      decoration: const BoxDecoration(gradient: AppGradients.canvas),
+      decoration: const BoxDecoration(color: Colors.white),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: CompactHomeBarOverlay(

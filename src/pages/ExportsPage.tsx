@@ -5,9 +5,8 @@ import { PageContainer } from "../components/PageContainer";
 import { CategoriesAisleCarousel } from "../components/categories/CategoriesAisleCarousel";
 import { ExportHeroCarousel } from "../components/ExportHeroCarousel";
 import { ScrollReveal } from "../components/ScrollReveal";
+import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
 import { useProducts } from "../context/ProductsContext";
-import { productMatchesCategory } from "../data/categories";
-import { excludeSpecialtyProducts } from "../utils/shopMode";
 import type { Product } from "../types/product";
 
 const EXPORT_CATEGORY_ID = "export-fresh-produce";
@@ -33,7 +32,11 @@ const SECTION_ANCHOR_STYLE = { scrollMarginTop: "calc(var(--site-header-height, 
 export function ExportsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { products, categories, getProductCountByCategory } = useProducts();
+  const { categories, getProductCountByCategory } = useProducts();
+  const exportList = useInfiniteProducts(
+    { shop: "fresh", category: EXPORT_CATEGORY_ID },
+    { pageSize: 120 }
+  );
   const [keyword, setKeyword] = useState("");
   const [commodity, setCommodity] = useState("all");
 
@@ -41,11 +44,7 @@ export function ExportsPage() {
     (c) => (getProductCountByCategory()[c.id] ?? 0) > 0
   );
 
-  const exportProducts = useMemo(() => {
-    return excludeSpecialtyProducts(products).filter((p) =>
-      productMatchesCategory(p.category, EXPORT_CATEGORY_ID)
-    );
-  }, [products]);
+  const exportProducts = exportList.products;
 
   /** Group export products into aisle rows by commodity. */
   const exportRows = useMemo(() => {

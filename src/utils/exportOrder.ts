@@ -7,6 +7,19 @@ export function isExportProduct(product: Product | { category: string }): boolea
   return normalizeCategoryId(product.category) === EXPORT_CATEGORY_ID;
 }
 
+/** Soft drinks and other export-aisle SKUs — Place order cards, not Fresh listings. */
+export function isExportCatalogueProduct(
+  product: Product | { id?: string; category: string }
+): boolean {
+  return isExportProduct(product) || String(product.id ?? "").startsWith("drink-");
+}
+
+export function excludeExportCatalogue<T extends { id?: string; category: string }>(
+  products: T[]
+): T[] {
+  return products.filter((product) => !isExportCatalogueProduct(product));
+}
+
 export function isExportOnlyCart(
   items: Array<{ product: Product }>
 ): boolean {

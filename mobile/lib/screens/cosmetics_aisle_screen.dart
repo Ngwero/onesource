@@ -83,10 +83,10 @@ class _CosmeticsAisleScreenState extends ConsumerState<CosmeticsAisleScreen> {
         state.isInitialLoading || (state.hasMore && state.error == null);
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(title),
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         automaticallyImplyLeading: !isTab,
         actions: [
           IconButton(
@@ -219,10 +219,10 @@ class CosmeticsCategoriesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.tr;
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(s.get('cosmetics.shopByCategory')),
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
       body: ListView(

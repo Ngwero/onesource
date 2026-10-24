@@ -87,14 +87,14 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
 
     if (productsState.isInitialLoading && !_contentShown) {
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         body: LoadingView(message: context.tr.get('common.loading')),
       );
     }
 
     if (productsState.error != null && productsState.items.isEmpty && !_contentShown) {
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         body: ErrorView(
           message: productsState.error!,
           onRetry: notifier.refresh,
@@ -109,7 +109,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
     _scrollListener?.scheduleCheck();
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.white,
       body: RefreshIndicator(
         onRefresh: notifier.refresh,
         child: CustomScrollView(

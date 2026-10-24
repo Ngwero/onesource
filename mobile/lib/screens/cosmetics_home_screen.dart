@@ -63,7 +63,7 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
     final all = ref.watch(paginatedProductsProvider(_query));
     if (all.items.isEmpty && all.error != null && !all.isInitialLoading) {
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         body: ErrorView(
           message: all.error!,
           onRetry: () => ref
@@ -85,7 +85,7 @@ class _CosmeticsHomeScreenState extends ConsumerState<CosmeticsHomeScreen> {
     if (!all.isInitialLoading) _scrollListener?.scheduleCheck();
 
     return Container(
-      decoration: const BoxDecoration(gradient: AppGradients.canvas),
+      decoration: const BoxDecoration(color: Colors.white),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: CompactHomeBarOverlay(

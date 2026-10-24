@@ -123,7 +123,7 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
           )
         : SliverAppBar(
             pinned: true,
-            backgroundColor: AppColors.canvas,
+            backgroundColor: Colors.white,
             title: Text(s.get(widget.dealsOnly ? 'kitchen.kicker' : 'kitchen.home.allCategories')),
             actions: [
               IconButton(
@@ -135,7 +135,7 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
 
     if (state.isInitialLoading && !_contentShown) {
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         body: CustomScrollView(
           slivers: [
             header,
@@ -149,7 +149,7 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
     }
     if (state.error != null && state.items.isEmpty && !_contentShown) {
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         appBar: AppBar(),
         body: ErrorView(message: state.error!, onRetry: () => _notifier.refresh()),
       );
@@ -161,7 +161,7 @@ class _KitchenFeedState extends ConsumerState<_KitchenFeed> {
     _scrollListener?.scheduleCheck();
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.white,
       body: RefreshIndicator(
         onRefresh: () => _notifier.refresh(),
         child: CustomScrollView(

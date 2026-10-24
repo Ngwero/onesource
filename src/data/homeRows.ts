@@ -1,5 +1,6 @@
 import type { Category, Product } from "../types/product";
 import { normalizeCategoryId } from "./categories";
+import { EXPORT_CATEGORY_ID } from "../utils/exportOrder";
 import { isSpecialtyProduct } from "../utils/shopMode";
 
 export type HomeRowConfig = {
@@ -68,6 +69,7 @@ export function buildHomeCategoryRows(
   for (const product of products) {
     if (product.published === false || isSpecialtyProduct(product)) continue;
     const category = normalizeCategoryId(product.category);
+    if (category === EXPORT_CATEGORY_ID) continue;
     const pool = grouped.get(category) ?? [];
     pool.push(product);
     grouped.set(category, pool);

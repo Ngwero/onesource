@@ -70,7 +70,7 @@ class _PharmacyHomeScreenState extends ConsumerState<PharmacyHomeScreen> {
     if (!all.isInitialLoading) _scrollListener?.scheduleCheck();
 
     return Container(
-      decoration: const BoxDecoration(gradient: AppGradients.canvas),
+      decoration: const BoxDecoration(color: Colors.white),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: CompactHomeBarOverlay(

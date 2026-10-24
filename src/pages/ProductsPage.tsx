@@ -7,14 +7,12 @@ import { PageContainer } from "../components/PageContainer";
 import { ShopListingLayout } from "../components/shop/ShopListingLayout";
 import { InfiniteScrollFooter, ProductGridSkeleton } from "../components/InfiniteScrollFooter";
 import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
-import { useProducts } from "../context/ProductsContext";
 import { normalizeCategoryId } from "../data/categories";
 import { useCategoryName } from "../i18n/useLocalizedProduct";
-import { excludeSpecialtyProducts } from "../utils/shopMode";
+import { excludeNonFreshProduce } from "../utils/shopMode";
 
 export function ProductsPage() {
   const { t } = useTranslation();
-  const { products } = useProducts();
   const [params] = useSearchParams();
   const rawCategory = params.get("category") ?? "";
   const rawCategoryParam = rawCategory.trim();
@@ -24,23 +22,16 @@ export function ProductsPage() {
   const hasCategoryFilter = rawCategoryParam.length > 0;
   const onSaleOnly = params.get("sale") === "1";
 
-  const list = useInfiniteProducts(
-    hasCategoryFilter
-      ? {
-          shop: "fresh",
-          category: rawCategoryParam,
-          ...(onSaleOnly ? { sale: true } : {}),
-        }
-      : null
-  );
+  const list = useInfiniteProducts({
+    shop: "fresh",
+    ...(hasCategoryFilter ? { category: rawCategoryParam } : { sort: "aisles" }),
+    ...(onSaleOnly ? { sale: true } : {}),
+  });
 
   const baseProducts = useMemo(() => {
     if (hasCategoryFilter) return list.products;
-    const produceOnly = excludeSpecialtyProducts(products);
-    return onSaleOnly
-      ? produceOnly.filter((p) => p.originalPrice != null && p.originalPrice > p.price)
-      : produceOnly;
-  }, [hasCategoryFilter, list.products, products, onSaleOnly]);
+    return excludeNonFreshProduce(list.products);
+  }, [hasCategoryFilter, list.products]);
 
   const header = (
     <ScrollReveal variant="fade-up">
@@ -78,8 +69,8 @@ export function ProductsPage() {
   );
 
   return (
-    <PageContainer className="py-6 sm:py-8 pb-8 sm:pb-16 w-full">
-      {hasCategoryFilter && list.initialLoading ? (
+    <PageContainer className="products-page py-6 sm:py-8 pb-8 sm:pb-16 w-full">
+      {list.initialLoading ? (
         <>
           {header}
           <ProductGridSkeleton gridClassName="product-grid" />
@@ -99,16 +90,14 @@ export function ProductsPage() {
           >
             {(filtered) => <ProductGrid products={filtered} />}
           </ShopListingLayout>
-          {hasCategoryFilter ? (
-            <InfiniteScrollFooter
-              sentinelRef={list.sentinelRef}
-              hasMore={list.hasMore}
-              loading={list.loading}
-              error={list.error}
-              onRetry={list.retry}
-              count={list.products.length}
-            />
-          ) : null}
+          <InfiniteScrollFooter
+            sentinelRef={list.sentinelRef}
+            hasMore={list.hasMore}
+            loading={list.loading}
+            error={list.error}
+            onRetry={list.retry}
+            count={list.products.length}
+          />
         </>
       )}
     </PageContainer>

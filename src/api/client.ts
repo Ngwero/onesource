@@ -4,6 +4,7 @@ import type { Category } from "../types/product";
 import type { HeroSlide } from "../types/hero";
 import type { KitchenCollage } from "../types/kitchenCollage";
 import type { CreateOrderPayload, Order } from "../types/order";
+import { isExportCatalogueProduct } from "../utils/exportOrder";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
@@ -293,7 +294,12 @@ export async function fetchProductListPage(
   const res = await fetch(`${API_BASE}/products?${search.toString()}`, { signal });
   if (!res.ok) throw new Error(i18n.t("errors.loadProductsApi"));
   const data = await res.json();
-  const products = (data.products as Product[]) ?? [];
+  const raw = (data.products as Product[]) ?? [];
+  // Default Fresh pages must not lead with export sodas if an older API still mixes them in.
+  const products =
+    query.shop === "fresh" && !query.category && !query.q
+      ? raw.filter((product) => !isExportCatalogueProduct(product))
+      : raw;
   const total = typeof data.total === "number" ? data.total : 0;
   const hasMore =
     typeof data.hasMore === "boolean" ? data.hasMore : (page + 1) * pageSize < total;

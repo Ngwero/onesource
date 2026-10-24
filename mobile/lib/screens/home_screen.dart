@@ -82,7 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (productsState.isInitialLoading) {
       return Container(
-        decoration: const BoxDecoration(gradient: AppGradients.canvas),
+        decoration: const BoxDecoration(color: Colors.white),
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: CustomScrollView(
@@ -106,7 +106,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (productsState.error != null && productsState.items.isEmpty) {
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         body: ErrorView(
           message: productsState.error!,
           onRetry: () =>
@@ -141,7 +141,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
 
     return Container(
-      decoration: const BoxDecoration(gradient: AppGradients.canvas),
+      decoration: const BoxDecoration(color: Colors.white),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: CompactHomeBarOverlay(

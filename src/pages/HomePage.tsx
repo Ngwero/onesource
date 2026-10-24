@@ -15,7 +15,7 @@ export function HomePage() {
   );
 
   return (
-    <div className="w-full pb-8 sm:pb-16">
+    <div className="home w-full pb-8 sm:pb-16">
       <PageContainer className="pt-4 sm:pt-6">
         <HeroSlider />
       </PageContainer>

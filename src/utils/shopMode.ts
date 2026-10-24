@@ -2,6 +2,7 @@ import { KITCHEN_WARE_CATEGORY_ID } from "../data/kitchenWare";
 import { COSMETICS_CATEGORY_ID } from "../data/cosmetics";
 import { PHARMACY_CATEGORY_ID } from "../data/pharmacy";
 import type { Product } from "../types/product";
+import { excludeExportCatalogue } from "./exportOrder";
 import { isKitchenPath, isKitchenProduct } from "./kitchenMode";
 import { isCosmeticsPath, isCosmeticsProduct } from "./cosmeticsMode";
 import { isPharmacyPath, isPharmacyProduct } from "./pharmacyMode";
@@ -29,4 +30,9 @@ export function isSpecialtyProduct(product: Product | null | undefined): boolean
 /** Fresh produce listings should never include Kitchen or Cosmetics SKUs. */
 export function excludeSpecialtyProducts(products: Product[]): Product[] {
   return products.filter((product) => !isSpecialtyProduct(product));
+}
+
+/** Fresh All products: produce and livestock only — not export sodas or other shops. */
+export function excludeNonFreshProduce(products: Product[]): Product[] {
+  return excludeExportCatalogue(excludeSpecialtyProducts(products));
 }

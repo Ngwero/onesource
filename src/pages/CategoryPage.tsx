@@ -108,7 +108,7 @@ export function CategoryPage() {
     { width: 1200, quality: 72 }
   );
   return (
-    <div className="w-full pb-8 sm:pb-16">
+    <div className="products-page w-full pb-8 sm:pb-16">
       <section className="w-full relative h-40 sm:h-48 md:h-56 overflow-hidden">
         {heroImage ? (
           <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" />

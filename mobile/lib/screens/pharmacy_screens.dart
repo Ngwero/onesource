@@ -78,10 +78,10 @@ class _PharmacyAisleScreenState extends ConsumerState<PharmacyAisleScreen> {
     final products = state.items;
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(title),
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
       ),
       body: RefreshIndicator(
         color: pharmacyAccent,
@@ -178,10 +178,10 @@ class PharmacyCategoriesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.tr;
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(s.or('pharmacy.navCategories', 'All aisles')),
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
       ),
       body: ListView(
           physics: const AlwaysScrollableScrollPhysics(),

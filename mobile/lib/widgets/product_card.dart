@@ -38,8 +38,6 @@ class ProductCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppColors.cardRadius),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
-        boxShadow: softCardShadow,
       ),
       clipBehavior: Clip.antiAlias,
       child: Material(

@@ -13,7 +13,7 @@ import {
   normalizeCategoryId,
 } from "../db.js";
 import { listCategories } from "../lib/categoriesService.js";
-import { categoryMatchAliases, FRESH_SHOP_CATEGORY_IDS } from "../data/categories.js";
+import { categoryMatchAliases, FRESH_PRODUCE_CATEGORY_IDS, FRESH_SHOP_CATEGORY_IDS } from "../data/categories.js";
 import { withLocalProductFallback } from "../lib/localSeed.js";
 import { enrichProductsWithSuppliers } from "../lib/suppliersService.js";
 import {
@@ -44,7 +44,6 @@ const FRESH_AISLE_ORDER = [
   "oilseeds-and-nuts",
   "cereals-and-grains",
   "coffee-tea-cocoa",
-  "export-fresh-produce",
 ];
 
 function isTruthyParam(value) {
@@ -195,8 +194,9 @@ function applyListFilters(query, ctx, { publishedColumn, searchCandidates = fals
     query = query.eq("supplier_id", ctx.supplierId);
   }
   // Keep the Fresh, Kitchen and Cosmetics catalogues from drowning each other out.
+  // Default Fresh listings are produce only; search still matches export drinks.
   if (ctx.freshOnly && !ctx.category) {
-    query = query.in("category", FRESH_SHOP_CATEGORY_IDS);
+    query = query.in("category", ctx.search ? FRESH_SHOP_CATEGORY_IDS : FRESH_PRODUCE_CATEGORY_IDS);
   } else if (ctx.aisleId) {
     const prefix = `${ctx.shopPrefix}-${ctx.aisleId}-`;
     query = query.gte("id", prefix).lt("id", idPrefixUpperBound(prefix));
@@ -445,8 +445,9 @@ function sortListedProducts(products, sort) {
 async function loadFreshProducts(db, ctx, { card, publishedColumn }) {
   const columns = card ? cardSelect(publishedColumn) : "*";
   const { list, admin } = ctx;
+  const categories = ctx.search ? FRESH_SHOP_CATEGORY_IDS : FRESH_PRODUCE_CATEGORY_IDS;
   const batches = await Promise.all(
-    FRESH_SHOP_CATEGORY_IDS.map(async (category) => {
+    categories.map(async (category) => {
       let query = db.from("products").select(columns).eq("category", category);
       if (list.sale) query = query.not("original_price", "is", null);
       if (list.prime) query = query.eq("prime", true);

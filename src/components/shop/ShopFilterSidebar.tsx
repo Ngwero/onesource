@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useProducts } from "../../context/ProductsContext";
 import { useCurrency } from "../../context/CurrencyContext";
+import { EXPORT_CATEGORY_ID } from "../../utils/exportOrder";
 import { SPECIALTY_SHOP_CATEGORY_IDS } from "../../utils/shopMode";
 import {
   type ShopFilters,
@@ -97,7 +98,7 @@ export function ShopFilterSidebar({
   const { categories } = useProducts();
   const { formatPrice } = useCurrency();
   const produceCategories = categories.filter(
-    (c) => !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id)
+    (c) => !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id) && c.id !== EXPORT_CATEGORY_ID
   );
 
   const toggleCategory = (id: string) => {
@@ -189,7 +190,7 @@ export function ShopFilterSidebar({
 
       {showCategories && produceCategories.length > 0 && (
         <FilterSection title={t("shopFilters.department")}>
-          <ul className="shop-filter-list max-h-52 overflow-y-auto scrollbar-hide">
+          <ul className="shop-filter-list max-h-80 overflow-y-auto scrollbar-hide">
             {produceCategories.map((c) => {
               const count = facetCounts.categories[c.id] ?? 0;
               if (count === 0) return null;

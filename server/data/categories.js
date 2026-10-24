@@ -54,6 +54,7 @@ export const LEGACY_CATEGORY_MAP = {
 export const UNCATEGORIZED_CATEGORY_ID = "uncategorized";
 
 const SPECIALTY_SHOP_CATEGORY_IDS = new Set(["kitchen-ware", "cosmetics", "pharmacy"]);
+const EXPORT_CATEGORY_ID = "export-fresh-produce";
 
 /**
  * Produce / livestock rows for the Fresh shop. A positive `category IN (...)`
@@ -67,6 +68,11 @@ export const FRESH_SHOP_CATEGORY_IDS = [
     .filter(([, target]) => !SPECIALTY_SHOP_CATEGORY_IDS.has(target))
     .map(([legacy]) => legacy),
 ];
+
+/** Default Fresh catalogue: fruits, vegetables, tubers, livestock — not export sodas. */
+export const FRESH_PRODUCE_CATEGORY_IDS = FRESH_SHOP_CATEGORY_IDS.filter(
+  (id) => id !== EXPORT_CATEGORY_ID
+);
 
 export function normalizeCategoryId(raw) {
   if (!raw || !String(raw).trim()) return UNCATEGORIZED_CATEGORY_ID;

@@ -9,7 +9,7 @@ import { CurrencySwitcher } from "./CurrencySwitcher";
 import { useCategoryName, useKitchenAisleTitle } from "../i18n/useLocalizedProduct";
 import { BrandLogo } from "./BrandLogo";
 import { AccountMenu } from "./AccountMenu";
-import { isExportOnlyCart } from "../utils/exportOrder";
+import { EXPORT_CATEGORY_ID, isExportOnlyCart } from "../utils/exportOrder";
 import { kitchenVisibleAisles } from "../data/kitchenWare";
 import { COSMETICS_AISLES } from "../data/cosmetics";
 import { PHARMACY_AISLES } from "../data/pharmacy";
@@ -110,7 +110,9 @@ export function Header() {
   const counts = getProductCountByCategory();
   const freshCategories = categories.filter(
     (c) =>
-      !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id) && (counts[c.id] ?? 0) > 0
+      !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id) &&
+      c.id !== EXPORT_CATEGORY_ID &&
+      (counts[c.id] ?? 0) > 0
   );
   const [search, setSearch] = useState("");
   const { user } = useAuth();

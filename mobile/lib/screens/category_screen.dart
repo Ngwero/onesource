@@ -108,14 +108,14 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
 
     if (productsState.isInitialLoading && !_contentShown) {
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         body: LoadingView(message: context.tr.get('common.loading')),
       );
     }
 
     if (productsState.error != null && allProducts.isEmpty && !_contentShown) {
       return Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: Colors.white,
         appBar: AppBar(title: Text(categoryName)),
         body: ErrorView(
           message: productsState.error!,
@@ -130,7 +130,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
     _scrollListener?.scheduleCheck();
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.white,
       body: RefreshIndicator(
         color: AppColors.leaf,
         onRefresh: () async {
@@ -424,8 +424,6 @@ class _SpotlightCard extends ConsumerWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
-            boxShadow: softCardShadow,
           ),
           padding: const EdgeInsets.all(14),
           child: Row(

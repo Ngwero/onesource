@@ -123,6 +123,13 @@ class ApiClient {
   static bool _isOtherShopSku(Product p) =>
       _isKitchenSku(p) || _isCosmeticsSku(p) || _isPharmacySku(p);
 
+  /// Export sodas / Place-order SKUs — export shop only, not Fresh All products.
+  static bool _isExportCatalogueSku(Product p) =>
+      p.id.startsWith('drink-') || p.category == 'export-fresh-produce';
+
+  static bool _isFreshProduceSku(Product p) =>
+      !_isOtherShopSku(p) && !_isExportCatalogueSku(p);
+
   Future<bool> checkHealth() async {
     try {
       final res = await _getWithRetry(
@@ -205,7 +212,7 @@ class ApiClient {
       pageSize: pageSize,
       allowServerErrorAsEmpty: true,
     );
-    final fresh = mapped.products.where((p) => !_isOtherShopSku(p)).toList();
+    final fresh = mapped.products.where(_isFreshProduceSku).toList();
     final total =
         fresh.isEmpty ? logicalPage * pageSize : (logicalPage + 2) * pageSize;
     return ProductsPageResult(
@@ -338,7 +345,7 @@ class ApiClient {
       if (!allKitchen) {
         _shopFilterSupported = true;
         return ProductsPageResult(
-          products: raw.products.where((p) => !_isOtherShopSku(p)).toList(),
+          products: raw.products.where(_isFreshProduceSku).toList(),
           total: raw.total,
           page: page,
           pageSize: pageSize,

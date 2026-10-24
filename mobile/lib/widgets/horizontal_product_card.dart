@@ -47,8 +47,6 @@ class HorizontalProductCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
-        boxShadow: softCardShadow,
       ),
       child: Material(
         color: Colors.transparent,

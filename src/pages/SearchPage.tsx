@@ -14,7 +14,7 @@ export function SearchPage() {
   const noResults = !list.initialLoading && !list.error && !list.hasMore && !list.products.length;
 
   return (
-    <PageContainer className="py-6 sm:py-8 pb-8 sm:pb-16 w-full">
+    <PageContainer className="products-page py-6 sm:py-8 pb-8 sm:pb-16 w-full">
       {query && <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight break-words mb-6">
         {t(noResults ? "search.noResults" : "search.forQuery", { query })}
       </h1>}
