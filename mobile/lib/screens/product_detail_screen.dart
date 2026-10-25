@@ -22,6 +22,7 @@ import '../utils/responsive.dart';
 import '../utils/user_facing_error.dart';
 import '../data/kitchen_ware.dart';
 import '../widgets/product_checkout_actions.dart';
+import '../screens/not_found_screen.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_card_details.dart';
 import '../widgets/product_image_zoom.dart';
@@ -90,7 +91,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       ),
       data: (product) {
         if (product == null) {
-          return Scaffold(appBar: AppBar(), body: Center(child: Text(s.get('product.notFound'))));
+          return NotFoundScreen(title: s.get('product.notFound'));
         }
 
         if (!_recorded) {

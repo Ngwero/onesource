@@ -55,6 +55,11 @@
     "search": "Luka",
     "breadcrumb": "Nzela ya navigation"
   },
+  "notFoundPage": {
+    "title": "Lokasa ezwami te",
+    "body": "Bolimbisi, lokasa yango ezali te. Tala adresse to koba kosomba.",
+    "home": "Zonga na magazini"
+  },
   "header": {
     "deliverTo": "Tindá na",
     "chooseCountry": "Pona mboka ya kotinda",

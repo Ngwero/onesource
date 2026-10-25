@@ -141,6 +141,9 @@ function parseListRequest(reqQuery) {
       Boolean(aisleId) ||
       categoryId === "kitchen-ware" ||
       categoryId === "kitchen-furniture");
+  const search =
+    typeof reqQuery.q === "string" ? reqQuery.q.trim().replace(/\s+/g, " ").toLowerCase() : undefined;
+  // Unscoped `q` used to regex-scan every shop. Default those hits to Fresh.
   const freshOnly =
     !pharmacyOnly &&
     !cosmeticsOnly &&
@@ -148,12 +151,13 @@ function parseListRequest(reqQuery) {
     (reqQuery.excludeKitchen === "1" ||
       reqQuery.excludeKitchen === "true" ||
       shopRaw === "fresh" ||
-      shopRaw === "produce");
+      shopRaw === "produce" ||
+      Boolean(search && !categoryId && !aisleId));
   return {
     admin: reqQuery.admin === "true",
     category,
     supplierId: reqQuery.supplierId ?? reqQuery.supplier_id,
-    search: typeof reqQuery.q === "string" ? reqQuery.q.trim().replace(/\s+/g, " ").toLowerCase() : undefined,
+    search,
     aisleId,
     pharmacyOnly,
     cosmeticsOnly,
@@ -596,7 +600,7 @@ async function loadListPage(ctx, { page, pageSize, card }) {
 
       // The whole Fresh catalogue is small enough to merge in memory. This avoids
       // the shop-wide scan that Supabase cancels.
-      if (ctx.freshOnly && !ctx.category && !ctx.aisleId) {
+      if (ctx.freshOnly && !ctx.category && !ctx.aisleId && !search) {
         const cacheKey = JSON.stringify([listFilterKey({ ...ctx, search: undefined }), card]);
         const all = await freshRowsCache.get(cacheKey, () =>
           loadFreshProducts(db, ctx, { card, publishedColumn })
@@ -718,9 +722,14 @@ router.get("/", async (req, res) => {
     const ctx = parseListRequest(req.query);
     const { admin, previewCosmetics } = ctx;
     const page = Math.max(0, parseInt(req.query.page ?? "0", 10) || 0);
-    const pageSize = Math.min(1000, Math.max(1, parseInt(req.query.pageSize ?? "1000", 10) || 1000));
-    // `fields=card` (web listings) drops descriptions and the full details JSON.
-    const card = String(req.query.fields ?? "").toLowerCase() === "card";
+    const defaultPageSize = ctx.search ? 36 : 1000;
+    const pageSize = Math.min(
+      1000,
+      Math.max(1, parseInt(req.query.pageSize ?? String(defaultPageSize), 10) || defaultPageSize)
+    );
+    // Search and `fields=card` drop descriptions and the full details JSON.
+    const card =
+      String(req.query.fields ?? (ctx.search ? "card" : "")).toLowerCase() === "card";
     const shopperList = !admin && !previewCosmetics;
 
     // Supabase cancels a cold statement (often around 8s). The same query is

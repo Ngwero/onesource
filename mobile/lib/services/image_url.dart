@@ -8,11 +8,30 @@ const int imageWidthDetail = 1200;
 
 const int _defaultQuality = 70;
 const String _objectPublic = '/storage/v1/object/public/';
+const String _renderPublic = '/storage/v1/render/image/public/';
+
+String _stripUrlDecorations(String url) => url.split('#').first.split('?').first;
+
+bool _isSupabaseHost(String url) {
+  if (url.contains('.supabase.co')) return true;
+  final origin = Env.supabaseUrl.replaceAll(RegExp(r'/$'), '');
+  return origin.isNotEmpty && url.startsWith(origin);
+}
 
 /// Public Storage object URL, or null when [url] is not on Supabase.
+/// Also unwraps an existing render URL so callers can request a new width.
 String? toPublicObjectUrl(String url) {
-  if (url.contains('.supabase.co') && url.contains(_objectPublic)) {
-    return url.split('#').first.split('?').first;
+  final clean = _stripUrlDecorations(url);
+
+  if (_isSupabaseHost(clean) && clean.contains(_objectPublic)) {
+    return clean;
+  }
+
+  if (_isSupabaseHost(clean) && clean.contains(_renderPublic)) {
+    final idx = clean.indexOf(_renderPublic);
+    final origin = clean.substring(0, idx);
+    final objectPath = clean.substring(idx + _renderPublic.length);
+    return '$origin$_objectPublic$objectPath';
   }
 
   final origin = Env.supabaseUrl.replaceAll(RegExp(r'/$'), '');

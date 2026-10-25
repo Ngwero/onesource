@@ -55,6 +55,11 @@
     "search": "Rechercher",
     "breadcrumb": "Fil d'Ariane"
   },
+  "notFoundPage": {
+    "title": "Page introuvable",
+    "body": "Désolé, cette page n'existe pas. Vérifiez l'adresse ou continuez vos achats.",
+    "home": "Retour à la boutique"
+  },
   "header": {
     "deliverTo": "Livrer à",
     "chooseCountry": "Choisissez votre pays de livraison",

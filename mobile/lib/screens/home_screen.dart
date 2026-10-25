@@ -106,7 +106,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (productsState.error != null && productsState.items.isEmpty) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.canvas,
         body: ErrorView(
           message: productsState.error!,
           onRetry: () =>

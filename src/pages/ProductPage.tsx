@@ -9,6 +9,7 @@ import { ProductRelatedSection } from "../components/product/ProductRelatedSecti
 import { ProductCustomersAlsoViewedSection } from "../components/product/ProductCustomersAlsoViewedSection";
 import { pickCustomersAlsoViewed } from "../utils/productRecommendations";
 import { PageContainer } from "../components/PageContainer";
+import { NotFoundPage } from "./NotFoundPage";
 import { ProductImageGallery } from "../components/product/ProductImageGallery";
 import { ProductBuyBox } from "../components/product/ProductBuyBox";
 import { ProductPdpJumpNav } from "../components/product/ProductPdpJumpNav";
@@ -217,16 +218,7 @@ export function ProductPage() {
   }
 
   if (!product || !pageContent) {
-    return (
-      <PageContainer className="py-16 sm:py-20 text-center">
-        <div className="card p-8 sm:p-12 max-w-md mx-auto">
-          <h1 className="text-xl sm:text-2xl font-bold">{t("product.notFound")}</h1>
-          <Link to="/" className="btn-primary mt-6 inline-flex">
-            {t("common.backToShop")}
-          </Link>
-        </div>
-      </PageContainer>
-    );
+    return <NotFoundPage title={t("product.notFound")} />;
   }
 
   const cosmeticsPdp = isCosmeticsProduct(product);

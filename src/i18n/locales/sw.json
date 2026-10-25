@@ -55,6 +55,11 @@
     "search": "Tafuta",
     "breadcrumb": "Njia ya urambazaji"
   },
+  "notFoundPage": {
+    "title": "Ukurasa haupatikani",
+    "body": "Samahani, hatukuweza kupata ukurasa huo. Angalia anwani au endelea kununua.",
+    "home": "Rudi dukani"
+  },
   "header": {
     "deliverTo": "Wasilisha kwa",
     "chooseCountry": "Chagua nchi ya kuwasilisha",

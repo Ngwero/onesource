@@ -55,6 +55,11 @@
     "search": "Shakisha",
     "breadcrumb": "Inzira y'urubuga"
   },
+  "notFoundPage": {
+    "title": "Urupapuro ntirwabonetse",
+    "body": "Ihangane, ntidushobora kubona uru rupapuro. Reba aderesi cyangwa ukomeze kugura.",
+    "home": "Subira mu iduka"
+  },
   "header": {
     "deliverTo": "Tanga kuri",
     "chooseCountry": "Hitamo igihugu cyo koherezamo",

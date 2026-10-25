@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { requireSupabase } from "../lib/supabase.js";
+import { hasPublishedColumn } from "../lib/productColumns.js";
+import { parseOrderRequest, priceOrderFromCatalogue } from "../lib/orderPricing.js";
+import { reserveStock, releaseStock } from "../lib/stockReservation.js";
 import {
   sendOrderConfirmedEmail,
   sendOrderDispatchedEmail,
@@ -65,111 +68,84 @@ const ORDER_SELECT = `
   )
 `;
 
-function validateOrderBody(body) {
-  const {
-    userId,
-    email,
-    fullName,
-    phone,
-    addressLine1,
-    addressLine2,
-    city,
-    district,
-    notes,
-    orderType,
-    subtotal,
-    deliveryFee,
-    total,
-    items,
-  } = body ?? {};
+const CATALOGUE_COLUMNS = "id,title,price,image,in_stock,stock_quantity";
 
-  if (!email?.trim() || !fullName?.trim() || !addressLine1?.trim() || !city?.trim()) {
-    return { error: "Missing required delivery details" };
-  }
-  if (!Array.isArray(items) || items.length === 0) {
-    return { error: "Order must include at least one item" };
-  }
-  if (orderType && !["retail", "export"].includes(orderType)) {
-    return { error: "Invalid order type" };
-  }
+async function loadCatalogueRows(db, ids) {
+  const unique = [...new Set(ids)];
+  const publishedColumn = await hasPublishedColumn(db);
+  const columns = publishedColumn ? `${CATALOGUE_COLUMNS},published` : CATALOGUE_COLUMNS;
+  const { data, error } = await db.from("products").select(columns).in("id", unique);
+  if (error) throw error;
+  return data ?? [];
+}
 
-  const sub = Number(subtotal);
-  const del = Number(deliveryFee);
-  const tot = Number(total);
-  if (!Number.isFinite(sub) || !Number.isFinite(del) || !Number.isFinite(tot)) {
-    return { error: "Invalid order totals" };
-  }
-
-  const computedItems = items.map((row) => {
-    const qty = Number(row.quantity);
-    const unit = Number(row.unitPrice);
-    if (!row.productId || !row.title || qty < 1 || unit < 0) {
-      throw new Error("Invalid line item");
-    }
-    return {
-      product_id: String(row.productId),
-      product_title: String(row.title),
-      product_image: row.image ? String(row.image) : null,
-      unit_price: unit,
-      quantity: qty,
-      line_total: unit * qty,
-    };
-  });
-
-  const itemsSum = computedItems.reduce((s, i) => s + i.line_total, 0);
-  if (Math.abs(itemsSum - sub) > 1) {
-    return { error: "Subtotal does not match line items" };
-  }
-  if (Math.abs(sub + del - tot) > 1) {
-    return { error: "Total does not match subtotal + delivery" };
-  }
-
+function buildOrderRow(contact, priced) {
   return {
-    order: {
-      user_id: userId || null,
-      status: "placed",
-      email: email.trim(),
-      full_name: fullName.trim(),
-      phone: phone?.trim() || null,
-      address_line1: addressLine1.trim(),
-      address_line2: addressLine2?.trim() || null,
-      city: city.trim(),
-      district: district?.trim() || "Kampala",
-      notes:
-        orderType === "export"
-          ? `${EXPORT_ORDER_MARKER}${notes?.trim() ? `\n${notes.trim()}` : ""}`
-          : notes?.trim() || null,
-      subtotal: sub,
-      delivery_fee: del,
-      total: tot,
-      currency: "UGX",
-    },
-    items: computedItems,
+    user_id: contact.user_id,
+    status: "placed",
+    email: contact.email,
+    full_name: contact.full_name,
+    phone: contact.phone,
+    address_line1: contact.address_line1,
+    address_line2: contact.address_line2,
+    city: contact.city,
+    district: contact.district,
+    notes:
+      contact.orderType === "export"
+        ? `${EXPORT_ORDER_MARKER}${contact.notes ? `\n${contact.notes}` : ""}`
+        : contact.notes,
+    subtotal: priced.subtotal,
+    delivery_fee: priced.delivery_fee,
+    total: priced.total,
+    currency: "UGX",
   };
 }
 
 router.post("/", async (req, res) => {
+  let reserved = null;
+  let db;
   try {
-    const parsed = validateOrderBody(req.body);
+    const parsed = parseOrderRequest(req.body);
     if (parsed.error) {
       return res.status(400).json({ error: parsed.error });
     }
 
-    const db = requireSupabase();
+    db = requireSupabase();
+    const rows = await loadCatalogueRows(
+      db,
+      parsed.lines.map((line) => line.productId)
+    );
+    const priced = priceOrderFromCatalogue(parsed.lines, rows);
+    if (priced.error) {
+      return res.status(priced.status || 400).json({
+        error: priced.error,
+        ...(priced.productId ? { productId: priced.productId } : {}),
+      });
+    }
+
+    reserved = await reserveStock(db, priced.items);
+    if (!reserved.ok) {
+      return res.status(409).json({
+        error: reserved.error,
+        ...(reserved.productId ? { productId: reserved.productId } : {}),
+      });
+    }
+
+    const orderRow = buildOrderRow(parsed.contact, priced);
     const { data: order, error: orderErr } = await db
       .from("orders")
-      .insert(parsed.order)
+      .insert(orderRow)
       .select("id, status, total, created_at")
       .single();
 
     if (orderErr) throw orderErr;
 
-    const rows = parsed.items.map((item) => ({
+    const itemRows = priced.items.map((item) => ({
       ...item,
       order_id: order.id,
     }));
 
-    const { error: itemsErr } = await db.from("order_items").insert(rows);
+    const { error: itemsErr } = await db.from("order_items").insert(itemRows);
     if (itemsErr) {
       await db.from("orders").delete().eq("id", order.id);
       throw itemsErr;
@@ -189,10 +165,15 @@ router.post("/", async (req, res) => {
         .catch((e) => console.error("[orders] placed email failed:", e.message));
     }
 
-    res
-      .status(201)
-      .json({ order: decorateOrder({ ...order, ...parsed.order }) });
+    res.status(201).json({
+      order: decorateOrder({ ...order, ...orderRow, order_items: itemRows }),
+    });
   } catch (e) {
+    if (reserved?.ok && db) {
+      await releaseStock(db, reserved.reserved, { via: reserved.via }).catch((releaseErr) => {
+        console.error("[orders] stock release failed:", releaseErr.message);
+      });
+    }
     console.error("[orders] POST", e.message);
     res.status(500).json({ error: e.message || "Failed to place order" });
   }

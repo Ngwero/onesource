@@ -69,21 +69,21 @@ export function ProductImage({
   priority = false,
 }: Props) {
   const dims = sizeWidths[size];
-  const direct = resolveImageUrl(src);
+  const listing = size === "card" || size === "thumb" || size === "basket";
   const resolved = resolveImageUrl(src, { width: dims.w, quality: dims.quality });
-  const srcSet = imageSrcSet(
-    src,
-    dims.w2x
-      ? [
-          { width: dims.w, quality: dims.quality },
-          { width: dims.w2x, quality: dims.quality },
-        ]
-      : [{ width: dims.w, quality: dims.quality }]
-  );
+  const srcSet = listing
+    ? undefined
+    : imageSrcSet(
+        src,
+        dims.w2x
+          ? [
+              { width: dims.w, quality: dims.quality },
+              { width: dims.w2x, quality: dims.quality },
+            ]
+          : [{ width: dims.w, quality: dims.quality }]
+      );
   const [failed, setFailed] = useState(false);
-  const [useDirect, setUseDirect] = useState(false);
-  const sizedSrc = useDirect ? direct : resolved;
-  const imageSrc = !sizedSrc || failed ? FALLBACK_SRC : sizedSrc;
+  const imageSrc = !resolved || failed ? FALLBACK_SRC : resolved;
 
   return (
     <div
@@ -91,8 +91,8 @@ export function ProductImage({
     >
       <img
         src={imageSrc}
-        srcSet={!failed && !useDirect ? srcSet : undefined}
-        sizes={!failed && !useDirect && srcSet ? dims.sizes : undefined}
+        srcSet={!failed ? srcSet : undefined}
+        sizes={!failed && srcSet ? dims.sizes : undefined}
         width={dims.w}
         height={dims.height}
         alt={alt}
@@ -101,10 +101,6 @@ export function ProductImage({
         decoding="async"
         fetchPriority={priority ? "high" : "low"}
         onError={() => {
-          if (!useDirect && direct && direct !== resolved) {
-            setUseDirect(true);
-            return;
-          }
           if (!failed) setFailed(true);
         }}
       />

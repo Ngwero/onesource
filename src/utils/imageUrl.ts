@@ -17,6 +17,7 @@ const IMAGE_TRANSFORMS =
   import.meta.env.VITE_SUPABASE_IMAGE_TRANSFORMS !== "false";
 
 const OBJECT_PUBLIC = "/storage/v1/object/public/";
+const RENDER_PUBLIC = "/storage/v1/render/image/public/";
 
 function supabaseOrigin(): string {
   return (import.meta.env.VITE_SUPABASE_URL?.trim() || "").replace(/\/$/, "");
@@ -26,10 +27,32 @@ function storageBucket(): string {
   return import.meta.env.VITE_SUPABASE_STORAGE_BUCKET?.trim() || "images";
 }
 
-/** Public Storage object URL, or null when this src is not on Supabase. */
-function toPublicObjectUrl(url: string): string | null {
-  if (url.includes(".supabase.co") && url.includes(OBJECT_PUBLIC)) {
-    return url.split("#")[0].split("?")[0];
+function stripUrlDecorations(url: string): string {
+  return url.split("#")[0].split("?")[0];
+}
+
+function isSupabaseHost(url: string): boolean {
+  if (url.includes(".supabase.co")) return true;
+  const origin = supabaseOrigin();
+  return Boolean(origin && url.startsWith(origin));
+}
+
+/**
+ * Public Storage object URL, or null when this src is not on Supabase.
+ * Also unwraps an existing render URL so callers can request a new width.
+ */
+export function toPublicObjectUrl(url: string): string | null {
+  const clean = stripUrlDecorations(url);
+
+  if (isSupabaseHost(clean) && clean.includes(OBJECT_PUBLIC)) {
+    return clean;
+  }
+
+  if (isSupabaseHost(clean) && clean.includes(RENDER_PUBLIC)) {
+    const idx = clean.indexOf(RENDER_PUBLIC);
+    const origin = clean.slice(0, idx);
+    const objectPath = clean.slice(idx + RENDER_PUBLIC.length);
+    return `${origin}${OBJECT_PUBLIC}${objectPath}`;
   }
 
   const origin = supabaseOrigin();
@@ -69,9 +92,8 @@ export function supabaseTransformUrl(
 
 /**
  * Normalize product/category image paths for img src.
- * Card widths request a ~400px transform only when that feature is enabled.
- * Otherwise Supabase public URLs are returned unchanged so the browser hits the CDN.
- * `/api/img` remains for local `/uploads/` files that are not on Storage.
+ * Listing cards request a 400px transform. Width is a max: Supabase does not
+ * enlarge, so 146×184 pharmacy covers stay 146×184.
  */
 export function resolveImageUrl(
   src: string | undefined,
@@ -87,8 +109,6 @@ export function resolveImageUrl(
   const publicUrl = toPublicObjectUrl(url);
 
   if (publicUrl) {
-    // width is a max: Supabase does not enlarge, so 146×184 pharmacy
-    // covers stay 146×184. Larger originals are resized to the card width.
     if (wantResize && IMAGE_TRANSFORMS) {
       return supabaseTransformUrl(publicUrl, width, clampQuality(options?.quality, 70)) ?? publicUrl;
     }

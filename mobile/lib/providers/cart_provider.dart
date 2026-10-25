@@ -5,13 +5,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/cart_item.dart';
 import '../models/product.dart';
+import '../services/api_client.dart';
 
 const _cartKey = 'onesource_cart_v1';
 
 class CartNotifier extends StateNotifier<List<CartItem>> {
-  CartNotifier() : super(const []) {
+  CartNotifier({ApiClient? api}) : _api = api, super(const []) {
     _load();
   }
+
+  final ApiClient? _api;
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -21,22 +24,56 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
       final list = jsonDecode(raw) as List<dynamic>;
       final restored = <CartItem>[];
       final pending = <Map<String, dynamic>>[];
+      final ids = <String>[];
       for (final entry in list.cast<Map<String, dynamic>>()) {
-        final snapshot = entry['product'];
         final qty = entry['quantity'] as int? ?? 0;
-        if (snapshot is Map<String, dynamic> && qty > 0) {
-          restored.add(CartItem(product: Product.fromJson(snapshot), quantity: qty));
+        if (qty <= 0) continue;
+        final snapshot = entry['product'];
+        final productId = (entry['productId'] as String?) ??
+            (snapshot is Map<String, dynamic> ? snapshot['id'] as String? : null);
+        if (productId == null || productId.isEmpty) continue;
+        ids.add(productId);
+        if (snapshot is Map<String, dynamic>) {
+          restored.add(
+            CartItem(product: Product.fromJson(snapshot), quantity: qty),
+          );
         } else {
-          // Older entries without a snapshot wait for the product to load.
-          pending.add(entry);
+          pending.add({'productId': productId, 'quantity': qty});
         }
       }
       _pendingRestore = pending;
       if (restored.isNotEmpty && state.isEmpty) state = restored;
+      await _refreshFromApi(ids);
     } catch (_) {}
   }
 
   List<Map<String, dynamic>> _pendingRestore = [];
+
+  Future<void> _refreshFromApi(List<String> ids) async {
+    if (ids.isEmpty) return;
+    final client = _api ?? ApiClient();
+    final live = <CartItem>[];
+    for (final id in ids) {
+      final existingQty = state
+          .where((item) => item.product.id == id)
+          .fold(0, (sum, item) => sum + item.quantity);
+      final pendingQty = _pendingRestore
+          .where((entry) => entry['productId'] == id)
+          .fold(0, (sum, entry) => sum + ((entry['quantity'] as int?) ?? 0));
+      final qty = existingQty > 0 ? existingQty : pendingQty;
+      if (qty <= 0) continue;
+      try {
+        final product = await client.fetchProductById(id);
+        if (product == null || !product.inStock) continue;
+        final max = product.stockQuantity ?? 99;
+        live.add(CartItem(product: product, quantity: qty.clamp(1, max)));
+      } catch (_) {}
+    }
+    if (live.isNotEmpty) {
+      state = live;
+      _pendingRestore = [];
+    }
+  }
 
   void restoreFromProducts(List<Product> products) {
     if (_pendingRestore.isEmpty) return;
@@ -59,14 +96,16 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
 
   Future<void> _persist() async {
     final prefs = await SharedPreferences.getInstance();
-    final data = state.map((i) => i.toJson()).toList();
+    final data = state
+        .map((i) => {'productId': i.product.id, 'quantity': i.quantity})
+        .toList();
     await prefs.setString(_cartKey, jsonEncode(data));
   }
 
   int quantityFor(String productId) {
     return state
         .where((i) => i.product.id == productId)
-        .fold(0, (sum, i) => sum + i.quantity);
+        .fold(0, (sum, i) => i.quantity + sum);
   }
 
   void add(Product product, {int quantity = 1}) {

@@ -55,6 +55,11 @@
     "search": "Search",
     "breadcrumb": "Breadcrumb"
   },
+  "notFoundPage": {
+    "title": "Page not found",
+    "body": "Sorry, we cannot find that page. Check the address or continue shopping.",
+    "home": "Back to shop"
+  },
   "header": {
     "deliverTo": "Deliver to",
     "chooseCountry": "Choose your delivery country",

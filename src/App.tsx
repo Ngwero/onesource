@@ -43,6 +43,7 @@ import { PharmacyAislePage } from "./pages/PharmacyAislePage";
 import { PharmacyProductsPage } from "./pages/PharmacyProductsPage";
 import { PharmacySearchPage } from "./pages/PharmacySearchPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 
 
 export default function App() {
@@ -137,6 +138,7 @@ export default function App() {
                   <Route path="lists" element={<ListsPage />} />
                   <Route path="history" element={<HistoryPage />} />
                   <Route path="privacy" element={<PrivacyPolicyPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>
             </CartProvider>

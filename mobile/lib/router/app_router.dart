@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../data/kitchen_ware.dart';
@@ -29,24 +28,14 @@ import '../screens/product_detail_screen.dart';
 import '../screens/category_screen.dart';
 import '../screens/search_screen.dart';
 import '../screens/splash_screen.dart';
+import '../screens/not_found_screen.dart';
 import '../utils/shop_mode.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     debugLogDiagnostics: true,
-    errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('One Source')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            context.tr.get('app.errors.notFound'),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    ),
+    errorBuilder: (context, state) => const NotFoundScreen(),
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
