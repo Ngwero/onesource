@@ -21,6 +21,7 @@ import {
   ProductDescriptionSection,
 } from "../components/product/ProductDetailsBlock";
 import { ProductReviewsSection } from "../components/product/ProductReviewsSection";
+import { useSavedList } from "../context/SavedListContext";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useLocalizedProduct, useCategoryName, getKitchenAisleTitleFromProductId } from "../i18n/useLocalizedProduct";
@@ -35,8 +36,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   addBrowsingHistory,
-  isInSavedList,
-  toggleSavedListItem,
 } from "../utils/userStorage";
 import { aisleIdFromProductId } from "../data/kitchenWare";
 import { kitchenAislePath, isKitchenProduct } from "../utils/kitchenMode";
@@ -72,7 +71,12 @@ const EMPTY_PRODUCT: Product = {
 };
 
 export function ProductPage() {
-  const { t, i18n } = useTranslation();
+  const { id } = useParams();
+  return <ProductPageContent key={id} />;
+}
+
+function ProductPageContent() {
+  const { t } = useTranslation();
   const { formatPrice, freeDeliveryThreshold } = useCurrency();
   const { id } = useParams<{ id: string }>();
   const { getProductById, products: loadedProducts } = useProducts();
@@ -106,21 +110,20 @@ export function ProductPage() {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
-  const [onList, setOnList] = useState(false);
+  const { isSaved, toggleSaved } = useSavedList();
+  const onList = Boolean(id && isSaved(id));
   const [showAllSpecs, setShowAllSpecs] = useState(false);
   const [shareDone, setShareDone] = useState(false);
 
   useEffect(() => {
     if (id) {
       addBrowsingHistory(user?.id, id);
-      setOnList(isInSavedList(user?.id, id));
     }
   }, [id, user?.id]);
 
   useEffect(() => {
     if (!id) return;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    setShowAllSpecs(false);
   }, [id]);
 
   const related = useMemo(() => {
@@ -148,7 +151,7 @@ export function ProductPage() {
   const pageContent = useMemo(
     () =>
       product ? buildProductPageContent(product, categoryName, formatPrice, t) : null,
-    [product, categoryName, formatPrice, t, i18n.language]
+    [product, categoryName, formatPrice, t]
   );
   const breadcrumbs = useMemo(() => {
     if (!product) return [];
@@ -206,7 +209,6 @@ export function ProductPage() {
     categoryId,
     localized.localizedTitle,
     t,
-    i18n.language,
   ]);
 
   if (fetchingProduct) {
@@ -239,7 +241,7 @@ export function ProductPage() {
     navigate("/checkout");
   };
   const handleToggleList = () => {
-    setOnList(toggleSavedListItem(user?.id, product.id));
+    toggleSaved(product.id);
   };
 
   const handleShare = async () => {

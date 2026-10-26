@@ -96,13 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     if (user?.id) await fetchProfile(user.id);
-  }, [user?.id, fetchProfile]);
+  }, [user, fetchProfile]);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
 
     const supabase = getSupabase();
     let cancelled = false;

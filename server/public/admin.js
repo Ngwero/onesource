@@ -4414,6 +4414,21 @@ document.addEventListener("keydown", (e) => {
 (async () => {
   setLoading(true);
   await detectShopUrl();
+  const session = await fetch("/api/admin/session").catch(() => null);
+  if (!session?.ok) {
+    window.location.replace(`${SHOP}/login?next=admin`);
+    return;
+  }
+  const logout = document.createElement("button");
+  logout.type = "button";
+  logout.className = "btn btn-secondary";
+  logout.textContent = "Sign out of admin";
+  logout.style.cssText = "position:fixed;bottom:16px;left:16px;z-index:1000";
+  logout.addEventListener("click", async () => {
+    await fetch("/api/admin/session", { method: "DELETE" });
+    window.location.replace(SHOP);
+  });
+  document.body.append(logout);
   try {
     await loadCategories().catch(() => {
       showError(

@@ -107,6 +107,7 @@ export function ProductLightbox({ images, index, alt, onIndex, onClose }: Props)
     };
   }, []);
 
+  const zoomBy = zoom.zoomBy;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -122,18 +123,18 @@ export function ProductLightbox({ images, index, alt, onIndex, onClose }: Props)
       }
       if (e.key === "+" || e.key === "=") {
         e.preventDefault();
-        zoom.zoomBy(1.25);
+        zoomBy(1.25);
       } else if (e.key === "-" || e.key === "_") {
         e.preventDefault();
-        zoom.zoomBy(1 / 1.25);
+        zoomBy(1 / 1.25);
       } else if (e.key === "0") {
         e.preventDefault();
-        zoom.zoomBy(0);
+        zoomBy(0);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [count, requestClose, onIndex, safeIndex, zoom.zoomBy]);
+  }, [count, requestClose, onIndex, safeIndex, zoomBy]);
 
   const step = (dir: 1 | -1) => onIndex((safeIndex + dir + count) % count);
   const percent = Math.round(zoom.view.scale * 100);

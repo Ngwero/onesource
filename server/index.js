@@ -1,4 +1,5 @@
 import express from "express";
+import { createAuthorization, ADMIN_COOKIE, requestToken } from "./lib/apiAuthorization.js";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
@@ -64,6 +65,19 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+const authorization = createAuthorization();
+app.use("/api", authorization.guard);
+app.get("/api/admin/session", (_req, res) => res.json({ ok: true }));
+app.post("/api/admin/session", (req, res) => {
+  const { token } = requestToken(req);
+  const secure = req.secure || req.get("x-forwarded-proto") === "https";
+  res.cookie(ADMIN_COOKIE, token, { httpOnly: true, secure, sameSite: "strict", path: "/", maxAge: 60 * 60 * 1000 });
+  res.json({ ok: true });
+});
+app.delete("/api/admin/session", (_req, res) => {
+  res.clearCookie(ADMIN_COOKIE, { path: "/", httpOnly: true, sameSite: "strict" });
+  res.json({ ok: true });
+});
 app.use("/api/products", productsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/upload", uploadRouter);

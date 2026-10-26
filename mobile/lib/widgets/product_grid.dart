@@ -25,7 +25,7 @@ class ProductGrid extends StatelessWidget {
   }) {
     return SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: crossAxisCount ?? productGridCount(context),
-      mainAxisExtent: 392,
+      mainAxisExtent: 408,
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
     );
@@ -37,7 +37,7 @@ class ProductGrid extends StatelessWidget {
   }) {
     return SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: crossAxisCount ?? productGridCount(context),
-      mainAxisExtent: 304,
+      mainAxisExtent: 348,
       crossAxisSpacing: 14,
       mainAxisSpacing: 14,
     );
@@ -46,14 +46,14 @@ class ProductGrid extends StatelessWidget {
   /// Phone default — prefer [gridDelegateFor] when a [BuildContext] is available.
   static const gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
     crossAxisCount: 2,
-    mainAxisExtent: 392,
+    mainAxisExtent: 408,
     crossAxisSpacing: 12,
     mainAxisSpacing: 12,
   );
 
   static const popularGridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
     crossAxisCount: 2,
-    mainAxisExtent: 304,
+    mainAxisExtent: 348,
     crossAxisSpacing: 14,
     mainAxisSpacing: 14,
   );

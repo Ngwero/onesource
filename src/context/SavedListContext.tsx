@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,24 +29,29 @@ type SavedListContextValue = {
 const SavedListContext = createContext<SavedListContextValue | null>(null);
 
 const SAVED_TOAST_MS = 3000;
+function subscribeSaved(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener("onesource-saved", onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener("onesource-saved", onChange);
+  };
+}
 
 export function SavedListProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [savedIds, setSavedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const savedSnapshot = useSyncExternalStore(subscribeSaved,
+    () => JSON.stringify(getSavedList(user?.id)), () => "[]");
+  const savedIds = useMemo<ReadonlySet<string>>(() => new Set(JSON.parse(savedSnapshot)), [savedSnapshot]);
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const reload = useCallback((userId: string | null | undefined) => {
-    setSavedIds(new Set(getSavedList(userId)));
-  }, []);
 
   useEffect(() => {
     if (user?.id) {
       mergeGuestSavedListIntoUser(user.id);
     }
-    reload(user?.id);
-  }, [user?.id, reload]);
+  }, [user?.id]);
 
   const isSaved = useCallback(
     (productId: string) => savedIds.has(productId),
@@ -80,21 +86,19 @@ export function SavedListProvider({ children }: { children: ReactNode }) {
   const toggleSaved = useCallback(
     (productId: string) => {
       const nowSaved = toggleSavedListItem(user?.id, productId);
-      reload(user?.id);
-      if (nowSaved) {
+        if (nowSaved) {
         showSavedToast();
       }
       return nowSaved;
     },
-    [user?.id, reload, showSavedToast]
+    [user?.id, showSavedToast]
   );
 
   const removeSaved = useCallback(
     (productId: string) => {
       removeSavedListItem(user?.id, productId);
-      reload(user?.id);
-    },
-    [user?.id, reload]
+      },
+    [user?.id]
   );
 
   const value = useMemo(

@@ -98,7 +98,7 @@ export function suggestRelatedTerms(products: Product[], query: string, limit = 
 
   const freq = new Map<string, number>();
   for (const p of products) {
-    for (const word of p.title.toLowerCase().split(/[\s,/\-]+/)) {
+    for (const word of p.title.toLowerCase().split(/[\s,/-]+/)) {
       const w = word.replace(/[^a-z0-9]/g, "");
       if (w.length < 3 || stop.has(w)) continue;
       freq.set(w, (freq.get(w) ?? 0) + 1);

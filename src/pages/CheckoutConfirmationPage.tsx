@@ -23,6 +23,7 @@ export function CheckoutConfirmationPage() {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const isExportOrder =
     confirmationState?.orderType === "export" || order?.order_type === "export";
 
@@ -30,6 +31,7 @@ export function CheckoutConfirmationPage() {
     if (!id) return;
     fetchOrderById(id, user?.id)
       .then((o) => setOrder(o ?? null))
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [id, user?.id]);
 
@@ -40,6 +42,11 @@ export function CheckoutConfirmationPage() {
       </PageContainer>
     );
   }
+
+  if (error || !order) return <PageContainer className="py-16 text-center">
+    <p role="alert">{t("errors.loadOrder")}</p>
+    <Link to="/account" className="btn-primary mt-4">{t("nav.account", { defaultValue: "Account" })}</Link>
+  </PageContainer>;
 
   return (
     <PageContainer className="py-10 sm:py-14">

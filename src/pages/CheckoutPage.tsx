@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
+import { CartRestoreStatus } from "../components/CartRestoreStatus";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useAuth } from "../context/AuthContext";
@@ -11,7 +12,7 @@ import { getLocalizedProductFields } from "../i18n/useLocalizedProduct";
 
 export function CheckoutPage() {
   const { t, i18n } = useTranslation();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, restoring, restoreError } = useCart();
   const { formatPrice } = useCurrency();
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -23,26 +24,29 @@ export function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [addressLine1, setAddressLine1] = useState("");
   const [addressLine2, setAddressLine2] = useState("");
-  const [city, setCity] = useState("");
-  const [district, setDistrict] = useState("");
+  const [city, setCity] = useState(() => t("checkout.defaultCity"));
+  const [district, setDistrict] = useState(() => t("checkout.defaultDistrict"));
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (restoring || restoreError) return;
     if (items.length === 0) {
       navigate("/cart", { replace: true });
       return;
     }
-    setCity((c) => c || t("checkout.defaultCity"));
-    setDistrict((d) => d || t("checkout.defaultDistrict"));
-    const name =
-      profile?.full_name?.trim() ||
-      (user?.user_metadata?.full_name as string | undefined)?.trim() ||
-      "";
-    if (name) setFullName(name);
-    if (user?.email) setEmail(user.email);
-  }, [items.length, navigate, profile, user, t]);
+
+  }, [items.length, navigate, profile, user, t, restoring, restoreError]);
+
+  const defaultName = profile?.full_name?.trim() || String(user?.user_metadata?.full_name || "");
+  const identity = `${user?.id || ""}:${defaultName}`;
+  const [previousIdentity, setPreviousIdentity] = useState("");
+  if (identity !== previousIdentity) {
+    setPreviousIdentity(identity);
+    setFullName(current => current || defaultName);
+    setEmail(current => current || user?.email || "");
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -93,6 +97,7 @@ export function CheckoutPage() {
     }
   };
 
+  if (restoring || restoreError) return <CartRestoreStatus />;
   if (items.length === 0) return null;
 
   return (

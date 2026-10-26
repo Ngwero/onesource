@@ -1,4 +1,5 @@
 import i18n from "../i18n";
+import { getSupabase, isSupabaseConfigured } from "../lib/supabase";
 import type { Product } from "../types/product";
 import type { Category } from "../types/product";
 import type { HeroSlide } from "../types/hero";
@@ -7,6 +8,21 @@ import type { CreateOrderPayload, Order } from "../types/order";
 import { isExportCatalogueProduct } from "../utils/exportOrder";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
+
+const guestOrderTokens = new Map<string, string>();
+async function orderHeaders(id?: string): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (isSupabaseConfigured) {
+    const { data: { session } } = await getSupabase().auth.getSession();
+    if (session) headers.Authorization = `Bearer ${session.access_token}`;
+  }
+  if (id) {
+    let token = guestOrderTokens.get(id);
+    try { token ??= sessionStorage.getItem(`order-access:${id}`) ?? undefined; } catch { /* storage unavailable */ }
+    if (token) headers["X-Order-Token"] = token;
+  }
+  return headers;
+}
 
 function isKitchenSku(p: Product): boolean {
   return p.id.startsWith("kitchen-") || p.category === "kitchen-ware";
@@ -381,16 +397,20 @@ export async function fetchKitchenCollage(): Promise<KitchenCollage> {
 export async function createOrder(payload: CreateOrderPayload): Promise<Order> {
   const res = await fetch(`${API_BASE}/orders`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: await orderHeaders(),
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || i18n.t("errors.placeOrderFailed"));
+  if (typeof data.accessToken === "string") {
+    guestOrderTokens.set(data.order.id, data.accessToken);
+    try { sessionStorage.setItem(`order-access:${data.order.id}`, data.accessToken); } catch { /* memory fallback */ }
+  }
   return data.order as Order;
 }
 
 export async function fetchOrders(userId: string): Promise<Order[]> {
-  const res = await fetch(`${API_BASE}/orders?userId=${encodeURIComponent(userId)}`);
+  const res = await fetch(`${API_BASE}/orders?userId=${encodeURIComponent(userId)}`, { headers: await orderHeaders() });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || i18n.t("errors.loadOrders"));
   return (data.orders as Order[]) ?? [];
@@ -398,7 +418,7 @@ export async function fetchOrders(userId: string): Promise<Order[]> {
 
 export async function fetchOrderById(id: string, userId?: string): Promise<Order | undefined> {
   const qs = userId ? `?userId=${encodeURIComponent(userId)}` : "";
-  const res = await fetch(`${API_BASE}/orders/${id}${qs}`);
+  const res = await fetch(`${API_BASE}/orders/${id}${qs}`, { headers: await orderHeaders(id) });
   if (res.status === 404) return undefined;
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || i18n.t("errors.loadOrder"));

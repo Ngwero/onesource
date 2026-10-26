@@ -45,13 +45,13 @@ function apiSlidesToContent(slides: HeroSlide[]): HeroSlideContent[] {
 }
 
 export function HeroSlider() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { formatPrice } = useCurrency();
 
   const i18nOnlySlides = useMemo(() => {
     const raw = t("home.slides", { returnObjects: true }) as HeroSlideContent[];
     return Array.isArray(raw) ? i18nSlidesToContent(raw) : [];
-  }, [t, i18n.language]);
+  }, [t]);
 
   const [apiSlides, setApiSlides] = useState<HeroSlideContent[] | null>(null);
 
@@ -76,7 +76,7 @@ export function HeroSlider() {
     const base =
       apiSlides && apiSlides.length > 0 ? apiSlides : i18nOnlySlides;
     return base.map((slide, index) => mergeHeroSlideWithI18n(slide, index, t));
-  }, [apiSlides, i18nOnlySlides, t, i18n.language]);
+  }, [apiSlides, i18nOnlySlides, t]);
 
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -92,9 +92,7 @@ export function HeroSlider() {
   const next = useCallback(() => goTo(active + 1), [active, goTo]);
   const prev = useCallback(() => goTo(active - 1), [active, goTo]);
 
-  useEffect(() => {
-    if (active >= count) setActive(0);
-  }, [active, count]);
+  if (active >= count) setActive(0);
 
   useEffect(() => {
     if (paused || count <= 1) return;

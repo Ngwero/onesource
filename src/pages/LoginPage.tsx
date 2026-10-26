@@ -14,7 +14,8 @@ export function LoginPage() {
   const { user, signIn, verifyLoginOtp, configured, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/account";
+  const from = new URLSearchParams(location.search).get("next") === "admin"
+    ? "/admin-access" : (location.state as { from?: string } | null)?.from ?? "/account";
 
   useEffect(() => {
     if (!loading && user) navigate(from, { replace: true });

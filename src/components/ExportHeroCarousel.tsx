@@ -90,9 +90,7 @@ export function ExportHeroCarousel({ children }: Props) {
   );
   const next = useCallback(() => goTo(active + 1), [active, goTo]);
 
-  useEffect(() => {
-    if (active >= count) setActive(0);
-  }, [active, count]);
+  if (active >= count) setActive(0);
 
   useEffect(() => {
     if (paused || count <= 1) return;

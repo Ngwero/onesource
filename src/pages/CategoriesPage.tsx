@@ -212,7 +212,6 @@ function FreshCategoryRow({
   useEffect(() => {
     if (!enabled) return;
     const controller = new AbortController();
-    setStatus("loading");
     fetchProductListPage(
       { shop: "fresh", category: categoryId, ...(sale ? { sale: true } : {}) },
       0,

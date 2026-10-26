@@ -42,10 +42,11 @@ export function WebsiteLoader({ children }: Props) {
   const selfLoading =
     SELF_LOADING_PATHS.some((re) => re.test(pathname)) || /^\/product\//.test(pathname);
   const outage = Boolean(error) && products.length === 0 && !selfLoading;
-  const mountTime = useRef(Date.now());
+  const mountTime = useRef(0);
   const [phase, setPhase] = useState<Phase>("loading");
 
   useEffect(() => {
+    mountTime.current = Date.now();
     document.getElementById("app-loader")?.remove();
   }, []);
 
@@ -53,10 +54,7 @@ export function WebsiteLoader({ children }: Props) {
     // The brand mark stays up briefly, then the shell is visible. A slow catalogue
     // must not hold the overlay: products fill in behind it, and "Shop unavailable"
     // is only for a request that actually failed (after the one retry).
-    if (outage) {
-      setPhase("done");
-      return;
-    }
+    if (outage) return;
     const elapsed = Date.now() - mountTime.current;
     const delay = Math.max(0, MIN_VISIBLE_MS - elapsed);
     const timer = window.setTimeout(() => setPhase("exiting"), delay);
@@ -87,7 +85,7 @@ export function WebsiteLoader({ children }: Props) {
   return (
     <>
       {children}
-      {phase !== "done" && (
+      {!outage && phase !== "done" && (
       <div
         className={`site-loader${phase === "exiting" ? " site-loader--exit" : ""}`}
         role="status"

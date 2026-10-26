@@ -21,10 +21,7 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
   const [visible, setVisible] = useState(prefersReducedMotion);
 
   useEffect(() => {
-    if (prefersReducedMotion()) {
-      setVisible(true);
-      return;
-    }
+    if (prefersReducedMotion()) return;
 
     const el = ref.current;
     if (!el) return;

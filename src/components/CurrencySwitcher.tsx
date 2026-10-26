@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCurrency } from "../context/CurrencyContext";
 import { CURRENCIES } from "../currency/currencies";
-import { HeaderSwitcherMenu, isSwitcherSheetTarget } from "./HeaderSwitcherMenu";
+import { HeaderSwitcherMenu } from "./HeaderSwitcherMenu";
+import { isSwitcherSheetTarget } from "../hooks/headerSwitcher";
 
 export function CurrencySwitcher() {
   const { t } = useTranslation();

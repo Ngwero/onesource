@@ -6,7 +6,7 @@ const server = await createServer({ server: { middlewareMode: true, hmr: false, 
 after(() => server.close());
 const { buildHomeCategoryRows, homeImageKey } = await server.ssrLoadModule('/src/data/homeRows.ts');
 const { AGRI_CATEGORIES } = await server.ssrLoadModule('/src/data/categories.ts');
-const categories = AGRI_CATEGORIES.filter(c => !['kitchen-ware', 'cosmetics', 'pharmacy'].includes(c.id));
+const categories = AGRI_CATEGORIES.filter(c => !['kitchen-ware', 'cosmetics', 'pharmacy', 'export-fresh-produce'].includes(c.id));
 const product = (id, category = 'fresh-fruits', image = `/uploads/${id}.jpg`, extra = {}) => ({
   id, title: id, category, image, price: 1000, rating: 0, reviewCount: 0,
   unit: 'each', prime: false, description: '', inStock: true, delivery: '', ...extra,
@@ -15,7 +15,7 @@ const product = (id, category = 'fresh-fruits', image = `/uploads/${id}.jpg`, ex
 test('all populated Fresh categories get their own row, in category order', () => {
   const products = categories.map(c => product(c.id, c.id));
   const rows = buildHomeCategoryRows(products, categories);
-  assert.equal(rows.length, 14);
+  assert.equal(rows.length, categories.length);
   assert.deepEqual(rows.map(r => r.row.id), categories.map(c => c.id));
   for (const row of rows) {
     assert.equal(row.row.seeAllCategoryId, row.products[0].category);

@@ -147,3 +147,36 @@ test("two overlapping reserves on the last unit: only one succeeds", async () =>
   assert.equal(db.store.get("fresh-fake-low-stock").stock_quantity, 0);
   assert.match(losses[0].error, /stock/i);
 });
+
+test('fractional, unsafe and malformed inputs are rejected before any database access', () => {
+  for (const quantity of [1.5, Infinity, NaN, -1, 10001]) {
+    assert.ok(parseOrderRequest({...contact, items: [{productId: 'fresh-mango', quantity}]}).error);
+  }
+  assert.ok(parseOrderRequest({...contact, email: {value: 'bad'}}).error);
+  assert.equal(parseOrderRequest({...contact, userId: 'someone-else'}).contact.user_id, null);
+});
+
+test('duplicate product lines are combined before checking stock', () => {
+  const parsed = parseOrderRequest({...contact, items: [
+    {productId: 'fresh-mango', quantity: 5}, {productId: 'fresh-mango', quantity: 5},
+  ]});
+  assert.equal(parsed.lines.length, 1);
+  assert.equal(priceOrderFromCatalogue(parsed.lines, [mango()]).status, 409);
+});
+
+test('rollback restores only its own units after another checkout succeeds', async () => {
+  const { releaseStock } = await import('../server/lib/stockReservation.js');
+  const db = memoryProducts([{id:'mango',stock_quantity:5,in_stock:true}]);
+  const first = await reserveStock(db,[{product_id:'mango',quantity:2}]);
+  const second = await reserveStock(db,[{product_id:'mango',quantity:1}]);
+  assert.equal(second.ok,true);
+  await releaseStock(db, first.reserved, {via:first.via});
+  assert.equal(db.store.get('mango').stock_quantity,4);
+});
+
+test('disabled stock cannot be reserved even when quantity remains positive', async () => {
+  const db=memoryProducts([{id:'disabled',stock_quantity:5,in_stock:false}]);
+  const result=await reserveStock(db,[{product_id:'disabled',quantity:1}]);
+  assert.equal(result.ok,false);
+  assert.equal(db.store.get('disabled').stock_quantity,5);
+});

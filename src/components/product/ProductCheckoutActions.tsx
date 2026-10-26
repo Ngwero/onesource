@@ -6,7 +6,7 @@ type Props = {
   onPayNow: () => void;
 };
 
-/** Shared pair: plus adds to basket; Pay now adds and goes to checkout. */
+/** Shared pair: Add to basket adds the product; Pay now adds and goes to checkout. */
 export function ProductCheckoutActions({ disabled, onAdd, onPayNow }: Props) {
   const { t } = useTranslation();
 
@@ -19,7 +19,7 @@ export function ProductCheckoutActions({ disabled, onAdd, onPayNow }: Props) {
         onClick={onAdd}
         aria-label={t(disabled ? "common.outOfStock" : "common.addToBasket")}
       >
-        <PlusIcon />
+        {t(disabled ? "common.outOfStock" : "common.addToBasket")}
       </button>
       <button
         type="button"
@@ -33,21 +33,5 @@ export function ProductCheckoutActions({ disabled, onAdd, onPayNow }: Props) {
   );
 }
 
-/** @deprecated Use ProductCheckoutActions — same shared plus + Pay now pair. */
+/** @deprecated Use ProductCheckoutActions. */
 export const CosmeticsCheckoutActions = ProductCheckoutActions;
-
-/**
- * Filled plus matching Flaticon "Plus" 2952084 (twentyfour Glyph).
- * Official SVG is account-gated; this is an original solid recreation of that
- * silhouette (axis-aligned plus with square ends) from the free PNG
- * https://cdn-icons-png.flaticon.com/512/2952/2952084.png
- * Icon: https://www.flaticon.com/free-icon/plus_2952084
- * License: Flaticon free license — personal/commercial use with attribution.
- */
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M11.25 3h1.5v8.25H21v1.5h-8.25V21h-1.5v-8.25H3v-1.5h8.25z" />
-    </svg>
-  );
-}

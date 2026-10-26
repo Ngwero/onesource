@@ -68,7 +68,7 @@ async function reserveOneOptimistic(db, item, attempts = 8) {
       .maybeSingle();
     if (error) throw error;
     const current = Math.floor(Number(row?.stock_quantity ?? 0));
-    if (!row || current < item.quantity) {
+    if (!row || row.in_stock === false || current < item.quantity) {
       return { ok: false, error: `Not enough stock for ${item.product_id}` };
     }
     const next = current - item.quantity;
@@ -80,6 +80,7 @@ async function reserveOneOptimistic(db, item, attempts = 8) {
       })
       .eq("id", item.product_id)
       .eq("stock_quantity", current)
+      .eq("in_stock", true)
       .gte("stock_quantity", item.quantity)
       .select("id, stock_quantity")
       .maybeSingle();
@@ -95,12 +96,7 @@ async function reserveOptimistic(db, items) {
     for (const item of items) {
       const result = await reserveOneOptimistic(db, item);
       if (!result.ok) {
-        await releaseOptimistic(db, reserved);
-        return {
-          ok: false,
-          error: result.error,
-          productId: item.product_id,
-        };
+        throw Object.assign(new Error(result.error), { stockFailure: true, productId: item.product_id });
       }
       reserved.push({
         product_id: item.product_id,
@@ -111,43 +107,37 @@ async function reserveOptimistic(db, items) {
     return { ok: true, reserved, via: "optimistic" };
   } catch (error) {
     await releaseOptimistic(db, reserved);
+    if (error.stockFailure) return { ok: false, error: error.message, productId: error.productId };
     throw error;
   }
 }
 
 async function releaseOptimistic(db, reserved) {
   for (const item of reserved) {
-    if (item.previous != null) {
-      await db
-        .from("products")
-        .update({
-          stock_quantity: item.previous,
-          in_stock: item.previous > 0,
-        })
-        .eq("id", item.product_id);
-      continue;
+    let restored = false;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const { data: row, error } = await db.from("products")
+        .select("stock_quantity,in_stock").eq("id", item.product_id).maybeSingle();
+      if (error) throw error;
+      if (!row) throw new Error(`Cannot restore stock for ${item.product_id}`);
+      const current = Number(row.stock_quantity);
+      const { data, error: updateError } = await db.from("products")
+        .update({ stock_quantity: current + item.quantity, in_stock: current === 0 || row.in_stock })
+        .eq("id", item.product_id).eq("stock_quantity", current)
+        .select("id").maybeSingle();
+      if (updateError) throw updateError;
+      if (data) { restored = true; break; }
     }
-    const { data: row } = await db
-      .from("products")
-      .select("stock_quantity")
-      .eq("id", item.product_id)
-      .maybeSingle();
-    const current = Math.floor(Number(row?.stock_quantity ?? 0));
-    await db
-      .from("products")
-      .update({
-        stock_quantity: current + item.quantity,
-        in_stock: true,
-      })
-      .eq("id", item.product_id);
+    if (!restored) throw new Error(`Could not restore stock for ${item.product_id}`);
   }
 }
 
 export async function reserveStock(db, items) {
   if (!items?.length) return { ok: true, reserved: [], via: "none" };
 
+  items = [...items].sort((a, b) => a.product_id.localeCompare(b.product_id));
   const rpc = await reserveViaRpc(db, items);
-  if (!rpc.error) return rpc;
+  if (typeof rpc.ok === "boolean") return rpc;
   if (!isMissingRpc(rpc.error)) {
     const msg = String(rpc.error.message ?? "");
     const stockMatch = msg.match(/insufficient_stock:(\S+)/);

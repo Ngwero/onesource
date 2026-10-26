@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LANGUAGES } from "../i18n/languages";
 import { chooseLanguage } from "../i18n/countryDefaults";
-import { HeaderSwitcherMenu, isSwitcherSheetTarget } from "./HeaderSwitcherMenu";
+import { HeaderSwitcherMenu } from "./HeaderSwitcherMenu";
+import { isSwitcherSheetTarget } from "../hooks/headerSwitcher";
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();

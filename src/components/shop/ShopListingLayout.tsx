@@ -64,14 +64,11 @@ export function ShopListingLayout({
   }));
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    if (lockCategoryId) {
-      setFilters((f) => ({
-        ...f,
-        categoryIds: [lockCategoryId],
-      }));
-    }
-  }, [lockCategoryId]);
+  const [lockedCategory, setLockedCategory] = useState(lockCategoryId);
+  if (lockedCategory !== lockCategoryId) {
+    setLockedCategory(lockCategoryId);
+    setFilters(f => ({ ...f, categoryIds: lockCategoryId ? [lockCategoryId] : [] }));
+  }
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";

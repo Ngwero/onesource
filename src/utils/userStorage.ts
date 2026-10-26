@@ -45,6 +45,7 @@ export function getSavedList(userId: string | null | undefined): string[] {
 export function setSavedList(userId: string | null | undefined, productIds: string[]): void {
   const key = `${LIST_PREFIX}${storageUserKey(userId)}`;
   localStorage.setItem(key, JSON.stringify(productIds));
+  window.dispatchEvent(new Event("onesource-saved"));
 }
 
 export function toggleSavedListItem(userId: string | null | undefined, productId: string): boolean {
@@ -56,6 +57,7 @@ export function toggleSavedListItem(userId: string | null | undefined, productId
     set.add(productId);
   }
   localStorage.setItem(key, JSON.stringify([...set]));
+  window.dispatchEvent(new Event("onesource-saved"));
   return set.has(productId);
 }
 

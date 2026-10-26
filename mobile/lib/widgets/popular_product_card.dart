@@ -38,14 +38,16 @@ class PopularProductCard extends ConsumerWidget {
     final unit = ProductCardDetails.unitLabel(product, context.tr);
     final formatPrice = ref.watch(formatPriceProvider);
     final cosmetics = addBelow && isCosmeticsProduct(product);
-    final exportProduct = productMatchesCategory(product.category, 'export-fresh-produce');
+    final exportProduct =
+        productMatchesCategory(product.category, 'export-fresh-produce');
     final showPair = onAdd != null && !exportProduct;
-    final useColumn = addBelow || showPair;
+    final useColumn = addBelow || onAdd != null;
     final brand = product.details.brand?.trim();
     final title = context.tr.productTitle(product);
     final displayTitle = cosmetics ? _titleWithoutBrand(title, brand) : title;
     final variant = cosmetics ? _cosmeticVariant(product, title) : null;
-    final onSale = product.originalPrice != null && product.originalPrice! > product.price;
+    final onSale =
+        product.originalPrice != null && product.originalPrice! > product.price;
     final fact = !cosmetics
         ? null
         : !product.inStock
@@ -69,7 +71,8 @@ class PopularProductCard extends ConsumerWidget {
             brand,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 11, height: 1.2, color: AppColors.textMuted),
+            style: const TextStyle(
+                fontSize: 11, height: 1.2, color: AppColors.textMuted),
           ),
         Text(
           displayTitle,
@@ -149,14 +152,26 @@ class PopularProductCard extends ConsumerWidget {
       ],
     );
 
-    final belowButton = showPair
+    final belowButton = onAdd != null
         ? Padding(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
-            child: ProductCheckoutActions(
-              inStock: product.inStock,
-              onAdd: onAdd!,
-              onPayNow: () => payNowAndCheckout(context, ref, product),
-            ),
+            child: showPair
+                ? ProductCheckoutActions(
+                    inStock: product.inStock,
+                    onAdd: onAdd!,
+                    onPayNow: () => payNowAndCheckout(context, ref, product),
+                  )
+                : FilledButton(
+                    onPressed: product.inStock ? onAdd : null,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFDF00),
+                      foregroundColor: const Color(0xFF0F1111),
+                      minimumSize: const Size(0, 44),
+                    ),
+                    child: Text(context.tr.get(product.inStock
+                        ? 'common.addToBasket'
+                        : 'common.outOfStock')),
+                  ),
           )
         : null;
 
@@ -190,44 +205,9 @@ class PopularProductCard extends ConsumerWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => context.push('/product/${product.id}'),
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
-                      child: details,
-                    ),
-                    if (onAdd != null)
-                      Positioned(
-                        right: 10,
-                        bottom: 10,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: product.inStock ? onAdd : null,
-                            customBorder: const CircleBorder(),
-                            child: Ink(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                gradient: product.inStock ? AppGradients.brand : null,
-                                color: product.inStock ? null : AppColors.muted,
-                                shape: BoxShape.circle,
-                                boxShadow: product.inStock
-                                    ? [
-                                        BoxShadow(
-                                          color: AppColors.darkGreen.withValues(alpha: 0.35),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 3),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: const Icon(Icons.add, color: Colors.white, size: 20),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+                  child: details,
                 ),
               ),
             ),
@@ -235,9 +215,13 @@ class PopularProductCard extends ConsumerWidget {
   }
 }
 
-final _measure = RegExp(r'\d+(?:[.,]\d+)?\s?(?:ml|cl|fl\.?\s?oz|oz|kg|g|l|mm|cm)\b', caseSensitive: false);
+final _measure = RegExp(
+    r'\d+(?:[.,]\d+)?\s?(?:ml|cl|fl\.?\s?oz|oz|kg|g|l|mm|cm)\b',
+    caseSensitive: false);
 final _variantNote = RegExp(r'\(([^)]{2,48})\)\s*$');
-final _variantWords = RegExp(r'shade|colour|color|scent|fragrance|size|pack|pair', caseSensitive: false);
+final _variantWords = RegExp(
+    r'shade|colour|color|scent|fragrance|size|pack|pair',
+    caseSensitive: false);
 
 String? _measureLabel(String? value) {
   final text = value?.replaceAll(RegExp(r'\s+'), ' ').trim() ?? '';
@@ -249,7 +233,8 @@ String? _measureLabel(String? value) {
 String _titleWithoutBrand(String title, String? brand) {
   final name = brand?.trim();
   if (name == null || name.isEmpty) return title;
-  final pattern = RegExp('^${RegExp.escape(name)}(?:\\s*[:–—-])?\\s+', caseSensitive: false);
+  final pattern = RegExp('^${RegExp.escape(name)}(?:\\s*[:–—-])?\\s+',
+      caseSensitive: false);
   final stripped = title.replaceFirst(pattern, '').trim();
   return stripped.isEmpty ? title : stripped;
 }
@@ -259,12 +244,18 @@ String? _cosmeticVariant(Product product, String title) {
   for (final spec in product.details.specs) {
     final key = spec.key.toLowerCase();
     final label = spec.label.toLowerCase();
-    if (key == 'size' || key == 'volume' || key == 'weight' || label == 'size' || label == 'volume') {
+    if (key == 'size' ||
+        key == 'volume' ||
+        key == 'weight' ||
+        label == 'size' ||
+        label == 'volume') {
       fromSpecs = spec.value;
       break;
     }
   }
-  final measured = _measureLabel(fromSpecs) ?? _measureLabel(product.unit) ?? _measureLabel(title);
+  final measured = _measureLabel(fromSpecs) ??
+      _measureLabel(product.unit) ??
+      _measureLabel(title);
   if (measured != null) return measured;
   final note = _variantNote.firstMatch(title)?.group(1)?.trim();
   if (note != null && _variantWords.hasMatch(note)) return note;

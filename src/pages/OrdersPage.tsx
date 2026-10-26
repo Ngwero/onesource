@@ -29,14 +29,15 @@ export function OrdersPage() {
 
   useEffect(() => {
     if (!user?.id) {
-      setLoading(false);
       return;
     }
+    let cancelled = false;
     fetchOrders(user.id)
-      .then(setOrders)
-      .catch((e) => setError(e instanceof Error ? e.message : t("errors.genericLoad")))
-      .finally(() => setLoading(false));
-  }, [user?.id]);
+      .then(rows => { if (!cancelled) setOrders(rows); })
+      .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : t("errors.genericLoad")); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [user?.id, t]);
 
   return (
     <PageContainer className="py-10 sm:py-14">

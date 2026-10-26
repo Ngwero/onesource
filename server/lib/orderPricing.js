@@ -22,7 +22,6 @@ function readProductId(row) {
 /** Contact + line ids/qty only. Prices on the body are ignored. */
 export function parseOrderRequest(body) {
   const {
-    userId,
     email,
     fullName,
     phone,
@@ -35,10 +34,13 @@ export function parseOrderRequest(body) {
     items,
   } = body ?? {};
 
-  if (!email?.trim() || !fullName?.trim() || !addressLine1?.trim() || !city?.trim()) {
+  const required = [email, fullName, addressLine1, city];
+  const optional = [phone, addressLine2, district, notes];
+  if (required.some(value => typeof value !== "string" || !value.trim() || value.length > 1000) ||
+      optional.some(value => value != null && (typeof value !== "string" || value.length > 4000))) {
     return { error: "Missing required delivery details" };
   }
-  if (!Array.isArray(items) || items.length === 0) {
+  if (!Array.isArray(items) || items.length === 0 || items.length > 100) {
     return { error: "Order must include at least one item" };
   }
   if (orderType && !["retail", "export"].includes(orderType)) {
@@ -48,12 +50,18 @@ export function parseOrderRequest(body) {
   const lines = [];
   for (const row of items) {
     const productId = readProductId(row);
-    const qty = Math.floor(Number(row?.quantity));
+    const qty = Number(row?.quantity);
     if (!productId) {
       return { error: "Invalid line item" };
     }
-    if (!Number.isFinite(qty) || qty < 1) {
+    if (!Number.isSafeInteger(qty) || qty < 1 || qty > 10000) {
       return { error: "Quantity must be at least 1" };
+    }
+    const existing = lines.find(line => line.productId === productId);
+    if (existing) {
+      existing.quantity += qty;
+      if (existing.quantity > 10000) return { error: "Quantity is too large" };
+      continue;
     }
     lines.push({
       productId,
@@ -65,7 +73,7 @@ export function parseOrderRequest(body) {
 
   return {
     contact: {
-      user_id: userId || null,
+      user_id: null,
       email: email.trim(),
       full_name: fullName.trim(),
       phone: phone?.trim() || null,
@@ -123,6 +131,9 @@ export function priceOrderFromCatalogue(lines, products, { requirePublished = tr
     if (requirePublished && !isPublished(product)) {
       return { error: `Product is not available: ${line.productId}`, status: 400 };
     }
+    if (!Number.isSafeInteger(line.quantity) || line.quantity < 1) {
+      return { error: "Quantity must be a positive integer", status: 400 };
+    }
     const unit = cataloguePrice(product);
     if (!Number.isFinite(unit) || unit < 0) {
       return { error: `Invalid catalogue price for ${line.productId}`, status: 400 };
@@ -146,6 +157,9 @@ export function priceOrderFromCatalogue(lines, products, { requirePublished = tr
   }
 
   const subtotal = priced.reduce((sum, item) => sum + item.line_total, 0);
+  if (!Number.isFinite(subtotal) || subtotal > Number.MAX_SAFE_INTEGER) {
+    return { error: "Order total is too large", status: 400 };
+  }
   const { delivery, total } = calcOrderTotal(subtotal);
   return {
     items: priced,

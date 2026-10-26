@@ -61,7 +61,8 @@ class SearchResultTile extends ConsumerWidget {
                         ),
                       ),
                     const SizedBox(height: 4),
-                    _HighlightedText(text: context.tr.productTitle(product), query: query),
+                    _HighlightedText(
+                        text: context.tr.productTitle(product), query: query),
                     const SizedBox(height: 4),
                     CardRating(product: product, size: 11),
                     const SizedBox(height: 4),
@@ -73,23 +74,24 @@ class SearchResultTile extends ConsumerWidget {
                         color: AppColors.darkGreen,
                       ),
                     ),
+                    if (onAdd != null) ...[
+                      const SizedBox(height: 8),
+                      FilledButton(
+                        onPressed: product.inStock ? onAdd : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFDF00),
+                          foregroundColor: const Color(0xFF0F1111),
+                          minimumSize: const Size(0, 40),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        child: Text(context.tr.get(product.inStock
+                            ? 'common.addToBasket'
+                            : 'common.outOfStock')),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              if (onAdd != null)
-                Material(
-                  color: AppColors.darkGreen,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    onTap: product.inStock ? onAdd : null,
-                    customBorder: const CircleBorder(),
-                    child: const SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Icon(Icons.add, color: Colors.white, size: 22),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -112,7 +114,8 @@ class _HighlightedText extends StatelessWidget {
         text,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, height: 1.25),
+        style: const TextStyle(
+            fontWeight: FontWeight.w700, fontSize: 14, height: 1.25),
       );
     }
 
@@ -127,7 +130,8 @@ class _HighlightedText extends StatelessWidget {
         text,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, height: 1.25),
+        style: const TextStyle(
+            fontWeight: FontWeight.w700, fontSize: 14, height: 1.25),
       );
     }
 
@@ -139,12 +143,17 @@ class _HighlightedText extends StatelessWidget {
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
       text: TextSpan(
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, height: 1.25, color: AppColors.text),
+        style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            height: 1.25,
+            color: AppColors.text),
         children: [
           TextSpan(text: before),
           TextSpan(
             text: match,
-            style: const TextStyle(color: AppColors.darkGreen, fontWeight: FontWeight.w800),
+            style: const TextStyle(
+                color: AppColors.darkGreen, fontWeight: FontWeight.w800),
           ),
           TextSpan(text: after),
         ],

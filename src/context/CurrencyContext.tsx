@@ -51,19 +51,14 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadRates = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { rates: liveRates, updatedAt } = await fetchLiveRates();
+  const loadRates = useCallback(() => fetchLiveRates()
+    .then(({ rates: liveRates, updatedAt }) => {
+      setError(null);
       setRates(liveRates);
       setRatesUpdatedAt(updatedAt);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : i18n.t("errors.loadRates"));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    })
+    .catch(e => setError(e instanceof Error ? e.message : i18n.t("errors.loadRates")))
+    .finally(() => setLoading(false)), []);
 
   useEffect(() => {
     loadRates();

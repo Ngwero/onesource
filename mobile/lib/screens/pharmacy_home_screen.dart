@@ -15,6 +15,7 @@ import '../utils/shop_mode.dart';
 import '../widgets/compact_home_bar.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/home_header.dart';
+import '../widgets/home_product_row.dart';
 import '../widgets/popular_product_card.dart';
 import '../widgets/products_load_more.dart';
 
@@ -358,17 +359,17 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 284,
+            height: ProductShelfLayout.rowHeight,
             child: ListView.separated(
               controller: _controller,
               scrollDirection: Axis.horizontal,
               itemCount: products.length +
                   skeletons +
                   (trailing && skeletons == 0 ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(width: 16),
+              separatorBuilder: (_, __) => const SizedBox(width: ProductShelfLayout.gap),
               itemBuilder: (context, index) {
                 if (index >= products.length && skeletons > 0) {
-                  return const _ShelfCardSkeleton(width: 156);
+                  return const _ShelfCardSkeleton(width: ProductShelfLayout.cardWidth);
                 }
                 if (index == products.length) {
                   return SizedBox(
@@ -394,9 +395,10 @@ class _ProductRowState extends ConsumerState<_ProductRow> {
                 }
                 final product = products[index];
                 return SizedBox(
-                  width: 156,
+                  width: ProductShelfLayout.cardWidth,
                   child: PopularProductCard(
                     product: product,
+                    imageSize: ProductShelfLayout.imageSize,
                     onAdd: () => widget.onAdd(product),
                   ),
                 );

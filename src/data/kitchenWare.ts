@@ -139,7 +139,7 @@ export function aisleTitleFromProductId(productId: string): string {
 }
 
 const SERIES_PREFIX =
-  /^[A-ZÄÖÅÉÜÁÍÓÚÑ0-9][A-ZÄÖÅÉÜÁÍÓÚÑ0-9\-]{2,}(?:\s+[A-ZÄÖÅÉÜÁÍÓÚÑ0-9][A-ZÄÖÅÉÜÁÍÓÚÑ0-9\-]{2,})?\s+/u;
+  /^[A-ZÄÖÅÉÜÁÍÓÚÑ0-9][A-ZÄÖÅÉÜÁÍÓÚÑ0-9-]{2,}(?:\s+[A-ZÄÖÅÉÜÁÍÓÚÑ0-9][A-ZÄÖÅÉÜÁÍÓÚÑ0-9-]{2,})?\s+/u;
 
 /** Turn IKEA-style "SERIES fact dump" into everyday product names. */
 export function humanizeKitchenTitle(rawTitle: string): string {

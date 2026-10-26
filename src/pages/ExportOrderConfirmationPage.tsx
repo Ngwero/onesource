@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { createOrder } from "../api/client";
 import { PageContainer } from "../components/PageContainer";
 import { ProductImage } from "../components/ProductImage";
 import { useAuth } from "../context/AuthContext";
+import { CartRestoreStatus } from "../components/CartRestoreStatus";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { getLocalizedProductFields } from "../i18n/useLocalizedProduct";
@@ -23,7 +24,7 @@ export function ExportOrderConfirmationPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const { items, updateQuantity, removeFromCart } = useCart();
+  const { items, updateQuantity, removeFromCart, restoring, restoreError } = useCart();
   const { formatPrice } = useCurrency();
   const exportItems = useMemo(
     () => items.filter(({ product }) => isExportProduct(product)),
@@ -46,14 +47,16 @@ export function ExportOrderConfirmationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const name =
-      profile?.full_name?.trim() ||
-      (user?.user_metadata?.full_name as string | undefined)?.trim() ||
-      "";
-    if (name) setFullName((current) => current || name);
-    if (user?.email) setEmail((current) => current || user.email || "");
-  }, [profile, user]);
+
+
+  const defaultName = profile?.full_name?.trim() || String(user?.user_metadata?.full_name || "");
+  const identity = `${user?.id || ""}:${defaultName}`;
+  const [previousIdentity, setPreviousIdentity] = useState("");
+  if (identity !== previousIdentity) {
+    setPreviousIdentity(identity);
+    setFullName(current => current || defaultName);
+    setEmail(current => current || user?.email || "");
+  }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -109,7 +112,9 @@ export function ExportOrderConfirmationPage() {
   };
 
   if (exportItems.length === 0) {
-    return (
+    if (restoring || restoreError) return <CartRestoreStatus />;
+
+  return (
       <div className="export-confirm-page">
         <PageContainer className="py-12 sm:py-20">
           <div className="export-confirm-empty">

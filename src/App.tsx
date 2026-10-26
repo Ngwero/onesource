@@ -1,3 +1,4 @@
+import { AdminAccessPage } from "./pages/AdminAccessPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { AuthProvider } from "./context/AuthContext";
@@ -107,6 +108,7 @@ export default function App() {
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="category/:categoryId" element={<CategoryPage />} />
                   <Route path="search" element={<SearchPage />} />
+                  <Route path="admin-access" element={<ProtectedRoute><AdminAccessPage /></ProtectedRoute>} />
                   <Route path="login" element={<LoginPage />} />
                   <Route path="signup" element={<SignupPage />} />
                   <Route path="forgot-password" element={<ForgotPasswordPage />} />

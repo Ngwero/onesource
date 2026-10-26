@@ -66,9 +66,11 @@ export function usePointerImageZoom(
   const enabledRef = useRef(enabled);
   const onTapRef = useRef(onTap);
   const onSwipeRef = useRef(onSwipe);
-  enabledRef.current = enabled;
-  onTapRef.current = onTap;
-  onSwipeRef.current = onSwipe;
+  useEffect(() => {
+    enabledRef.current = enabled;
+    onTapRef.current = onTap;
+    onSwipeRef.current = onSwipe;
+  }, [enabled, onTap, onSwipe]);
 
   const stopAnim = useCallback(() => {
     if (raf.current) cancelAnimationFrame(raf.current);
@@ -130,13 +132,22 @@ export function usePointerImageZoom(
     commit(IDENTITY);
   }, [commit, stopAnim]);
 
+  const resetIdentity = `${resetKey}:${enabled}`;
+  const [previousResetIdentity, setPreviousResetIdentity] = useState(resetIdentity);
+  if (previousResetIdentity !== resetIdentity) {
+    setPreviousResetIdentity(resetIdentity);
+    setView(IDENTITY);
+    setPanning(false);
+  }
   useEffect(() => {
-    reset();
-  }, [resetKey, reset]);
-
-  useEffect(() => {
-    if (!enabled) reset();
-  }, [enabled, reset]);
+    stopAnim();
+    if (tapTimer.current) window.clearTimeout(tapTimer.current);
+    tapTimer.current = null;
+    viewRef.current = IDENTITY;
+    ptrs.current.clear();
+    gesture.current = null;
+    if (imgRef.current) imgRef.current.style.transform = "translate3d(0, 0, 0) scale(1)";
+  }, [resetKey, enabled, stopAnim, imgRef]);
 
   useEffect(() => () => {
     stopAnim();

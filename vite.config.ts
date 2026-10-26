@@ -8,13 +8,16 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
     proxy: {
+      "/admin": { target: "http://localhost:3001", changeOrigin: true, xfwd: true },
       "/api": {
         target: "http://localhost:3001",
         changeOrigin: true,
+        xfwd: true,
       },
       "/uploads": {
         target: "http://localhost:3001",
         changeOrigin: true,
+        xfwd: true,
       },
     },
   },

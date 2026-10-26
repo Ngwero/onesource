@@ -26,6 +26,7 @@ begin
       coalesce(item->>'product_id', item->>'productId') as id,
       (item->>'quantity')::integer as qty
     from jsonb_array_elements(p_items) as item
+    order by coalesce(item->>'product_id', item->>'productId')
   loop
     if rec.id is null or rec.id = '' or rec.qty is null or rec.qty < 1 then
       raise exception 'invalid_quantity:%', coalesce(rec.id, '?') using errcode = 'P0001';
@@ -38,6 +39,7 @@ begin
       updated_at = now()
     where id = rec.id
       and stock_quantity >= rec.qty
+      and in_stock = true
     returning stock_quantity into new_qty;
 
     if not found then
@@ -74,6 +76,7 @@ begin
       coalesce(item->>'product_id', item->>'productId') as id,
       (item->>'quantity')::integer as qty
     from jsonb_array_elements(p_items) as item
+    order by coalesce(item->>'product_id', item->>'productId')
   loop
     if rec.id is null or rec.id = '' or rec.qty is null or rec.qty < 1 then
       continue;

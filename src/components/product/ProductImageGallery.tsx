@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ProductImageZoom } from "./ProductImageZoom";
 import { ProductLightbox } from "./ProductLightbox";
@@ -22,9 +22,12 @@ export function ProductImageGallery({ imageSrc, images, alt, discount = 0 }: Pro
   const safeIndex = Math.min(index, gallery.length - 1);
   const current = gallery[safeIndex] ?? imageSrc;
 
-  useEffect(() => {
+  const [previousImage, setPreviousImage] = useState(imageSrc);
+  if (previousImage !== imageSrc) {
+    setPreviousImage(imageSrc);
     setIndex(0);
-  }, [imageSrc]);
+    setLightboxOpen(false);
+  }
 
   const step = (dir: 1 | -1) => {
     setIndex((i) => (i + dir + gallery.length) % gallery.length);

@@ -139,9 +139,11 @@ export function Header() {
     openBasket();
   };
 
-  useEffect(() => {
+  const [searchShop, setSearchShop] = useState(shopMode);
+  if (searchShop !== shopMode) {
+    setSearchShop(shopMode);
     setSearch("");
-  }, [shopMode]);
+  }
 
   useEffect(() => {
     const el = headerRef.current;

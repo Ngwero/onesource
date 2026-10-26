@@ -3,8 +3,10 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/env.dart';
+import 'auth_service.dart' show isSupabaseReady;
 import '../models/app_notification.dart';
 import '../models/hero_slide.dart';
 import '../models/order.dart';
@@ -40,9 +42,27 @@ const _nestedAisles = <String, List<String>>{
 };
 
 class ApiClient {
-  ApiClient({http.Client? client}) : _client = client ?? http.Client();
+  ApiClient({http.Client? client, String? Function()? accessToken})
+      : _client = client ?? http.Client(), _accessToken = accessToken;
 
   final http.Client _client;
+  final String? Function()? _accessToken;
+  final Map<String, String> _guestOrderTokens = {};
+
+  Map<String, String> _orderHeaders([String? orderId]) {
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    if (_accessToken != null) {
+      final token = _accessToken();
+      if (token != null) headers['Authorization'] = 'Bearer $token';
+    } else if (isSupabaseReady) {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) headers['Authorization'] = 'Bearer ${session.accessToken}';
+    }
+    final guestToken = _guestOrderTokens[orderId];
+    if (guestToken != null) headers['X-Order-Token'] = guestToken;
+    return headers;
+  }
+
 
   /// When production API ignores `shop=fresh`, newest rows are all kitchen.
   int? _catalogTotal;
@@ -60,12 +80,13 @@ class ApiClient {
   Future<http.Response> _getWithRetry(
     Uri uri, {
     Duration timeout = const Duration(seconds: 12),
+    Map<String, String>? headers,
   }) async {
     Object? lastError;
     const attempts = 3;
     for (var attempt = 0; attempt < attempts; attempt++) {
       try {
-        final response = await _client.get(uri).timeout(timeout);
+        final response = await _client.get(uri, headers: headers).timeout(timeout);
         if (!_retryableStatus(response.statusCode) || attempt == attempts - 1) {
           return response;
         }
@@ -515,7 +536,7 @@ class ApiClient {
   }
 
   Future<List<Order>> fetchOrders(String userId) async {
-    final res = await _getWithRetry(_uri('/orders', {'userId': userId}));
+    final res = await _getWithRetry(_uri('/orders', {'userId': userId}), headers: _orderHeaders());
     if (res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
     }
@@ -526,7 +547,7 @@ class ApiClient {
 
   Future<Order> fetchOrderById(String id, {String? userId}) async {
     final params = userId != null ? {'userId': userId} : null;
-    final res = await _getWithRetry(_uri('/orders/$id', params));
+    final res = await _getWithRetry(_uri('/orders/$id', params), headers: _orderHeaders(id));
     if (res.statusCode == 404) {
       throw ApiException(_t('orderNotFound', 'Order not found'));
     }
@@ -540,14 +561,17 @@ class ApiClient {
   Future<Order> placeOrder(CreateOrderPayload payload) async {
     final res = await _client.post(
       _uri('/orders'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _orderHeaders(),
       body: jsonEncode(payload.toJson()),
     );
     if (res.statusCode != 201 && res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
     }
     final data = jsonDecode(res.body) as Map<String, dynamic>;
-    return Order.fromJson(data['order'] as Map<String, dynamic>);
+    final order = Order.fromJson(data['order'] as Map<String, dynamic>);
+    final token = data['accessToken'];
+    if (token is String) _guestOrderTokens[order.id] = token;
+    return order;
   }
 
   Future<LoginStartResult> requestLoginOtp(

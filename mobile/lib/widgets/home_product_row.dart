@@ -8,6 +8,14 @@ import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import 'popular_product_card.dart';
 
+/// Phone aisle-card size: wide enough for title + 44px plus/Pay now.
+class ProductShelfLayout {
+  static const cardWidth = 196.0;
+  static const rowHeight = 340.0;
+  static const imageSize = 132.0;
+  static const gap = 12.0;
+}
+
 class HomeProductRow extends ConsumerWidget {
   const HomeProductRow({
     super.key,
@@ -72,17 +80,18 @@ class HomeProductRow extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 284,
+            height: ProductShelfLayout.rowHeight,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: products.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 16),
+              separatorBuilder: (_, __) => const SizedBox(width: ProductShelfLayout.gap),
               itemBuilder: (context, index) {
                 final product = products[index];
                 return SizedBox(
-                  width: 156,
+                  width: ProductShelfLayout.cardWidth,
                   child: PopularProductCard(
                     product: product,
+                    imageSize: ProductShelfLayout.imageSize,
                     onAdd: () => onAdd(product),
                   ),
                 );

@@ -1,5 +1,6 @@
 import { Link, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { CartRestoreStatus } from "../components/CartRestoreStatus";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useLocalizedProduct } from "../i18n/useLocalizedProduct";
@@ -81,7 +82,9 @@ function CartLineItem({
 export function CartPage() {
   const { t } = useTranslation();
   const { formatPrice } = useCurrency();
-  const { items, removeFromCart, updateQuantity, subtotal, itemCount } = useCart();
+  const { items, removeFromCart, updateQuantity, subtotal, itemCount, restoring, restoreError } = useCart();
+
+  if (restoring || restoreError) return <CartRestoreStatus />;
 
   if (isExportOnlyCart(items)) {
     return <Navigate to="/exports/confirmation" replace />;

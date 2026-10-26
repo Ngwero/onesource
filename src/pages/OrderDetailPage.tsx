@@ -30,14 +30,15 @@ export function OrderDetailPage() {
 
   useEffect(() => {
     if (!id || !user?.id) {
-      setLoading(false);
       return;
     }
+    let cancelled = false;
     fetchOrderById(id, user.id)
-      .then((o) => setOrder(o ?? null))
-      .catch((e) => setError(e instanceof Error ? e.message : t("errors.genericLoad")))
-      .finally(() => setLoading(false));
-  }, [id, user?.id]);
+      .then(o => { if (!cancelled) setOrder(o ?? null); })
+      .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : t("errors.genericLoad")); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [id, user?.id, t]);
 
   if (loading) {
     return (

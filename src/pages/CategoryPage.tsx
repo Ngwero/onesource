@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ProductGrid } from "../components/ProductGrid";
@@ -67,13 +67,8 @@ export function CategoryPage() {
     }
   }, [rawId, normalizedId, categoryDef, isRemovedSlug, navigate]);
 
-  const relatedCategories = useMemo(
-    () =>
-      categories
-        .filter((c) => c.id !== normalizedId && !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id))
-        .slice(0, 8),
-    [categories, normalizedId]
-  );
+  const relatedCategories = categories
+    .filter(c => c.id !== normalizedId && !SPECIALTY_SHOP_CATEGORY_IDS.has(c.id)).slice(0, 8);
 
   const hasCategoryMeta = Boolean(category ?? categoryDef ?? isRemovedSlug);
   const noProducts =

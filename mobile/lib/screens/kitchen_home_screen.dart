@@ -20,6 +20,7 @@ import '../widgets/compact_home_bar.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/home_header.dart';
 import '../widgets/loading_view.dart';
+import '../widgets/home_product_row.dart';
 import '../widgets/popular_product_card.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/products_load_more.dart';
@@ -350,17 +351,18 @@ class _KitchenAisleProductRow extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 284,
+            height: ProductShelfLayout.rowHeight,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: products.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 16),
+              separatorBuilder: (_, __) => const SizedBox(width: ProductShelfLayout.gap),
               itemBuilder: (context, index) {
                 final product = products[index];
                 return SizedBox(
-                  width: 156,
+                  width: ProductShelfLayout.cardWidth,
                   child: PopularProductCard(
                     product: product,
+                    imageSize: ProductShelfLayout.imageSize,
                     onAdd: () => onAdd(product),
                   ),
                 );

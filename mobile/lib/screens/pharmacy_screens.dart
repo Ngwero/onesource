@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../config/theme.dart';
 import '../data/pharmacy.dart';
 import '../i18n/app_strings.dart';
 import '../providers/paginated_products_provider.dart';
