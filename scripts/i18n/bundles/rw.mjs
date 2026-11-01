@@ -23,7 +23,7 @@ export const rw = {
     select: "Ururimi",
   },
   common: {
-    tagline: "Ibiribwa bishya mu Bugande",
+    tagline: "Ibiribwa bishya",
     freshProduce: "Ibiribwa Bishya",
     home: "Ahabanza",
     close: "Funga",
@@ -55,7 +55,7 @@ export const rw = {
   },
   header: {
     deliverTo: "Tanga kuri",
-    unitedKingdom: "Ubugande",
+    unitedKingdom: "Mpuzamahanga",
     searchPlaceholder: "Shakisha ibiribwa bishya, imbuto, amata…",
     allProduce: "Byose",
     basket: "Agatebo",
@@ -80,7 +80,7 @@ export const rw = {
     loginTitle: "Murakaza neza",
     loginSubtitle: "Injira kugira ngo ukurikirane ibicuruzwa byawe kandi wishyure vuba.",
     signupTitle: "Fungura konti yawe",
-    signupSubtitle: "Jya kuri One Source kugira ngo ubone ibiribwa bishya bitangwa mu Bugande hose.",
+    signupSubtitle: "Jya kuri One Source kugira ngo ubone ibiribwa bishya bitangwa ku muryango wawe.",
     accountTitle: "Konti yawe",
     accountSubtitle: "Genzura umwirondoro n'ibicuruzwa byawe.",
     noAccount: "Nta konti ufite?",
@@ -226,7 +226,7 @@ export const rw = {
         },
         out_for_delivery: {
           title: "Biri mu nzira yo gutangwa",
-          desc: "Biri mu nzira kugera ku aderesi yawe mu Bugande.",
+          desc: "Biri mu nzira kugera ku aderesi yawe.",
         },
         delivered: {
           title: "Byatanzwe",
@@ -251,7 +251,7 @@ export const rw = {
     empty: "Nta mateka aracyariho. Shakisha iduka kugira ngo ubone ibintu hano.",
   },
   footer: {
-    tagline: "Inkomoko yawe imwe y'ibiribwa bishya byiza — bitangwa mu Bugande hose.",
+    tagline: "Inkomoko yawe imwe y'ibiribwa bishya byiza — bitangwa ku muryango wawe.",
     categories: "Ibyiciro",
     help: "Ubufasha",
     deliveryInfo: "Amakuru yo gutanga",
@@ -261,7 +261,7 @@ export const rw = {
     signIn: "Injira",
     yourBasket: "Agafuka kawe",
     copyright: "© 2026 One Source. Uburenganzira bwose burabitswe.",
-    country: "Ubugande",
+    country: "Mpuzamahanga",
     locale: "Ikinyarwanda",
   },
   basketPanel: {
@@ -287,9 +287,9 @@ export const rw = {
     heroGoTo: "Jya ku gice cya {{n}}",
     slidesById: {
       "hero-1": {
-        badge: "Gutanga uyu munsi i Kampala",
-        title: "Ibiribwa bishya by'Ubugande, bitangwa",
-        subtitle: "Imbuto, imboga n'ibinyamye — kuva kuri {{price}} i Kampala",
+        badge: "Gutanga uyu munsi",
+        title: "Ibiribwa bishya, bitangwa",
+        subtitle: "Imbuto, imboga n'ibinyamye — kuva kuri {{price}}",
         cta: "Ibyiciro byose",
         ctaHref: "/categories",
         cta2: "Imbuto nshya",
@@ -305,7 +305,7 @@ export const rw = {
       "hero-3": {
         badge: "Imboga n'ibinyamye",
         title: "Sukuma, inyanya n'imboga z'urubanza",
-        subtitle: "Ibijyanye n'umunsi kuva mu mirima y'Ubugande — biteguye gufatwa",
+        subtitle: "Ibijyanye n'umunsi kuva mu mirima — biteguye gufatwa",
         cta: "Imboga nshya",
         ctaHref: "/category/fresh-vegetables",
         cta2: "Reba ibyiza",
@@ -314,16 +314,16 @@ export const rw = {
       "hero-4": {
         badge: "Gutanga ku buntu",
         title: "Kuva ku murima kugera ku rugi rwawe",
-        subtitle: "Gutanga KU BUNTU kuva kuri {{amount}} — Grand Kampala",
+        subtitle: "Gutanga KU BUNTU kuva kuri {{amount}}",
         cta: "Tangira kugura",
         ctaHref: "/categories",
       },
     },
     slides: [
       {
-        badge: "Gutanga uyu munsi i Kampala",
-        title: "Ibiribwa bishya by'Ubugande, bitangwa",
-        subtitle: "Imbuto, imboga n'ibinyamye — kuva kuri {{price}} i Kampala",
+        badge: "Gutanga uyu munsi",
+        title: "Ibiribwa bishya, bitangwa",
+        subtitle: "Imbuto, imboga n'ibinyamye — kuva kuri {{price}}",
         cta: "Ibyiciro byose",
         ctaHref: "/categories",
         cta2: "Imbuto nshya",
@@ -339,7 +339,7 @@ export const rw = {
       {
         badge: "Imboga n'ibinyamye",
         title: "Sukuma, inyanya n'imboga z'urubanza",
-        subtitle: "Ibijyanye n'umunsi kuva mu mirima y'Ubugande — biteguye gufatwa",
+        subtitle: "Ibijyanye n'umunsi kuva mu mirima — biteguye gufatwa",
         cta: "Imboga nshya",
         ctaHref: "/category/fresh-vegetables",
         cta2: "Reba ibyiza",
@@ -348,14 +348,14 @@ export const rw = {
       {
         badge: "Gutanga ku buntu",
         title: "Kuva ku murima kugera ku rugi rwawe",
-        subtitle: "Gutanga KU BUNTU kuva kuri {{amount}} — Grand Kampala",
+        subtitle: "Gutanga KU BUNTU kuva kuri {{amount}}",
         cta: "Tangira kugura",
         ctaHref: "/categories",
       },
     ],
     heroBadge: "Gutanga uyu munsi birashoboka",
-    heroTitle: "Ibiribwa bishya by'Ubugande, bitangwa",
-    heroSubtitle: "Imbuto, imboga n'ibinyamye — kuva kuri {{price}} i Kampala",
+    heroTitle: "Ibiribwa bishya, bitangwa",
+    heroSubtitle: "Imbuto, imboga n'ibinyamye — kuva kuri {{price}}",
     heroCta: "Ibyiciro byose",
     heroCtaOrganic: "Kamere",
     statCategories: "Ibyiciro",
@@ -368,8 +368,8 @@ export const rw = {
     statRatingSub: "Impuzandengo y'amanota",
     promoTickerLabel: "Ubutumwa bw'ubucuruzi",
     promoTicker: [
-      "Ibiribwa bishya biva ku murima bitangwa mu Bugande hose",
-      "Gutanga uyu munsi mu Grand Kampala",
+      "Ibiribwa bishya biva ku murima bitangwa ku muryango wawe",
+      "Gutanga uyu munsi",
       "Ibicuruzwa bya kamere n'iby'igihe biri mu bubiko",
       "Gutanga ku buntu kuva kuri 100 000 USh",
       "Imbuto, imboga n'ibinyamye by'aho",
@@ -502,7 +502,7 @@ export const rw = {
     byId: {
       "1": {
         title: "Pome nshya – Premium, ipaki ya 5",
-        description: "Pome zikama kandi zisukuye. Nziza ku gufata cyangwa guteka. Abatanga ibicuruzwa b'Ubugande bizeye.",
+        description: "Pome zikama kandi zisukuye. Nziza ku gufata cyangwa guteka. Abatanga ibicuruzwa bizeye.",
         delivery: "Gutanga KU BUNTU uyu munsi kuva kuri 100 000 USh",
       },
       "2": {
@@ -636,7 +636,7 @@ export const rw = {
   cart: {
     title: "Agafuka kawe",
     emptyTitle: "Agafuka kawe ari ubusa",
-    emptyText: "Ongeraho imbuto, imboga, ibinyamye n'ibindi — dutanga mu Bugande hose.",
+    emptyText: "Ongeraho imbuto, imboga, ibinyamye n'ibindi — dutanga ku muryango wawe.",
     browseCategories: "Shakisha ibyiciro",
     produceBasket: "Agafuka k'ibiribwa bishya",
     freshInStock: "Bishya — biri mu bubiko",
@@ -669,11 +669,11 @@ export const rw = {
     placeOrderFailed: "Ntibyashoboye gutanga igicuruzwa. Ongera ugerageze.",
     backToCart: "Subira mu gafuka",
     guestHint: "Kwishyura nk'umushyitsi. Injira kugira ngo ubike ibicuruzwa byawe:",
-    defaultCity: "Kampala",
-    defaultDistrict: "Kampala",
-    phonePlaceholder: "+256",
+    defaultCity: "",
+    defaultDistrict: "",
+    phonePlaceholder: "+…",
     confirmedTitle: "Igicuruzwa cyatanzwe!",
-    confirmedSubtitle: "Murakoze. Turategura ibiribwa byawe bishya kugira ngo bitangwe mu Bugande.",
+    confirmedSubtitle: "Murakoze. Turategura ibiribwa byawe bishya kugira ngo bitangwe.",
     orderId: "Nomero y'igicuruzwa",
     viewOrders: "Reba ibicuruzwa byawe",
   },
@@ -746,8 +746,8 @@ export const rw = {
     shipFrom: "Byoherejwe na",
     soldBy: "Byaguzwe na",
     sourcedFrom: "Inkomoko",
-    sourcedValue: "Imirima n'amakoperative y'Ubugande",
-    soldValue: "One Source Ubugande",
+    sourcedValue: "Imirima n'amakoperative",
+    soldValue: "One Source",
     about: "Ibyerekeye iki gicuruzwa",
     productDetails: "Amakuru y'igicuruzwa",
     detailCategory: "Icyiciro",
@@ -782,7 +782,7 @@ export const rw = {
     legalDisclaimerText:
       "Ubusa n'ibikoresho by'ukuri bishobora kuba bifite amakuru menshi kuruta ibyo twerekana ku rubuga rwacu. Ntukizigire gusa amakuru aha; soma buri gihe ibimenyetso, iburira n'uburyo bwo gukoresha mbere yo gukoresha cyangwa gufata.",
     disclaimerText:
-      "Ibiri kuri ubu rubuga bitangwa gusa ku makuru. Vugana n'umukora kugira ngo umenye allergènes cyangwa imikoreshereze y'ubuvuzi. One Source Ubugande ntiyifata inshingano ku makosa y'abatanga ibicuruzwa b'undi.",
+      "Ibiri kuri ubu rubuga bitangwa gusa ku makuru. Vugana n'umukora kugira ngo umenye allergènes cyangwa imikoreshereze y'ubuvuzi. One Source ntiyifata inshingano ku makosa y'abatanga ibicuruzwa b'undi.",
     productDescription: "Ibisobanuro by'igicuruzwa",
     customerReviews: "Isuzuma ry'abaguzi",
     outOf5: "ku nyenyeri 5",
@@ -791,8 +791,8 @@ export const rw = {
     star: "inyenyeri",
     reviewsHowItWorks:
       "Isuzuma ry'abaguzi rirafasha kumenya byinshi ku gicuruzwa no kumenya niba kikwiriye.",
-    topReviews: "Isuzuma ryiza rya Ubugande",
-    reviewedInUganda: "Byasuzumwe mu Bugande",
+    topReviews: "Isuzuma ryiza ry’abakiriya",
+    reviewedInUganda: "Byasuzumwe",
     peopleFoundHelpful: "abantu {{count}} babonye ibi byafashije",
     sampleReview1Title: "Ubwiza bwiza",
     sampleReview1Body:
@@ -914,13 +914,13 @@ export const rw = {
       chilli1: "Uruhoko rushya — rwiza ku misosi, marinades n'ibiryo by'umuco.",
       chilli2: "Bika ahantu gakonje cyangwa mu firigo.",
       chilli3: "Menyesha ibibazo by'ubwiza mu masaha 24 nyuma yo gutanga.",
-      freshCategory: "{{category}} bishya biva ku mirima n'amakoperative y'Ubugande.",
+      freshCategory: "{{category}} bishya biva ku mirima n'amakoperative.",
       report24h: "Menyesha ibibazo by'ubwiza ku bicuruzwa bishya mu masaha 24 nyuma yo gutanga.",
       primeEligible: "Bifite Prime — gutanga uyu munsi ku bicuruzwa bihuye n'ibisabwa.",
     },
     description: {
       intro: "{{name}} ({{origin}})",
-      farmFresh: "{{name}} bishya biva ku murima binyuze kuri One Source Ubugande.",
+      farmFresh: "{{name}} bishya biva ku murima binyuze kuri One Source.",
       yam1: "Ibirayi by'ubwoko byera bishya bifite uruhande rw'umukara n'umubiri wera w'ubwoko. Byarerewe mu butaka bwiza, byatoranijwe kugira ngo biteke.",
       yam2: "Biteke mu mvura, mu mafuta cyangwa biteketse. Ikintu cy'ingenzi mu fufu, ibirayi by'ubwoko byatetse n'ibiryo byinshi by'Afurika.",
       yam3: "Igicuruzwa cya {{origin}}. Menyesha ibibazo byo gutanga ku bicuruzwa bishya mu masaha 24.",
@@ -940,7 +940,7 @@ export const rw = {
     },
     warranty: {
       p1: "Ibiribwa bishya bifite garanti y'ubushya bwacu. Vugana n'itsinda ry'ubufasha mu masaha 24 nyuma yo gutanga niba hari ibyangiritse cyangwa ubwiza budahagije — amafoto niba bishoboka.",
-      p2: "Kugarura amafaranga cyangwa guhindura bitewe n'ubushobozi bwa One Source Ubugande ukurikije politiki yacu yo kugarura.",
+      p2: "Kugarura amafaranga cyangwa guhindura bitewe n'ubushobozi bwa One Source ukurikije politiki yacu yo kugarura.",
       p3: "Hatariho uburenganzira bw'amategeko, ibicuruzwa byinshi bishobora kugarurwa mu minsi 30 mu bihe bihuye. Reba ibitandukanye.",
     },
     breadcrumbs: {

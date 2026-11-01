@@ -6,13 +6,11 @@ import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/currency_provider.dart';
-import '../utils/cart_feedback.dart';
 import 'product_card_details.dart';
-import 'product_checkout_actions.dart';
 import 'product_thumbnail.dart';
 import 'rating_stars.dart';
 
-/// Compact horizontal recommendation tile with a full add-to-basket button.
+/// Compact recommendation tile. Checkout actions live on the product details page.
 class ProductRecommendationCard extends ConsumerWidget {
   const ProductRecommendationCard({
     super.key,
@@ -21,6 +19,8 @@ class ProductRecommendationCard extends ConsumerWidget {
   });
 
   final Product product;
+  // Checkout lives on the product details page.
+  // ignore: unused_field
   final VoidCallback? onAdd;
 
   @override
@@ -74,17 +74,6 @@ class ProductRecommendationCard extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
                   ),
-                const Spacer(),
-                if (onAdd != null) ...[
-                  const SizedBox(height: 8),
-                  ProductCheckoutActions(
-                    inStock: product.inStock,
-                    onAdd: onAdd!,
-                    onPayNow: () => payNowAndCheckout(context, ref, product),
-                    widthFactor: 1,
-                    height: 34,
-                  ),
-                ],
               ],
             ),
           ),

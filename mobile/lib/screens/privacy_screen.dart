@@ -13,7 +13,7 @@ class PrivacyScreen extends StatelessWidget {
     (
       '1. About this Notice',
       [
-        'This Privacy and Cookie Notice explains how One Source (“we”, “us”, “our”) collects and processes your personal data when you use our website, mobile applications, and related services for ordering fresh produce, kitchen ware, cosmetics, and delivery across Uganda.',
+        'This Privacy and Cookie Notice explains how One Source (“we”, “us”, “our”) collects and processes your personal data when you use our website, mobile applications, and related services for ordering fresh produce, kitchen ware, cosmetics, and delivery to your door.',
       ],
     ),
     (
@@ -66,7 +66,7 @@ class PrivacyScreen extends StatelessWidget {
     (
       '6. International transfers',
       [
-        'Some of our service providers may process data on servers outside Uganda. When that happens, we take steps appropriate under applicable law to protect your information, and we continue to respect your rights described in this notice.',
+        'Some of our service providers may process data on servers in other countries. When that happens, we take steps appropriate under applicable law to protect your information, and we continue to respect your rights described in this notice.',
       ],
     ),
     (
@@ -142,7 +142,9 @@ class PrivacyScreen extends StatelessWidget {
           ],
           for (final (title, paragraphs) in _sections) ...[
             const SizedBox(height: 22),
-            Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+            Text(title,
+                style:
+                    const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
             for (final p in paragraphs) ...[
               const SizedBox(height: 8),
               Text(

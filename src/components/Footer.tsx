@@ -108,7 +108,7 @@ export function Footer() {
             <Link to="/privacy" className="hover:text-accent transition-colors underline-offset-2 hover:underline">
               Privacy Policy
             </Link>
-            <span className="px-3 py-1.5 rounded-lg bg-muted whitespace-nowrap">🇬🇧 {t("footer.country")}</span>
+            <span className="px-3 py-1.5 rounded-lg bg-muted whitespace-nowrap">🌐 {t("footer.country")}</span>
             <span className="px-3 py-1.5 rounded-lg bg-muted whitespace-nowrap">{t("footer.locale")}</span>
           </div>
         </div>

@@ -55,7 +55,7 @@ export function PrivacyPolicyPage() {
             This Privacy and Cookie Notice explains how One Source (“we”, “us”, “our”)
             collects and processes your personal data when you use our website, mobile
             applications, and related services for ordering fresh produce, kitchen ware,
-            and delivery across Uganda.
+            and delivery to your door.
           </p>
         </section>
 
@@ -164,7 +164,7 @@ export function PrivacyPolicyPage() {
         <section id="transfers" className="scroll-mt-24">
           <h2 className="text-xl font-bold mb-3">6. International transfers</h2>
           <p className="text-text-muted">
-            Some of our service providers may process data on servers outside Uganda. When
+            Some of our service providers may process data on servers in other countries. When
             that happens, we take steps appropriate under applicable law to protect your
             information, and we continue to respect your rights described in this notice.
           </p>

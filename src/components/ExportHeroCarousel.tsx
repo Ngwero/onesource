@@ -21,7 +21,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
     image:
       "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?w=1920&q=75&auto=format&fit=crop",
     badge: "Global exports",
-    title: "Uganda's freshest produce, delivered to the world",
+    title: "Fresh produce, delivered to the world",
     subtitle:
       "Certified produce, cold-chain protected and air-freighted from Entebbe.",
     cta: "Browse export produce",
@@ -44,7 +44,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
     image:
       "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1920&q=75&auto=format&fit=crop",
     badge: "Reliable air freight",
-    title: "From Uganda to your market",
+    title: "From our partners to your market",
     subtitle: "Established export lanes connect our farms with buyers worldwide.",
     cta: "Talk to our export team",
     ctaHref: "#export-contact",

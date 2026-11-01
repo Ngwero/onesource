@@ -94,10 +94,9 @@ class HeroSlide {
 
   static const _defaultData = [
     (
-      badge: 'Kampala same-day delivery',
-      title: 'Fresh produce for Uganda, delivered',
-      subtitle:
-          'Hand-picked fruit, vegetables & greens — from {{price}} in Kampala',
+      badge: 'Freshness at your doorstep',
+      title: 'Fresh produce, delivered to your door',
+      subtitle: 'Hand-picked fruit, vegetables & greens — from {{price}}',
       cta: 'Shop all categories',
       ctaHref: '/categories',
       cta2: 'Shop fresh fruits',
@@ -115,7 +114,7 @@ class HeroSlide {
     (
       badge: 'Vegetables & greens',
       title: 'Sukuma, tomatoes & garden greens',
-      subtitle: 'Daily staples from Ugandan farms — ready for your kitchen',
+      subtitle: 'Daily staples from partner farms — ready for your kitchen',
       cta: 'Shop vegetables',
       ctaHref: '/category/fresh-vegetables',
       cta2: 'View deals',
@@ -124,8 +123,7 @@ class HeroSlide {
     (
       badge: 'Free delivery',
       title: 'Farm-fresh to your door',
-      subtitle:
-          'FREE delivery on orders over {{amount}} — across Greater Kampala',
+      subtitle: 'FREE delivery on orders over {{amount}}',
       cta: 'Start shopping',
       ctaHref: '/categories',
       cta2: null,
@@ -198,7 +196,7 @@ class HeroSlide {
     (
       badge: 'Kitchen Ware',
       title: 'Cookware for every kitchen',
-      subtitle: 'Saucepans, pans & sets — Kampala-ready prices',
+      subtitle: 'Saucepans, pans & sets — everyday prices',
       cta: 'Shop cookware',
       ctaHref: '/kitchen/aisle/cookware',
       cta2: 'Browse aisles',
@@ -259,7 +257,7 @@ class HeroSlide {
       badge: 'Fresh produce',
       title: 'Your shop.\nYour time.',
       subtitle:
-          'Groceries when you need them — clear prices, Kampala delivery, your way.',
+          'Groceries when you need them — clear prices, delivery to your door, your way.',
       cta: 'Continue',
     ),
     (
@@ -273,7 +271,7 @@ class HeroSlide {
       badge: 'One Source',
       title: 'One basket.\nOne delivery.',
       subtitle:
-          'Fresh + kitchen together. Free delivery over UGX 100k across Kampala.',
+          'Fresh + kitchen together. Free delivery over UGX 100k to your door.',
       cta: 'Get started',
     ),
   ];

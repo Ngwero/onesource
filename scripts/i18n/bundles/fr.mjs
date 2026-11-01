@@ -23,7 +23,7 @@ export const fr = {
     select: "Langue",
   },
   common: {
-    tagline: "Produits frais en Ouganda",
+    tagline: "Produits frais",
     freshProduce: "Produits frais",
     home: "Accueil",
     close: "Fermer",
@@ -55,7 +55,7 @@ export const fr = {
   },
   header: {
     deliverTo: "Livrer à",
-    unitedKingdom: "Ouganda",
+    unitedKingdom: "International",
     searchPlaceholder: "Rechercher produits frais, céréales, laitiers…",
     allProduce: "Tout",
     basket: "Panier",
@@ -80,7 +80,7 @@ export const fr = {
     loginTitle: "Bon retour",
     loginSubtitle: "Connectez-vous pour suivre vos commandes et payer plus vite.",
     signupTitle: "Créez votre compte",
-    signupSubtitle: "Rejoignez One Source pour des produits frais livrés partout en Ouganda.",
+    signupSubtitle: "Rejoignez One Source pour des produits frais livrés à votre porte.",
     accountTitle: "Votre compte",
     accountSubtitle: "Gérez votre profil et vos commandes.",
     noAccount: "Vous n'avez pas de compte ?",
@@ -226,7 +226,7 @@ export const fr = {
         },
         out_for_delivery: {
           title: "En livraison",
-          desc: "En route vers votre adresse en Ouganda.",
+          desc: "En route vers votre adresse.",
         },
         delivered: {
           title: "Livrée",
@@ -251,7 +251,7 @@ export const fr = {
     empty: "Pas encore d'historique. Parcourez la boutique pour voir des articles ici.",
   },
   footer: {
-    tagline: "Votre source unique de produits frais de qualité — livrés partout en Ouganda.",
+    tagline: "Votre source unique de produits frais de qualité — livrés à votre porte.",
     categories: "Catégories",
     help: "Aide",
     deliveryInfo: "Infos livraison",
@@ -261,7 +261,7 @@ export const fr = {
     signIn: "Se connecter",
     yourBasket: "Votre panier",
     copyright: "© 2026 One Source. Tous droits réservés.",
-    country: "Ouganda",
+    country: "International",
     locale: "Français",
   },
   basketPanel: {
@@ -287,9 +287,9 @@ export const fr = {
     heroGoTo: "Aller à la diapositive {{n}}",
     slidesById: {
       "hero-1": {
-        badge: "Livraison le jour même à Kampala",
-        title: "Produits frais pour l'Ouganda, livrés",
-        subtitle: "Fruits, légumes et verdure — dès {{price}} à Kampala",
+        badge: "Livraison le jour même",
+        title: "Produits frais pour vous, livrés",
+        subtitle: "Fruits, légumes et verdure — dès {{price}}",
         cta: "Toutes les catégories",
         ctaHref: "/categories",
         cta2: "Fruits frais",
@@ -305,7 +305,7 @@ export const fr = {
       "hero-3": {
         badge: "Légumes et verdure",
         title: "Sukuma, tomates et légumes du jardin",
-        subtitle: "Produits du quotidien des fermes ougandaises — prêts pour votre cuisine",
+        subtitle: "Produits du quotidien des fermes partenaires — prêts pour votre cuisine",
         cta: "Légumes frais",
         ctaHref: "/category/fresh-vegetables",
         cta2: "Voir les offres",
@@ -314,16 +314,16 @@ export const fr = {
       "hero-4": {
         badge: "Livraison gratuite",
         title: "De la ferme à votre porte",
-        subtitle: "Livraison GRATUITE dès {{amount}} — Grand Kampala",
+        subtitle: "Livraison GRATUITE dès {{amount}}",
         cta: "Commencer vos achats",
         ctaHref: "/categories",
       },
     },
     slides: [
       {
-        badge: "Livraison le jour même à Kampala",
-        title: "Produits frais pour l'Ouganda, livrés",
-        subtitle: "Fruits, légumes et verdure — dès {{price}} à Kampala",
+        badge: "Livraison le jour même",
+        title: "Produits frais pour vous, livrés",
+        subtitle: "Fruits, légumes et verdure — dès {{price}}",
         cta: "Toutes les catégories",
         ctaHref: "/categories",
         cta2: "Fruits frais",
@@ -339,7 +339,7 @@ export const fr = {
       {
         badge: "Légumes et verdure",
         title: "Sukuma, tomates et légumes du jardin",
-        subtitle: "Produits du quotidien des fermes ougandaises — prêts pour votre cuisine",
+        subtitle: "Produits du quotidien des fermes partenaires — prêts pour votre cuisine",
         cta: "Légumes frais",
         ctaHref: "/category/fresh-vegetables",
         cta2: "Voir les offres",
@@ -348,14 +348,14 @@ export const fr = {
       {
         badge: "Livraison gratuite",
         title: "De la ferme à votre porte",
-        subtitle: "Livraison GRATUITE dès {{amount}} — Grand Kampala",
+        subtitle: "Livraison GRATUITE dès {{amount}}",
         cta: "Commencer vos achats",
         ctaHref: "/categories",
       },
     ],
     heroBadge: "Livraison le jour même disponible",
-    heroTitle: "Produits frais pour l'Ouganda, livrés",
-    heroSubtitle: "Fruits, légumes et verdure — dès {{price}} à Kampala",
+    heroTitle: "Produits frais pour vous, livrés",
+    heroSubtitle: "Fruits, légumes et verdure — dès {{price}}",
     heroCta: "Toutes les catégories",
     heroCtaOrganic: "Bio",
     statCategories: "Catégories",
@@ -368,8 +368,8 @@ export const fr = {
     statRatingSub: "Note moyenne",
     promoTickerLabel: "Messages promotionnels",
     promoTicker: [
-      "Produits frais de la ferme livrés dans tout l'Ouganda",
-      "Livraison le jour même dans le Grand Kampala",
+      "Produits frais de la ferme livrés à votre porte",
+      "Livraison le jour même",
       "Bio et produits de saison en stock",
       "Livraison gratuite dès 100 000 USh",
       "Fruits, légumes et verdure locaux",
@@ -505,7 +505,7 @@ export const fr = {
     byId: {
       "1": {
         title: "Pommes fraîches – Premium, paquet de 5",
-        description: "Pommes croquantes et sucrées. Parfaites en collation ou pâtisserie. Fournisseurs ougandais de confiance.",
+        description: "Pommes croquantes et sucrées. Parfaites en collation ou pâtisserie. Fournisseurs de confiance.",
         delivery: "Livraison GRATUITE le jour même dès 100 000 USh",
       },
       "2": {
@@ -640,7 +640,7 @@ export const fr = {
   cart: {
     title: "Votre panier",
     emptyTitle: "Votre panier est vide",
-    emptyText: "Ajoutez fruits, légumes, verdure et plus — nous livrons dans tout l'Ouganda.",
+    emptyText: "Ajoutez fruits, légumes, verdure et plus — nous livrons à votre porte.",
     browseCategories: "Parcourir les catégories",
     produceBasket: "Panier produits frais",
     freshInStock: "Frais — en stock",
@@ -673,11 +673,11 @@ export const fr = {
     placeOrderFailed: "Impossible de passer la commande. Réessayez.",
     backToCart: "Retour au panier",
     guestHint: "Paiement en tant qu'invité. Connectez-vous pour enregistrer vos commandes :",
-    defaultCity: "Kampala",
-    defaultDistrict: "Kampala",
-    phonePlaceholder: "+256",
+    defaultCity: "",
+    defaultDistrict: "",
+    phonePlaceholder: "+…",
     confirmedTitle: "Commande passée !",
-    confirmedSubtitle: "Merci. Nous préparons vos produits frais pour la livraison en Ouganda.",
+    confirmedSubtitle: "Merci. Nous préparons vos produits frais pour la livraison.",
     orderId: "N° de commande",
     viewOrders: "Voir vos commandes",
   },
@@ -755,8 +755,8 @@ export const fr = {
     shipFrom: "Expédié par",
     soldBy: "Vendu par",
     sourcedFrom: "Provenance",
-    sourcedValue: "Fermes et coopératives ougandaises",
-    soldValue: "One Source Ouganda",
+    sourcedValue: "Fermes et coopératives partenaires",
+    soldValue: "One Source",
     about: "À propos de cet article",
     productDetails: "Informations produit",
     detailCategory: "Catégorie",
@@ -791,7 +791,7 @@ export const fr = {
     legalDisclaimerText:
       "L'emballage et les matériaux réels peuvent contenir plus d'informations que celles affichées sur notre site. Ne vous fiez pas uniquement aux informations présentées ici ; lisez toujours les étiquettes, avertissements et modes d'emploi avant utilisation ou consommation.",
     disclaimerText:
-      "Le contenu de ce site est fourni à titre informatif uniquement. Contactez le fabricant pour les allergènes ou usages médicaux. One Source Ouganda décline toute responsabilité pour les inexactitudes des fournisseurs tiers.",
+      "Le contenu de ce site est fourni à titre informatif uniquement. Contactez le fabricant pour les allergènes ou usages médicaux. One Source décline toute responsabilité pour les inexactitudes des fournisseurs tiers.",
     productDescription: "Description du produit",
     customerReviews: "Avis clients",
     outOf5: "sur 5 étoiles",
@@ -800,8 +800,8 @@ export const fr = {
     star: "étoile",
     reviewsHowItWorks:
       "Les avis clients vous aident à en savoir plus sur le produit et à décider s'il vous convient.",
-    topReviews: "Meilleurs avis d'Ouganda",
-    reviewedInUganda: "Avis en Ouganda",
+    topReviews: "Meilleurs avis clients",
+    reviewedInUganda: "Avis",
     peopleFoundHelpful: "{{count}} personnes ont trouvé cela utile",
     sampleReview1Title: "Excellente qualité",
     sampleReview1Body:
@@ -924,13 +924,13 @@ export const fr = {
       chilli1: "Piments frais — idéaux pour sauces, marinades et plats traditionnels.",
       chilli2: "Conserver au frais ou au réfrigérateur.",
       chilli3: "Signalez les problèmes de qualité dans les 24 h suivant la livraison.",
-      freshCategory: "{{category}} frais de fermes et coopératives ougandaises.",
+      freshCategory: "{{category}} frais de fermes et coopératives partenaires.",
       report24h: "Signalez les problèmes de qualité des périssables dans les 24 h suivant la livraison.",
       primeEligible: "Éligible Prime — livraison le jour même sur commandes admissibles.",
     },
     description: {
       intro: "{{name}} ({{origin}})",
-      farmFresh: "{{name}} frais de la ferme via One Source Ouganda.",
+      farmFresh: "{{name}} frais de la ferme via One Source.",
       yam1: "Igname blanche fraîche à peau brune et chair blanche féculente. Cultivée en sols fertiles, sélectionnée pour la cuisson.",
       yam2: "À bouillir, frire ou rôtir. Ingrédient du foutou, de l'igname pilée et de nombreux plats africains.",
       yam3: "Produit de {{origin}}. Signalez les problèmes de livraison des périssables sous 24 h.",
@@ -950,7 +950,7 @@ export const fr = {
     },
     warranty: {
       p1: "Les produits frais sont couverts par notre garantie fraîcheur. Contactez le service client sous 24 h après livraison en cas de dommage ou qualité insuffisante — photos si possible.",
-      p2: "Remboursements ou remplacements à la discrétion de One Source Ouganda selon notre politique de retours.",
+      p2: "Remboursements ou remplacements à la discrétion de One Source selon notre politique de retours.",
       p3: "Indépendamment des droits légaux, de nombreux produits peuvent être retournés sous 30 jours le cas échéant. Voir les exceptions.",
     },
     breadcrumbs: {

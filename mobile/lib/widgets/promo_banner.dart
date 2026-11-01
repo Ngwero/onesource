@@ -39,7 +39,7 @@ class PromoBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Quality delivery across Uganda',
+                  'Quality delivery to your door',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.88),
                     fontSize: 12,
@@ -54,7 +54,8 @@ class PromoBanner extends StatelessWidget {
                     onTap: () => context.go('/shop?deals=1'),
                     borderRadius: BorderRadius.circular(24),
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       child: Text(
                         'Grab deals',
                         style: TextStyle(
@@ -77,7 +78,8 @@ class PromoBanner extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.eco_rounded, color: AppColors.lemonGreen, size: 40),
+            child: const Icon(Icons.eco_rounded,
+                color: AppColors.lemonGreen, size: 40),
           ),
         ],
       ),

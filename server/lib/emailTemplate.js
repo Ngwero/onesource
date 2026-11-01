@@ -199,7 +199,7 @@ export function renderBrandedEmail({
           <!-- Footer -->
           <tr>
             <td style="background-color:${EMAIL_BRAND.footer};padding:18px 28px;text-align:center;">
-              <p style="margin:0 0 8px;font-size:11px;line-height:1.5;color:${EMAIL_BRAND.footerMuted};">© ${new Date().getFullYear()} One Source · Fresh produce delivered across Uganda</p>
+              <p style="margin:0 0 8px;font-size:11px;line-height:1.5;color:${EMAIL_BRAND.footerMuted};">© ${new Date().getFullYear()} One Source · Fresh produce delivered to your door</p>
               <p style="margin:0;font-size:10px;line-height:1.5;color:#7a9488;">This is an automated message. Please do not reply.</p>
             </td>
           </tr>

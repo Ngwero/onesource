@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
-import '../utils/cart_feedback.dart';
 import 'product_card_details.dart';
-import 'product_checkout_actions.dart';
 import 'product_image_zoom.dart';
 import 'product_thumbnail.dart';
 import 'rating_stars.dart';
 
-class ProductCard extends ConsumerWidget {
+class ProductCard extends StatelessWidget {
   const ProductCard({
     super.key,
     required this.product,
@@ -21,6 +18,8 @@ class ProductCard extends ConsumerWidget {
   });
 
   final Product product;
+  // Checkout lives on the product details page.
+  // ignore: unused_field
   final VoidCallback? onAdd;
 
   /// Shows a zoom button on the photo. Used on the products list, where a tap
@@ -28,7 +27,7 @@ class ProductCard extends ConsumerWidget {
   final bool showImageZoom;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final category = ProductCardDetails.categoryLabel(product, context.tr);
     final social = ProductCardDetails.socialProof(product, context.tr);
     final stock = ProductCardDetails.stockLabel(product, context.tr);
@@ -142,14 +141,6 @@ class ProductCard extends ConsumerWidget {
                           fontWeight: FontWeight.w600,
                           color: product.inStock ? AppColors.deal : AppColors.textMuted,
                         ),
-                      ),
-                    ],
-                    if (onAdd != null) ...[
-                      const SizedBox(height: 10),
-                      ProductCheckoutActions(
-                        inStock: product.inStock,
-                        onAdd: onAdd!,
-                        onPayNow: () => payNowAndCheckout(context, ref, product),
                       ),
                     ],
                   ],

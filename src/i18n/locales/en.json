@@ -64,7 +64,7 @@
     "deliverTo": "Deliver to",
     "chooseCountry": "Choose your delivery country",
     "searchCountries": "Search countries",
-    "unitedKingdom": "Uganda",
+    "unitedKingdom": "Global",
     "searchPlaceholder": "Search fresh produce, grains, dairy...",
     "kitchenSearchPlaceholder": "Search cookware, pans, cabinets...",
     "allProduce": "All",
@@ -201,7 +201,7 @@
   "exports": {
     "hero": {
       "kicker": "Global exports",
-      "title": "Uganda's freshest produce, delivered to the world",
+      "title": "Fresh produce, delivered to the world",
       "subtitle": "From smallholder farms to international markets in under 48 hours. Fully certified, cold-chain protected and air-freighted from Entebbe.",
       "browseCta": "Browse export produce",
       "contactCta": "Talk to our export team"
@@ -234,7 +234,7 @@
     "steps": {
       "source": {
         "title": "Sourced at the farm",
-        "desc": "We harvest to order from vetted partner farms across Uganda, picking at peak ripeness."
+        "desc": "We harvest to order from vetted partner farms, picking at peak ripeness."
       },
       "quality": {
         "title": "Graded & inspected",
@@ -284,7 +284,7 @@
       "namePlaceholder": "Buyer or contact name",
       "companyPlaceholder": "Trading company (optional)",
       "emailPlaceholder": "buyer@company.com",
-      "phonePlaceholder": "+256 or international number",
+      "phonePlaceholder": "International phone number",
       "countryPlaceholder": "e.g. United Kingdom",
       "cityPlaceholder": "City or port of entry",
       "addressPlaceholder": "Warehouse, market, or airport cargo terminal",
@@ -482,7 +482,7 @@
         },
         "out_for_delivery": {
           "title": "Out for delivery",
-          "desc": "On the way to your address in Uganda."
+          "desc": "On the way to your address."
         },
         "delivered": {
           "title": "Delivered",
@@ -518,8 +518,8 @@
     "signIn": "Sign in",
     "yourBasket": "Your basket",
     "copyright": "© 2026 One Source. All rights reserved.",
-    "country": "Uganda",
-    "locale": "English (Uganda)"
+    "country": "Global",
+    "locale": "English"
   },
   "home": {
     "heroCarousel": "Promotional banners",
@@ -528,9 +528,9 @@
     "heroGoTo": "Go to slide {{n}}",
     "slidesById": {
       "hero-1": {
-        "badge": "Kampala same-day delivery",
-        "title": "Fresh produce for Uganda, delivered",
-        "subtitle": "Hand-picked fruit, vegetables & greens — from {{price}} in Kampala",
+        "badge": "Freshness at your doorstep",
+        "title": "Fresh produce, delivered to your door",
+        "subtitle": "Hand-picked fruit, vegetables & greens — from {{price}}",
         "cta": "Shop all categories",
         "ctaHref": "/categories",
         "cta2": "Shop fresh fruits",
@@ -546,7 +546,7 @@
       "hero-3": {
         "badge": "Vegetables & greens",
         "title": "Sukuma, tomatoes & garden greens",
-        "subtitle": "Daily staples from Ugandan farms — ready for your kitchen",
+        "subtitle": "Daily staples from partner farms — ready for your kitchen",
         "cta": "Shop vegetables",
         "ctaHref": "/category/fresh-vegetables",
         "cta2": "View deals",
@@ -555,7 +555,7 @@
       "hero-4": {
         "badge": "Free delivery",
         "title": "Farm-fresh to your door",
-        "subtitle": "FREE delivery on orders over {{amount}} — across Greater Kampala",
+        "subtitle": "FREE delivery on orders over {{amount}}",
         "cta": "Start shopping",
         "ctaHref": "/categories"
       },
@@ -569,9 +569,9 @@
     },
     "slides": [
       {
-        "badge": "Kampala same-day delivery",
-        "title": "Fresh produce for Uganda, delivered",
-        "subtitle": "Hand-picked fruit, vegetables & greens — from {{price}} in Kampala",
+        "badge": "Freshness at your doorstep",
+        "title": "Fresh produce, delivered to your door",
+        "subtitle": "Hand-picked fruit, vegetables & greens — from {{price}}",
         "cta": "Shop all categories",
         "ctaHref": "/categories",
         "cta2": "Shop fresh fruits",
@@ -587,7 +587,7 @@
       {
         "badge": "Vegetables & greens",
         "title": "Sukuma, tomatoes & garden greens",
-        "subtitle": "Daily staples from Ugandan farms — ready for your kitchen",
+        "subtitle": "Daily staples from partner farms — ready for your kitchen",
         "cta": "Shop vegetables",
         "ctaHref": "/category/fresh-vegetables",
         "cta2": "View deals",
@@ -596,14 +596,14 @@
       {
         "badge": "Free delivery",
         "title": "Farm-fresh to your door",
-        "subtitle": "FREE delivery on orders over {{amount}} — across Greater Kampala",
+        "subtitle": "FREE delivery on orders over {{amount}}",
         "cta": "Start shopping",
         "ctaHref": "/categories"
       }
     ],
     "heroBadge": "Same-day delivery available",
-    "heroTitle": "Fresh produce for Uganda, delivered",
-    "heroSubtitle": "Hand-picked fruit, vegetables & greens — from {{price}} in Kampala",
+    "heroTitle": "Fresh produce, delivered to your door",
+    "heroSubtitle": "Hand-picked fruit, vegetables & greens — from {{price}}",
     "heroCta": "Shop all categories",
     "heroCtaOrganic": "Shop organic",
     "statCategories": "Categories",
@@ -616,8 +616,8 @@
     "statRatingSub": "Average score",
     "promoTickerLabel": "Promotional messages",
     "promoTicker": [
-      "Farm-fresh produce delivered across Uganda",
-      "Same-day delivery in Greater Kampala",
+      "Farm-fresh produce delivered to your door",
+      "Quality essentials for your everyday",
       "Organic & seasonal picks in stock now",
       "Free delivery on orders over USh 100,000",
       "Locally sourced fruit, veg & greens",
@@ -766,7 +766,7 @@
     "byId": {
       "1": {
         "title": "Fresh Apples – Premium, pack of 5",
-        "description": "Crisp, sweet apples. Perfect for snacking or baking. Sourced from trusted Ugandan suppliers.",
+        "description": "Crisp, sweet apples. Perfect for snacking or baking. Sourced from trusted suppliers.",
         "delivery": "FREE same-day delivery on orders over USh 100,000"
       },
       "2": {
@@ -806,7 +806,7 @@
       },
       "9": {
         "title": "Maris Piper Potatoes – Baking & roasting, 2kg",
-        "description": "Versatile Irish potatoes. Fluffy when mashed, crispy when roasted. A Ugandan kitchen staple.",
+        "description": "Versatile Irish potatoes. Fluffy when mashed, crispy when roasted. A kitchen staple.",
         "delivery": "FREE same-day delivery Tomorrow"
       },
       "10": {
@@ -920,8 +920,8 @@
     "shipFrom": "Ships from",
     "soldBy": "Sold by",
     "sourcedFrom": "Sourced from",
-    "sourcedValue": "Ugandan farms & cooperatives",
-    "soldValue": "One Source Uganda",
+    "sourcedValue": "Partner farms & cooperatives",
+    "soldValue": "One Source",
     "about": "About this item",
     "productDetails": "Product information",
     "detailCategory": "Category",
@@ -955,7 +955,7 @@
     "importantInformation": "Important information",
     "legalDisclaimer": "Legal Disclaimer",
     "legalDisclaimerText": "Actual product packaging and materials may contain more and different information than what is shown on our website. We recommend that you do not rely solely on the information presented here and that you always read labels, warnings, and directions before using or consuming a product.",
-    "disclaimerText": "Content on this site is for information purposes only. Contact the manufacturer with questions about allergens or medical use. One Source Uganda accepts no liability for inaccuracies from third-party suppliers.",
+    "disclaimerText": "Content on this site is for information purposes only. Contact the manufacturer with questions about allergens or medical use. One Source accepts no liability for inaccuracies from third-party suppliers.",
     "productDescription": "Product description",
     "customerReviews": "Customer reviews",
     "outOf5": "out of 5 stars",
@@ -963,8 +963,8 @@
     "globalRatings": "global ratings",
     "star": "star",
     "reviewsHowItWorks": "Customer reviews help you learn more about the product and decide if it is right for you.",
-    "topReviews": "Top reviews from Uganda",
-    "reviewedInUganda": "Reviewed in Uganda",
+    "topReviews": "Top customer reviews",
+    "reviewedInUganda": "Customer review",
     "peopleFoundHelpful": "{{count}} people found this helpful",
     "sampleReview1Title": "Great quality",
     "sampleReview1Body": "Fresh and exactly as described. {{product}} arrived well packaged. Will order again.",
@@ -1035,7 +1035,7 @@
   "cart": {
     "title": "Your basket",
     "emptyTitle": "Your basket is empty",
-    "emptyText": "Add fresh fruit, vegetables, greens and more — we'll deliver across Uganda.",
+    "emptyText": "Add fresh fruit, vegetables, greens and more — we'll deliver to your door.",
     "browseCategories": "Browse categories",
     "produceBasket": "Fresh Produce Basket",
     "freshInStock": "Fresh — in stock",
@@ -1068,11 +1068,11 @@
     "placeOrderFailed": "Could not place your order. Please try again.",
     "backToCart": "Back to basket",
     "guestHint": "Checking out as a guest. Sign in to save orders to your account:",
-    "defaultCity": "Kampala",
-    "defaultDistrict": "Kampala",
-    "phonePlaceholder": "+256",
+    "defaultCity": "",
+    "defaultDistrict": "",
+    "phonePlaceholder": "+…",
     "confirmedTitle": "Order placed!",
-    "confirmedSubtitle": "Thank you. We're preparing your fresh produce for delivery across Uganda.",
+    "confirmedSubtitle": "Thank you. We're preparing your fresh produce for delivery to your door.",
     "orderId": "Order ID",
     "viewOrders": "View your orders"
   },
@@ -1232,13 +1232,13 @@
       "chilli1": "Fresh hot peppers — ideal for sauces, marinades, and traditional dishes.",
       "chilli2": "Store in a cool place or refrigerate to maintain freshness.",
       "chilli3": "Report quality issues within 24 hours of delivery.",
-      "freshCategory": "Fresh {{category}} from Ugandan farms and cooperatives.",
+      "freshCategory": "Fresh {{category}} from partner farms and cooperatives.",
       "report24h": "Report perishable quality issues within 24 hours of delivery.",
       "primeEligible": "Prime eligible — same-day delivery on qualifying orders."
     },
     "description": {
       "intro": "{{name}} ({{origin}})",
-      "farmFresh": "Farm-fresh {{name}} supplied through One Source Uganda.",
+      "farmFresh": "Farm-fresh {{name}} supplied through One Source.",
       "yam1": "Fresh white yam with brown tough skin and white starchy flesh. Grown in fertile soils and selected for cooking quality.",
       "yam2": "Cook boiled, fried, or roasted. A main ingredient in fufu, pounded yam, and many African dishes.",
       "yam3": "Product of {{origin}}. Report delivery issues with perishables within 24 hours."
@@ -1258,7 +1258,7 @@
     },
     "warranty": {
       "p1": "Fresh produce is covered by our freshness guarantee. Contact customer service within 24 hours of delivery if items arrive damaged or below quality — include photos where possible.",
-      "p2": "Refunds or replacements are issued at One Source Uganda's discretion in line with our returns policy.",
+      "p2": "Refunds or replacements are issued at One Source's discretion in line with our returns policy.",
       "p3": "Regardless of statutory rights, many products qualify for return within 30 days where applicable. See return details for exceptions."
     },
     "breadcrumbs": {
@@ -1329,7 +1329,7 @@
       "makeupCta2": "Eye makeup",
       "skincareBadge": "Skincare",
       "skincareTitle": "Your daily skincare shelf",
-      "skincareSub": "Serums, moisturisers and SPF to keep skin healthy in the Kampala sun.",
+      "skincareSub": "Serums, moisturisers and SPF to keep skin healthy in the sun.",
       "skincareCta": "Shop serums",
       "skincareCta2": "Sun protection",
       "fragranceBadge": "Fragrance",

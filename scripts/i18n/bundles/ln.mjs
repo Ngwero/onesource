@@ -23,7 +23,7 @@ export const ln = {
     select: "Lokótá",
   },
   common: {
-    tagline: "Biloko ya sika na Ouganda",
+    tagline: "Biloko ya sika",
     freshProduce: "Biloko ya Sika",
     home: "Ebandeli",
     close: "Koziba",
@@ -55,7 +55,7 @@ export const ln = {
   },
   header: {
     deliverTo: "Tindá na",
-    unitedKingdom: "Ouganda",
+    unitedKingdom: "Mokili mobimba",
     searchPlaceholder: "Luka biloko ya sika, mbuma, mabele…",
     allProduce: "Nyonso",
     basket: "Panier",
@@ -80,7 +80,7 @@ export const ln = {
     loginTitle: "Boyei malamu lisusu",
     loginSubtitle: "Kota mpo na kolanda ba commande na yo mpe kofuta nokinoki.",
     signupTitle: "Pesa kompte na yo",
-    signupSubtitle: "Kota na One Source mpo na biloko ya sika ekotisami na Ouganda mobimba.",
+    signupSubtitle: "Kota na One Source mpo na biloko ya sika ekotisami na porte na yo.",
     accountTitle: "Compte na yo",
     accountSubtitle: "Bokisa profil na yo mpe ba commande.",
     noAccount: "Ozali na kompte te?",
@@ -226,7 +226,7 @@ export const ln = {
         },
         out_for_delivery: {
           title: "Ezali kokende",
-          desc: "Ezali kokende na adresi na yo na Ouganda.",
+          desc: "Ezali kokende na adresi na yo.",
         },
         delivered: {
           title: "Ekotisami",
@@ -251,7 +251,7 @@ export const ln = {
     empty: "Historique ezali nanu te. Tala boutique mpo na komona biloko awa.",
   },
   footer: {
-    tagline: "Esika moko ya biloko ya sika ya qualité — ekotisami na Ouganda mobimba.",
+    tagline: "Esika moko ya biloko ya sika ya qualité — ekotisami na porte na yo.",
     categories: "Ba catégorie",
     help: "Lisalisi",
     deliveryInfo: "Makambo ya livraison",
@@ -261,7 +261,7 @@ export const ln = {
     signIn: "Kokota",
     yourBasket: "Panier na yo",
     copyright: "© 2026 One Source. Makoki nyonso ebombami.",
-    country: "Ouganda",
+    country: "Mokili mobimba",
     locale: "Lingala",
   },
   basketPanel: {
@@ -287,9 +287,9 @@ export const ln = {
     heroGoTo: "Kende na diapositive {{n}}",
     slidesById: {
       "hero-1": {
-        badge: "Livraison mokolo moko na Kampala",
-        title: "Biloko ya sika mpo na Ouganda, ekotisami",
-        subtitle: "Bambuma, légumes mpe verdure — kobanda na {{price}} na Kampala",
+        badge: "Livraison mokolo moko",
+        title: "Biloko ya sika mpo na yo, ekotisami",
+        subtitle: "Bambuma, légumes mpe verdure — kobanda na {{price}}",
         cta: "Ba catégorie nyonso",
         ctaHref: "/categories",
         cta2: "Bambuma ya sika",
@@ -305,7 +305,7 @@ export const ln = {
       "hero-3": {
         badge: "Légumes mpe verdure",
         title: "Sukuma, tomate mpe légumes ya elanga",
-        subtitle: "Biloko ya mokolo kowuta na ba ferme ya Ouganda — prêt na cuisine",
+        subtitle: "Biloko ya mokolo kowuta na ba ferme — prêt na cuisine",
         cta: "Légumes ya sika",
         ctaHref: "/category/fresh-vegetables",
         cta2: "Tala ba offre",
@@ -314,16 +314,16 @@ export const ln = {
       "hero-4": {
         badge: "Livraison ya ofele",
         title: "Kowuta na elanga tii na ndako na yo",
-        subtitle: "Livraison GRATUITE kobanda na {{amount}} — Grand Kampala",
+        subtitle: "Livraison GRATUITE kobanda na {{amount}}",
         cta: "Banda kosomba",
         ctaHref: "/categories",
       },
     },
     slides: [
       {
-        badge: "Livraison mokolo moko na Kampala",
-        title: "Biloko ya sika mpo na Ouganda, ekotisami",
-        subtitle: "Bambuma, légumes mpe verdure — kobanda na {{price}} na Kampala",
+        badge: "Livraison mokolo moko",
+        title: "Biloko ya sika mpo na yo, ekotisami",
+        subtitle: "Bambuma, légumes mpe verdure — kobanda na {{price}}",
         cta: "Ba catégorie nyonso",
         ctaHref: "/categories",
         cta2: "Bambuma ya sika",
@@ -339,7 +339,7 @@ export const ln = {
       {
         badge: "Légumes mpe verdure",
         title: "Sukuma, tomate mpe légumes ya elanga",
-        subtitle: "Biloko ya mokolo kowuta na ba ferme ya Ouganda — prêt na cuisine",
+        subtitle: "Biloko ya mokolo kowuta na ba ferme — prêt na cuisine",
         cta: "Légumes ya sika",
         ctaHref: "/category/fresh-vegetables",
         cta2: "Tala ba offre",
@@ -348,14 +348,14 @@ export const ln = {
       {
         badge: "Livraison ya ofele",
         title: "Kowuta na elanga tii na ndako na yo",
-        subtitle: "Livraison GRATUITE kobanda na {{amount}} — Grand Kampala",
+        subtitle: "Livraison GRATUITE kobanda na {{amount}}",
         cta: "Banda kosomba",
         ctaHref: "/categories",
       },
     ],
     heroBadge: "Livraison mokolo moko ezali",
-    heroTitle: "Biloko ya sika mpo na Ouganda, ekotisami",
-    heroSubtitle: "Bambuma, légumes mpe verdure — kobanda na {{price}} na Kampala",
+    heroTitle: "Biloko ya sika mpo na yo, ekotisami",
+    heroSubtitle: "Bambuma, légumes mpe verdure — kobanda na {{price}}",
     heroCta: "Ba catégorie nyonso",
     heroCtaOrganic: "Bio",
     statCategories: "Ba catégorie",
@@ -368,8 +368,8 @@ export const ln = {
     statRatingSub: "Note ya moyenne",
     promoTickerLabel: "Ba message ya promotion",
     promoTicker: [
-      "Biloko ya sika kowuta na elanga ekotisami na Ouganda mobimba",
-      "Livraison mokolo moko na Grand Kampala",
+      "Biloko ya sika kowuta na elanga ekotisami na porte na yo",
+      "Livraison mokolo moko",
       "Bio mpe biloko ya saison ezali na stock",
       "Livraison ya ofele kobanda na 100 000 USh",
       "Bambuma, légumes mpe verdure ya mboka",
@@ -382,7 +382,7 @@ export const ln = {
     seasonalOffersSub: "Ekonomie ya moke na biloko ya sika",
     saveToday: "Ekonomisa lelo",
     farmFresh: "Ponami ya elanga",
-    farmFreshSub: "Livraison mokolo moko na biloko oyo baponaki",
+    farmFreshSub: "Livraison mokolo moko biloko oyo baponaki",
     allProduce: "Biloko ya sika nyonso",
     allProduceSub: "Biloko ezali awa lelo",
     rows: {
@@ -502,7 +502,7 @@ export const ln = {
     byId: {
       "1": {
         title: "Ba pomme ya sika – Premium, paquet ya 5",
-        description: "Ba pomme ya sukali mpe ya sika. Malamu mpo na kolia to pâtisserie. Ba fournisseur ya Ouganda oyo bato batyaka motema.",
+        description: "Ba pomme ya sukali mpe ya sika. Malamu mpo na kolia to pâtisserie. Ba fournisseur oyo bato batyaka motema.",
         delivery: "Livraison GRATUITE mokolo moko kobanda na 100 000 USh",
       },
       "2": {
@@ -636,7 +636,7 @@ export const ln = {
   cart: {
     title: "Panier na yo",
     emptyTitle: "Panier na yo ezali mpamba",
-    emptyText: "Bakisa bambuma, légumes, verdure mpe mosusu — tokotisa na Ouganda mobimba.",
+    emptyText: "Bakisa bambuma, légumes, verdure mpe mosusu — tokotisa na porte na yo.",
     browseCategories: "Tala ba catégorie",
     produceBasket: "Panier biloko ya sika",
     freshInStock: "Ya sika — na stock",
@@ -669,11 +669,11 @@ export const ln = {
     placeOrderFailed: "Commande ekomi te. Leka lisusu.",
     backToCart: "Zonga na panier",
     guestHint: "Kofuta lokola mokɛ́i. Kota mpo na kobomba ba commande:",
-    defaultCity: "Kampala",
-    defaultDistrict: "Kampala",
-    phonePlaceholder: "+256",
+    defaultCity: "",
+    defaultDistrict: "",
+    phonePlaceholder: "+…",
     confirmedTitle: "Commande epesami!",
-    confirmedSubtitle: "Matondo. Tokobongisa biloko na yo ya sika mpo na livraison na Ouganda.",
+    confirmedSubtitle: "Matondo. Tokobongisa biloko na yo ya sika mpo na livraison.",
     orderId: "N° ya commande",
     viewOrders: "Tala ba commande na yo",
   },
@@ -729,7 +729,7 @@ export const ln = {
     notFound: "Produit emonani te",
     savePercent: "-{{percent}} %",
     listPrice: "Ntalo catalogue:",
-    pricePerUnit: "{{price}} na {{unit}}",
+    pricePerUnit: "{{price}} {{unit}}",
     visitStore: "Tala boutique One Source",
     ratingsLink: "{{count}} ba évaluation",
     amazonChoice: "Ponami One Source",
@@ -746,8 +746,8 @@ export const ln = {
     shipFrom: "Ekotisami na",
     soldBy: "Etɛkami na",
     sourcedFrom: "Ezwami",
-    sourcedValue: "Ba elanga mpe ba coopérative ya Ouganda",
-    soldValue: "One Source Ouganda",
+    sourcedValue: "Ba elanga mpe ba coopérative",
+    soldValue: "One Source",
     about: "Makambo ya biloko oyo",
     productDetails: "Makambo ya produit",
     detailCategory: "Catégorie",
@@ -782,7 +782,7 @@ export const ln = {
     legalDisclaimerText:
       "Emballage mpe matériaux ya solo ekoki kozala na makambo mingi koleka oyo emonisami na site na biso. Kotya kaka te na makambo awa; soma ntango nyonso ba étiquette, ba avertissement mpe ba mode d'emploi liboso ya kosalela to kolia.",
     disclaimerText:
-      "Makambo na site oyo epesami kaka mpo na boyebi. Benga fabricant mpo na allergène to usage médical. One Source Ouganda azali na responsabilité te mpo na makambo ya sika te ya ba fournisseur ya misato.",
+      "Makambo na site oyo epesami kaka mpo na boyebi. Benga fabricant mpo na allergène to usage médical. One Source azali na responsabilité te mpo na makambo ya sika te ya ba fournisseur ya misato.",
     productDescription: "Description ya produit",
     customerReviews: "Avis ya client",
     outOf5: "na 5 étoile",
@@ -791,8 +791,8 @@ export const ln = {
     star: "étoile",
     reviewsHowItWorks:
       "Ba avis ya client esalisaka yo koyeba produit mpe kondima soki ekokani na yo.",
-    topReviews: "Ba avis ya Ouganda oyo eleki",
-    reviewedInUganda: "Avis na Ouganda",
+    topReviews: "Ba avis oyo eleki",
+    reviewedInUganda: "Avis",
     peopleFoundHelpful: "{{count}} bato balobaki ete ezali malamu",
     sampleReview1Title: "Qualité ya malamu",
     sampleReview1Body:
@@ -914,13 +914,13 @@ export const ln = {
       chilli1: "Ba piment ya sika — malamu mpo na sauce, marinade mpe bilei ya tradition.",
       chilli2: "Bomba na malili to na frigo.",
       chilli3: "Lapola problème ya qualité na ba heure 24 nsima ya livraison.",
-      freshCategory: "{{category}} ya sika kowuta na ba elanga mpe ba coopérative ya Ouganda.",
+      freshCategory: "{{category}} ya sika kowuta na ba elanga mpe ba coopérative.",
       report24h: "Lapola problème ya qualité ya biloko oyo ekufa na ba heure 24 nsima ya livraison.",
       primeEligible: "Ekoki na Prime — livraison mokolo moko na ba commande oyo ekokani.",
     },
     description: {
       intro: "{{name}} ({{origin}})",
-      farmFresh: "{{name}} ya sika kowuta na elanga na One Source Ouganda.",
+      farmFresh: "{{name}} ya sika kowuta na elanga na One Source.",
       yam1: "Igname ya pembe ya sika na peau ya marron mpe chair ya féculent. Ekolami na mabele ya malamu, baponami mpo na kobika.",
       yam2: "Bouillir, frire to rôtir. Ingredient ya foutou, igname pilée mpe bilei ya Afrika mingi.",
       yam3: "Biloko ya {{origin}}. Lapola problème ya livraison ya biloko oyo ekufa na ba heure 24.",
@@ -940,7 +940,7 @@ export const ln = {
     },
     warranty: {
       p1: "Biloko ya sika ezali na garantie ya fraîcheur na biso. Benga service client na ba heure 24 nsima ya livraison soki ezali kobebisama to qualité moke — ba photo soki ekoki.",
-      p2: "Remboursement to remplacement na libondeli ya One Source Ouganda selon politique ya retour na biso.",
+      p2: "Remboursement to remplacement na libondeli ya One Source selon politique ya retour na biso.",
       p3: "Ata na makoki ya mibeko, biloko mingi ekoki kozongisama na ba jour 30 soki ekokani. Tala ba exception.",
     },
     breadcrumbs: {

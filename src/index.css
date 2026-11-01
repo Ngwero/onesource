@@ -10230,22 +10230,36 @@ body {
   justify-content: center;
   height: 2.25rem;
   min-height: 2.25rem;
-  background: #ffdf00;
-  border: 1px solid #ffdf00;
-  color: #0f1111;
+  border: 1px solid transparent;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.cos-checkout-basket:hover:not(:disabled),
+.cos-checkout-basket {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.cos-checkout-basket:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.cos-checkout-pay {
+  background: var(--color-highlight);
+  border-color: var(--color-highlight);
+  color: var(--color-text);
+}
+
 .cos-checkout-pay:hover:not(:disabled) {
-  background: #f7ca00;
-  border-color: #f7ca00;
+  background: var(--color-highlight-hover);
+  border-color: var(--color-highlight-hover);
 }
 
 .cos-checkout-basket:focus-visible,
 .cos-checkout-pay:focus-visible {
-  outline: 3px solid #007185;
+  outline: 3px solid var(--color-accent);
   outline-offset: 3px;
 }
 

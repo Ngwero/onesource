@@ -3,7 +3,7 @@ import { ProductCard } from "../ProductCard";
 
 type Props = { product: Product; priority?: boolean };
 
-/** Cosmetics listing card: same shared cart + Pay now pair as every shop. */
+/** Cosmetics listing card: same shared listing card as every shop. */
 export function CosmeticsProductCard(props: Props) {
   return <ProductCard {...props} />;
 }

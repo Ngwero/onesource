@@ -6,7 +6,7 @@ type Props = {
   onPayNow: () => void;
 };
 
-/** Shared pair: Add to basket adds the product; Pay now adds and goes to checkout. */
+/** Shared pair: Add to basket adds the product; Buy now adds and goes to checkout. */
 export function ProductCheckoutActions({ disabled, onAdd, onPayNow }: Props) {
   const { t } = useTranslation();
 
@@ -27,7 +27,7 @@ export function ProductCheckoutActions({ disabled, onAdd, onPayNow }: Props) {
         disabled={disabled}
         onClick={onPayNow}
       >
-        {t("product.payNow")}
+        {t("common.buyNow")}
       </button>
     </div>
   );

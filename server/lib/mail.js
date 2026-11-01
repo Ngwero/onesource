@@ -256,7 +256,7 @@ export async function sendWelcomeEmail({ email, fullName }) {
     headerLabel: "One Source Shop",
     heroEyebrow: "Welcome aboard",
     heroTitle: "Welcome to One Source",
-    heroSubtitle: "Fresh produce delivered across Uganda — your account is ready.",
+    heroSubtitle: "Fresh produce delivered to your door — your account is ready.",
     greeting: fullName,
     bodyParagraphs: [
       "Thank you for creating your One Source account. You can now track orders, save items, and checkout faster.",
@@ -264,7 +264,7 @@ export async function sendWelcomeEmail({ email, fullName }) {
     ],
     actionBox: renderWelcomeActionBox(shopUrl),
     footnotes: [
-      "Browse the shop to discover fresh produce delivered across Uganda.",
+      "Browse the shop to discover fresh produce delivered to your door.",
       "If you did not create this account, please contact our support team.",
     ],
   });

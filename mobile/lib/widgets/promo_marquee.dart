@@ -7,8 +7,8 @@ class PromoMarquee extends StatefulWidget {
   const PromoMarquee({super.key});
 
   static const phrases = [
-    'Farm-fresh produce delivered across Uganda',
-    'Same-day delivery in Greater Kampala',
+    'Farm-fresh produce delivered to your door',
+    'Quality essentials for your everyday',
     'Organic & seasonal picks in stock now',
     'Free delivery on orders over UGX 100,000',
     'Locally sourced fruit, veg & greens',
@@ -19,7 +19,8 @@ class PromoMarquee extends StatefulWidget {
   State<PromoMarquee> createState() => _PromoMarqueeState();
 }
 
-class _PromoMarqueeState extends State<PromoMarquee> with SingleTickerProviderStateMixin {
+class _PromoMarqueeState extends State<PromoMarquee>
+    with SingleTickerProviderStateMixin {
   static const _duration = Duration(seconds: 35);
 
   late final AnimationController _controller;
@@ -127,7 +128,10 @@ class _PromoMarqueeState extends State<PromoMarquee> with SingleTickerProviderSt
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [const Color(0xFFEBF3DF), const Color(0xFFEBF3DF).withValues(alpha: 0)],
+                        colors: [
+                          const Color(0xFFEBF3DF),
+                          const Color(0xFFEBF3DF).withValues(alpha: 0)
+                        ],
                       ),
                     ),
                   ),
@@ -142,7 +146,10 @@ class _PromoMarqueeState extends State<PromoMarquee> with SingleTickerProviderSt
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [const Color(0xFFEBF3DF).withValues(alpha: 0), const Color(0xFFEBF3DF)],
+                        colors: [
+                          const Color(0xFFEBF3DF).withValues(alpha: 0),
+                          const Color(0xFFEBF3DF)
+                        ],
                       ),
                     ),
                   ),
@@ -163,7 +170,11 @@ class _DotSeparator extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 16),
-      child: Text('·', style: TextStyle(color: AppColors.accent, fontSize: 16, fontWeight: FontWeight.w700)),
+      child: Text('·',
+          style: TextStyle(
+              color: AppColors.accent,
+              fontSize: 16,
+              fontWeight: FontWeight.w700)),
     );
   }
 }

@@ -23,7 +23,7 @@ export const sw = {
     select: "Lugha",
   },
   common: {
-    tagline: "Mazao mapya nchini Uganda",
+    tagline: "Mazao mapya",
     freshProduce: "Mazao mapya",
     home: "Nyumbani",
     close: "Funga",
@@ -55,7 +55,7 @@ export const sw = {
   },
   header: {
     deliverTo: "Wasilisha kwa",
-    unitedKingdom: "Uganda",
+    unitedKingdom: "Kimataifa",
     searchPlaceholder: "Tafuta mazao mapya, nafaka, maziwa…",
     allProduce: "Zote",
     basket: "Kikapu",
@@ -80,7 +80,7 @@ export const sw = {
     loginTitle: "Karibu tena",
     loginSubtitle: "Ingia ili kufuatilia maagizo yako na kulipa haraka zaidi.",
     signupTitle: "Fungua akaunti yako",
-    signupSubtitle: "Jiunge na One Source kwa mazao mapya yanayowasilishwa kote Uganda.",
+    signupSubtitle: "Jiunge na One Source kwa mazao mapya yanayowasilishwa mlangoni pako.",
     accountTitle: "Akaunti yako",
     accountSubtitle: "Simamia wasifu wako na maagizo yako.",
     noAccount: "Huna akaunti?",
@@ -226,7 +226,7 @@ export const sw = {
         },
         out_for_delivery: {
           title: "Inawasilishwa",
-          desc: "Njiani kwenda anwani yako nchini Uganda.",
+          desc: "Njiani kwenda anwani yako.",
         },
         delivered: {
           title: "Imewasilishwa",
@@ -251,7 +251,7 @@ export const sw = {
     empty: "Bado hakuna historia. Vinjari duka ili kuona bidhaa hapa.",
   },
   footer: {
-    tagline: "Chanzo chako kimoja cha mazao bora mapya — yanayowasilishwa kote Uganda.",
+    tagline: "Chanzo chako kimoja cha mazao bora mapya — yanayowasilishwa mlangoni pako.",
     categories: "Jamii",
     help: "Msaada",
     deliveryInfo: "Maelezo ya uwasilishaji",
@@ -261,7 +261,7 @@ export const sw = {
     signIn: "Ingia",
     yourBasket: "Kikapu chako",
     copyright: "© 2026 One Source. Haki zote zimehifadhiwa.",
-    country: "Uganda",
+    country: "Kimataifa",
     locale: "Kiswahili",
   },
   basketPanel: {
@@ -287,9 +287,9 @@ export const sw = {
     heroGoTo: "Nenda kwenye slaidi {{n}}",
     slidesById: {
       "hero-1": {
-        badge: "Uwasilishaji siku hiyo hiyo Kampala",
-        title: "Mazao mapya kwa Uganda, yanawasilishwa",
-        subtitle: "Matunda, mboga na majani — kutoka {{price}} Kampala",
+        badge: "Uwasilishaji siku hiyo hiyo",
+        title: "Mazao mapya kwa ajili yako, yanawasilishwa",
+        subtitle: "Matunda, mboga na majani — kutoka {{price}}",
         cta: "Jamii zote",
         ctaHref: "/categories",
         cta2: "Matunda mapya",
@@ -305,7 +305,7 @@ export const sw = {
       "hero-3": {
         badge: "Mboga na majani",
         title: "Sukuma, nyanya na mboga za bustani",
-        subtitle: "Mazao ya kila siku kutoka mashamba ya Uganda — tayari kwa jikoni yako",
+        subtitle: "Mazao ya kila siku kutoka mashamba — tayari kwa jikoni yako",
         cta: "Mboga mbichi",
         ctaHref: "/category/fresh-vegetables",
         cta2: "Ona ofa",
@@ -314,16 +314,16 @@ export const sw = {
       "hero-4": {
         badge: "Uwasilishaji bure",
         title: "Kutoka shambani hadi mlangoni mwako",
-        subtitle: "Uwasilishaji BURE kutoka {{amount}} — Kampala Kubwa",
+        subtitle: "Uwasilishaji BURE kutoka {{amount}}",
         cta: "Anza kununua",
         ctaHref: "/categories",
       },
     },
     slides: [
       {
-        badge: "Uwasilishaji siku hiyo hiyo Kampala",
-        title: "Mazao mapya kwa Uganda, yanawasilishwa",
-        subtitle: "Matunda, mboga na majani — kutoka {{price}} Kampala",
+        badge: "Uwasilishaji siku hiyo hiyo",
+        title: "Mazao mapya kwa ajili yako, yanawasilishwa",
+        subtitle: "Matunda, mboga na majani — kutoka {{price}}",
         cta: "Jamii zote",
         ctaHref: "/categories",
         cta2: "Matunda mapya",
@@ -339,7 +339,7 @@ export const sw = {
       {
         badge: "Mboga na majani",
         title: "Sukuma, nyanya na mboga za bustani",
-        subtitle: "Mazao ya kila siku kutoka mashamba ya Uganda — tayari kwa jikoni yako",
+        subtitle: "Mazao ya kila siku kutoka mashamba — tayari kwa jikoni yako",
         cta: "Mboga mbichi",
         ctaHref: "/category/fresh-vegetables",
         cta2: "Ona ofa",
@@ -348,14 +348,14 @@ export const sw = {
       {
         badge: "Uwasilishaji bure",
         title: "Kutoka shambani hadi mlangoni mwako",
-        subtitle: "Uwasilishaji BURE kutoka {{amount}} — Kampala Kubwa",
+        subtitle: "Uwasilishaji BURE kutoka {{amount}}",
         cta: "Anza kununua",
         ctaHref: "/categories",
       },
     ],
     heroBadge: "Uwasilishaji siku hiyo hiyo unapatikana",
-    heroTitle: "Mazao mapya kwa Uganda, yanawasilishwa",
-    heroSubtitle: "Matunda, mboga na majani — kutoka {{price}} Kampala",
+    heroTitle: "Mazao mapya kwa ajili yako, yanawasilishwa",
+    heroSubtitle: "Matunda, mboga na majani — kutoka {{price}}",
     heroCta: "Jamii zote",
     heroCtaOrganic: "Kikaboni",
     statCategories: "Jamii",
@@ -368,8 +368,8 @@ export const sw = {
     statRatingSub: "Wastani wa ukadiriaji",
     promoTickerLabel: "Ujumbe wa matangazo",
     promoTicker: [
-      "Mazao mapya kutoka shambani yanayowasilishwa kote Uganda",
-      "Uwasilishaji siku hiyo hiyo katika Kampala Kubwa",
+      "Mazao mapya kutoka shambani yanayowasilishwa mlangoni pako",
+      "Uwasilishaji siku hiyo hiyo",
       "Kikaboni na mazao ya msimu yapo stoki",
       "Uwasilishaji bure kutoka USh 100,000",
       "Matunda, mboga na majani ya ndani",
@@ -488,7 +488,7 @@ export const sw = {
     price: "Bei",
     priceUnder: "Chini ya {{price}}",
     priceBetween: "{{min}} – {{max}}",
-    priceOver: "{{price}} na zaidi",
+    priceOver: "{{price}} zaidi",
     deals: "Ofa",
     onSale: "Inauzwa kwa punguzo",
     noMatches: "Hakuna bidhaa zinazolingana na vichujio hivi. Jaribu kufuta baadhi.",
@@ -505,7 +505,7 @@ export const sw = {
     byId: {
       "1": {
         title: "Tufaha mapya – bora, kifurushi cha 5",
-        description: "Tufaha tamu na laini. Bora kwa vitafunio au keki. Wauzaji wa kuaminika nchini Uganda.",
+        description: "Tufaha tamu na laini. Bora kwa vitafunio au keki. Wauzaji wa kuaminika.",
         delivery: "Uwasilishaji BURE siku hiyo hiyo kutoka USh 100,000",
       },
       "2": {
@@ -640,7 +640,7 @@ export const sw = {
   cart: {
     title: "Kikapu chako",
     emptyTitle: "Kikapu chako ni tupu",
-    emptyText: "Ongeza matunda, mboga, majani na zaidi — tunawasilisha kote Uganda.",
+    emptyText: "Ongeza matunda, mboga, majani na zaidi — tunawasilisha mlangoni pako.",
     browseCategories: "Vinjari jamii",
     produceBasket: "Kikapu cha mazao mapya",
     freshInStock: "Mapya — ipo stoki",
@@ -673,11 +673,11 @@ export const sw = {
     placeOrderFailed: "Haikuwezekana kuweka agizo. Jaribu tena.",
     backToCart: "Rudi kwenye kikapu",
     guestHint: "Unalipa kama mgeni. Ingia ili kuhifadhi maagizo yako:",
-    defaultCity: "Kampala",
-    defaultDistrict: "Kampala",
-    phonePlaceholder: "+256",
+    defaultCity: "",
+    defaultDistrict: "",
+    phonePlaceholder: "+…",
     confirmedTitle: "Agizo limewekwa!",
-    confirmedSubtitle: "Asante. Tunaandaa mazao yako mapya kwa uwasilishaji nchini Uganda.",
+    confirmedSubtitle: "Asante. Tunaandaa mazao yako mapya kwa uwasilishaji.",
     orderId: "Nambari ya agizo",
     viewOrders: "Ona maagizo yako",
   },
@@ -750,8 +750,8 @@ export const sw = {
     shipFrom: "Inatumwa kutoka",
     soldBy: "Inauzwa na",
     sourcedFrom: "Chanzo",
-    sourcedValue: "Mashamba na vyama vya ushirika vya Uganda",
-    soldValue: "One Source Uganda",
+    sourcedValue: "Mashamba na vyama vya ushirika",
+    soldValue: "One Source",
     about: "Kuhusu bidhaa hii",
     productDetails: "Maelezo ya bidhaa",
     detailCategory: "Jamii",
@@ -786,7 +786,7 @@ export const sw = {
     legalDisclaimerText:
       "Ufungaji na nyenzo halisi zinaweza kuwa na taarifa zaidi kuliko zinazoonyeshwa kwenye tovuti yetu. Usitegemee tu taarifa zilizo hapa; soma kila mara lebo, onyo na maelekezo kabla ya matumizi au matumizi.",
     disclaimerText:
-      "Maudhui ya tovuti hii yanatolewa kwa taarifa tu. Wasiliana na mtengenezaji kuhusu vichochezi au matumizi ya matibabu. One Source Uganda haiwajibiki kwa makosa ya wauzaji wa tatu.",
+      "Maudhui ya tovuti hii yanatolewa kwa taarifa tu. Wasiliana na mtengenezaji kuhusu vichochezi au matumizi ya matibabu. One Source haiwajibiki kwa makosa ya wauzaji wa tatu.",
     productDescription: "Maelezo ya bidhaa",
     customerReviews: "Maoni ya wateja",
     outOf5: "kati ya nyota 5",
@@ -795,8 +795,8 @@ export const sw = {
     star: "nyota",
     reviewsHowItWorks:
       "Maoni ya wateja yanakusaidia kujua zaidi kuhusu bidhaa na kuamua ikiwa inakufaa.",
-    topReviews: "Maoni bora kutoka Uganda",
-    reviewedInUganda: "Maoni nchini Uganda",
+    topReviews: "Maoni bora kutoka kwa wateja",
+    reviewedInUganda: "Maoni",
     peopleFoundHelpful: "watu {{count}} waliona hii kuwa muhimu",
     sampleReview1Title: "Ubora mzuri sana",
     sampleReview1Body:
@@ -919,13 +919,13 @@ export const sw = {
       chilli1: "Pilipili mbichi — bora kwa michuzi, marinades na vyakula vya jadi.",
       chilli2: "Hifadhi mahali baridi au jokofuni.",
       chilli3: "Ripoti matatizo ya ubora ndani ya masaa 24 baada ya uwasilishaji.",
-      freshCategory: "{{category}} mbichi kutoka mashamba na vyama vya ushirika vya Uganda.",
+      freshCategory: "{{category}} mbichi kutoka mashamba na vyama vya ushirika.",
       report24h: "Ripoti matatizo ya ubora wa bidhaa zinazoharibika ndani ya masaa 24 baada ya uwasilishaji.",
       primeEligible: "Inastahili Prime — uwasilishaji siku hiyo hiyo kwa maagizo yanayostahili.",
     },
     description: {
       intro: "{{name}} ({{origin}})",
-      farmFresh: "{{name}} mapya kutoka shambani kupitia One Source Uganda.",
+      farmFresh: "{{name}} mapya kutoka shambani kupitia One Source.",
       yam1: "Nduma nyeupe mbichi yenye ngozi kahawia na nyama nyeupe yenye wanga. Inayolimwa kwenye udongo wenye rutuba, imechaguliwa kwa kupika.",
       yam2: "Chemsha, kaanga au kaanga. Kiungo cha fufu, nduma iliyopondwa na vyakula vingi vya Kiafrika.",
       yam3: "Bidhaa ya {{origin}}. Ripoti matatizo ya uwasilishaji wa bidhaa zinazoharibika ndani ya masaa 24.",
@@ -945,7 +945,7 @@ export const sw = {
     },
     warranty: {
       p1: "Mazao mapya yanafunikwa na dhamana yetu ya ubichi. Wasiliana na huduma ya wateja ndani ya masaa 24 baada ya uwasilishaji ikiwa kuna uharibifu au ubora duni — picha ikiwezekana.",
-      p2: "Marejesho au kubadilishwa kwa hiari ya One Source Uganda kulingana na sera yetu ya marejesho.",
+      p2: "Marejesho au kubadilishwa kwa hiari ya One Source kulingana na sera yetu ya marejesho.",
       p3: "Haidhuru haki za kisheria, bidhaa nyingi zinaweza kurudishwa ndani ya siku 30 inapofaa. Angalia matukio ya pekee.",
     },
     breadcrumbs: {

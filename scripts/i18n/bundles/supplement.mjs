@@ -137,10 +137,10 @@ const rows = {
     "Izina ry'umuguzi cyangwa uwo kuvugisha",
   ],
   "exports.confirmation.phonePlaceholder": [
-    "+256 ou numéro international",
-    "+256 au namba ya kimataifa",
-    "+256 to nimero ya mokili mobimba",
-    "+256 cyangwa nimero mpuzamahanga",
+    "Numéro de téléphone international",
+    "Namba ya simu ya kimataifa",
+    "Nimero ya telefone ya mokili mobimba",
+    "Nimero ya telefone mpuzamahanga",
   ],
   "exports.confirmation.requirementsPlaceholder": [
     "ex. GlobalGAP, certificat phytosanitaire, chaîne du froid, taille des palettes",

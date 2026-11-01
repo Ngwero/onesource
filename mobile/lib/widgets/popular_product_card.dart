@@ -7,10 +7,7 @@ import '../data/cosmetics.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/currency_provider.dart';
-import '../utils/cart_feedback.dart';
-import '../utils/categories.dart';
 import 'product_card_details.dart';
-import 'product_checkout_actions.dart';
 import 'product_thumbnail.dart';
 import 'rating_stars.dart';
 
@@ -25,9 +22,11 @@ class PopularProductCard extends ConsumerWidget {
   });
 
   final Product product;
+  // Checkout lives on the product details page.
+  // ignore: unused_field
   final VoidCallback? onAdd;
 
-  /// Puts the basket control under the photo, title, and price.
+  /// Cosmetics listing tiles use brand / variant copy.
   final bool addBelow;
 
   /// Photo frame in logical pixels. Pharmacy passes a larger frame.
@@ -38,10 +37,6 @@ class PopularProductCard extends ConsumerWidget {
     final unit = ProductCardDetails.unitLabel(product, context.tr);
     final formatPrice = ref.watch(formatPriceProvider);
     final cosmetics = addBelow && isCosmeticsProduct(product);
-    final exportProduct =
-        productMatchesCategory(product.category, 'export-fresh-produce');
-    final showPair = onAdd != null && !exportProduct;
-    final useColumn = addBelow || onAdd != null;
     final brand = product.details.brand?.trim();
     final title = context.tr.productTitle(product);
     final displayTitle = cosmetics ? _titleWithoutBrand(title, brand) : title;
@@ -152,29 +147,6 @@ class PopularProductCard extends ConsumerWidget {
       ],
     );
 
-    final belowButton = onAdd != null
-        ? Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
-            child: showPair
-                ? ProductCheckoutActions(
-                    inStock: product.inStock,
-                    onAdd: onAdd!,
-                    onPayNow: () => payNowAndCheckout(context, ref, product),
-                  )
-                : FilledButton(
-                    onPressed: product.inStock ? onAdd : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFDF00),
-                      foregroundColor: const Color(0xFF0F1111),
-                      minimumSize: const Size(0, 44),
-                    ),
-                    child: Text(context.tr.get(product.inStock
-                        ? 'common.addToBasket'
-                        : 'common.outOfStock')),
-                  ),
-          )
-        : null;
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -182,35 +154,16 @@ class PopularProductCard extends ConsumerWidget {
         boxShadow: softCardShadow,
       ),
       clipBehavior: Clip.antiAlias,
-      child: useColumn
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => context.push('/product/${product.id}'),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
-                        child: details,
-                      ),
-                    ),
-                  ),
-                ),
-                if (belowButton != null) belowButton,
-              ],
-            )
-          : Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => context.push('/product/${product.id}'),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
-                  child: details,
-                ),
-              ),
-            ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/product/${product.id}'),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+            child: details,
+          ),
+        ),
+      ),
     );
   }
 }

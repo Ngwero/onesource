@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/theme.dart';
 import '../i18n/app_strings.dart';
 import '../models/product.dart';
-import '../utils/cart_feedback.dart';
 import 'product_card_details.dart';
-import 'product_checkout_actions.dart';
 import 'product_image_zoom.dart';
 import 'product_thumbnail.dart';
 import 'quantity_stepper.dart';
 import 'rating_stars.dart';
 
-class HorizontalProductCard extends ConsumerWidget {
+class HorizontalProductCard extends StatelessWidget {
   const HorizontalProductCard({
     super.key,
     required this.product,
@@ -24,6 +21,8 @@ class HorizontalProductCard extends ConsumerWidget {
   });
 
   final Product product;
+  // Checkout lives on the product details page.
+  // ignore: unused_field
   final VoidCallback? onBuy;
   final int? quantity;
   final ValueChanged<int>? onQuantityChanged;
@@ -33,7 +32,7 @@ class HorizontalProductCard extends ConsumerWidget {
   final bool showImageZoom;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final category = ProductCardDetails.categoryLabel(product, context.tr);
     final desc = context.tr.productDescription(product).trim();
     final subtitle = desc.isNotEmpty
@@ -141,27 +140,14 @@ class HorizontalProductCard extends ConsumerWidget {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          if (quantity != null && onQuantityChanged != null)
-                            QuantityStepper(
-                              quantity: quantity!,
-                              compact: true,
-                              onChanged: onQuantityChanged!,
-                            )
-                          else if (onBuy != null)
-                            Expanded(
-                              child: ProductCheckoutActions(
-                                inStock: product.inStock,
-                                onAdd: onBuy!,
-                                onPayNow: () => payNowAndCheckout(context, ref, product),
-                                widthFactor: 1,
-                                height: 40,
-                              ),
-                            ),
-                        ],
-                      ),
+                      if (quantity != null && onQuantityChanged != null) ...[
+                        const SizedBox(height: 12),
+                        QuantityStepper(
+                          quantity: quantity!,
+                          compact: true,
+                          onChanged: onQuantityChanged!,
+                        ),
+                      ],
                     ],
                   ),
                 ),
