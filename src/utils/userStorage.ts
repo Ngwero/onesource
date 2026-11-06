@@ -1,13 +1,28 @@
+import type { ShopMode } from "./shopMode";
+import { shopModeForProductId } from "./shopMode";
+
 const HISTORY_PREFIX = "os-browse-history:";
 const LIST_PREFIX = "os-saved-list:";
 
 export type HistoryEntry = {
   productId: string;
   viewedAt: string;
+  /** Shop the product belongs to; older entries may omit this and are inferred from id. */
+  shop?: ShopMode;
 };
 
 export function storageUserKey(userId: string | null | undefined): string {
   return userId ?? "guest";
+}
+
+function normalizeHistoryEntry(entry: HistoryEntry): HistoryEntry {
+  const productId = String(entry.productId ?? "");
+  if (!productId) return entry;
+  return {
+    productId,
+    viewedAt: entry.viewedAt || new Date(0).toISOString(),
+    shop: entry.shop ?? shopModeForProductId(productId),
+  };
 }
 
 export function getBrowsingHistory(userId: string | null | undefined): HistoryEntry[] {
@@ -15,17 +30,33 @@ export function getBrowsingHistory(userId: string | null | undefined): HistoryEn
     const raw = localStorage.getItem(`${HISTORY_PREFIX}${storageUserKey(userId)}`);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as HistoryEntry[];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((e) => e && typeof e.productId === "string" && e.productId)
+      .map(normalizeHistoryEntry);
   } catch {
     return [];
   }
 }
 
-export function addBrowsingHistory(userId: string | null | undefined, productId: string) {
+/** Recently viewed entries for one shop home (Fresh / Kitchen / Cosmetics / Pharmacy). */
+export function getBrowsingHistoryForShop(
+  userId: string | null | undefined,
+  shop: ShopMode,
+): HistoryEntry[] {
+  return getBrowsingHistory(userId).filter((e) => (e.shop ?? shopModeForProductId(e.productId)) === shop);
+}
+
+export function addBrowsingHistory(
+  userId: string | null | undefined,
+  productId: string,
+  shop?: ShopMode,
+) {
   const key = `${HISTORY_PREFIX}${storageUserKey(userId)}`;
+  const resolvedShop = shop ?? shopModeForProductId(productId);
   const existing = getBrowsingHistory(userId).filter((e) => e.productId !== productId);
   const next: HistoryEntry[] = [
-    { productId, viewedAt: new Date().toISOString() },
+    { productId, viewedAt: new Date().toISOString(), shop: resolvedShop },
     ...existing,
   ].slice(0, 24);
   localStorage.setItem(key, JSON.stringify(next));

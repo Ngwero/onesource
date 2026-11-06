@@ -46,7 +46,7 @@ import { cosmeticsAislePath, isCosmeticsProduct } from "../utils/cosmeticsMode";
 import { COSMETICS_AISLES, cosmeticsAisleIdFromProductId } from "../data/cosmetics";
 import { pharmacyAislePath, isPharmacyProduct } from "../utils/pharmacyMode";
 import { PHARMACY_AISLES, pharmacyAisleIdFromProductId } from "../data/pharmacy";
-import { excludeSpecialtyProducts } from "../utils/shopMode";
+import { excludeSpecialtyProducts, shopModeForProduct, shopModeForProductId } from "../utils/shopMode";
 
 function sameShopPool(product: Product, products: Product[]) {
   if (isKitchenProduct(product)) return products.filter(isKitchenProduct);
@@ -119,10 +119,12 @@ function ProductPageContent() {
   const [shareDone, setShareDone] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      addBrowsingHistory(user?.id, id);
-    }
-  }, [id, user?.id]);
+    if (!id) return;
+    const shop = product
+      ? shopModeForProduct(product)
+      : shopModeForProductId(id);
+    addBrowsingHistory(user?.id, id, shop);
+  }, [id, user?.id, product]);
 
   useEffect(() => {
     if (!id) return;

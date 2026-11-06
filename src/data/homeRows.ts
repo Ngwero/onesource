@@ -54,6 +54,10 @@ function titleMatches(product: Product, pattern: RegExp): boolean {
  * High-count produce varieties that are not their own AGRI category.
  * Placed above the broad Fresh Fruits row so shoppers see packed aisles first.
  */
+function isSoftDrinkTitle(product: Product): boolean {
+  return titleMatches(product, /\bfanta\b|\bsoda\b|\bcoca[\s-]?cola\b|\bsprite\b|\bpepsi\b/i);
+}
+
 export const FRESH_HOME_THEMED_ROWS: ThemedRowDef[] = [
   {
     id: "berries",
@@ -108,6 +112,105 @@ export const FRESH_HOME_THEMED_ROWS: ThemedRowDef[] = [
     seeAllCategoryId: "fresh-fruits",
     minProducts: 6,
     match: (p) => titleMatches(p, /\bapples?\b/i),
+  },
+  {
+    id: "citrus",
+    titleKey: "home.rows.citrus",
+    title: "Oranges & citrus",
+    seeAllSearch: "orange",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) =>
+      titleMatches(p, /\b(?:oranges?|tangerines?|mandarins?|citrus|lemons?|limes?)\b/i) &&
+      !titleMatches(p, /potato/i),
+  },
+  {
+    id: "pineapple",
+    titleKey: "home.rows.pineapple",
+    title: "Pineapple",
+    seeAllSearch: "pineapple",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /pine\s*apple/i) && !isSoftDrinkTitle(p),
+  },
+  {
+    id: "watermelon",
+    titleKey: "home.rows.watermelon",
+    title: "Watermelon",
+    seeAllSearch: "watermelon",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /watermelon/i),
+  },
+  {
+    id: "bananas",
+    titleKey: "home.rows.bananas",
+    title: "Bananas",
+    seeAllSearch: "banana",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /banana|plantain|matoke/i),
+  },
+  {
+    id: "tomatoes",
+    titleKey: "home.rows.tomatoes",
+    title: "Tomatoes",
+    seeAllSearch: "tomato",
+    seeAllCategoryId: "fresh-vegetables",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /tomato/i),
+  },
+  {
+    id: "onions",
+    titleKey: "home.rows.onions",
+    title: "Onions",
+    seeAllSearch: "onion",
+    seeAllCategoryId: "fresh-vegetables",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /onion|shallot/i),
+  },
+  {
+    id: "potatoes",
+    titleKey: "home.rows.potatoes",
+    title: "Potatoes & roots",
+    seeAllSearch: "potato",
+    seeAllCategoryId: "roots-and-tubers",
+    minProducts: 6,
+    match: (p) =>
+      normalizeCategoryId(p.category) === "roots-and-tubers" ||
+      titleMatches(p, /potato|yam|cassava|irish/i),
+  },
+  {
+    id: "chicken",
+    titleKey: "home.rows.chicken",
+    title: "Chicken",
+    seeAllSearch: "chicken",
+    seeAllCategoryId: "poultry-products",
+    minProducts: 6,
+    match: (p) =>
+      !titleMatches(p, /\beggs?\b/i) &&
+      (normalizeCategoryId(p.category) === "poultry-products" ||
+        titleMatches(p, /chicken|broiler|poultry|drumstick|thigh|wing/i)),
+  },
+  {
+    id: "tilapia",
+    titleKey: "home.rows.tilapia",
+    title: "Tilapia",
+    seeAllSearch: "tilapia",
+    seeAllCategoryId: "fish-and-aquaculture",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /tilapia/i),
+  },
+  {
+    id: "beef",
+    titleKey: "home.rows.beef",
+    title: "Beef, lamb & goat",
+    seeAllSearch: "beef",
+    seeAllCategoryId: "livestock-products",
+    minProducts: 6,
+    match: (p) =>
+      normalizeCategoryId(p.category) === "livestock-products" ||
+      titleMatches(p, /beef|lamb|goat|mutton/i),
   },
 ];
 

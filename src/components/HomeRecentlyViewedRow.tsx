@@ -3,17 +3,23 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useProducts } from "../context/ProductsContext";
 import { useEnsureProducts } from "../hooks/useEnsureShops";
-import { getBrowsingHistory } from "../utils/userStorage";
+import type { ShopMode } from "../utils/shopMode";
+import { getBrowsingHistoryForShop } from "../utils/userStorage";
 import { ShopHomeProductRow } from "./ShopHomeProductRow";
 
-/** Home-row carousel of products the shopper recently opened. */
-export function HomeRecentlyViewedRow() {
+type Props = {
+  /** Only show products from this shop home; never mix shops. */
+  shop?: ShopMode;
+};
+
+/** Home-row carousel of products the shopper recently opened in this shop. */
+export function HomeRecentlyViewedRow({ shop = "fresh" }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { products } = useProducts();
   const ids = useMemo(
-    () => getBrowsingHistory(user?.id).map((e) => e.productId).slice(0, 16),
-    [user?.id]
+    () => getBrowsingHistoryForShop(user?.id, shop).map((e) => e.productId).slice(0, 16),
+    [user?.id, shop]
   );
   useEnsureProducts(ids);
 

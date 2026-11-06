@@ -24,11 +24,18 @@ test('high-count Fresh categories get their own row in pinned order', () => {
     ),
   );
   const rows = buildHomeCategoryRows(products, categories);
+  // Poultry / livestock / roots are claimed by chicken / beef / potatoes themed
+  // rows first; remaining pinned categories still appear in order.
+  const themedIds = new Set(['chicken', 'beef', 'potatoes']);
+  assert.ok(rows.some((r) => themedIds.has(r.row.id)));
   const categoryRows = rows.filter((r) => FRESH_HOME_CATEGORY_ORDER.includes(r.row.id));
-  assert.deepEqual(
-    categoryRows.map((r) => r.row.id),
-    [...FRESH_HOME_CATEGORY_ORDER],
+  const expected = FRESH_HOME_CATEGORY_ORDER.filter((id) =>
+    categoryRows.some((r) => r.row.id === id),
   );
+  assert.deepEqual(categoryRows.map((r) => r.row.id), expected);
+  assert.ok(expected.includes('fresh-fruits'));
+  assert.ok(expected.includes('fresh-vegetables'));
+  assert.ok(expected.includes('fish-and-aquaculture'));
 });
 
 test('near-empty categories are omitted from Fresh home', () => {
@@ -56,14 +63,31 @@ test('packed produce variety rows appear when catalogue has enough matches', () 
       product(`mango-${i}`, 'fresh-fruits', `/uploads/mango-${i}.jpg`, { title: `Mangoes – ripe ${i}` }),
     ),
     ...Array.from({ length: 8 }, (_, i) =>
-      product(`other-${i}`, 'fresh-fruits', `/uploads/other-${i}.jpg`, { title: `Pineapple – ${i}` }),
+      product(`citrus-${i}`, 'fresh-fruits', `/uploads/citrus-${i}.jpg`, { title: `Oranges – sweet ${i}` }),
+    ),
+    ...Array.from({ length: 8 }, (_, i) =>
+      product(`other-${i}`, 'fresh-fruits', `/uploads/other-${i}.jpg`, { title: `Guava – ${i}` }),
     ),
   ];
   const rows = buildHomeCategoryRows(products, categories);
   assert.ok(rows.some((r) => r.row.id === 'berries'));
   assert.ok(rows.some((r) => r.row.id === 'mangoes'));
+  assert.ok(rows.some((r) => r.row.id === 'citrus'));
   assert.ok(rows.some((r) => r.row.id === 'fresh-fruits'));
   assert.equal(rows.findIndex((r) => r.row.id === 'berries') < rows.findIndex((r) => r.row.id === 'fresh-fruits'), true);
+});
+
+test('soft-drink pineapple titles stay out of the pineapple row', () => {
+  const products = [
+    ...Array.from({ length: 6 }, (_, i) =>
+      product(`pine-${i}`, 'fresh-fruits', `/uploads/pine-${i}.jpg`, { title: `Pineapple – sweet ${i}` }),
+    ),
+    product('fanta', 'fresh-fruits', '/uploads/fanta.jpg', { title: 'Fanta Pine Apple' }),
+  ];
+  const rows = buildHomeCategoryRows(products, categories);
+  const pine = rows.find((r) => r.row.id === 'pineapple');
+  assert.ok(pine);
+  assert.equal(pine.products.some((p) => p.id === 'fanta'), false);
 });
 
 test('no product or source image repeats within or across category rows', () => {
@@ -120,7 +144,7 @@ test('empty categories, hidden products, placeholders and other shops do not lea
       product(`poultry-${i}`, 'poultry-products', `/uploads/poultry-${i}.jpg`, { title: `Chicken – ${i}` }),
     ),
   ], AGRI_CATEGORIES);
-  assert.deepEqual(rows.map(r => r.row.id), ['poultry-products']);
+  assert.deepEqual(rows.map(r => r.row.id), ['chicken']);
 });
 
 test('row limits do not consume images that later categories could show', () => {

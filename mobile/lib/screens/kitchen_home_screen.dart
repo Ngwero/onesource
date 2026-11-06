@@ -19,6 +19,7 @@ import '../widgets/category_marquee.dart';
 import '../widgets/compact_home_bar.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/home_header.dart';
+import '../widgets/home_discovery_rows.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/home_product_row.dart';
 import '../widgets/popular_product_card.dart';
@@ -201,6 +202,16 @@ class _KitchenHomeScreenState extends ConsumerState<KitchenHomeScreen> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: HomeDiscoveryRows(
+                      shop: ShopMode.kitchen,
+                      showBuyItAgain: false,
+                      onAdd: _addToCart,
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                     child: _KitchenHomeRows(onAdd: _addToCart),
                   ),
                 ),

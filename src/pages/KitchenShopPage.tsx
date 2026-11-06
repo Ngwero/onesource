@@ -3,6 +3,7 @@ import { uniquePreviewProducts } from "../utils/uniquePreviewProducts";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
+import { HomeRecentlyViewedRow } from "../components/HomeRecentlyViewedRow";
 import { KitchenAisleCarousel } from "../components/kitchen/KitchenAisleCarousel";
 import { KitchenIkeaProductCard } from "../components/kitchen/KitchenIkeaProductCard";
 import { KitchenInspirationCollage } from "../components/kitchen/KitchenInspirationCollage";
@@ -213,6 +214,7 @@ export function KitchenShopPage() {
       </PageContainer>
 
       <PageContainer className="mt-6 sm:mt-8 space-y-7 sm:space-y-9">
+        <HomeRecentlyViewedRow shop="kitchen" />
         {PINNED_AISLES.map((aisle, index) => (
           <KitchenAisleShelf
             key={aisle.id}

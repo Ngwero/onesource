@@ -25,6 +25,7 @@ const _titleSeeds = <String>[
   'beef',
   'goat',
   'fish',
+  'tilapia',
   'mango',
   'berry',
   'blueberry',
@@ -33,9 +34,13 @@ const _titleSeeds = <String>[
   'passion',
   'avocado',
   'apple',
+  'orange',
+  'pineapple',
+  'watermelon',
   'banana',
   'tomato',
   'onion',
+  'potato',
   'egg',
 ];
 

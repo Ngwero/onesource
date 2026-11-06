@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { PharmacyHero } from "../components/pharmacy/PharmacyHero";
 import { PageContainer } from "../components/PageContainer";
+import { HomeRecentlyViewedRow } from "../components/HomeRecentlyViewedRow";
 import { ShopInfiniteHomeRow } from "../components/ShopInfiniteHomeRow";
 import { usePharmacyCatalog } from "../hooks/usePharmacyCatalog";
 import type { ProductListQuery } from "../api/client";
@@ -31,6 +32,7 @@ export function PharmacyShopPage() {
       </PageContainer>
 
       <PageContainer className="mt-6 sm:mt-8 space-y-7 sm:space-y-9">
+        <HomeRecentlyViewedRow shop="pharmacy" />
         {offers.length > 0 && (
           <ShopInfiniteHomeRow
             title={t("kitchen.home.feedOffers")}

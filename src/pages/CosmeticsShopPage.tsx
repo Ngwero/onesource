@@ -6,6 +6,7 @@ import { PageContainer } from "../components/PageContainer";
 import { CosmeticsProductCard } from "../components/cosmetics/CosmeticsProductCard";
 import { CosmeticsHeroCarousel } from "../components/cosmetics/CosmeticsHeroCarousel";
 import { CosmeticsCategoryMarquee } from "../components/cosmetics/CosmeticsCategoryMarquee";
+import { HomeRecentlyViewedRow } from "../components/HomeRecentlyViewedRow";
 import { ShopInfiniteHomeRow } from "../components/ShopInfiniteHomeRow";
 import { InfiniteScrollFooter, ProductGridSkeleton } from "../components/InfiniteScrollFooter";
 import { useCosmeticsCatalog } from "../hooks/useCosmeticsCatalog";
@@ -90,6 +91,7 @@ export function CosmeticsShopPage() {
       )}
 
       <PageContainer className="mt-6 sm:mt-8 space-y-7 sm:space-y-9">
+        <HomeRecentlyViewedRow shop="cosmetics" />
         {offers.length > 0 && (
           <ShopInfiniteHomeRow
             title={t("kitchen.home.feedOffers")}

@@ -1,5 +1,6 @@
 import '../data/cosmetics.dart';
 import '../data/pharmacy.dart';
+import '../models/product.dart';
 import 'kitchen_mode.dart';
 
 /// Fresh produce, Kitchen Ware, Cosmetics and Pharmacy.
@@ -10,6 +11,21 @@ ShopMode shopModeForLocation(String location) {
   if (isCosmeticsPath(location)) return ShopMode.cosmetics;
   if (isKitchenPath(location)) return ShopMode.kitchen;
   return ShopMode.fresh;
+}
+
+/// Infer shop from SKU prefix when category data is unavailable.
+ShopMode shopModeForProductId(String productId) {
+  if (productId.startsWith('pharmacy-')) return ShopMode.pharmacy;
+  if (productId.startsWith('cosmetics-')) return ShopMode.cosmetics;
+  if (productId.startsWith('kitchen-')) return ShopMode.kitchen;
+  return ShopMode.fresh;
+}
+
+ShopMode shopModeForProduct(Product product) {
+  if (isPharmacyProduct(product)) return ShopMode.pharmacy;
+  if (isCosmeticsProduct(product)) return ShopMode.cosmetics;
+  if (isKitchenProduct(product)) return ShopMode.kitchen;
+  return shopModeForProductId(product.id);
 }
 
 extension ShopModePaths on ShopMode {

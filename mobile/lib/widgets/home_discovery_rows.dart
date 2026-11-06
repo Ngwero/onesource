@@ -7,13 +7,22 @@ import '../models/product.dart';
 import '../providers/user_lists_provider.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
+import '../utils/shop_mode.dart';
 import 'product_recommendation_row.dart';
 
-/// Recently viewed (local history) + buy-it-again (API) for the Fresh home.
+/// Recently viewed (local history) + buy-it-again (API) for a shop home.
+/// Recently viewed is scoped to [shop] so Fresh never mixes Kitchen SKUs, etc.
 class HomeDiscoveryRows extends ConsumerStatefulWidget {
-  const HomeDiscoveryRows({super.key, required this.onAdd});
+  const HomeDiscoveryRows({
+    super.key,
+    required this.onAdd,
+    this.shop = ShopMode.fresh,
+    this.showBuyItAgain = true,
+  });
 
   final void Function(Product product) onAdd;
+  final ShopMode shop;
+  final bool showBuyItAgain;
 
   @override
   ConsumerState<HomeDiscoveryRows> createState() => _HomeDiscoveryRowsState();
@@ -26,7 +35,11 @@ class _HomeDiscoveryRowsState extends ConsumerState<HomeDiscoveryRows> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadBuyAgain());
+    if (widget.showBuyItAgain) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadBuyAgain());
+    } else {
+      _loadedBuyAgain = true;
+    }
   }
 
   Future<void> _loadBuyAgain() async {
@@ -38,7 +51,9 @@ class _HomeDiscoveryRowsState extends ConsumerState<HomeDiscoveryRows> {
     final products = await apiClientProvider.fetchBuyAgain();
     if (!mounted) return;
     setState(() {
-      _buyAgain = products;
+      _buyAgain = products
+          .where((p) => shopModeForProduct(p) == widget.shop)
+          .toList();
       _loadedBuyAgain = true;
     });
   }
@@ -46,10 +61,13 @@ class _HomeDiscoveryRowsState extends ConsumerState<HomeDiscoveryRows> {
   @override
   Widget build(BuildContext context) {
     final s = context.tr;
-    final recent = ref.watch(browsingHistoryProvider);
+    final recent = ref
+        .watch(browsingHistoryProvider)
+        .where((p) => shopModeForProduct(p) == widget.shop)
+        .toList();
     final session = ref.watch(authStateProvider).valueOrNull?.session;
 
-    if (session != null && !_loadedBuyAgain) {
+    if (widget.showBuyItAgain && session != null && !_loadedBuyAgain) {
       // Kick a reload when the user signs in after mount.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_loadedBuyAgain) _loadBuyAgain();
@@ -58,7 +76,7 @@ class _HomeDiscoveryRowsState extends ConsumerState<HomeDiscoveryRows> {
 
     return Column(
       children: [
-        if (_buyAgain.isNotEmpty)
+        if (widget.showBuyItAgain && _buyAgain.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 22),
             child: ProductRecommendationRow(

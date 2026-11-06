@@ -14,6 +14,7 @@ import '../utils/cart_feedback.dart';
 import '../utils/shop_mode.dart';
 import '../widgets/compact_home_bar.dart';
 import '../widgets/featured_carousel.dart';
+import '../widgets/home_discovery_rows.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_product_row.dart';
 import '../widgets/popular_product_card.dart';
@@ -131,6 +132,16 @@ class _PharmacyHomeScreenState extends ConsumerState<PharmacyHomeScreen> {
                   ),
                 ),
                 const SliverToBoxAdapter(child: _AisleChips()),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: HomeDiscoveryRows(
+                      shop: ShopMode.pharmacy,
+                      showBuyItAgain: false,
+                      onAdd: (product) => _addToCart(context, ref, product),
+                    ),
+                  ),
+                ),
                 for (final aisle in pharmacyAisles)
                   SliverToBoxAdapter(
                     child: _AisleRow(

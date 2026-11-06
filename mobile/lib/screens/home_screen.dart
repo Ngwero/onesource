@@ -127,7 +127,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final moreProducts = products.length > _popularCount
         ? products.skip(_popularCount).toList()
         : <Product>[];
-    final themedRows = buildHomeThemedRows(catalog, minRows: 12);
+    final themedRows = buildHomeThemedRows(catalog);
     final produceCategories = diversifyFreshCategories(
       (categoriesAsync.valueOrNull ?? [])
           .where((c) =>

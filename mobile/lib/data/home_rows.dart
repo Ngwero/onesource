@@ -78,34 +78,22 @@ final homeProductRows = <HomeRowConfig>[
     match: _isApple,
   ),
   HomeRowConfig(
-    id: 'fruits',
+    id: 'citrus',
+    seeAllSearch: 'orange',
     seeAllCategoryId: 'fresh-fruits',
-    seeAllSearch: 'fruit',
-    match: _inCategory('fresh-fruits'),
+    match: _isCitrus,
   ),
   HomeRowConfig(
-    id: 'chicken',
-    seeAllCategoryId: 'poultry-products',
-    seeAllSearch: 'chicken',
-    match: _isChicken,
+    id: 'pineapple',
+    seeAllSearch: 'pineapple',
+    seeAllCategoryId: 'fresh-fruits',
+    match: _isPineapple,
   ),
   HomeRowConfig(
-    id: 'vegetables',
-    seeAllCategoryId: 'fresh-vegetables',
-    seeAllSearch: 'vegetable',
-    match: _isVegetable,
-  ),
-  HomeRowConfig(
-    id: 'fish',
-    seeAllCategoryId: 'fish-and-aquaculture',
-    seeAllSearch: 'fish',
-    match: _isFish,
-  ),
-  HomeRowConfig(
-    id: 'beef',
-    seeAllCategoryId: 'livestock-products',
-    seeAllSearch: 'beef',
-    match: _isBeef,
+    id: 'watermelon',
+    seeAllSearch: 'watermelon',
+    seeAllCategoryId: 'fresh-fruits',
+    match: _isWatermelon,
   ),
   HomeRowConfig(
     id: 'bananas',
@@ -132,6 +120,42 @@ final homeProductRows = <HomeRowConfig>[
     match: _isPotato,
   ),
   HomeRowConfig(
+    id: 'chicken',
+    seeAllCategoryId: 'poultry-products',
+    seeAllSearch: 'chicken',
+    match: _isChicken,
+  ),
+  HomeRowConfig(
+    id: 'tilapia',
+    seeAllSearch: 'tilapia',
+    seeAllCategoryId: 'fish-and-aquaculture',
+    match: _isTilapia,
+  ),
+  HomeRowConfig(
+    id: 'beef',
+    seeAllCategoryId: 'livestock-products',
+    seeAllSearch: 'beef',
+    match: _isBeef,
+  ),
+  HomeRowConfig(
+    id: 'fruits',
+    seeAllCategoryId: 'fresh-fruits',
+    seeAllSearch: 'fruit',
+    match: _inCategory('fresh-fruits'),
+  ),
+  HomeRowConfig(
+    id: 'vegetables',
+    seeAllCategoryId: 'fresh-vegetables',
+    seeAllSearch: 'vegetable',
+    match: _isVegetable,
+  ),
+  HomeRowConfig(
+    id: 'fish',
+    seeAllCategoryId: 'fish-and-aquaculture',
+    seeAllSearch: 'fish',
+    match: _isFish,
+  ),
+  HomeRowConfig(
     id: 'nuts',
     seeAllCategoryId: 'oilseeds-and-nuts',
     seeAllSearch: 'nuts',
@@ -155,6 +179,7 @@ final homeProductRows = <HomeRowConfig>[
     seeAllSearch: 'coffee',
     match: _isCoffeeTea,
   ),
+  // Near-empty aisles stay configured but are omitted by min-product gating.
   HomeRowConfig(
     id: 'chillies',
     seeAllCategoryId: chilliesCategoryId,
@@ -194,7 +219,19 @@ bool _isAvocado(Product p) => _titleMatches(p, r'avocado');
 
 bool _isApple(Product p) => _titleMatches(p, r'\bapples?\b');
 
-bool _isBanana(Product p) => _titleMatches(p, r'banana|plantain');
+bool _isSoftDrink(Product p) =>
+    _titleMatches(p, r'\bfanta\b|\bsoda\b|\bcoca[\s-]?cola\b|\bsprite\b|\bpepsi\b');
+
+bool _isCitrus(Product p) =>
+    _titleMatches(p, r'\b(?:oranges?|tangerines?|mandarins?|citrus|lemons?|limes?)\b') &&
+    !_titleMatches(p, r'potato');
+
+bool _isPineapple(Product p) =>
+    _titleMatches(p, r'pine\s*apple') && !_isSoftDrink(p);
+
+bool _isWatermelon(Product p) => _titleMatches(p, r'watermelon');
+
+bool _isBanana(Product p) => _titleMatches(p, r'banana|plantain|matoke');
 
 bool _isTomato(Product p) => _titleMatches(p, r'tomato');
 
@@ -227,13 +264,16 @@ bool _isChicken(Product p) =>
     (normalizeCategoryId(p.category) == 'poultry-products' ||
         _titleMatches(p, r'chicken|broiler|poultry|drumstick|thigh|wing'));
 
+bool _isTilapia(Product p) => _titleMatches(p, r'tilapia');
+
 bool _isBeef(Product p) =>
     normalizeCategoryId(p.category) == 'livestock-products' ||
     _titleMatches(p, r'beef|lamb|goat|mutton');
 
 bool _isFish(Product p) =>
-    normalizeCategoryId(p.category) == 'fish-and-aquaculture' ||
-    _titleMatches(p, r'fish|tilapia|mackerel|catfish|smoked');
+    !_isTilapia(p) &&
+    (normalizeCategoryId(p.category) == 'fish-and-aquaculture' ||
+        _titleMatches(p, r'fish|mackerel|catfish|smoked'));
 
 bool _isEgg(Product p) =>
     _titleMatches(p, r'\begg') && !_titleMatches(p, r'eggplant');
@@ -270,10 +310,11 @@ List<Product> productsForHomeRow(
 }
 
 /// Build visible home aisle rows — aim for [minRows] sections under Special Offers.
+/// Near-empty aisles (herbs/dairy/chillies, thin produce varieties) stay off the page.
 List<({HomeRowConfig row, List<Product> products})> buildHomeThemedRows(
   List<Product> catalog, {
-  int minRows = 10,
-  int minProductsPerRow = 2,
+  int minRows = 10, // kept for call-site compatibility; packing is catalogue-driven
+  int minProductsPerRow = 6,
   int productLimit = 12,
 }) {
   final matched = <({HomeRowConfig row, List<Product> products})>[];
@@ -283,20 +324,8 @@ List<({HomeRowConfig row, List<Product> products})> buildHomeThemedRows(
       matched.add((row: row, products: products));
     }
   }
-
-  if (matched.length >= minRows) return matched.take(14).toList();
-
-  // Pad with any remaining configured rows that have at least 1 product.
-  final seen = matched.map((e) => e.row.id).toSet();
-  for (final row in homeProductRows) {
-    if (seen.contains(row.id)) continue;
-    final products = productsForHomeRow(catalog, row, limit: productLimit);
-    if (products.isEmpty) continue;
-    matched.add((row: row, products: products));
-    seen.add(row.id);
-    if (matched.length >= minRows) break;
-  }
-  return matched;
+  // Prefer a packed homepage; never pad with near-empty aisles.
+  return matched.take(18).toList();
 }
 
 String? homeRowSeeAllPath(HomeRowConfig row) {

@@ -23,6 +23,22 @@ export function shopModeForPath(pathname: string): ShopMode {
   return "fresh";
 }
 
+/** Infer shop from SKU prefix when the product object is not loaded yet. */
+export function shopModeForProductId(productId: string): ShopMode {
+  if (productId.startsWith("pharmacy-")) return "pharmacy";
+  if (productId.startsWith("cosmetics-")) return "cosmetics";
+  if (productId.startsWith("kitchen-")) return "kitchen";
+  return "fresh";
+}
+
+export function shopModeForProduct(product: Product | null | undefined): ShopMode {
+  if (!product) return "fresh";
+  if (isPharmacyProduct(product)) return "pharmacy";
+  if (isCosmeticsProduct(product)) return "cosmetics";
+  if (isKitchenProduct(product)) return "kitchen";
+  return shopModeForProductId(String(product.id));
+}
+
 export function isSpecialtyProduct(product: Product | null | undefined): boolean {
   return isKitchenProduct(product) || isCosmeticsProduct(product) || isPharmacyProduct(product);
 }
