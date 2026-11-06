@@ -28,10 +28,49 @@ import {
 } from "../lib/mail.js";
 
 import { createOrderAccessToken, verifyOrderAccessToken } from "../lib/orderAccess.js";
+import { getMembershipTier } from "../lib/membershipService.js";
+import { isFeatureEnabled } from "../lib/featureFlags.js";
+import { dealPriceMap } from "../lib/dealsService.js";
+import { enqueueUserNotification } from "../lib/pushNotificationService.js";
+import { logInfo } from "../lib/requestLog.js";
 
 export function createOrdersRouter({ getDb = requireSupabase } = {}) {
   const router = Router();
   const EXPORT_ORDER_MARKER = "[ORDER_TYPE:EXPORT]";
+
+  async function priceWithDeals(db, lines, rows, req) {
+    let dealPriceByProductId;
+    let membershipTier = "standard";
+    let freeDeliveryThreshold;
+    if (isFeatureEnabled("membership") && req?.auth?.id) {
+      try {
+        const membership = await getMembershipTier(db, req.auth.id);
+        membershipTier = membership.tier;
+        freeDeliveryThreshold = membership.freeDeliveryThreshold;
+      } catch (e) {
+        logInfo("orders", "membership lookup skipped", {
+          error: e.message,
+          requestId: req?.requestId,
+        });
+      }
+    }
+    if (isFeatureEnabled("timedDeals") || isFeatureEnabled("deals")) {
+      try {
+        dealPriceByProductId = await dealPriceMap(
+          db,
+          lines.map((l) => l.productId),
+          { isMember: membershipTier !== "standard" }
+        );
+      } catch (e) {
+        logInfo("orders", "deal overlay skipped", { error: e.message, requestId: req?.requestId });
+      }
+    }
+    return priceOrderFromCatalogue(lines, rows, {
+      dealPriceByProductId,
+      membershipTier,
+      freeDeliveryThreshold,
+    });
+  }
 
   function decorateOrder(order) {
     if (!order) return order;
@@ -138,12 +177,14 @@ export function createOrdersRouter({ getDb = requireSupabase } = {}) {
         db,
         lines.map((line) => line.product_id)
       );
-      const priced = priceOrderFromCatalogue(
+      const priced = await priceWithDeals(
+        db,
         lines.map((line) => ({
           productId: line.product_id,
           quantity: line.quantity,
         })),
-        rows
+        rows,
+        req
       );
       if (priced.error) {
         return res.status(priced.status || 400).json({
@@ -216,7 +257,7 @@ export function createOrdersRouter({ getDb = requireSupabase } = {}) {
         db,
         parsed.lines.map((line) => line.productId)
       );
-      const priced = priceOrderFromCatalogue(parsed.lines, rows);
+      const priced = await priceWithDeals(db, parsed.lines, rows, req);
       if (priced.error) {
         return res.status(priced.status || 400).json({
           error: priced.error,
@@ -394,6 +435,15 @@ export function createOrdersRouter({ getDb = requireSupabase } = {}) {
 
       let emailSent = null;
       if (previousStatus !== status) {
+        if (order.user_id && isFeatureEnabled("push")) {
+          enqueueUserNotification(db, {
+            userId: order.user_id,
+            topic: "order_status",
+            title: "Order update",
+            body: `Your order is now ${status.replace(/_/g, " ")}.`,
+            href: `/orders/${order.id}`,
+          }).catch((e) => console.warn("[orders] push enqueue skipped:", e.message));
+        }
         if (status === "confirmed") {
           sendOrderConfirmedEmail(decorateOrder(order))
             .then((r) => {
@@ -418,7 +468,7 @@ export function createOrdersRouter({ getDb = requireSupabase } = {}) {
         }
       }
 
-      res.json({ order: decorateOrder(order), emailSent });
+      res.json({ order: decorateOrder(order), emailSent, requestId: req.requestId });
     } catch (e) {
       console.error("[orders] PATCH", e.message);
       res.status(500).json({ error: e.message || "Failed to update order" });

@@ -37,6 +37,7 @@
     "prime": "prime",
     "sameDayDelivery": "Same-day delivery",
     "addToBasket": "Add to basket",
+    "add": "Add",
     "buyNow": "Buy now",
     "quantity": "Quantity",
     "remove": "Remove",
@@ -496,13 +497,52 @@
       "itemsHeading": "Items in this order",
       "backToOrders": "Back to orders"
     },
+    "reorder": "Reorder",
     "title": "Your orders"
   },
   "lists": {
     "subtitle": "Items you saved for later.",
     "empty": "Your list is empty. Save items from any product page.",
     "addToList": "Save to your list",
-    "removeFromList": "Saved — remove from list"
+    "removeFromList": "Saved — remove from list",
+    "save": "Save to wishlist",
+    "saved": "Saved to wishlist",
+    "savedToast": "Saved to your list",
+    "share": "Share wishlist",
+    "shareLink": "Shareable link",
+    "sharedTitle": "Shared wishlist",
+    "sharedSubtitle": "Someone shared these One Source picks with you."
+  },
+  "deals": {
+    "dealOfDay": "Deal of the Day",
+    "timedDeal": "Timed deal",
+    "endsIn": "Ends in",
+    "shopDeal": "Shop deal"
+  },
+  "membership": {
+    "title": "One Source Plus",
+    "freeDeliveryCopy": "Free delivery on orders of {{amount}} or more — a Plus benefit for every shopper.",
+    "noBilling": "Enrol for free. No subscription billing.",
+    "enrollFree": "Enrol free",
+    "enrolled": "You're enrolled",
+    "signInHint": "Sign in to enrol in One Source Plus."
+  },
+  "returns": {
+    "title": "Request a return",
+    "noRefundNote": "We track return requests only — no automatic refunds.",
+    "item": "Item",
+    "reason": "Reason",
+    "photo": "Photo (optional)",
+    "submit": "Submit return request",
+    "submitted": "Return requested. We'll update the status soon."
+  },
+  "support": {
+    "faqTitle": "Delivery FAQ",
+    "chatTitle": "Order support",
+    "chatHint": "Message our team about this order.",
+    "startChat": "Start chat",
+    "messagePlaceholder": "Type a message…",
+    "send": "Send"
   },
   "history": {
     "subtitle": "Products you recently viewed.",
@@ -1053,7 +1093,9 @@
     "freeSameDay": "FREE same-day delivery",
     "addMoreForFree": "Add {{amount}} more for FREE delivery",
     "checkout": "Proceed to checkout",
-    "qty": "Qty: {{n}}"
+    "qty": "Qty: {{n}}",
+    "upsellTitle": "Frequently bought together",
+    "upsellSubtitle": "Add related items before checkout."
   },
   "checkout": {
     "title": "Checkout",
@@ -1432,5 +1474,11 @@
     "signInToAsk": "Sign in to ask a question.",
     "awaitingAnswer": "Awaiting an answer",
     "unavailable": "Product Q&A is not enabled yet."
+  },
+  "marketplace": {
+    "seller": "Marketplace seller",
+    "ratingPlaceholder": "Ratings coming soon",
+    "products": "Products from this seller",
+    "noProducts": "No marketplace products linked yet."
   }
 }

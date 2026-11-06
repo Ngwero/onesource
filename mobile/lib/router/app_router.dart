@@ -29,9 +29,14 @@ import '../screens/category_screen.dart';
 import '../screens/search_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/not_found_screen.dart';
+import '../screens/support_thread_screen.dart';
+import '../screens/wishlist_screen.dart';
 import '../utils/shop_mode.dart';
+import '../services/feature_flags.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
+  // Warm feature flags in the background (non-blocking).
+  FeatureFlags.load();
   return GoRouter(
     initialLocation: '/splash',
     debugLogDiagnostics: true,
@@ -88,9 +93,22 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ),
           ),
-          GoRoute(path: '/lists', builder: (_, __) => const SafeArea(child: SavedItemsScreen())),
+          GoRoute(
+            path: '/lists',
+            builder: (_, __) => SafeArea(
+              child: FeatureFlags.current.enabled('wishlists')
+                  ? const WishlistScreen()
+                  : const SavedItemsScreen(),
+            ),
+          ),
           GoRoute(path: '/history', builder: (_, __) => const SafeArea(child: BrowsingHistoryScreen())),
         ],
+      ),
+      GoRoute(
+        path: '/support/:orderId',
+        builder: (context, state) => SupportThreadScreen(
+          orderId: state.pathParameters['orderId']!,
+        ),
       ),
       GoRoute(
         path: '/cosmetics/aisle/:aisleId',

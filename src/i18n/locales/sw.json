@@ -53,7 +53,8 @@
     "retry": "Jaribu tena",
     "backToTop": "Rudi juu",
     "search": "Tafuta",
-    "breadcrumb": "Njia ya urambazaji"
+    "breadcrumb": "Njia ya urambazaji",
+    "add": "Ongeza"
   },
   "notFoundPage": {
     "title": "Ukurasa haupatikani",
@@ -483,13 +484,21 @@
       "itemsHeading": "Bidhaa za agizo hili",
       "backToOrders": "Rudi kwenye maagizo"
     },
-    "title": "Maagizo yako"
+    "title": "Maagizo yako",
+    "reorder": "Agiza tena"
   },
   "lists": {
     "subtitle": "Bidhaa ulizohifadhi kwa baadaye.",
     "empty": "Orodha yako ni tupu. Hifadhi bidhaa kutoka ukurasa wa bidhaa.",
     "addToList": "Hifadhi kwenye orodha yako",
-    "removeFromList": "Imehifadhiwa — ondoa kwenye orodha"
+    "removeFromList": "Imehifadhiwa — ondoa kwenye orodha",
+    "save": "Save to wishlist",
+    "saved": "Saved to wishlist",
+    "savedToast": "Saved to your list",
+    "share": "Shiriki",
+    "shareLink": "Shareable link",
+    "sharedTitle": "Shared wishlist",
+    "sharedSubtitle": "Someone shared these One Source picks with you."
   },
   "history": {
     "subtitle": "Bidhaa ulizotazama hivi karibuni.",
@@ -1817,7 +1826,9 @@
     "freeSameDay": "Uwasilishaji BURE siku hiyo hiyo",
     "addMoreForFree": "Ongeza {{amount}} kwa uwasilishaji BURE",
     "checkout": "Endelea kulipa",
-    "qty": "Kiasi: {{n}}"
+    "qty": "Kiasi: {{n}}",
+    "upsellTitle": "Frequently bought together",
+    "upsellSubtitle": "Add related items before checkout."
   },
   "checkout": {
     "title": "Malipo",
@@ -2188,5 +2199,42 @@
     "signInToAsk": "Ingia ili kuuliza swali.",
     "awaitingAnswer": "Inasubiri jibu",
     "unavailable": "Maswali na majibu ya bidhaa bado hayajawezeshwa."
+  },
+  "deals": {
+    "dealOfDay": "Deal of the Day",
+    "timedDeal": "Timed deal",
+    "endsIn": "Ends in",
+    "shopDeal": "Shop deal"
+  },
+  "membership": {
+    "title": "One Source Plus",
+    "freeDeliveryCopy": "Free delivery on orders of {{amount}} or more — a Plus benefit for every shopper.",
+    "noBilling": "Enrol for free. No subscription billing.",
+    "enrollFree": "Enrol free",
+    "enrolled": "You're enrolled",
+    "signInHint": "Sign in to enrol in One Source Plus."
+  },
+  "returns": {
+    "title": "Request a return",
+    "noRefundNote": "We track return requests only — no automatic refunds.",
+    "item": "Item",
+    "reason": "Reason",
+    "photo": "Photo (optional)",
+    "submit": "Submit return request",
+    "submitted": "Return requested. We'll update the status soon."
+  },
+  "support": {
+    "faqTitle": "Delivery FAQ",
+    "chatTitle": "Order support",
+    "chatHint": "Message our team about this order.",
+    "startChat": "Start chat",
+    "messagePlaceholder": "Type a message…",
+    "send": "Send"
+  },
+  "marketplace": {
+    "seller": "Marketplace seller",
+    "ratingPlaceholder": "Ratings coming soon",
+    "products": "Products from this seller",
+    "noProducts": "No marketplace products linked yet."
   }
 }

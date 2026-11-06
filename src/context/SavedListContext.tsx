@@ -18,6 +18,8 @@ import {
   removeSavedListItem,
   toggleSavedListItem,
 } from "../utils/userStorage";
+import { syncWishlist } from "../api/client";
+import { isFlagEnabled } from "../lib/featureFlags";
 
 type SavedListContextValue = {
   savedIds: ReadonlySet<string>;
@@ -50,6 +52,12 @@ export function SavedListProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user?.id) {
       mergeGuestSavedListIntoUser(user.id);
+      if (isFlagEnabled("wishlists")) {
+        const ids = getSavedList(user.id);
+        void syncWishlist(ids).catch(() => {
+          /* local list remains source of truth when tables missing */
+        });
+      }
     }
   }, [user?.id]);
 

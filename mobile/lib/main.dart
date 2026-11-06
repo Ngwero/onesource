@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'services/sentry_bootstrap.dart';
 
 /// Synchronous on purpose. On a physical iPhone the asset and plugin
 /// channels are not serviced until the Flutter view is attached, which
@@ -25,6 +26,9 @@ void main() {
 
   // Exists even if the first frame is late or the splash element is disposed.
   SplashDeadline.arm();
+  // Fire-and-forget; never block first frame on Sentry.
+  // ignore: unawaited_futures
+  initSentryIfConfigured();
   debugPrint('[OneSource] main() — launching app');
   runApp(const ProviderScope(child: OneSourceApp()));
 }

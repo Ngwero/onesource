@@ -101,6 +101,10 @@
           Orders
           <span class="nav-badge" id="navOrdersBadge" style="display:none">0</span>
         </button>
+        <button type="button" class="nav-btn" data-view="support">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Support chat
+        </button>
         <button type="button" class="nav-btn" data-view="customers">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Customers
@@ -726,6 +730,31 @@
               <span id="ordersTableMeta">—</span>
               <div class="pagination" id="ordersPagination"></div>
             </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-support">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Support threads</h2>
+                <p class="panel-desc">
+                  Order-linked customer chat. Requires a signed-in administrator
+                  (<code>ADMIN_USER_IDS</code> or <code>app_metadata.role=admin</code>).
+                  Paste <code>server/supabase/support-chat.sql</code> if the list is empty.
+                </p>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm" id="refreshSupportThreads">Refresh</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Updated</th><th>Subject</th><th>Order</th><th>User</th><th>Status</th></tr>
+                </thead>
+                <tbody id="supportThreadsTable"></tbody>
+              </table>
+            </div>
+            <p class="panel-desc" id="supportThreadsEmpty" style="display:none;margin-top:1rem">No threads yet.</p>
           </div>
         </section>
 

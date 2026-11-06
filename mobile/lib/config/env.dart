@@ -34,6 +34,9 @@ class Env {
   static bool get isConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
+  /// Optional Sentry DSN — no-op when empty (see `services/sentry_bootstrap.dart`).
+  static const sentryDsn = String.fromEnvironment('SENTRY_DSN', defaultValue: '');
+
   /// Public shop URL (no trailing slash) — used in password-reset emails.
   static String get shopUrl {
     const override = String.fromEnvironment('SHOP_URL');

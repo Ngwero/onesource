@@ -53,7 +53,8 @@
     "retry": "Ongera ugerageze",
     "backToTop": "Subira hejuru",
     "search": "Shakisha",
-    "breadcrumb": "Inzira y'urubuga"
+    "breadcrumb": "Inzira y'urubuga",
+    "add": "Ongeraho"
   },
   "notFoundPage": {
     "title": "Urupapuro ntirwabonetse",
@@ -483,13 +484,21 @@
       "itemsHeading": "Ibintu by'iki gicuruzwa",
       "backToOrders": "Subira ku bicuruzwa"
     },
-    "title": "Ibicuruzwa byawe"
+    "title": "Ibicuruzwa byawe",
+    "reorder": "Ongera utumire"
   },
   "lists": {
     "subtitle": "Ibintu wabitse kugira ngo ubikoreshe nyuma.",
     "empty": "Urutonde rwawe ari ubusa. Bika ibintu uhereye ku rupapuro rw'igicuruzwa.",
     "addToList": "Bika mu rutonde rwawe",
-    "removeFromList": "Byabitswe — kuraho mu rutonde"
+    "removeFromList": "Byabitswe — kuraho mu rutonde",
+    "save": "Save to wishlist",
+    "saved": "Saved to wishlist",
+    "savedToast": "Saved to your list",
+    "share": "Sangiza",
+    "shareLink": "Shareable link",
+    "sharedTitle": "Shared wishlist",
+    "sharedSubtitle": "Someone shared these One Source picks with you."
   },
   "history": {
     "subtitle": "Ibicuruzwa warebye vuba.",
@@ -1817,7 +1826,9 @@
     "freeSameDay": "Gutanga KU BUNTU uyu munsi",
     "addMoreForFree": "Ongeraho {{amount}} kugira ngo ubone gutanga KU BUNTU",
     "checkout": "Komeza kwishyura",
-    "qty": "Umubare: {{n}}"
+    "qty": "Umubare: {{n}}",
+    "upsellTitle": "Frequently bought together",
+    "upsellSubtitle": "Add related items before checkout."
   },
   "checkout": {
     "title": "Kwishyura",
@@ -2188,5 +2199,42 @@
     "signInToAsk": "Injira kugira ngo ubaze ikibazo.",
     "awaitingAnswer": "Bitegereje igisubizo",
     "unavailable": "Ibibazo n’ibisubizo ntibiriho."
+  },
+  "deals": {
+    "dealOfDay": "Deal of the Day",
+    "timedDeal": "Timed deal",
+    "endsIn": "Ends in",
+    "shopDeal": "Shop deal"
+  },
+  "membership": {
+    "title": "One Source Plus",
+    "freeDeliveryCopy": "Free delivery on orders of {{amount}} or more — a Plus benefit for every shopper.",
+    "noBilling": "Enrol for free. No subscription billing.",
+    "enrollFree": "Enrol free",
+    "enrolled": "You're enrolled",
+    "signInHint": "Sign in to enrol in One Source Plus."
+  },
+  "returns": {
+    "title": "Request a return",
+    "noRefundNote": "We track return requests only — no automatic refunds.",
+    "item": "Item",
+    "reason": "Reason",
+    "photo": "Photo (optional)",
+    "submit": "Submit return request",
+    "submitted": "Return requested. We'll update the status soon."
+  },
+  "support": {
+    "faqTitle": "Delivery FAQ",
+    "chatTitle": "Order support",
+    "chatHint": "Message our team about this order.",
+    "startChat": "Start chat",
+    "messagePlaceholder": "Type a message…",
+    "send": "Send"
+  },
+  "marketplace": {
+    "seller": "Marketplace seller",
+    "ratingPlaceholder": "Ratings coming soon",
+    "products": "Products from this seller",
+    "noProducts": "No marketplace products linked yet."
   }
 }

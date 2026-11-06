@@ -10,6 +10,8 @@ import { FREE_DELIVERY_THRESHOLD_GBP } from "../currency/currencies";
 import { calcOrderTotal } from "../utils/checkout";
 import type { Product } from "../types/product";
 import { isExportOnlyCart } from "../utils/exportOrder";
+import { CartUpsellRow } from "../components/CartUpsellRow";
+import { MembershipBenefitsCard } from "../components/MembershipBenefitsCard";
 
 function CartLineItem({
   product,
@@ -128,6 +130,7 @@ export function CartPage() {
               onRemove={() => removeFromCart(product.id)}
             />
           ))}
+          <CartUpsellRow cartItems={items} />
         </div>
 
         <div className="w-full xl:w-96 xl:flex-shrink-0">
@@ -167,6 +170,9 @@ export function CartPage() {
             <Link to="/checkout" className="btn-primary w-full mt-6 min-h-[48px] justify-center">
               {t("cart.checkout")}
             </Link>
+          </div>
+          <div className="mt-4">
+            <MembershipBenefitsCard />
           </div>
         </div>
       </div>

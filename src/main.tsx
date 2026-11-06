@@ -3,6 +3,11 @@ import { createRoot } from 'react-dom/client'
 import './i18n'
 import './index.css'
 import App from './App.tsx'
+import { initSentry } from './lib/sentry'
+import { loadFeatureFlags } from './lib/featureFlags'
+
+void initSentry()
+void loadFeatureFlags()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

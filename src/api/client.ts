@@ -749,3 +749,157 @@ export async function askProductQuestion(
   if (!res.ok) throw new Error((data.error as string) || i18n.t("productQa.submitFailed"));
   return data.question as ProductQuestion;
 }
+
+export type ActiveDeal = {
+  id: string;
+  productId: string;
+  title: string;
+  dealPrice: number | null;
+  startsAt: string;
+  endsAt: string;
+  dealOfDay: boolean;
+  memberOnly: boolean;
+  live: boolean;
+  serverNow: string;
+  msRemaining: number;
+};
+
+export async function fetchActiveDeals(): Promise<{ deals: ActiveDeal[]; serverNow: string }> {
+  const res = await fetch(`${API_BASE}/deals/active`, { cache: "no-store" });
+  if (!res.ok) return { deals: [], serverNow: new Date().toISOString() };
+  const data = await res.json().catch(() => ({}));
+  return {
+    deals: Array.isArray(data.deals) ? data.deals : [],
+    serverNow: data.serverNow || new Date().toISOString(),
+  };
+}
+
+export async function fetchCartUpsell(productIds: string[]): Promise<Product[]> {
+  if (!productIds.length) return [];
+  const qs = new URLSearchParams({ productIds: productIds.join(",") });
+  const res = await fetch(`${API_BASE}/cart/suggestions?${qs}`);
+  if (!res.ok) {
+    const post = await fetch(`${API_BASE}/cart/upsell/suggestions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: productIds.map((id) => ({ productId: id })) }),
+    });
+    if (!post.ok) return [];
+    const data = await post.json().catch(() => ({}));
+    return Array.isArray(data.products) ? data.products : [];
+  }
+  const data = await res.json().catch(() => ({}));
+  return Array.isArray(data.products) ? data.products : [];
+}
+
+export async function syncWishlist(productIds: string[]): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/wishlists`, {
+    method: "PUT",
+    headers: await authHeaders(),
+    body: JSON.stringify({ productIds }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return productIds;
+  return Array.isArray(data.productIds) ? data.productIds : productIds;
+}
+
+export async function createWishlistShareLink(): Promise<string | null> {
+  const res = await fetch(`${API_BASE}/wishlists/share`, {
+    method: "POST",
+    headers: await authHeaders(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return null;
+  return data.sharePath || (data.shareToken ? `/lists/shared/${data.shareToken}` : null);
+}
+
+export async function fetchSharedWishlist(token: string): Promise<{ name?: string; products: Product[] }> {
+  const res = await fetch(`${API_BASE}/wishlists/shared/${encodeURIComponent(token)}`);
+  if (!res.ok) return { products: [] };
+  const data = await res.json().catch(() => ({}));
+  return { name: data.name, products: Array.isArray(data.products) ? data.products : [] };
+}
+
+export async function submitReturnRequest(form: FormData): Promise<{ ok: boolean; error?: string }> {
+  const headers: Record<string, string> = {};
+  if (isSupabaseConfigured) {
+    const { data: { session } } = await getSupabase().auth.getSession();
+    if (session) headers.Authorization = `Bearer ${session.access_token}`;
+  }
+  const res = await fetch(`${API_BASE}/returns`, { method: "POST", headers, body: form });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: (data.error as string) || "Return failed" };
+  return { ok: true };
+}
+
+export async function fetchSupportFaq(): Promise<{ id: string; question: string; answer: string }[]> {
+  const res = await fetch(`${API_BASE}/support/faq`);
+  if (!res.ok) return [];
+  const data = await res.json().catch(() => ({}));
+  return Array.isArray(data.items) ? data.items : [];
+}
+
+export async function openSupportThread(orderId?: string): Promise<{ id: string } | null> {
+  const res = await fetch(`${API_BASE}/support/threads`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify({ orderId }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return null;
+  return data.thread ?? null;
+}
+
+export async function fetchSupportMessages(threadId: string): Promise<{ id: string; body: string; senderRole: string; createdAt: string }[]> {
+  const res = await fetch(`${API_BASE}/support/threads/${encodeURIComponent(threadId)}/messages`, {
+    headers: await authHeaders(),
+  });
+  if (!res.ok) return [];
+  const data = await res.json().catch(() => ({}));
+  return Array.isArray(data.messages) ? data.messages : [];
+}
+
+export async function postSupportMessage(threadId: string, body: string): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/support/threads/${encodeURIComponent(threadId)}/messages`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify({ body }),
+  });
+  return res.ok;
+}
+
+export async function reorderDeliveredOrder(orderId: string): Promise<{ product: Product; quantity: number }[]> {
+  const res = await fetch(`${API_BASE}/subscriptions/reorder/${encodeURIComponent(orderId)}`, {
+    method: "POST",
+    headers: await authHeaders(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data.error as string) || "Reorder failed");
+  return Array.isArray(data.items) ? data.items : [];
+}
+
+export async function enrollOneSourcePlus(): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/membership/enroll`, {
+    method: "POST",
+    headers: await authHeaders(),
+  });
+  return res.ok;
+}
+
+export async function fetchMembershipMe(): Promise<{ enrolled: boolean; freeDeliveryThresholdUgx: number }> {
+  const res = await fetch(`${API_BASE}/membership/me`, { headers: await authHeaders() });
+  const data = await res.json().catch(() => ({}));
+  return {
+    enrolled: Boolean(data.enrolled),
+    freeDeliveryThresholdUgx: Number(data.freeDeliveryThresholdUgx) || 100_000,
+  };
+}
+
+export async function createStapleSubscription(productId: string, intervalDays = 14): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/subscriptions`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify({ productId, intervalDays }),
+  });
+  return res.ok;
+}

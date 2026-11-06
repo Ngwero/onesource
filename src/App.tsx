@@ -23,6 +23,8 @@ import { AccountPage } from "./pages/AccountPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { OrderDetailPage } from "./pages/OrderDetailPage";
 import { ListsPage } from "./pages/ListsPage";
+import { SharedWishlistPage } from "./pages/SharedWishlistPage";
+import { SellerPage } from "./pages/SellerPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { CheckoutConfirmationPage } from "./pages/CheckoutConfirmationPage";
@@ -138,6 +140,8 @@ export default function App() {
                     }
                   />
                   <Route path="lists" element={<ListsPage />} />
+                  <Route path="lists/shared/:token" element={<SharedWishlistPage />} />
+                  <Route path="seller/:slug" element={<SellerPage />} />
                   <Route path="history" element={<HistoryPage />} />
                   <Route path="privacy" element={<PrivacyPolicyPage />} />
                   <Route path="*" element={<NotFoundPage />} />

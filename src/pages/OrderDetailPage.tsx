@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { BrandLoader } from "../components/BrandLoader";
 import { OrderProgressRoadmap } from "../components/OrderProgressRoadmap";
 import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
-import { fetchOrderById } from "../api/client";
+import { fetchOrderById, reorderDeliveredOrder } from "../api/client";
 import type { Order } from "../types/order";
+import { OrderReturnForm } from "../components/OrderReturnForm";
+import { OrderSupportChat } from "../components/OrderSupportChat";
+import { useCart } from "../context/CartContext";
+import { isFlagEnabled } from "../lib/featureFlags";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -24,9 +28,12 @@ export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reorderBusy, setReorderBusy] = useState(false);
 
   useEffect(() => {
     if (!id || !user?.id) {
@@ -77,7 +84,32 @@ export function OrderDetailPage() {
             {formatDate(order.created_at)}
           </p>
         </div>
-        <p className="text-xl font-bold text-accent">{formatPrice(Number(order.total))}</p>
+        <div className="flex flex-col items-end gap-2">
+          <p className="text-xl font-bold text-accent">{formatPrice(Number(order.total))}</p>
+          {order.status === "delivered" && isFlagEnabled("subscriptions") && (
+            <button
+              type="button"
+              className="btn-secondary text-sm min-h-[40px]"
+              disabled={reorderBusy}
+              onClick={async () => {
+                setReorderBusy(true);
+                try {
+                  const lines = await reorderDeliveredOrder(order.id);
+                  for (const line of lines) {
+                    addToCart(line.product, line.quantity, { openBasket: false });
+                  }
+                  navigate("/cart");
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : t("errors.genericLoad"));
+                } finally {
+                  setReorderBusy(false);
+                }
+              }}
+            >
+              {t("orders.reorder")}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="card p-5 sm:p-6 mt-6">
@@ -142,6 +174,9 @@ export function OrderDetailPage() {
           </dl>
         </div>
       </div>
+
+      <OrderReturnForm order={order} />
+      <OrderSupportChat orderId={order.id} />
     </PageContainer>
   );
 }

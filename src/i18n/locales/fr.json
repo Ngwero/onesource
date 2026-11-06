@@ -53,7 +53,8 @@
     "retry": "Réessayer",
     "backToTop": "Retour en haut",
     "search": "Rechercher",
-    "breadcrumb": "Fil d'Ariane"
+    "breadcrumb": "Fil d'Ariane",
+    "add": "Ajouter"
   },
   "notFoundPage": {
     "title": "Page introuvable",
@@ -483,13 +484,21 @@
       "itemsHeading": "Articles de cette commande",
       "backToOrders": "Retour aux commandes"
     },
-    "title": "Vos commandes"
+    "title": "Vos commandes",
+    "reorder": "Commander à nouveau"
   },
   "lists": {
     "subtitle": "Articles que vous avez enregistrés pour plus tard.",
     "empty": "Votre liste est vide. Enregistrez des articles depuis une fiche produit.",
     "addToList": "Enregistrer dans votre liste",
-    "removeFromList": "Enregistré — retirer de la liste"
+    "removeFromList": "Enregistré — retirer de la liste",
+    "save": "Save to wishlist",
+    "saved": "Saved to wishlist",
+    "savedToast": "Saved to your list",
+    "share": "Partager",
+    "shareLink": "Shareable link",
+    "sharedTitle": "Shared wishlist",
+    "sharedSubtitle": "Someone shared these One Source picks with you."
   },
   "history": {
     "subtitle": "Produits que vous avez consultés récemment.",
@@ -1817,7 +1826,9 @@
     "freeSameDay": "Livraison GRATUITE le jour même",
     "addMoreForFree": "Ajoutez {{amount}} pour la livraison GRATUITE",
     "checkout": "Passer au paiement",
-    "qty": "Qté : {{n}}"
+    "qty": "Qté : {{n}}",
+    "upsellTitle": "Souvent achetés ensemble",
+    "upsellSubtitle": "Ajoutez des articles liés avant le paiement."
   },
   "checkout": {
     "title": "Paiement",
@@ -2188,5 +2199,42 @@
     "signInToAsk": "Connectez-vous pour poser une question.",
     "awaitingAnswer": "En attente d’une réponse",
     "unavailable": "Les Q&R produit ne sont pas encore activées."
+  },
+  "deals": {
+    "dealOfDay": "Offre du jour",
+    "timedDeal": "Offre limitée",
+    "endsIn": "Se termine dans",
+    "shopDeal": "Voir l'offre"
+  },
+  "membership": {
+    "title": "One Source Plus",
+    "freeDeliveryCopy": "Livraison gratuite dès {{amount}} — avantage Plus pour tous.",
+    "noBilling": "Inscription gratuite. Pas d'abonnement payant.",
+    "enrollFree": "S'inscrire gratuitement",
+    "enrolled": "Inscrit",
+    "signInHint": "Connectez-vous pour rejoindre One Source Plus."
+  },
+  "returns": {
+    "title": "Demander un retour",
+    "noRefundNote": "Suivi des retours uniquement — pas de remboursement automatique.",
+    "item": "Article",
+    "reason": "Motif",
+    "photo": "Photo (optionnel)",
+    "submit": "Envoyer la demande",
+    "submitted": "Retour demandé. Statut bientôt mis à jour."
+  },
+  "support": {
+    "faqTitle": "FAQ livraison",
+    "chatTitle": "Assistance commande",
+    "chatHint": "Écrivez-nous à propos de cette commande.",
+    "startChat": "Démarrer le chat",
+    "messagePlaceholder": "Votre message…",
+    "send": "Envoyer"
+  },
+  "marketplace": {
+    "seller": "Marketplace seller",
+    "ratingPlaceholder": "Ratings coming soon",
+    "products": "Products from this seller",
+    "noProducts": "No marketplace products linked yet."
   }
 }

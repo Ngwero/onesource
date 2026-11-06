@@ -558,6 +558,86 @@ class ApiClient {
     return Order.fromJson(data['order'] as Map<String, dynamic>);
   }
 
+  Future<List<({Product product, int quantity})>> reorderDeliveredOrder(String orderId) async {
+    final res = await _client.post(
+      _uri('/subscriptions/reorder/$orderId'),
+      headers: _orderHeaders(),
+      body: '{}',
+    );
+    if (res.statusCode != 200) throw ApiException(_errorMessage(res));
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    final items = data['items'] as List<dynamic>? ?? [];
+    return [
+      for (final row in items)
+        (
+          product: Product.fromJson((row as Map)['product'] as Map<String, dynamic>),
+          quantity: (row['quantity'] as num?)?.toInt() ?? 1,
+        ),
+    ];
+  }
+
+  Future<void> submitReturnRequest({
+    required String orderId,
+    required String reason,
+    String? orderItemId,
+    String? productId,
+  }) async {
+    final res = await _client.post(
+      _uri('/returns'),
+      headers: _orderHeaders(),
+      body: jsonEncode({
+        'orderId': orderId,
+        'reason': reason,
+        if (orderItemId != null) 'orderItemId': orderItemId,
+        if (productId != null) 'productId': productId,
+      }),
+    );
+    if (res.statusCode != 201 && res.statusCode != 200) {
+      throw ApiException(_errorMessage(res));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchSupportFaq() async {
+    final res = await _getWithRetry(_uri('/support/faq'));
+    if (res.statusCode != 200) return const [];
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return (data['items'] as List<dynamic>? ?? [])
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+  }
+
+  Future<String?> openSupportThread({String? orderId}) async {
+    final res = await _client.post(
+      _uri('/support/threads'),
+      headers: _orderHeaders(),
+      body: jsonEncode({if (orderId != null) 'orderId': orderId}),
+    );
+    if (res.statusCode != 201 && res.statusCode != 200) return null;
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return (data['thread'] as Map?)?['id'] as String?;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchSupportMessages(String threadId) async {
+    final res = await _getWithRetry(
+      _uri('/support/threads/$threadId/messages'),
+      headers: _orderHeaders(),
+    );
+    if (res.statusCode != 200) return const [];
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return (data['messages'] as List<dynamic>? ?? [])
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+  }
+
+  Future<bool> postSupportMessage(String threadId, String body) async {
+    final res = await _client.post(
+      _uri('/support/threads/$threadId/messages'),
+      headers: _orderHeaders(),
+      body: jsonEncode({'body': body}),
+    );
+    return res.statusCode == 201 || res.statusCode == 200;
+  }
+
   Future<Map<String, dynamic>> reserveCheckout(
     List<({String productId, int quantity})> items,
   ) async {

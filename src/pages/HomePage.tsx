@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { PageContainer } from "../components/PageContainer";
 import { HeroSlider } from "../components/HeroSlider";
 import { PromoMarquee } from "../components/PromoMarquee";
+import { DealOfDayBanner } from "../components/DealOfDayBanner";
 import { HomeProductRow } from "../components/HomeProductRow";
 import { HomeRecentlyViewedRow } from "../components/HomeRecentlyViewedRow";
 import { HomeBuyItAgainRow } from "../components/HomeBuyItAgainRow";
@@ -22,10 +23,11 @@ export function HomePage() {
         <HeroSlider />
       </PageContainer>
 
-      <PageContainer className="mt-4 sm:mt-6">
+      <PageContainer className="mt-4 sm:mt-6 space-y-4">
         <ScrollReveal variant="fade">
           <PromoMarquee />
         </ScrollReveal>
+        <DealOfDayBanner />
       </PageContainer>
 
       <PageContainer className="mt-6 sm:mt-8 space-y-7 sm:space-y-9">

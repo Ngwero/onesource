@@ -8,16 +8,30 @@ import { asMoneyInteger, BASE_CURRENCY } from "./money.js";
 
 export const DELIVERY_FEE_UGX = 15_000;
 export const FREE_DELIVERY_THRESHOLD_UGX = 100_000;
+/** Member tier free-delivery threshold (UGX). Override via env when wiring membership. */
+export const MEMBER_FREE_DELIVERY_THRESHOLD_UGX = Number(
+  process.env.MEMBER_FREE_DELIVERY_THRESHOLD_UGX || 50_000
+);
 export const ORDER_CURRENCY = BASE_CURRENCY;
 
-export function calcDeliveryFee(subtotalUgx) {
+/**
+ * @param {number} subtotalUgx
+ * @param {{ membershipTier?: string, freeDeliveryThreshold?: number }} [opts]
+ */
+export function calcDeliveryFee(subtotalUgx, opts = {}) {
   const subtotal = asMoneyInteger(subtotalUgx) ?? 0;
-  return subtotal >= FREE_DELIVERY_THRESHOLD_UGX ? 0 : DELIVERY_FEE_UGX;
+  const tier = opts.membershipTier;
+  const threshold =
+    opts.freeDeliveryThreshold ??
+    (tier && tier !== "standard" && tier !== "none"
+      ? MEMBER_FREE_DELIVERY_THRESHOLD_UGX
+      : FREE_DELIVERY_THRESHOLD_UGX);
+  return subtotal >= threshold ? 0 : DELIVERY_FEE_UGX;
 }
 
-export function calcOrderTotal(subtotalUgx) {
+export function calcOrderTotal(subtotalUgx, opts = {}) {
   const subtotal = asMoneyInteger(subtotalUgx) ?? 0;
-  const delivery = calcDeliveryFee(subtotal);
+  const delivery = calcDeliveryFee(subtotal, opts);
   return { delivery, total: subtotal + delivery };
 }
 
@@ -124,8 +138,18 @@ function isListed(product) {
 /**
  * Recalculate every line from catalogue rows. Client prices are discarded.
  * `products` may be an array of rows or a Map keyed by id.
+ * Optional `dealPriceByProductId` Map applies live timed-deal prices (server-authoritative).
  */
-export function priceOrderFromCatalogue(lines, products, { requirePublished = true } = {}) {
+export function priceOrderFromCatalogue(
+  lines,
+  products,
+  {
+    requirePublished = true,
+    dealPriceByProductId,
+    membershipTier,
+    freeDeliveryThreshold,
+  } = {}
+) {
   const byId = products instanceof Map ? products : productMap(products);
   const priced = [];
 
@@ -140,10 +164,18 @@ export function priceOrderFromCatalogue(lines, products, { requirePublished = tr
     if (!Number.isSafeInteger(line.quantity) || line.quantity < 1) {
       return { error: "Quantity must be a positive integer", status: 400 };
     }
-    const unit = cataloguePrice(product);
-    if (unit == null) {
+    const catalogueUnit = cataloguePrice(product);
+    if (catalogueUnit == null) {
       return { error: `Invalid catalogue price for ${line.productId}`, status: 400 };
     }
+    const dealUnit =
+      dealPriceByProductId instanceof Map
+        ? asMoneyInteger(dealPriceByProductId.get(line.productId))
+        : null;
+    const unit =
+      dealUnit != null && dealUnit > 0 && dealUnit < catalogueUnit
+        ? dealUnit
+        : catalogueUnit;
     const stock = catalogueStock(product);
     if (!isListed(product) || stock < line.quantity) {
       return {
@@ -170,12 +202,14 @@ export function priceOrderFromCatalogue(lines, products, { requirePublished = tr
   if (!Number.isSafeInteger(subtotal)) {
     return { error: "Order total is too large", status: 400 };
   }
-  const { delivery, total } = calcOrderTotal(subtotal);
+  const pricingOpts = { membershipTier, freeDeliveryThreshold };
+  const { delivery, total } = calcOrderTotal(subtotal, pricingOpts);
   return {
     items: priced,
     subtotal,
     delivery_fee: delivery,
     total,
     currency: ORDER_CURRENCY,
+    membership_tier: membershipTier || "standard",
   };
 }

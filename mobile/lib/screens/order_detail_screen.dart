@@ -8,6 +8,7 @@ import '../i18n/app_strings.dart';
 import '../models/order.dart';
 import '../services/api_client.dart';
 import '../widgets/brand_loader.dart';
+import '../widgets/order_engagement_panel.dart';
 import '../widgets/order_progress.dart';
 import '../widgets/product_thumbnail.dart';
 
@@ -117,6 +118,17 @@ class OrderDetailScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
+              OrderEngagementPanel(order: order),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => context.push('/support/${order.id}'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: Text(context.tr.or('app.support.chat', 'Order support')),
+              ),
+              const SizedBox(height: 10),
               OutlinedButton(
                 onPressed: () => context.go('/shop'),
                 style: OutlinedButton.styleFrom(

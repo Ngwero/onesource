@@ -367,6 +367,7 @@ const viewTitles = {
   "kitchen-collage": "Kitchen collage",
   notifications: "Notifications",
   orders: "Orders",
+  support: "Support chat",
   suppliers: "Suppliers",
   packaging: "Packaging",
   customers: "Customers",
@@ -386,6 +387,7 @@ const viewBreadcrumbs = {
   notifications: ["Home", "Storefront", "Notifications"],
   suppliers: ["Home", "Marketplace", "Suppliers"],
   orders: ["Home", "Sales", "Orders"],
+  support: ["Home", "Sales", "Support chat"],
   customers: ["Home", "Sales", "Customers"],
   settings: ["Home", "System", "Settings"],
 };
@@ -3403,6 +3405,7 @@ function switchView(name) {
   }
   $("exportCsvBtn").style.display = name === "products" ? "" : "none";
   if (name === "orders") loadOrders();
+  if (name === "support") loadSupportThreads().catch((err) => toast(err.message, true));
   if (name === "packaging") loadPackaging().then(() => renderPackaging());
   if (name === "notifications") {
     loadNotifications().catch((err) => toast(err.message, true));
@@ -4475,3 +4478,34 @@ document.addEventListener("keydown", (e) => {
     setLoading(false);
   }
 })();
+
+async function loadSupportThreads() {
+  const tbody = $("supportThreadsTable");
+  const empty = $("supportThreadsEmpty");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="5">Loading…</td></tr>`;
+  const res = await fetch("/api/support/admin/threads", { credentials: "include" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to load support threads");
+  const threads = data.threads || [];
+  if (empty) empty.style.display = threads.length ? "none" : "";
+  if (!threads.length) {
+    tbody.innerHTML = "";
+    return;
+  }
+  tbody.innerHTML = threads
+    .map(
+      (t) => `<tr>
+      <td>${escapeHtml(new Date(t.updatedAt || t.createdAt).toLocaleString())}</td>
+      <td>${escapeHtml(t.subject || "—")}</td>
+      <td class="mono">${escapeHtml((t.orderId || "—").toString().slice(0, 8))}</td>
+      <td class="mono">${escapeHtml((t.userId || "—").toString().slice(0, 8))}</td>
+      <td>${escapeHtml(t.status || "open")}</td>
+    </tr>`
+    )
+    .join("");
+}
+
+$("refreshSupportThreads")?.addEventListener("click", () => {
+  loadSupportThreads().catch((err) => toast(err.message, true));
+});

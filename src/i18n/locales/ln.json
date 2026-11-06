@@ -53,7 +53,8 @@
     "retry": "Komeka lisusu",
     "backToTop": "Zonga likolo",
     "search": "Luka",
-    "breadcrumb": "Nzela ya navigation"
+    "breadcrumb": "Nzela ya navigation",
+    "add": "Bakisa"
   },
   "notFoundPage": {
     "title": "Lokasa ezwami te",
@@ -483,13 +484,21 @@
       "itemsHeading": "Biloko ya commande oyo",
       "backToOrders": "Zonga na ba commande"
     },
-    "title": "Ba commande na yo"
+    "title": "Ba commande na yo",
+    "reorder": "Sombela lisusu"
   },
   "lists": {
     "subtitle": "Biloko oyo obombaki mpo na nsima.",
     "empty": "Liste na yo ezali mpamba. Bomba biloko na page ya produit.",
     "addToList": "Bomba na liste na yo",
-    "removeFromList": "Ebombami — longola na liste"
+    "removeFromList": "Ebombami — longola na liste",
+    "save": "Save to wishlist",
+    "saved": "Saved to wishlist",
+    "savedToast": "Saved to your list",
+    "share": "Kabola",
+    "shareLink": "Shareable link",
+    "sharedTitle": "Shared wishlist",
+    "sharedSubtitle": "Someone shared these One Source picks with you."
   },
   "history": {
     "subtitle": "Biloko oyo otalaki kala na mwa moke.",
@@ -1817,7 +1826,9 @@
     "freeSameDay": "Livraison GRATUITE mokolo moko",
     "addMoreForFree": "Bakisa {{amount}} mpo na livraison GRATUITE",
     "checkout": "Kende na kofuta",
-    "qty": "Motango: {{n}}"
+    "qty": "Motango: {{n}}",
+    "upsellTitle": "Frequently bought together",
+    "upsellSubtitle": "Add related items before checkout."
   },
   "checkout": {
     "title": "Kofuta",
@@ -2188,5 +2199,42 @@
     "signInToAsk": "Kota mpo na kotuna motuna.",
     "awaitingAnswer": "Ezali kozela eyano",
     "unavailable": "Mituna mpe biyano ezali naino te."
+  },
+  "deals": {
+    "dealOfDay": "Deal of the Day",
+    "timedDeal": "Timed deal",
+    "endsIn": "Ends in",
+    "shopDeal": "Shop deal"
+  },
+  "membership": {
+    "title": "One Source Plus",
+    "freeDeliveryCopy": "Free delivery on orders of {{amount}} or more — a Plus benefit for every shopper.",
+    "noBilling": "Enrol for free. No subscription billing.",
+    "enrollFree": "Enrol free",
+    "enrolled": "You're enrolled",
+    "signInHint": "Sign in to enrol in One Source Plus."
+  },
+  "returns": {
+    "title": "Request a return",
+    "noRefundNote": "We track return requests only — no automatic refunds.",
+    "item": "Item",
+    "reason": "Reason",
+    "photo": "Photo (optional)",
+    "submit": "Submit return request",
+    "submitted": "Return requested. We'll update the status soon."
+  },
+  "support": {
+    "faqTitle": "Delivery FAQ",
+    "chatTitle": "Order support",
+    "chatHint": "Message our team about this order.",
+    "startChat": "Start chat",
+    "messagePlaceholder": "Type a message…",
+    "send": "Send"
+  },
+  "marketplace": {
+    "seller": "Marketplace seller",
+    "ratingPlaceholder": "Ratings coming soon",
+    "products": "Products from this seller",
+    "noProducts": "No marketplace products linked yet."
   }
 }

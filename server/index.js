@@ -19,6 +19,20 @@ import imgRouter from "./routes/img.js";
 import notificationsRouter from "./routes/notifications.js";
 import appVersionRouter from "./routes/appVersion.js";
 import geoRouter from "./routes/geo.js";
+import featuresRouter from "./routes/features.js";
+import flagsRouter from "./routes/flags.js";
+import wishlistsRouter from "./routes/wishlists.js";
+import dealsRouter from "./routes/deals.js";
+import membershipRouter from "./routes/membership.js";
+import cartRouter from "./routes/cart.js";
+import cartUpsellRouter from "./routes/cartUpsell.js";
+import returnsRouter from "./routes/returns.js";
+import supportRouter from "./routes/support.js";
+import pushRouter from "./routes/push.js";
+import subscriptionsRouter from "./routes/subscriptions.js";
+import internalRouter from "./routes/internal.js";
+import sellersRouter from "./routes/sellers.js";
+import { requestIdMiddleware } from "./lib/requestLog.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -38,6 +52,7 @@ app.use((req, res, next) => {
 
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: "2mb" }));
+app.use(requestIdMiddleware);
 
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/upload") || req.path.startsWith("/uploads/")) {
@@ -92,6 +107,19 @@ app.use("/api/notifications", notificationsRouter);
 app.use("/api/img", imgRouter);
 app.use("/api/app-version", appVersionRouter);
 app.use("/api/geo", geoRouter);
+app.use("/api/features", featuresRouter);
+app.use("/api/flags", flagsRouter);
+app.use("/api/wishlists", wishlistsRouter);
+app.use("/api/deals", dealsRouter);
+app.use("/api/membership", membershipRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/cart/upsell", cartUpsellRouter);
+app.use("/api/returns", returnsRouter);
+app.use("/api/support", supportRouter);
+app.use("/api/push", pushRouter);
+app.use("/api/subscriptions", subscriptionsRouter);
+app.use("/api/internal", internalRouter);
+app.use("/api/sellers", sellersRouter);
 
 const uploadsDir = path.join(__dirname, "uploads");
 const storageBucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "images";

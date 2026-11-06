@@ -67,30 +67,88 @@ export function createAuthorization({ getClient = requireSupabase, adminIds } = 
     const admin = /^\/(admin|packaging|suppliers)(\/|$)/.test(path) || req.query.admin === 'true';
     const orders = /^\/orders(\/|$)/.test(path);
     const publicAuth = /^\/auth(\/|$)/.test(path);
-    // Verified-purchase reviews + product Q&A: signed-in shoppers may POST.
+    const internalCron = /^\/internal(\/|$)/.test(path);
+
     const shopperProductWrite =
       /^\/products\/[^/]+\/(reviews|questions)$/.test(path) && req.method === 'POST';
     const shopperAuthGet =
       path === '/products/buy-again' ||
       /^\/products\/[^/]+\/reviews\/eligibility$/.test(path);
+
+    // Shopper-owned feature surfaces (auth required except public carve-outs below).
+    const shopperFeature =
+      /^\/(wishlists|returns|support|push|subscriptions|membership)(\/|$)/.test(path);
+
+    const publicWishlistShare = read && /^\/wishlists\/shared\//.test(path);
+    const publicSupportFaq = read && path === '/support/faq';
+    const publicPushStatus = read && path === '/push/status';
+    const publicMembershipBenefits =
+      read &&
+      (path === '/membership/benefits' ||
+        path === '/membership/config' ||
+        path === '/membership/me');
+
+    const publicFeatureRead =
+      read &&
+      (path === '/features' ||
+        path === '/flags' ||
+        /^\/deals(\/|$)/.test(path) ||
+        /^\/sellers(\/|$)/.test(path) ||
+        path === '/cart/suggestions' ||
+        path === '/membership/config' ||
+        path === '/membership/benefits');
+
+    const shopperOpenWrite =
+      (path === '/cart/suggestions' || path === '/cart/upsell/suggestions') &&
+      req.method === 'POST';
+
+    if (internalCron) {
+      return next();
+    }
+
     if (
       admin ||
       (!read &&
         !publicAuth &&
         !(path === '/orders' && req.method === 'POST') &&
-        !shopperProductWrite)
+        !shopperProductWrite &&
+        !shopperFeature &&
+        !shopperOpenWrite)
     ) {
       return requireAdmin(req, res, next);
     }
+
     if (orders) {
       res.set('Cache-Control', 'no-store');
-      // Guest checkout and token-protected confirmation remain available.
       if (!await authenticate(req, res, path === '/orders' && read)) return;
     }
+
     if (shopperProductWrite || shopperAuthGet) {
       res.set('Cache-Control', 'no-store');
       if (!await authenticate(req, res, true)) return;
     }
+
+    if (
+      shopperFeature &&
+      !publicWishlistShare &&
+      !publicSupportFaq &&
+      !publicPushStatus &&
+      !publicMembershipBenefits
+    ) {
+      res.set('Cache-Control', 'no-store');
+      if (!await authenticate(req, res, true)) return;
+    }
+
+    if (
+      publicFeatureRead ||
+      shopperOpenWrite ||
+      publicWishlistShare ||
+      publicSupportFaq ||
+      publicMembershipBenefits
+    ) {
+      await authenticate(req, res, false);
+    }
+
     next();
   }
   return { guard, requireAdmin, authenticate };
