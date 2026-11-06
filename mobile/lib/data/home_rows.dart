@@ -42,6 +42,42 @@ bool _isChilliProduct(Product p) {
 
 final homeProductRows = <HomeRowConfig>[
   HomeRowConfig(
+    id: 'berries',
+    seeAllCategoryId: 'fresh-fruits',
+    seeAllSearch: 'berry',
+    match: _isBerry,
+  ),
+  HomeRowConfig(
+    id: 'mangoes',
+    seeAllSearch: 'mango',
+    seeAllCategoryId: 'fresh-fruits',
+    match: _isMango,
+  ),
+  HomeRowConfig(
+    id: 'pawpaw',
+    seeAllSearch: 'pawpaw',
+    seeAllCategoryId: 'fresh-fruits',
+    match: _isPawpaw,
+  ),
+  HomeRowConfig(
+    id: 'passion-fruit',
+    seeAllSearch: 'passion',
+    seeAllCategoryId: 'fresh-fruits',
+    match: _isPassionFruit,
+  ),
+  HomeRowConfig(
+    id: 'avocado',
+    seeAllSearch: 'avocado',
+    seeAllCategoryId: 'fresh-fruits',
+    match: _isAvocado,
+  ),
+  HomeRowConfig(
+    id: 'apples',
+    seeAllSearch: 'apple',
+    seeAllCategoryId: 'fresh-fruits',
+    match: _isApple,
+  ),
+  HomeRowConfig(
     id: 'fruits',
     seeAllCategoryId: 'fresh-fruits',
     seeAllSearch: 'fruit',
@@ -66,21 +102,10 @@ final homeProductRows = <HomeRowConfig>[
     match: _isFish,
   ),
   HomeRowConfig(
-    id: 'chillies',
-    seeAllCategoryId: chilliesCategoryId,
-    seeAllSearch: 'chilli',
-    match: _isChilliProduct,
-  ),
-  HomeRowConfig(
     id: 'beef',
     seeAllCategoryId: 'livestock-products',
     seeAllSearch: 'beef',
     match: _isBeef,
-  ),
-  HomeRowConfig(
-    id: 'mangoes',
-    seeAllSearch: 'mango',
-    match: _isMango,
   ),
   HomeRowConfig(
     id: 'bananas',
@@ -107,6 +132,36 @@ final homeProductRows = <HomeRowConfig>[
     match: _isPotato,
   ),
   HomeRowConfig(
+    id: 'nuts',
+    seeAllCategoryId: 'oilseeds-and-nuts',
+    seeAllSearch: 'nuts',
+    match: _isNuts,
+  ),
+  HomeRowConfig(
+    id: 'legumes',
+    seeAllCategoryId: 'legumes-and-pulses',
+    seeAllSearch: 'beans',
+    match: _isLegumes,
+  ),
+  HomeRowConfig(
+    id: 'rice-grains',
+    seeAllCategoryId: 'cereals-and-grains',
+    seeAllSearch: 'rice',
+    match: _isGrains,
+  ),
+  HomeRowConfig(
+    id: 'coffee-tea',
+    seeAllCategoryId: 'coffee-tea-cocoa',
+    seeAllSearch: 'coffee',
+    match: _isCoffeeTea,
+  ),
+  HomeRowConfig(
+    id: 'chillies',
+    seeAllCategoryId: chilliesCategoryId,
+    seeAllSearch: 'chilli',
+    match: _isChilliProduct,
+  ),
+  HomeRowConfig(
     id: 'herbs',
     seeAllCategoryId: 'herbs-and-spices',
     seeAllSearch: 'herb',
@@ -124,33 +179,20 @@ final homeProductRows = <HomeRowConfig>[
     seeAllSearch: 'milk',
     match: _inCategory('dairy-products'),
   ),
-  HomeRowConfig(
-    id: 'legumes',
-    seeAllCategoryId: 'legumes-and-pulses',
-    seeAllSearch: 'beans',
-    match: _isLegumes,
-  ),
-  HomeRowConfig(
-    id: 'nuts',
-    seeAllCategoryId: 'oilseeds-and-nuts',
-    seeAllSearch: 'nuts',
-    match: _isNuts,
-  ),
-  HomeRowConfig(
-    id: 'rice-grains',
-    seeAllCategoryId: 'cereals-and-grains',
-    seeAllSearch: 'rice',
-    match: _isGrains,
-  ),
-  HomeRowConfig(
-    id: 'coffee-tea',
-    seeAllCategoryId: 'coffee-tea-cocoa',
-    seeAllSearch: 'coffee',
-    match: _isCoffeeTea,
-  ),
 ];
 
+bool _isBerry(Product p) =>
+    _titleMatches(p, r'blueberr|raspberr|strawberr|blackberr|\bberry|\bberries\b');
+
 bool _isMango(Product p) => _titleMatches(p, r'mango');
+
+bool _isPawpaw(Product p) => _titleMatches(p, r'paw\s*paw|papaya');
+
+bool _isPassionFruit(Product p) => _titleMatches(p, r'passion');
+
+bool _isAvocado(Product p) => _titleMatches(p, r'avocado');
+
+bool _isApple(Product p) => _titleMatches(p, r'\bapples?\b');
 
 bool _isBanana(Product p) => _titleMatches(p, r'banana|plantain');
 

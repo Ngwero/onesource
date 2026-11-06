@@ -10,6 +10,7 @@ import '../models/hero_slide.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../providers/hero_provider.dart';
+import '../providers/home_aisle_catalog_provider.dart';
 import '../providers/paginated_products_provider.dart';
 import '../providers/products_provider.dart';
 import '../services/auth_service.dart';
@@ -118,11 +119,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     _scrollListener?.scheduleCheck();
     final products = productsState.items;
+    // Seed packed aisles (berries, mangoes, chicken, fish, …) so home rows
+    // appear even when the main feed is fruit-heavy.
+    final aisleSeed = ref.watch(homeAisleCatalogProvider).valueOrNull ?? const [];
+    final catalog = mergeProductPools(products, aisleSeed);
     final popularProducts = products.take(_popularCount).toList();
     final moreProducts = products.length > _popularCount
         ? products.skip(_popularCount).toList()
         : <Product>[];
-    final themedRows = buildHomeThemedRows(products, minRows: 12);
+    final themedRows = buildHomeThemedRows(catalog, minRows: 12);
     final produceCategories = diversifyFreshCategories(
       (categoriesAsync.valueOrNull ?? [])
           .where((c) =>
@@ -154,6 +159,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   .refresh();
               ref.invalidate(categoriesProvider);
               ref.invalidate(heroSlidesProvider('home'));
+              ref.invalidate(homeAisleCatalogProvider);
             },
             child: CustomScrollView(
               controller: _scrollController,

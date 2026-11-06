@@ -7,10 +7,109 @@ export type HomeRowConfig = {
   id: string;
   titleKey: string;
   title: string;
-  seeAllCategoryId: string;
+  seeAllCategoryId?: string;
+  seeAllSearch?: string;
 };
 
 export type HomeCategoryRow = { row: HomeRowConfig; products: Product[] };
+
+/** Skip near-empty aisles on Fresh home (herbs=2, dairy=3, chillies=0). */
+export const FRESH_HOME_MIN_CATEGORY_PRODUCTS = 6;
+
+/**
+ * High-count Fresh category aisles in a produce-first order with protein
+ * interleaved. Counts from shop=fresh (excl. export): fruits 119, veg 16,
+ * fish 16, oilseeds 15, roots 13, cereals 11, legumes/livestock/poultry 10,
+ * coffee 9.
+ */
+export const FRESH_HOME_CATEGORY_ORDER = [
+  "fresh-fruits",
+  "poultry-products",
+  "fresh-vegetables",
+  "fish-and-aquaculture",
+  "oilseeds-and-nuts",
+  "roots-and-tubers",
+  "livestock-products",
+  "cereals-and-grains",
+  "legumes-and-pulses",
+  "coffee-tea-cocoa",
+] as const;
+
+type ThemedRowDef = {
+  id: string;
+  titleKey: string;
+  title: string;
+  seeAllCategoryId?: string;
+  seeAllSearch?: string;
+  /** Minimum matching products in the catalogue before the row is shown. */
+  minProducts: number;
+  match: (product: Product) => boolean;
+};
+
+function titleMatches(product: Product, pattern: RegExp): boolean {
+  return pattern.test(product.title);
+}
+
+/**
+ * High-count produce varieties that are not their own AGRI category.
+ * Placed above the broad Fresh Fruits row so shoppers see packed aisles first.
+ */
+export const FRESH_HOME_THEMED_ROWS: ThemedRowDef[] = [
+  {
+    id: "berries",
+    titleKey: "home.rows.berries",
+    title: "Berries",
+    seeAllSearch: "berry",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /blueberr|raspberr|strawberr|blackberr|\bberry|\bberries\b/i),
+  },
+  {
+    id: "mangoes",
+    titleKey: "home.rows.mangoes",
+    title: "Mangoes",
+    seeAllSearch: "mango",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /mango/i),
+  },
+  {
+    id: "pawpaw",
+    titleKey: "home.rows.pawpaw",
+    title: "Pawpaw",
+    seeAllSearch: "pawpaw",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /paw\s*paw|papaya/i),
+  },
+  {
+    id: "passion-fruit",
+    titleKey: "home.rows.passionFruit",
+    title: "Passion fruit",
+    seeAllSearch: "passion",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /passion/i),
+  },
+  {
+    id: "avocado",
+    titleKey: "home.rows.avocado",
+    title: "Avocado",
+    seeAllSearch: "avocado",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /avocado/i),
+  },
+  {
+    id: "apples",
+    titleKey: "home.rows.apples",
+    title: "Apples",
+    seeAllSearch: "apple",
+    seeAllCategoryId: "fresh-fruits",
+    minProducts: 6,
+    match: (p) => titleMatches(p, /\bapples?\b/i),
+  },
+];
 
 /** Spread varieties across a row instead of leading with one import batch. */
 function mixCategoryProducts(products: Product[]): Product[] {
@@ -58,18 +157,53 @@ export function homeImageKey(image: string): string {
   }
 }
 
-/** One row per populated category, with no reused product or photo on the page. */
+function isFreshHomeProduct(product: Product): boolean {
+  if (product.published === false || isSpecialtyProduct(product)) return false;
+  return normalizeCategoryId(product.category) !== EXPORT_CATEGORY_ID;
+}
+
+function pickUniqueProducts(
+  candidates: Product[],
+  usedProducts: Set<string>,
+  usedImages: Set<string>,
+  limit: number,
+): Product[] {
+  const selected: Product[] = [];
+  for (const product of mixCategoryProducts(candidates)) {
+    if (selected.length >= limit) break;
+    if (usedProducts.has(product.id)) continue;
+    const image = [product.image, ...(product.images ?? [])].find((candidate) => {
+      const key = homeImageKey(candidate);
+      return key !== "" && !usedImages.has(key);
+    });
+    if (!image) continue;
+    usedProducts.add(product.id);
+    usedImages.add(homeImageKey(image));
+    selected.push(image === product.image ? product : { ...product, image });
+  }
+  return selected;
+}
+
+function categoryDisplayName(categories: Category[], id: string): string {
+  return categories.find((c) => normalizeCategoryId(c.id) === id)?.name ?? id;
+}
+
+/**
+ * Fresh home shelves: packed produce variety rows first, then high-count
+ * category aisles. Near-empty categories and export sodas stay off the page.
+ * No reused product or photo across rows.
+ */
 export function buildHomeCategoryRows(
   products: Product[],
   categories: Category[],
   limit = 12,
 ): HomeCategoryRow[] {
   if (limit <= 0) return [];
+
+  const catalog = products.filter(isFreshHomeProduct);
   const grouped = new Map<string, Product[]>();
-  for (const product of products) {
-    if (product.published === false || isSpecialtyProduct(product)) continue;
+  for (const product of catalog) {
     const category = normalizeCategoryId(product.category);
-    if (category === EXPORT_CATEGORY_ID) continue;
     const pool = grouped.get(category) ?? [];
     pool.push(product);
     grouped.set(category, pool);
@@ -77,38 +211,54 @@ export function buildHomeCategoryRows(
 
   const usedProducts = new Set<string>();
   const usedImages = new Set<string>();
-  const usedCategories = new Set<string>();
   const rows: HomeCategoryRow[] = [];
-  for (const category of categories) {
-    const id = normalizeCategoryId(category.id);
-    if (usedCategories.has(id)) continue;
-    usedCategories.add(id);
-    const selected: Product[] = [];
-    for (const product of mixCategoryProducts(grouped.get(id) ?? [])) {
-      if (selected.length >= limit) break;
-      if (usedProducts.has(product.id)) continue;
-      // A gallery photo can give variants a distinct preview without repeating
-      // the same cover image throughout the home page.
-      const image = [product.image, ...(product.images ?? [])].find((candidate) => {
-        const key = homeImageKey(candidate);
-        return key !== "" && !usedImages.has(key);
-      });
-      if (!image) continue;
-      usedProducts.add(product.id);
-      usedImages.add(homeImageKey(image));
-      selected.push(image === product.image ? product : { ...product, image });
-    }
-    if (selected.length) {
-      rows.push({
-        row: {
-          id,
-          titleKey: `categories.names.${id}`,
-          title: category.name,
-          seeAllCategoryId: id,
-        },
-        products: selected,
-      });
-    }
+
+  for (const themed of FRESH_HOME_THEMED_ROWS) {
+    const matched = catalog.filter(themed.match);
+    if (matched.length < themed.minProducts) continue;
+    const selected = pickUniqueProducts(matched, usedProducts, usedImages, limit);
+    if (selected.length < 2) continue;
+    rows.push({
+      row: {
+        id: themed.id,
+        titleKey: themed.titleKey,
+        title: themed.title,
+        seeAllCategoryId: themed.seeAllCategoryId,
+        seeAllSearch: themed.seeAllSearch,
+      },
+      products: selected,
+    });
   }
+
+  const orderedIds: string[] = [];
+  const seen = new Set<string>();
+  for (const id of FRESH_HOME_CATEGORY_ORDER) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    orderedIds.push(id);
+  }
+  // Any other strong Fresh category not in the pinned list (by catalogue size).
+  const extras = [...grouped.entries()]
+    .filter(([id, pool]) => !seen.has(id) && pool.length >= FRESH_HOME_MIN_CATEGORY_PRODUCTS)
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([id]) => id);
+  orderedIds.push(...extras);
+
+  for (const id of orderedIds) {
+    const pool = grouped.get(id) ?? [];
+    if (pool.length < FRESH_HOME_MIN_CATEGORY_PRODUCTS) continue;
+    const selected = pickUniqueProducts(pool, usedProducts, usedImages, limit);
+    if (!selected.length) continue;
+    rows.push({
+      row: {
+        id,
+        titleKey: `categories.names.${id}`,
+        title: categoryDisplayName(categories, id),
+        seeAllCategoryId: id,
+      },
+      products: selected,
+    });
+  }
+
   return rows;
 }

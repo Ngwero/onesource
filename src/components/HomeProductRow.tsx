@@ -8,13 +8,23 @@ type Props = {
   products: Product[];
 };
 
+function seeAllPath(row: HomeRowConfig): string | undefined {
+  if (row.seeAllSearch) {
+    return `/search?q=${encodeURIComponent(row.seeAllSearch)}`;
+  }
+  if (row.seeAllCategoryId) {
+    return `/category/${encodeURIComponent(row.seeAllCategoryId)}`;
+  }
+  return undefined;
+}
+
 export function HomeProductRow({ row, products }: Props) {
   const { t } = useTranslation();
   return (
     <ShopHomeProductRow
       title={t(row.titleKey, { defaultValue: row.title })}
       products={products}
-      seeAllTo={`/category/${encodeURIComponent(row.seeAllCategoryId)}`}
+      seeAllTo={seeAllPath(row)}
     />
   );
 }

@@ -9,12 +9,22 @@ import { HomeBuyItAgainRow } from "../components/HomeBuyItAgainRow";
 import { ScrollReveal } from "../components/ScrollReveal";
 import { useProducts } from "../context/ProductsContext";
 import { buildHomeCategoryRows } from "../data/homeRows";
+import { useFreshHomeShelfBoost } from "../hooks/useFreshHomeShelf";
 
 export function HomePage() {
   const { products, categories } = useProducts();
+  const aisleBoost = useFreshHomeShelfBoost();
+  const catalog = useMemo(() => {
+    if (!aisleBoost.length) return products;
+    const byId = new Map(products.map((p) => [p.id, p]));
+    for (const product of aisleBoost) {
+      if (!byId.has(product.id)) byId.set(product.id, product);
+    }
+    return [...byId.values()];
+  }, [products, aisleBoost]);
   const rows = useMemo(
-    () => buildHomeCategoryRows(products, categories),
-    [products, categories]
+    () => buildHomeCategoryRows(catalog, categories),
+    [catalog, categories]
   );
 
   return (
