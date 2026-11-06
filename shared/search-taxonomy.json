@@ -1828,12 +1828,92 @@
     "brocolli": "broccoli",
     "brocoli": "broccoli",
     "strawbery": "strawberry",
-    "strawberies": "strawberry"
+    "strawberies": "strawberry",
+    "matoke": "matooke",
+    "matoooke": "matooke",
+    "ndizi": "banana",
+    "machungwa": "orange",
+    "emabeere": "milk",
+    "nyama": "beef",
+    "mbuzi": "goat",
+    "kuku": "chicken",
+    "samaki": "fish",
+    "viazi": "potato",
+    "sukuma": "kale",
+    "sukumawiki": "kale",
+    "nyanya": "tomato",
+    "vitunguu": "onion",
+    "mahindi": "maize",
+    "muhogo": "cassava",
+    "kasava": "cassava",
+    "posho": "maize",
+    "ugali": "maize",
+    "pilipili": "chilli",
+    "hoho": "capsicum",
+    "nanasi": "pineapple",
+    "embe": "mango",
+    "parachichi": "avocado",
+    "mayai": "egg",
+    "unga": "flour",
+    "mchuzi": "sauce",
+    "kitunguu": "onion",
+    "mafuta": "oil",
+    "chapati": "flatbread",
+    "chapatis": "flatbread",
+    "ghee": "butter",
+    "cooking oil": "oil",
+    "cookingoil": "oil",
+    "karoti": "carrot",
+    "kabichi": "cabbage",
+    "njiwa": "pigeon",
+    "biryani": "rice",
+    "pilau": "rice",
+    "saucepan": "pan",
+    "frypan": "pan",
+    "fryingpan": "pan",
+    "nonstick": "pan",
+    "tupperware": "container",
+    "lotion": "moisturiser",
+    "moisturizer": "moisturiser",
+    "shampooo": "shampoo",
+    "conditionner": "conditioner",
+    "tomat": "tomato",
+    "onoin": "onion",
+    "onios": "onion",
+    "potatos": "potato",
+    "bananna": "banana",
+    "avocdo": "avocado"
   },
   "collections": {
     "plate and cup": [
       "plates",
       "cups"
+    ],
+    "sukuma wiki": [
+      "kale",
+      "sukuma"
+    ],
+    "nyama ya ng'ombe": [
+      "beef"
+    ],
+    "ndizi": [
+      "banana",
+      "matooke"
+    ],
+    "kitunguu": [
+      "onion"
+    ],
+    "mafuta ya kupikia": [
+      "oil",
+      "cooking oil"
+    ],
+    "chapati": [
+      "flatbread",
+      "chapati"
+    ],
+    "unga wa ngano": [
+      "flour",
+      "wheat"
     ]
   }
 }

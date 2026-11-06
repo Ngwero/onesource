@@ -39,6 +39,10 @@ export type CreateOrderPayload = {
   city: string;
   district?: string;
   notes?: string;
+  /** Optional checkout stock hold from POST /orders/reserve. */
+  reservationId?: string;
+  /** Client retry key; also sent as Idempotency-Key header. */
+  idempotencyKey?: string;
   subtotal: number;
   deliveryFee: number;
   total: number;

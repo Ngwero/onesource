@@ -83,6 +83,10 @@ test("delivery is free once the catalogue subtotal clears the threshold", () => 
 function memoryProducts(initial) {
   const store = new Map(initial.map((row) => [row.id, { ...row }]));
   const missingRpc = { message: "Could not find the function public.reserve_product_stock" };
+  const missingTable = {
+    code: "PGRST205",
+    message: "Could not find the table in the schema cache",
+  };
 
   function chain(state) {
     return {
@@ -98,9 +102,27 @@ function memoryProducts(initial) {
         state.filters.push({ column, value, op: "gte" });
         return chain(state);
       },
+      lte(column, value) {
+        state.filters.push({ column, value, op: "lte" });
+        return chain(state);
+      },
       update(patch) {
         state.patch = patch;
         return chain(state);
+      },
+      insert() {
+        return {
+          async then(resolve) {
+            resolve({ data: null, error: missingTable });
+          },
+        };
+      },
+      limit() {
+        return {
+          async then(resolve) {
+            resolve({ data: [], error: null });
+          },
+        };
       },
       async maybeSingle() {
         const id = state.filters.find((f) => f.column === "id")?.value;
@@ -122,8 +144,40 @@ function memoryProducts(initial) {
   return {
     store,
     from(table) {
-      if (table !== "products") throw new Error(`unexpected table ${table}`);
-      return chain({ filters: [] });
+      if (table === "products") return chain({ filters: [] });
+      // Optional ledger tables are not installed in unit tests — signal missing.
+      if (table === "stock_reservations" || table === "order_idempotency") {
+        return {
+          select() {
+            return this;
+          },
+          eq() {
+            return this;
+          },
+          lte() {
+            return this;
+          },
+          limit() {
+            return this;
+          },
+          insert() {
+            return this;
+          },
+          update() {
+            return this;
+          },
+          upsert() {
+            return this;
+          },
+          async maybeSingle() {
+            return { data: null, error: missingTable };
+          },
+          async then(resolve) {
+            resolve({ data: null, error: missingTable });
+          },
+        };
+      }
+      throw new Error(`unexpected table ${table}`);
     },
     async rpc() {
       return { data: null, error: missingRpc };
@@ -179,4 +233,93 @@ test('disabled stock cannot be reserved even when quantity remains positive', as
   const result=await reserveStock(db,[{product_id:'disabled',quantity:1}]);
   assert.equal(result.ok,false);
   assert.equal(db.store.get('disabled').stock_quantity,5);
+});
+
+test("catalogue pricing keeps integer UGX minor units", () => {
+  const priced = priceOrderFromCatalogue(
+    [{ productId: "fresh-mango", quantity: 3 }],
+    [mango({ price: 4500.4 })]
+  );
+  assert.equal(priced.items[0].unit_price, 4500);
+  assert.equal(priced.items[0].line_total, 13500);
+  assert.equal(priced.currency, "UGX");
+  assert.equal(Number.isInteger(priced.total), true);
+});
+
+test("checkout hold expires and restores stock without the RPC", async () => {
+  const {
+    holdCheckoutStock,
+    releaseExpiredReservations,
+    _resetMemoryHoldsForTests,
+  } = await import("../server/lib/stockReservation.js");
+  _resetMemoryHoldsForTests();
+  const db = memoryProducts([
+    { id: "fresh-fake-hold", stock_quantity: 2, in_stock: true },
+  ]);
+  const hold = await holdCheckoutStock(
+    db,
+    [{ product_id: "fresh-fake-hold", quantity: 1 }],
+    { ttlMs: 1, now: 1_000 }
+  );
+  assert.equal(hold.ok, true);
+  assert.equal(db.store.get("fresh-fake-hold").stock_quantity, 1);
+  const released = await releaseExpiredReservations(db, { now: 1_000 + 2 });
+  assert.equal(released, 1);
+  assert.equal(db.store.get("fresh-fake-hold").stock_quantity, 2);
+  _resetMemoryHoldsForTests();
+});
+
+test("claimStockForOrder rejects an expired reservation id", async () => {
+  const {
+    holdCheckoutStock,
+    claimStockForOrder,
+    _resetMemoryHoldsForTests,
+  } = await import("../server/lib/stockReservation.js");
+  _resetMemoryHoldsForTests();
+  const db = memoryProducts([
+    { id: "fresh-fake-claim", stock_quantity: 3, in_stock: true },
+  ]);
+  const hold = await holdCheckoutStock(
+    db,
+    [{ product_id: "fresh-fake-claim", quantity: 1 }],
+    { ttlMs: 5, now: 10 }
+  );
+  assert.equal(hold.ok, true);
+  const claim = await claimStockForOrder(
+    db,
+    [{ product_id: "fresh-fake-claim", quantity: 1 }],
+    { reservationId: hold.reservationId, now: 10 + 20 }
+  );
+  assert.equal(claim.ok, false);
+  assert.match(claim.error, /expired/i);
+  assert.equal(db.store.get("fresh-fake-claim").stock_quantity, 3);
+  _resetMemoryHoldsForTests();
+});
+
+test("idempotency replays the same order and conflicts on a different payload", async () => {
+  const {
+    orderRequestFingerprint,
+    persistIdempotency,
+    lookupIdempotency,
+  } = await import("../server/lib/idempotency.js");
+  const parsed = parseOrderRequest(contact);
+  const fingerprint = orderRequestFingerprint(parsed);
+  const db = memoryProducts([]);
+  const body = { order: { id: "ord-test-1", total: 9000 } };
+  await persistIdempotency(db, {
+    key: "checkout-key-1",
+    fingerprint,
+    orderId: "ord-test-1",
+    responseStatus: 201,
+    responseBody: body,
+  });
+  const hit = await lookupIdempotency(db, "checkout-key-1");
+  assert.equal(hit.fingerprint, fingerprint);
+  assert.equal(hit.responseBody.order.id, "ord-test-1");
+
+  const other = parseOrderRequest({
+    ...contact,
+    items: [{ productId: "fresh-mango", quantity: 1 }],
+  });
+  assert.notEqual(orderRequestFingerprint(other), fingerprint);
 });

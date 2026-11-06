@@ -79,7 +79,8 @@
     "cosmeticsSearchPlaceholder": "Rechercher maquillage, sérums, solaires...",
     "shopPharmacy": "Pharmacie",
     "shopPharmacyHint": "Médicaments, soins & compléments",
-    "pharmacySearchPlaceholder": "Chercher médicaments, vitamines, premiers secours..."
+    "pharmacySearchPlaceholder": "Chercher médicaments, vitamines, premiers secours...",
+    "locationUseHint": "Le pays est détecté via votre IP pour la devise et la langue — pas de suivi GPS."
   },
   "nav": {
     "allCategories": "Toutes les catégories",
@@ -638,7 +639,10 @@
     "adminPhotos": {
       "title": "En vedette avec photos",
       "subtitle": "Produits avec photos ajoutées dans l'admin"
-    }
+    },
+    "recentlyViewed": "Consultés récemment",
+    "relatedProducts": "Vous aimerez aussi",
+    "buyItAgain": "Acheter à nouveau"
   },
   "categories": {
     "title": "Acheter par catégorie",
@@ -730,7 +734,8 @@
     "priceOver": "{{price}} et plus",
     "deals": "Offres",
     "onSale": "En promotion",
-    "noMatches": "Aucun produit ne correspond à ces filtres. Essayez d'en effacer quelques-uns."
+    "noMatches": "Aucun produit ne correspond à ces filtres. Essayez d'en effacer quelques-uns.",
+    "brand": "Marque"
   },
   "products": {
     "delivery": {
@@ -1778,7 +1783,10 @@
       "care": "Conseils d'entretien"
     },
     "safetyNote": "Lisez toujours l'étiquette du produit avant utilisation. Contactez-nous pour plus d'informations sur les allergènes ou l'utilisation en toute sécurité.",
-    "safetyNoteManufacturer": "Informations fournies par le fabricant. L'emballage peut changer — lisez toujours l'étiquette du produit avant utilisation."
+    "safetyNoteManufacturer": "Informations fournies par le fabricant. L'emballage peut changer — lisez toujours l'étiquette du produit avant utilisation.",
+    "ariaProductCard": "{{title}}, {{price}}",
+    "customersAlsoBought": "Les clients ont aussi acheté",
+    "customersAlsoBoughtSubtitle": "Souvent achetés ensemble"
   },
   "basketPanel": {
     "title": "Votre panier",
@@ -2149,5 +2157,36 @@
       "firstAidAccent": "À portée de main.",
       "firstAidDescription": "Complétez votre armoire à pharmacie avec des pansements et les essentiels des premiers secours."
     }
+  },
+  "privacy": {
+    "locationUseTitle": "Comment nous utilisons votre localisation",
+    "locationUseBody": "Nous utilisons uniquement le pays de votre adresse IP pour proposer une devise et une langue. Pas de GPS, pas de suivi continu, pas de position précise."
+  },
+  "reviews": {
+    "verifiedPurchase": "Achat vérifié",
+    "empty": "Pas encore d’avis clients.",
+    "write": "Écrire un avis",
+    "verifiedOnly": "Seuls les achats vérifiés d’une commande livrée peuvent être notés.",
+    "ratingLabel": "Note",
+    "titleLabel": "Titre (facultatif)",
+    "bodyLabel": "Votre avis",
+    "submit": "Envoyer l’avis",
+    "submitFailed": "Impossible d’envoyer votre avis.",
+    "thanks": "Merci — votre avis est publié.",
+    "signInToReview": "Connectez-vous pour laisser un avis.",
+    "buyToReview": "Achetez cet article et attendez la livraison pour laisser un avis vérifié.",
+    "alreadyReviewed": "Vous avez déjà noté ce produit pour cet achat.",
+    "unavailable": "Les avis ne sont pas encore disponibles."
+  },
+  "productQa": {
+    "title": "Questions des clients",
+    "subtitle": "Posez une question sur ce produit. Les réponses apparaissent quand l’équipe répond.",
+    "empty": "Pas encore de questions.",
+    "askLabel": "Votre question",
+    "submit": "Poser la question",
+    "submitFailed": "Impossible d’envoyer votre question.",
+    "signInToAsk": "Connectez-vous pour poser une question.",
+    "awaitingAnswer": "En attente d’une réponse",
+    "unavailable": "Les Q&R produit ne sont pas encore activées."
   }
 }

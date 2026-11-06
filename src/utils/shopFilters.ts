@@ -5,6 +5,7 @@ export type PriceRangeId = "under-15k" | "15k-50k" | "50k-100k" | "over-100k";
 
 export type ShopFilters = {
   categoryIds: string[];
+  brands: string[];
   minRating: number | null;
   primeOnly: boolean;
   onSaleOnly: boolean;
@@ -15,6 +16,7 @@ export type ShopFilters = {
 
 export const DEFAULT_SHOP_FILTERS: ShopFilters = {
   categoryIds: [],
+  brands: [],
   minRating: null,
   primeOnly: false,
   onSaleOnly: false,
@@ -22,6 +24,12 @@ export const DEFAULT_SHOP_FILTERS: ShopFilters = {
   priceRanges: [],
   relatedTerms: [],
 };
+
+/** Brand from details when present (kitchen/cosmetics/fresh). */
+export function productBrand(p: Product): string {
+  const raw = p.details?.brand;
+  return typeof raw === "string" ? raw.trim() : "";
+}
 
 const PRICE_BOUNDS: Record<PriceRangeId, { min: number; max: number | null }> = {
   "under-15k": { min: 0, max: 15000 },
@@ -50,6 +58,11 @@ export function applyShopFilters(products: Product[], filters: ShopFilters): Pro
       if (!ok) return false;
     }
 
+    if (filters.brands.length > 0) {
+      const brand = productBrand(p).toLowerCase();
+      if (!brand || !filters.brands.some((b) => b.toLowerCase() === brand)) return false;
+    }
+
     if (filters.priceRanges.length > 0) {
       const ok = filters.priceRanges.some((r) => matchesPriceRange(p.price, r));
       if (!ok) return false;
@@ -70,6 +83,16 @@ export function countByCategory(products: Product[]): Record<string, number> {
   for (const p of products) {
     const id = normalizeCategoryId(p.category);
     counts[id] = (counts[id] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export function countByBrand(products: Product[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const p of products) {
+    const brand = productBrand(p);
+    if (!brand) continue;
+    counts[brand] = (counts[brand] ?? 0) + 1;
   }
   return counts;
 }
@@ -114,6 +137,7 @@ export function suggestRelatedTerms(products: Product[], query: string, limit = 
 export function hasActiveFilters(filters: ShopFilters): boolean {
   return (
     filters.categoryIds.length > 0 ||
+    filters.brands.length > 0 ||
     filters.minRating != null ||
     filters.primeOnly ||
     filters.onSaleOnly ||

@@ -120,6 +120,8 @@ class CreateOrderPayload {
     this.district,
     this.notes,
     this.orderType,
+    this.reservationId,
+    this.idempotencyKey,
   });
 
   final String? userId;
@@ -138,6 +140,8 @@ class CreateOrderPayload {
 
   /// `export` for export orders; omitted for regular deliveries.
   final String? orderType;
+  final String? reservationId;
+  final String? idempotencyKey;
 
   Map<String, dynamic> toJson() => {
         if (userId != null) 'userId': userId,
@@ -154,5 +158,7 @@ class CreateOrderPayload {
         if (district != null) 'district': district,
         if (notes != null) 'notes': notes,
         if (orderType != null) 'orderType': orderType,
+        if (reservationId != null) 'reservationId': reservationId,
+        if (idempotencyKey != null) 'idempotencyKey': idempotencyKey,
       };
 }

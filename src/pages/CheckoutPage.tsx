@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
@@ -6,9 +6,20 @@ import { CartRestoreStatus } from "../components/CartRestoreStatus";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useAuth } from "../context/AuthContext";
-import { createOrder } from "../api/client";
+import {
+  createOrder,
+  releaseCheckoutReservation,
+  reserveCheckoutStock,
+} from "../api/client";
 import { calcOrderTotal } from "../utils/checkout";
 import { getLocalizedProductFields } from "../i18n/useLocalizedProduct";
+
+function newCheckoutKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `chk-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export function CheckoutPage() {
   const { t, i18n } = useTranslation();
@@ -29,6 +40,14 @@ export function CheckoutPage() {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [reservationId, setReservationId] = useState<string | null>(null);
+  const [serverTotals, setServerTotals] = useState<{
+    subtotal: number;
+    deliveryFee: number;
+    total: number;
+  } | null>(null);
+  const idempotencyKeyRef = useRef(newCheckoutKey());
+  const reservationRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (restoring || restoreError) return;
@@ -39,6 +58,54 @@ export function CheckoutPage() {
 
   }, [items.length, navigate, profile, user, t, restoring, restoreError]);
 
+  const basketKey = items
+    .map(({ product, quantity }) => `${product.id}:${quantity}`)
+    .sort()
+    .join("|");
+
+  useEffect(() => {
+    if (restoring || restoreError || !basketKey) return;
+    let cancelled = false;
+    const previous = reservationRef.current;
+    reservationRef.current = null;
+    if (previous) void releaseCheckoutReservation(previous);
+
+    const lines = basketKey.split("|").map((pair) => {
+      const [productId, qty] = pair.split(":");
+      return { productId, quantity: Number(qty) };
+    });
+
+    reserveCheckoutStock(lines)
+      .then((hold) => {
+        if (cancelled) {
+          void releaseCheckoutReservation(hold.reservationId);
+          return;
+        }
+        reservationRef.current = hold.reservationId;
+        setReservationId(hold.reservationId);
+        setServerTotals({
+          subtotal: hold.subtotal,
+          deliveryFee: hold.deliveryFee,
+          total: hold.total,
+        });
+        setError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setReservationId(null);
+        setServerTotals(null);
+        const raw = err instanceof Error ? err.message : "";
+        setError(raw || t("checkout.placeOrderFailed"));
+      });
+
+    return () => {
+      cancelled = true;
+      const id = reservationRef.current;
+      reservationRef.current = null;
+      if (id) void releaseCheckoutReservation(id);
+    };
+  }, [basketKey, restoring, restoreError, t]);
+
   const defaultName = profile?.full_name?.trim() || String(user?.user_metadata?.full_name || "");
   const identity = `${user?.id || ""}:${defaultName}`;
   const [previousIdentity, setPreviousIdentity] = useState("");
@@ -47,6 +114,10 @@ export function CheckoutPage() {
     setFullName(current => current || defaultName);
     setEmail(current => current || user?.email || "");
   }
+
+  const displaySubtotal = serverTotals?.subtotal ?? subtotal;
+  const displayDelivery = serverTotals?.deliveryFee ?? delivery;
+  const displayTotal = serverTotals?.total ?? total;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -64,9 +135,11 @@ export function CheckoutPage() {
         city: city.trim(),
         district: district.trim() || undefined,
         notes: notes.trim() || undefined,
-        subtotal,
-        deliveryFee: delivery,
-        total,
+        reservationId: reservationId || undefined,
+        idempotencyKey: idempotencyKeyRef.current,
+        subtotal: displaySubtotal,
+        deliveryFee: displayDelivery,
+        total: displayTotal,
         items: items.map(({ product, quantity }) => {
           const { localizedTitle } = getLocalizedProductFields(product, t, i18n.language);
           return {
@@ -79,12 +152,15 @@ export function CheckoutPage() {
         }),
       });
 
+      reservationRef.current = null;
+      setReservationId(null);
       clearCart();
       navigate(`/checkout/confirmation/${order.id}`, {
         replace: true,
         state: { paymentMethod: "cod" },
       });
     } catch (err) {
+      // Keep the same idempotency key so a network retry cannot double-create.
       const raw = err instanceof Error ? err.message : "";
       const looksTechnical =
         /exception|socket|failed host|statuscode|unexpected_failure|\{"/i.test(raw) ||
@@ -261,17 +337,17 @@ export function CheckoutPage() {
             <div className="space-y-2 text-sm border-t border-border pt-4">
               <div className="flex justify-between">
                 <span className="text-text-muted">{t("cart.subtotal")}</span>
-                <span className="font-semibold">{formatPrice(subtotal)}</span>
+                <span className="font-semibold">{formatPrice(displaySubtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">{t("cart.delivery")}</span>
                 <span className="font-semibold">
-                  {delivery === 0 ? t("common.free") : formatPrice(delivery)}
+                  {displayDelivery === 0 ? t("common.free") : formatPrice(displayDelivery)}
                 </span>
               </div>
               <div className="flex justify-between text-base pt-2 border-t border-border">
                 <span className="font-bold">{t("cart.total")}</span>
-                <span className="font-bold">{formatPrice(total)}</span>
+                <span className="font-bold">{formatPrice(displayTotal)}</span>
               </div>
             </div>
 

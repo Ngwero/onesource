@@ -1,18 +1,24 @@
 /**
  * Checkout totals are always computed from the live catalogue.
  * Client unit prices, line totals, and order totals are display-only.
+ * Amounts are integers in UGX minor units (whole shillings).
  */
+
+import { asMoneyInteger, BASE_CURRENCY } from "./money.js";
 
 export const DELIVERY_FEE_UGX = 15_000;
 export const FREE_DELIVERY_THRESHOLD_UGX = 100_000;
+export const ORDER_CURRENCY = BASE_CURRENCY;
 
 export function calcDeliveryFee(subtotalUgx) {
-  return Number(subtotalUgx) >= FREE_DELIVERY_THRESHOLD_UGX ? 0 : DELIVERY_FEE_UGX;
+  const subtotal = asMoneyInteger(subtotalUgx) ?? 0;
+  return subtotal >= FREE_DELIVERY_THRESHOLD_UGX ? 0 : DELIVERY_FEE_UGX;
 }
 
 export function calcOrderTotal(subtotalUgx) {
-  const delivery = calcDeliveryFee(subtotalUgx);
-  return { delivery, total: subtotalUgx + delivery };
+  const subtotal = asMoneyInteger(subtotalUgx) ?? 0;
+  const delivery = calcDeliveryFee(subtotal);
+  return { delivery, total: subtotal + delivery };
 }
 
 function readProductId(row) {
@@ -97,7 +103,7 @@ function productMap(rows) {
 }
 
 function cataloguePrice(product) {
-  return Number(product.price);
+  return asMoneyInteger(product.price);
 }
 
 function catalogueStock(product) {
@@ -135,7 +141,7 @@ export function priceOrderFromCatalogue(lines, products, { requirePublished = tr
       return { error: "Quantity must be a positive integer", status: 400 };
     }
     const unit = cataloguePrice(product);
-    if (!Number.isFinite(unit) || unit < 0) {
+    if (unit == null) {
       return { error: `Invalid catalogue price for ${line.productId}`, status: 400 };
     }
     const stock = catalogueStock(product);
@@ -146,18 +152,22 @@ export function priceOrderFromCatalogue(lines, products, { requirePublished = tr
         productId: line.productId,
       };
     }
+    const lineTotal = unit * line.quantity;
+    if (!Number.isSafeInteger(lineTotal)) {
+      return { error: `Line total is too large for ${line.productId}`, status: 400 };
+    }
     priced.push({
       product_id: String(product.id),
       product_title: String(product.title || line.clientTitle || line.productId),
       product_image: product.image ? String(product.image) : line.clientImage || null,
       unit_price: unit,
       quantity: line.quantity,
-      line_total: unit * line.quantity,
+      line_total: lineTotal,
     });
   }
 
   const subtotal = priced.reduce((sum, item) => sum + item.line_total, 0);
-  if (!Number.isFinite(subtotal) || subtotal > Number.MAX_SAFE_INTEGER) {
+  if (!Number.isSafeInteger(subtotal)) {
     return { error: "Order total is too large", status: 400 };
   }
   const { delivery, total } = calcOrderTotal(subtotal);
@@ -166,5 +176,6 @@ export function priceOrderFromCatalogue(lines, products, { requirePublished = tr
     subtotal,
     delivery_fee: delivery,
     total,
+    currency: ORDER_CURRENCY,
   };
 }

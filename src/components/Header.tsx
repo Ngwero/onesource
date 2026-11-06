@@ -39,8 +39,9 @@ function DeliverToPicker({ visible }: { visible: boolean }) {
         <CountryFlag code={code} size={18} />
         {name}
       </span>
+      <span className="sr-only">{t("header.locationUseHint")}</span>
       <select
-        aria-label={t("header.deliverTo")}
+        aria-label={`${t("header.deliverTo")}. ${t("header.locationUseHint")}`}
         className="absolute inset-0 opacity-0 cursor-pointer"
         value={code}
         onChange={(e) => chooseCountry(e.target.value)}

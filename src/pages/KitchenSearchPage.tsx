@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { PageContainer } from "../components/PageContainer";
 import { KitchenIkeaProductCard } from "../components/kitchen/KitchenIkeaProductCard";
 import { InfiniteScrollFooter, ProductGridSkeleton } from "../components/InfiniteScrollFooter";
+import { ShopListingLayout } from "../components/shop/ShopListingLayout";
 import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
 
 export function KitchenSearchPage() {
@@ -30,9 +31,7 @@ export function KitchenSearchPage() {
                 : t("search.forQuery", { query })
               : t("kitchen.searchTitle")}
           </h1>
-          {!query && (
-            <p>{t("kitchen.searchHint")}</p>
-          )}
+          {!query && <p>{t("kitchen.searchHint")}</p>}
         </header>
 
         {!query ? (
@@ -53,22 +52,32 @@ export function KitchenSearchPage() {
           </div>
         ) : (
           <>
-            <div className="kitchen-home-grid">
-              {results.map((product, index) => (
-                <KitchenIkeaProductCard
-                  key={product.id}
-                  product={product}
-                  priority={index < 4}
-                />
-              ))}
-            </div>
+            <ShopListingLayout
+              key={query}
+              products={results}
+              header={null}
+              searchQuery={query}
+              showCategoryFilter={false}
+            >
+              {(products) => (
+                <div className="kitchen-home-grid">
+                  {products.map((product, index) => (
+                    <KitchenIkeaProductCard
+                      key={product.id}
+                      product={product}
+                      priority={index < 4}
+                    />
+                  ))}
+                </div>
+              )}
+            </ShopListingLayout>
             <InfiniteScrollFooter
               sentinelRef={list.sentinelRef}
               hasMore={list.hasMore}
               loading={list.loading}
               error={list.error}
               onRetry={list.retry}
-              count={results.length}
+              count={list.products.length}
             />
           </>
         )}

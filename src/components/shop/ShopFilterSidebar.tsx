@@ -18,6 +18,7 @@ type FacetCounts = {
   rating3: number;
   rating2: number;
   categories: Record<string, number>;
+  brands: Record<string, number>;
   prices: Record<PriceRangeId, number>;
 };
 
@@ -107,6 +108,17 @@ export function ShopFilterSidebar({
       : [...filters.categoryIds, id];
     onChange({ ...filters, categoryIds: next });
   };
+
+  const toggleBrand = (brand: string) => {
+    const next = filters.brands.includes(brand)
+      ? filters.brands.filter((b) => b !== brand)
+      : [...filters.brands, brand];
+    onChange({ ...filters, brands: next });
+  };
+
+  const brandEntries = Object.entries(facetCounts.brands ?? {})
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 24);
 
   const togglePrice = (id: PriceRangeId) => {
     const next = filters.priceRanges.includes(id)
@@ -207,6 +219,24 @@ export function ShopFilterSidebar({
                 </li>
               );
             })}
+          </ul>
+        </FilterSection>
+      )}
+
+      {brandEntries.length > 0 && (
+        <FilterSection title={t("shopFilters.brand")}>
+          <ul className="shop-filter-list max-h-64 overflow-y-auto scrollbar-hide">
+            {brandEntries.map(([brand, count]) => (
+              <li key={brand}>
+                <CheckboxRow
+                  id={`filter-brand-${brand}`}
+                  label={brand}
+                  count={count}
+                  checked={filters.brands.includes(brand)}
+                  onChange={() => toggleBrand(brand)}
+                />
+              </li>
+            ))}
           </ul>
         </FilterSection>
       )}

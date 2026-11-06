@@ -25,10 +25,26 @@ export function ProductCard({ product, priority = false }: Props) {
   const { available, discount, lowStock, brand, supplier, size } = productCardFacts(product);
   const unitPrice = formatCardUnitPrice(product, formatPrice, t);
 
+  const cardLabel = [
+    title,
+    formatPrice(product.price),
+    !available
+      ? t("common.outOfStock")
+      : lowStock != null
+        ? t("productDetails.values.stockAvailable", { count: lowStock })
+        : t("product.inStock"),
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <article className="product-card">
       <SaveProductButton productId={product.id} className="product-card-save-btn" />
-      <Link to={`/product/${product.id}`} className="product-card-link">
+      <Link
+        to={`/product/${product.id}`}
+        className="product-card-link"
+        aria-label={cardLabel}
+      >
         <ProductImage
           src={product.image}
           alt={title}

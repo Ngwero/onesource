@@ -16,6 +16,7 @@ import {
   getCurrencyInfo,
   type CurrencyCode,
 } from "../currency/currencies";
+import { convertUgxToDisplayMajor } from "../currency/money";
 import { fetchLiveRates } from "../currency/fetchRates";
 import { getCurrency, subscribeCurrency } from "../currency/currencyStore";
 
@@ -69,9 +70,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const setCurrency = chooseCurrency;
 
   const convert = useCallback(
-    (amountGbp: number) => {
+    (amountUgx: number) => {
       const rate = rates[currency] ?? 1;
-      return amountGbp * rate;
+      return convertUgxToDisplayMajor(amountUgx, currency, rate);
     },
     [currency, rates]
   );
@@ -91,8 +92,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   }, [currency]);
 
   const formatPrice = useCallback(
-    (amountGbp: number) => {
-      const converted = convert(amountGbp);
+    (amountUgx: number) => {
+      const converted = convert(amountUgx);
       if (formatter) return formatter.format(converted);
       const info = getCurrencyInfo(currency);
       return `${info.symbol}${converted.toFixed(info.decimals)}`;

@@ -33,7 +33,18 @@ class ProductCard extends StatelessWidget {
     final stock = ProductCardDetails.stockLabel(product, context.tr);
     final isBestSeller = ProductCardDetails.isBestSeller(product);
 
-    return Container(
+    final title = context.tr.productTitle(product);
+    final priceLabel = ProductCardDetails.formatPrice(product.price);
+    final semanticsLabel = [
+      title,
+      priceLabel,
+      if (stock != null) stock,
+    ].join(', ');
+
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppColors.cardRadius),
@@ -150,6 +161,7 @@ class ProductCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

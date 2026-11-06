@@ -4,24 +4,25 @@ import 'package:intl/intl.dart';
 
 import 'currencies.dart';
 
-/// Format a UGX base amount in the selected currency.
+/// Format a UGX base amount (whole shillings) in the selected currency.
+/// Conversion rounds through the target currency's minor units so product
+/// cards stay stable across GBP/USD/KES vs zero-decimal francs/shillings.
 String formatConvertedPrice({
   required CurrencyCode currency,
   required Map<CurrencyCode, double> rates,
   required num amountUgx,
 }) {
   final info = currencyInfo(currency);
-  if (amountUgx <= 0) {
+  final ugx = amountUgx.round();
+  if (ugx <= 0) {
     return _formatAmount(info, 0);
   }
 
   final rate = rates[currency] ?? 1;
-  var converted = amountUgx * rate;
-
-  if (converted > 0) {
-    final minUnit = info.decimals == 0 ? 1.0 : math.pow(10, -info.decimals).toDouble();
-    if (converted < minUnit) converted = minUnit;
-  }
+  final scale = math.pow(10, info.decimals).toDouble();
+  var minor = (ugx * rate * scale).round();
+  if (ugx > 0 && minor == 0 && rate > 0) minor = 1;
+  final converted = minor / scale;
 
   return _formatAmount(info, converted);
 }
@@ -66,5 +67,12 @@ double convertAmount({
   required Map<CurrencyCode, double> rates,
   required num amountUgx,
 }) {
-  return amountUgx * (rates[currency] ?? 1);
+  final info = currencyInfo(currency);
+  final ugx = amountUgx.round();
+  if (ugx <= 0) return 0;
+  final rate = rates[currency] ?? 1;
+  final scale = math.pow(10, info.decimals).toDouble();
+  var minor = (ugx * rate * scale).round();
+  if (ugx > 0 && minor == 0 && rate > 0) minor = 1;
+  return minor / scale;
 }

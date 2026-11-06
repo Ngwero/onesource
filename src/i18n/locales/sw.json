@@ -79,7 +79,8 @@
     "cosmeticsSearchPlaceholder": "Tafuta vipodozi, seramu, kinga ya jua...",
     "shopPharmacy": "Duka la dawa",
     "shopPharmacyHint": "Dawa, virutubisho na huduma",
-    "pharmacySearchPlaceholder": "Tafuta dawa, vitamini, huduma ya kwanza..."
+    "pharmacySearchPlaceholder": "Tafuta dawa, vitamini, huduma ya kwanza...",
+    "locationUseHint": "Nchi hugunduliwa kutoka IP yako kwa sarafu na lugha — si ufuatiliaji wa GPS."
   },
   "nav": {
     "allCategories": "Jamii zote",
@@ -638,7 +639,10 @@
     "adminPhotos": {
       "title": "Zilizoangaziwa na picha",
       "subtitle": "Bidhaa zenye picha zilizoongezwa katika admin"
-    }
+    },
+    "recentlyViewed": "Uliyotazama hivi karibuni",
+    "relatedProducts": "Unaweza kupenda pia",
+    "buyItAgain": "Nunua tena"
   },
   "categories": {
     "title": "Nunua kwa jamii",
@@ -730,7 +734,8 @@
     "priceOver": "{{price}} na zaidi",
     "deals": "Ofa",
     "onSale": "Inauzwa kwa punguzo",
-    "noMatches": "Hakuna bidhaa zinazolingana na vichujio hivi. Jaribu kufuta baadhi."
+    "noMatches": "Hakuna bidhaa zinazolingana na vichujio hivi. Jaribu kufuta baadhi.",
+    "brand": "Chapa"
   },
   "products": {
     "delivery": {
@@ -1778,7 +1783,10 @@
       "care": "Maelekezo ya utunzaji"
     },
     "safetyNote": "Soma lebo ya bidhaa kila wakati kabla ya kutumia. Wasiliana nasi ukihitaji maelezo zaidi kuhusu vizio au matumizi salama.",
-    "safetyNoteManufacturer": "Taarifa zimetolewa na mtengenezaji. Kifungashio kinaweza kubadilika — soma lebo ya bidhaa kila wakati kabla ya kutumia."
+    "safetyNoteManufacturer": "Taarifa zimetolewa na mtengenezaji. Kifungashio kinaweza kubadilika — soma lebo ya bidhaa kila wakati kabla ya kutumia.",
+    "ariaProductCard": "{{title}}, {{price}}",
+    "customersAlsoBought": "Wateja walinunua pia",
+    "customersAlsoBoughtSubtitle": "Huninunuliwa pamoja mara nyingi"
   },
   "basketPanel": {
     "title": "Kikapu chako",
@@ -2149,5 +2157,36 @@
       "firstAidAccent": "Tayari nyumbani.",
       "firstAidDescription": "Jaza kabati lako la huduma ya nyumbani kwa plasta, bandeji na vifaa vya huduma ya kwanza."
     }
+  },
+  "privacy": {
+    "locationUseTitle": "Jinsi tunavyotumia eneo lako",
+    "locationUseBody": "Tunatazama tu nchi ya anwani yako ya IP ili kupendekeza sarafu na lugha. Hatutumii GPS wala kufuatilia eneo lako sahihi."
+  },
+  "reviews": {
+    "verifiedPurchase": "Ununuzi uliothibitishwa",
+    "empty": "Bado hakuna maoni ya wateja.",
+    "write": "Andika maoni",
+    "verifiedOnly": "Ni ununuzi uliothibitishwa kutoka oda iliyowasilishwa tu unaweza kukaguliwa.",
+    "ratingLabel": "Ukadiriaji",
+    "titleLabel": "Kichwa (hiari)",
+    "bodyLabel": "Maoni yako",
+    "submit": "Wasilisha maoni",
+    "submitFailed": "Imeshindikana kuwasilisha maoni yako.",
+    "thanks": "Asante — maoni yako yameonekana.",
+    "signInToReview": "Ingia ili kuacha maoni.",
+    "buyToReview": "Nunua bidhaa hii na subiri uwasilishaji ili kuacha maoni yaliyothibitishwa.",
+    "alreadyReviewed": "Tayari umekagua bidhaa hii kwa ununuzi wako.",
+    "unavailable": "Maoni bado hayapatikani."
+  },
+  "productQa": {
+    "title": "Maswali ya wateja",
+    "subtitle": "Uliza kuhusu bidhaa hii. Majibu yanaonekana timu inapojibu.",
+    "empty": "Bado hakuna maswali.",
+    "askLabel": "Swali lako",
+    "submit": "Uliza swali",
+    "submitFailed": "Imeshindikana kuwasilisha swali lako.",
+    "signInToAsk": "Ingia ili kuuliza swali.",
+    "awaitingAnswer": "Inasubiri jibu",
+    "unavailable": "Maswali na majibu ya bidhaa bado hayajawezeshwa."
   }
 }

@@ -23,7 +23,7 @@ class PrivacyScreen extends StatelessWidget {
         '• Information you provide: name, email address, phone number, delivery address, account password, and order notes.',
         '• Order and payment-related data: items purchased, basket contents, delivery preferences, and cash-on-delivery order details. We currently accept cash on delivery only and do not process card payments in the app.',
         '• Usage data: pages and products viewed, searches, device type, app version, and approximate technical logs needed to keep the service secure and reliable.',
-        '• Approximate country: when you open the website or app we look up the country of your IP address (using the country.is service) to pre-fill “Deliver to” and suggest a currency and language. We do not use GPS or ask for location permission, we only keep the country, not your precise location, and you can change it at any time.',
+        '• Approximate country (not GPS): when you open the website or app we look up the country of your IP address (using the country.is service) to pre-fill “Deliver to” and suggest a currency and language. We do not use GPS, do not ask for continuous location permission, and do not track your precise position. We only keep the country, and you can change it at any time.',
         '• Communications: messages you send to support, and transactional emails we send (for example login codes, password reset links, and order updates).',
         'We do not require access to your SMS inbox, full contacts list, or installed app list to use One Source shopping features.',
       ],

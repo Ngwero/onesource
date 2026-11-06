@@ -82,10 +82,12 @@ export function PrivacyPolicyPage() {
               keep the service secure and reliable.
             </li>
             <li>
-              <strong className="text-text">Approximate country:</strong> when you visit the
-              website we look up the country of your IP address (using the country.is
-              service) to pre-fill &ldquo;Deliver to&rdquo;. We only keep the country, not
-              your precise location, and you can change it at any time.
+              <strong className="text-text">Approximate country (not GPS):</strong> when you
+              visit the website or app we look up the country of your IP address (using the
+              country.is service) to pre-fill &ldquo;Deliver to&rdquo; and suggest a
+              currency and language. We do not use GPS, do not ask for continuous location
+              permission, and do not track your precise position. We only keep the country,
+              and you can change it at any time.
             </li>
             <li>
               <strong className="text-text">Communications:</strong> messages you send to

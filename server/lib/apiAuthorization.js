@@ -67,13 +67,29 @@ export function createAuthorization({ getClient = requireSupabase, adminIds } = 
     const admin = /^\/(admin|packaging|suppliers)(\/|$)/.test(path) || req.query.admin === 'true';
     const orders = /^\/orders(\/|$)/.test(path);
     const publicAuth = /^\/auth(\/|$)/.test(path);
-    if (admin || (!read && !publicAuth && !(path === '/orders' && req.method === 'POST'))) {
+    // Verified-purchase reviews + product Q&A: signed-in shoppers may POST.
+    const shopperProductWrite =
+      /^\/products\/[^/]+\/(reviews|questions)$/.test(path) && req.method === 'POST';
+    const shopperAuthGet =
+      path === '/products/buy-again' ||
+      /^\/products\/[^/]+\/reviews\/eligibility$/.test(path);
+    if (
+      admin ||
+      (!read &&
+        !publicAuth &&
+        !(path === '/orders' && req.method === 'POST') &&
+        !shopperProductWrite)
+    ) {
       return requireAdmin(req, res, next);
     }
     if (orders) {
       res.set('Cache-Control', 'no-store');
       // Guest checkout and token-protected confirmation remain available.
       if (!await authenticate(req, res, path === '/orders' && read)) return;
+    }
+    if (shopperProductWrite || shopperAuthGet) {
+      res.set('Cache-Control', 'no-store');
+      if (!await authenticate(req, res, true)) return;
     }
     next();
   }

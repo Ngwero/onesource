@@ -228,10 +228,19 @@ class _OneSourceAppState extends ConsumerState<OneSourceApp>
       themeMode: ThemeMode.light,
       locale: Locale(languageCodeLabel(language)),
       routerConfig: router,
-      builder: (context, child) => AppStringsScope(
-        strings: strings,
-        child: child ?? const SizedBox.shrink(),
-      ),
+      builder: (context, child) {
+        // Honour system Dynamic Type / text scale on product, cart and checkout.
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            textScaler: media.textScaler.clamp(minScaleFactor: 1.0, maxScaleFactor: 1.6),
+          ),
+          child: AppStringsScope(
+            strings: strings,
+            child: child ?? const SizedBox.shrink(),
+          ),
+        );
+      },
     );
   }
 }

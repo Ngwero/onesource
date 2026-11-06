@@ -558,11 +558,49 @@ class ApiClient {
     return Order.fromJson(data['order'] as Map<String, dynamic>);
   }
 
+  Future<Map<String, dynamic>> reserveCheckout(
+    List<({String productId, int quantity})> items,
+  ) async {
+    final res = await _client.post(
+      _uri('/orders/reserve'),
+      headers: _orderHeaders(),
+      body: jsonEncode({
+        'items': [
+          for (final item in items)
+            {'productId': item.productId, 'quantity': item.quantity},
+        ],
+      }),
+    );
+    if (res.statusCode != 201 && res.statusCode != 200) {
+      throw ApiException(_errorMessage(res));
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<void> releaseCheckoutReservation(String reservationId) async {
+    if (reservationId.isEmpty) return;
+    try {
+      await _client.delete(
+        _uri('/orders/reserve/$reservationId'),
+        headers: _orderHeaders(),
+      );
+    } catch (_) {
+      /* best-effort release */
+    }
+  }
+
   Future<Order> placeOrder(CreateOrderPayload payload) async {
+    final key = payload.idempotencyKey ??
+        'ord-${DateTime.now().microsecondsSinceEpoch}-${payload.items.length}';
+    final headers = _orderHeaders()
+      ..['Idempotency-Key'] = key;
     final res = await _client.post(
       _uri('/orders'),
-      headers: _orderHeaders(),
-      body: jsonEncode(payload.toJson()),
+      headers: headers,
+      body: jsonEncode({
+        ...payload.toJson(),
+        'idempotencyKey': key,
+      }),
     );
     if (res.statusCode != 201 && res.statusCode != 200) {
       throw ApiException(_errorMessage(res));
@@ -747,6 +785,121 @@ class ApiClient {
           'Too many attempts. Please wait a few minutes and try again.');
     }
     return _t('generic', 'Something went wrong. Please try again.');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchProductReviews(String productId) async {
+    try {
+      final res = await _getWithRetry(_uri('/products/${Uri.encodeComponent(productId)}/reviews'));
+      if (res.statusCode != 200) return [];
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final list = data['reviews'] as List<dynamic>? ?? [];
+      return list.whereType<Map<String, dynamic>>().toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchReviewEligibility(String productId) async {
+    try {
+      final res = await _getWithRetry(
+        _uri('/products/${Uri.encodeComponent(productId)}/reviews/eligibility'),
+        headers: _orderHeaders(),
+      );
+      if (res.statusCode == 401) {
+        return {'eligible': false, 'reason': 'sign_in', 'orderId': null};
+      }
+      if (res.statusCode != 200) {
+        return {'eligible': false, 'reason': 'unavailable', 'orderId': null};
+      }
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'eligible': false, 'reason': 'unavailable', 'orderId': null};
+    }
+  }
+
+  Future<Map<String, dynamic>> submitProductReview(
+    String productId, {
+    required String orderId,
+    required int rating,
+    String? title,
+    required String body,
+  }) async {
+    final res = await _client
+        .post(
+          _uri('/products/${Uri.encodeComponent(productId)}/reviews'),
+          headers: _orderHeaders(),
+          body: jsonEncode({
+            'orderId': orderId,
+            'rating': rating,
+            if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+            'body': body,
+          }),
+        )
+        .timeout(const Duration(seconds: 30));
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode != 201) {
+      throw ApiException((data['error'] as String?) ?? _t('generic', 'Something went wrong.'));
+    }
+    return data['review'] as Map<String, dynamic>;
+  }
+
+  Future<List<Product>> fetchAlsoBought(String productId) async {
+    try {
+      final res = await _getWithRetry(
+        _uri('/products/${Uri.encodeComponent(productId)}/also-bought'),
+      );
+      if (res.statusCode != 200) return [];
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final list = data['products'] as List<dynamic>? ?? [];
+      return list
+          .map((e) => Product.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<Product>> fetchBuyAgain() async {
+    try {
+      final res = await _getWithRetry(_uri('/products/buy-again'), headers: _orderHeaders());
+      if (res.statusCode != 200) return [];
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final list = data['products'] as List<dynamic>? ?? [];
+      return list
+          .map((e) => Product.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchProductQuestions(String productId) async {
+    try {
+      final res = await _getWithRetry(
+        _uri('/products/${Uri.encodeComponent(productId)}/questions'),
+      );
+      if (res.statusCode != 200) return [];
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final list = data['questions'] as List<dynamic>? ?? [];
+      return list.whereType<Map<String, dynamic>>().toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> askProductQuestion(String productId, String question) async {
+    final res = await _client
+        .post(
+          _uri('/products/${Uri.encodeComponent(productId)}/questions'),
+          headers: _orderHeaders(),
+          body: jsonEncode({'question': question}),
+        )
+        .timeout(const Duration(seconds: 30));
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode != 201) {
+      throw ApiException((data['error'] as String?) ?? _t('generic', 'Something went wrong.'));
+    }
+    return data['question'] as Map<String, dynamic>;
   }
 }
 

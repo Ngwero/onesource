@@ -18,6 +18,7 @@ import '../widgets/category_marquee.dart';
 import '../widgets/compact_home_bar.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/home_header.dart';
+import '../widgets/home_discovery_rows.dart';
 import '../widgets/home_product_row.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_grid.dart';
@@ -193,10 +194,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: HomeDiscoveryRows(onAdd: _addToCart),
+                  ),
+                ),
                 if (themedRows.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                       child: Column(
                         children: [
                           for (final entry in themedRows)

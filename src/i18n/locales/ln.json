@@ -79,7 +79,8 @@
     "cosmeticsSearchPlaceholder": "Luka maquillage, sérums, crème ya moi...",
     "shopPharmacy": "Pharmacie",
     "shopPharmacyHint": "Mankisi, soin & vitamines",
-    "pharmacySearchPlaceholder": "Luka mankisi, vitamines, secours..."
+    "pharmacySearchPlaceholder": "Luka mankisi, vitamines, secours...",
+    "locationUseHint": "Mboka ezali kotalama na IP na yo mpo na mbongo mpe monoko — GPS te."
   },
   "nav": {
     "allCategories": "Ba catégories nyonso",
@@ -638,7 +639,10 @@
     "adminPhotos": {
       "title": "Ekomonami na ba photo",
       "subtitle": "Biloko oyo ezali na ba photo oyo ebakisami na admin"
-    }
+    },
+    "recentlyViewed": "Otalaki yango sika",
+    "relatedProducts": "Okoki kolinga mpe",
+    "buyItAgain": "Sombra lisusu"
   },
   "categories": {
     "title": "Somba na catégorie",
@@ -730,7 +734,8 @@
     "priceOver": "{{price}} mpe likolo",
     "deals": "Ba offre",
     "onSale": "Na promotion",
-    "noMatches": "Biloko moko ekokani te na ba filtre oyo. Leka kolongola ba filtre."
+    "noMatches": "Biloko moko ekokani te na ba filtre oyo. Leka kolongola ba filtre.",
+    "brand": "Marque"
   },
   "products": {
     "delivery": {
@@ -1778,7 +1783,10 @@
       "care": "Ndenge ya kobatela"
     },
     "safetyNote": "Tángá ntango nyonso etiketi ya eloko liboso ya kosalela yango. Benga biso soki osengeli koyeba makambo mosusu na ntina ya allergie to bosaleli malamu.",
-    "safetyNoteManufacturer": "Bansango oyo euti epai ya mosali ya eloko. Emballage ekoki kobongwana — tángá ntango nyonso etiketi liboso ya kosalela."
+    "safetyNoteManufacturer": "Bansango oyo euti epai ya mosali ya eloko. Emballage ekoki kobongwana — tángá ntango nyonso etiketi liboso ya kosalela.",
+    "ariaProductCard": "{{title}}, {{price}}",
+    "customersAlsoBought": "Bakiliya basombaki mpe",
+    "customersAlsoBoughtSubtitle": "Basombaka yango mbala mingi elongwani"
   },
   "basketPanel": {
     "title": "Panier na yo",
@@ -2149,5 +2157,36 @@
       "firstAidAccent": "Pene na ndako.",
       "firstAidDescription": "Tondisa armoire na yo na bapansima, bandaji mpe biloko ya lisalisi ya liboso."
     }
+  },
+  "privacy": {
+    "locationUseTitle": "Ndenge tosalelaka esika na yo",
+    "locationUseBody": "Totangi kaka mboka ya adresse IP na yo mpo na kobongisa mbongo mpe monoko. Tozali kosalela GPS te mpe tozali kolanda esika na yo ya solo te."
+  },
+  "reviews": {
+    "verifiedPurchase": "Kosomba oyo eza vérifié",
+    "empty": "Bakanisi ya bakiliya ezali naino te.",
+    "write": "Kokoma makanisi",
+    "verifiedOnly": "Kaka kosomba oyo eza vérifié ya commande oyo ezwami ekoki kozala na makanisi.",
+    "ratingLabel": "Notation",
+    "titleLabel": "Titre (facultatif)",
+    "bodyLabel": "Makanisi na yo",
+    "submit": "Tinda makanisi",
+    "submitFailed": "Ekoki te kotinda makanisi na yo.",
+    "thanks": "Matondi — makanisi na yo eza na site.",
+    "signInToReview": "Kota mpo na kotika makanisi.",
+    "buyToReview": "Sombra article oyo mpe zela delivery mpo na kotika makanisi vérifié.",
+    "alreadyReviewed": "Osalisi déjà makanisi ya article oyo mpo na kosomba na yo.",
+    "unavailable": "Bakanisi ezali naino te."
+  },
+  "productQa": {
+    "title": "Mituna ya bakiliya",
+    "subtitle": "Tuna mituna na article oyo. Biyano ekomonana ntango équipe eyanoli.",
+    "empty": "Mituna ezali naino te.",
+    "askLabel": "Motuna na yo",
+    "submit": "Tuna motuna",
+    "submitFailed": "Ekoki te kotinda motuna.",
+    "signInToAsk": "Kota mpo na kotuna motuna.",
+    "awaitingAnswer": "Ezali kozela eyano",
+    "unavailable": "Mituna mpe biyano ezali naino te."
   }
 }

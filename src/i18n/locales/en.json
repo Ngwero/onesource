@@ -79,7 +79,8 @@
     "cosmeticsSearchPlaceholder": "Search makeup, serums, sunscreen...",
     "shopPharmacy": "Pharmacy",
     "shopPharmacyHint": "Medicines, care & supplements",
-    "pharmacySearchPlaceholder": "Search medicines, vitamins, first aid..."
+    "pharmacySearchPlaceholder": "Search medicines, vitamins, first aid...",
+    "locationUseHint": "Country is detected from your IP for currency and language defaults — not GPS tracking."
   },
   "nav": {
     "allCategories": "All categories",
@@ -651,7 +652,10 @@
     "adminPhotos": {
       "title": "Featured with photos",
       "subtitle": "Products with photos added in admin"
-    }
+    },
+    "recentlyViewed": "Recently viewed",
+    "buyItAgain": "Buy it again",
+    "relatedProducts": "You may also like"
   },
   "categories": {
     "title": "Shop by category",
@@ -735,6 +739,7 @@
     "primeDelivery": "Prime same-day delivery",
     "inStock": "In stock only",
     "department": "Department",
+    "brand": "Brand",
     "customerReview": "Customer review",
     "starsAndUp": "& up",
     "price": "Price",
@@ -931,6 +936,8 @@
     "brandValue": "One Source",
     "customersAlsoViewed": "Customers who viewed this item also viewed",
     "customersAlsoViewedSubtitle": "Popular picks from across the store",
+    "customersAlsoBought": "Customers also bought",
+    "customersAlsoBoughtSubtitle": "Frequently purchased together",
     "relatedProducts": "Related products",
     "relatedProductsSubtitle": "More fresh picks you might like",
     "viewAllInCategory": "View all in {{category}}",
@@ -1014,7 +1021,8 @@
       "measurements": "Measurements",
       "warranty": "Warranty and feedback",
       "specifications": "Product specifications"
-    }
+    },
+    "ariaProductCard": "{{title}}, {{price}}"
   },
   "basketPanel": {
     "title": "Your basket",
@@ -1393,5 +1401,36 @@
       "firstAidAccent": "Ready at home.",
       "firstAidDescription": "Stock your home care cupboard with plasters, dressings and first aid essentials."
     }
+  },
+  "privacy": {
+    "locationUseTitle": "How we use your location",
+    "locationUseBody": "We only look up the country of your IP address to suggest currency and language defaults. We do not use GPS, do not ask for continuous location permission, and do not track your precise position."
+  },
+  "reviews": {
+    "verifiedPurchase": "Verified purchase",
+    "empty": "No customer reviews yet.",
+    "write": "Write a review",
+    "verifiedOnly": "Only verified purchases from a delivered order can be reviewed.",
+    "ratingLabel": "Rating",
+    "titleLabel": "Title (optional)",
+    "bodyLabel": "Your review",
+    "submit": "Submit review",
+    "submitFailed": "Could not submit your review.",
+    "thanks": "Thank you — your review is live.",
+    "signInToReview": "Sign in to leave a review.",
+    "buyToReview": "Buy this item and wait until delivery to leave a verified review.",
+    "alreadyReviewed": "You have already reviewed this product for your purchase.",
+    "unavailable": "Reviews are not available yet."
+  },
+  "productQa": {
+    "title": "Customer questions",
+    "subtitle": "Ask about this product. Answers appear when our team responds.",
+    "empty": "No questions yet.",
+    "askLabel": "Your question",
+    "submit": "Ask question",
+    "submitFailed": "Could not submit your question.",
+    "signInToAsk": "Sign in to ask a question.",
+    "awaitingAnswer": "Awaiting an answer",
+    "unavailable": "Product Q&A is not enabled yet."
   }
 }

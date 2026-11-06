@@ -79,7 +79,8 @@
     "cosmeticsSearchPlaceholder": "Shakisha ibyo kwisiga, serumu, amavuta arinda izuba...",
     "shopPharmacy": "Farumasi",
     "shopPharmacyHint": "Imiti, intungamubiri n'ubuvuzi",
-    "pharmacySearchPlaceholder": "Shakisha imiti, vitamini, ubuvuzi bw'ibanze..."
+    "pharmacySearchPlaceholder": "Shakisha imiti, vitamini, ubuvuzi bw'ibanze...",
+    "locationUseHint": "Igihugu kivanwa ku IP yawe ku ifaranga n’ururimi — si GPS."
   },
   "nav": {
     "allCategories": "Ibyiciro byose",
@@ -638,7 +639,10 @@
     "adminPhotos": {
       "title": "Byatoranyijwe hamwe n'amafoto",
       "subtitle": "Ibicuruzwa bifite amafoto yongewe mu buyobozi"
-    }
+    },
+    "recentlyViewed": "Ibyo wabonye vuba",
+    "relatedProducts": "Washobora kunkunda na",
+    "buyItAgain": "Gura nanone"
   },
   "categories": {
     "title": "Gura ukurikije icyiciro",
@@ -730,7 +734,8 @@
     "priceOver": "{{price}} n'hejuru",
     "deals": "Ibyiza",
     "onSale": "Mu kugurisha",
-    "noMatches": "Nta gicuruzwa gihura n'aya mashyusho. Gerageza gusiba amwe."
+    "noMatches": "Nta gicuruzwa gihura n'aya mashyusho. Gerageza gusiba amwe.",
+    "brand": "Ikirannga"
   },
   "products": {
     "delivery": {
@@ -1778,7 +1783,10 @@
       "care": "Amabwiriza yo kwita ku gicuruzwa"
     },
     "safetyNote": "Buri gihe soma ikirango cy'igicuruzwa mbere yo kugikoresha. Twandikire niba ukeneye amakuru arambuye ku bitera aleruji cyangwa ku mikoreshereze itekanye.",
-    "safetyNoteManufacturer": "Amakuru yatanzwe n'uwakoze igicuruzwa. Ipaki ishobora guhinduka — buri gihe soma ikirango mbere yo gukoresha."
+    "safetyNoteManufacturer": "Amakuru yatanzwe n'uwakoze igicuruzwa. Ipaki ishobora guhinduka — buri gihe soma ikirango mbere yo gukoresha.",
+    "ariaProductCard": "{{title}}, {{price}}",
+    "customersAlsoBought": "Abakiriya nabo baguze",
+    "customersAlsoBoughtSubtitle": "Bikunze kugurwa hamwe"
   },
   "basketPanel": {
     "title": "Agafuka kawe",
@@ -2149,5 +2157,36 @@
       "firstAidAccent": "Biri hafi mu rugo.",
       "firstAidDescription": "Uzuza akabati k’ubutabazi mu rugo n’ibipfuko by’ibikomere n’ibindi bikoresho by’ubutabazi bw’ibanze."
     }
+  },
+  "privacy": {
+    "locationUseTitle": "Uko dukoresha aho uri",
+    "locationUseBody": "Dureba gusa igihugu cy’adresse yawe ya IP kugira ngo dusabe ifaranga n’ururimi. Ntidukoresha GPS kandi ntidukurikirana aho uri neza."
+  },
+  "reviews": {
+    "verifiedPurchase": "Kugura byemejwe",
+    "empty": "Nta subiramo ry’abakiriya rihari.",
+    "write": "Andika isubiramo",
+    "verifiedOnly": "Gusa ibyo waguze byemejwe ku gahunda yageze gusa byemera isubiramo.",
+    "ratingLabel": "Amanota",
+    "titleLabel": "Umutwe (si ngombwa)",
+    "bodyLabel": "Isubiramo ryawe",
+    "submit": "Ohereza isubiramo",
+    "submitFailed": "Ntibishoboye kohereza isubiramo.",
+    "thanks": "Murakoze — isubiramo ryawe riratangajwe.",
+    "signInToReview": "Injira kugira ngo wandike isubiramo.",
+    "buyToReview": "Gura iki gicuruzwa uhaguruke kugeza cyageze kugira ngo wandike isubiramo ryemewe.",
+    "alreadyReviewed": "Wamaze gusubiramo iki gicuruzwa ku byo waguze.",
+    "unavailable": "Isubiramo ntirihari."
+  },
+  "productQa": {
+    "title": "Ibibazo by’abakiriya",
+    "subtitle": "Baza ikibazo kuri iki gicuruzwa. Ibisubizo bigaragara itsinda risubije.",
+    "empty": "Nta bibazo bihari.",
+    "askLabel": "Ikibazo cyawe",
+    "submit": "Baza ikibazo",
+    "submitFailed": "Ntibishoboye kohereza ikibazo.",
+    "signInToAsk": "Injira kugira ngo ubaze ikibazo.",
+    "awaitingAnswer": "Bitegereje igisubizo",
+    "unavailable": "Ibibazo n’ibisubizo ntibiriho."
   }
 }

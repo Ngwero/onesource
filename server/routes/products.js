@@ -924,6 +924,35 @@ router.get("/titles", async (req, res) => {
   }
 });
 
+/** "Buy it again" from the signed-in user's delivered order history. */
+router.get("/buy-again", async (req, res) => {
+  try {
+    if (!req.auth?.id) {
+      return res.status(401).json({ error: "Sign in to see buy-it-again" });
+    }
+    const { buyAgainProductIds } = await import("../lib/recommendationsService.js");
+    const db = requireSupabase();
+    const ids = await buyAgainProductIds(db, req.auth.id, {
+      limit: Number(req.query.limit) || 16,
+    });
+    if (!ids.length) return res.json({ products: [] });
+    const { data, error } = await db.from("products").select("*").in("id", ids);
+    if (error) throw error;
+    const byId = new Map((data ?? []).map((row) => [row.id, row]));
+    const products = (
+      await enrichProductsWithSuppliers(
+        db,
+        ids.map((id) => byId.get(id)).filter(Boolean).map(rowToProduct),
+        { admin: false }
+      )
+    ).filter((p) => p.inStock !== false);
+    res.set("Cache-Control", "private, max-age=60");
+    res.json({ products });
+  } catch (e) {
+    res.status(500).json({ error: dbErrorMessage(e) });
+  }
+});
+
 /**
  * Cosmetics ids embed the aisle; when a product moves aisle (e.g. hair-baby-more →
  * fragrance) old links, carts and lists still carry the old id. Look up the same
@@ -937,6 +966,118 @@ async function findMovedCosmeticsProduct(db, id) {
   if (error) throw error;
   return (data ?? []).find((r) => productIdWithoutAisle("cosmetics", r.id) === sourceId) ?? null;
 }
+
+router.get("/:id/reviews", async (req, res) => {
+  try {
+    const { listApprovedReviews } = await import("../lib/reviewsService.js");
+    const reviews = await listApprovedReviews(requireSupabase(), req.params.id, {
+      limit: Number(req.query.limit) || 20,
+    });
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    res.json({ reviews });
+  } catch (e) {
+    res.status(500).json({ error: dbErrorMessage(e) });
+  }
+});
+
+router.get("/:id/reviews/eligibility", async (req, res) => {
+  try {
+    if (!req.auth?.id) {
+      return res.status(401).json({ eligible: false, reason: "sign_in", orderId: null });
+    }
+    const { getReviewEligibility } = await import("../lib/reviewsService.js");
+    const eligibility = await getReviewEligibility(
+      requireSupabase(),
+      req.params.id,
+      req.auth.id
+    );
+    res.set("Cache-Control", "private, no-store");
+    res.json(eligibility);
+  } catch (e) {
+    res.status(500).json({ error: dbErrorMessage(e) });
+  }
+});
+
+router.post("/:id/reviews", async (req, res) => {
+  try {
+    if (!req.auth?.id) {
+      return res.status(401).json({ error: "Sign in to leave a review" });
+    }
+    const { createVerifiedReview } = await import("../lib/reviewsService.js");
+    const result = await createVerifiedReview(requireSupabase(), {
+      productId: req.params.id,
+      orderId: req.body?.orderId ?? req.body?.order_id,
+      userId: req.auth.id,
+      rating: req.body?.rating,
+      title: req.body?.title,
+      body: req.body?.body ?? req.body?.text,
+    });
+    if (result.error) {
+      return res.status(result.status || 400).json({ error: result.error });
+    }
+    res.status(201).json({ review: result.review });
+  } catch (e) {
+    res.status(500).json({ error: dbErrorMessage(e) });
+  }
+});
+
+router.get("/:id/also-bought", async (req, res) => {
+  try {
+    const { alsoBoughtProductIds } = await import("../lib/recommendationsService.js");
+    const db = requireSupabase();
+    const ids = await alsoBoughtProductIds(db, req.params.id, {
+      limit: Number(req.query.limit) || 12,
+    });
+    if (!ids.length) return res.json({ products: [] });
+    const { data, error } = await db.from("products").select("*").in("id", ids);
+    if (error) throw error;
+    const byId = new Map((data ?? []).map((row) => [row.id, row]));
+    const products = (
+      await enrichProductsWithSuppliers(
+        db,
+        ids.map((id) => byId.get(id)).filter(Boolean).map(rowToProduct),
+        { admin: false }
+      )
+    ).filter((p) => p.inStock !== false);
+    res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=600");
+    res.json({ products });
+  } catch (e) {
+    res.status(500).json({ error: dbErrorMessage(e) });
+  }
+});
+
+router.get("/:id/questions", async (req, res) => {
+  try {
+    const { listProductQuestions } = await import("../lib/productQaService.js");
+    const questions = await listProductQuestions(requireSupabase(), req.params.id, {
+      limit: Number(req.query.limit) || 20,
+    });
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    res.json({ questions });
+  } catch (e) {
+    res.status(500).json({ error: dbErrorMessage(e) });
+  }
+});
+
+router.post("/:id/questions", async (req, res) => {
+  try {
+    if (!req.auth?.id) {
+      return res.status(401).json({ error: "Sign in to ask a question" });
+    }
+    const { askProductQuestion } = await import("../lib/productQaService.js");
+    const result = await askProductQuestion(requireSupabase(), {
+      productId: req.params.id,
+      userId: req.auth.id,
+      question: req.body?.question ?? req.body?.text,
+    });
+    if (result.error) {
+      return res.status(result.status || 400).json({ error: result.error });
+    }
+    res.status(201).json({ question: result.question });
+  } catch (e) {
+    res.status(500).json({ error: dbErrorMessage(e) });
+  }
+});
 
 router.get("/:id", async (req, res) => {
   try {

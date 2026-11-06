@@ -394,11 +394,53 @@ export async function fetchKitchenCollage(): Promise<KitchenCollage> {
   return data.collage as KitchenCollage;
 }
 
-export async function createOrder(payload: CreateOrderPayload): Promise<Order> {
-  const res = await fetch(`${API_BASE}/orders`, {
+function newIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `ord-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export type CheckoutReservation = {
+  reservationId: string;
+  expiresAt: string;
+  expiresInMs: number;
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  currency: string;
+};
+
+/** Hold catalogue stock for ~10 minutes while the guest finishes checkout. */
+export async function reserveCheckoutStock(
+  items: { productId: string; quantity: number }[]
+): Promise<CheckoutReservation> {
+  const res = await fetch(`${API_BASE}/orders/reserve`, {
     method: "POST",
     headers: await orderHeaders(),
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ items }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || i18n.t("errors.placeOrderFailed"));
+  return data as CheckoutReservation;
+}
+
+export async function releaseCheckoutReservation(reservationId: string): Promise<void> {
+  if (!reservationId) return;
+  await fetch(`${API_BASE}/orders/reserve/${encodeURIComponent(reservationId)}`, {
+    method: "DELETE",
+    headers: await orderHeaders(),
+  }).catch(() => undefined);
+}
+
+export async function createOrder(payload: CreateOrderPayload): Promise<Order> {
+  const idempotencyKey = payload.idempotencyKey || newIdempotencyKey();
+  const headers = await orderHeaders();
+  headers["Idempotency-Key"] = idempotencyKey;
+  const res = await fetch(`${API_BASE}/orders`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ ...payload, idempotencyKey }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || i18n.t("errors.placeOrderFailed"));
@@ -597,4 +639,113 @@ export async function checkApiHealth(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export type ProductReview = {
+  id: string;
+  rating: number;
+  title?: string | null;
+  body: string;
+  verified_purchase?: boolean;
+  created_at?: string;
+};
+
+export type ReviewEligibility = {
+  eligible: boolean;
+  reason: string | null;
+  orderId: string | null;
+};
+
+export type ProductQuestion = {
+  id: string;
+  question: string;
+  answer?: string | null;
+  answered_at?: string | null;
+  created_at?: string;
+};
+
+async function authHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (isSupabaseConfigured) {
+    const {
+      data: { session },
+    } = await getSupabase().auth.getSession();
+    if (session) headers.Authorization = `Bearer ${session.access_token}`;
+  }
+  return headers;
+}
+
+export async function fetchProductReviews(productId: string): Promise<ProductReview[]> {
+  const res = await fetch(`${API_BASE}/products/${encodeURIComponent(productId)}/reviews`);
+  if (!res.ok) return [];
+  const data = await res.json().catch(() => ({}));
+  return Array.isArray(data.reviews) ? data.reviews : [];
+}
+
+export async function fetchReviewEligibility(productId: string): Promise<ReviewEligibility> {
+  const res = await fetch(
+    `${API_BASE}/products/${encodeURIComponent(productId)}/reviews/eligibility`,
+    { headers: await authHeaders() }
+  );
+  if (res.status === 401) {
+    return { eligible: false, reason: "sign_in", orderId: null };
+  }
+  if (!res.ok) {
+    return { eligible: false, reason: "unavailable", orderId: null };
+  }
+  const data = await res.json();
+  return {
+    eligible: Boolean(data.eligible),
+    reason: data.reason ?? null,
+    orderId: data.orderId ?? data.order_id ?? null,
+  };
+}
+
+export async function submitProductReview(
+  productId: string,
+  payload: { orderId: string; rating: number; title?: string; body: string }
+): Promise<ProductReview> {
+  const res = await fetch(`${API_BASE}/products/${encodeURIComponent(productId)}/reviews`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data.error as string) || i18n.t("reviews.submitFailed"));
+  return data.review as ProductReview;
+}
+
+export async function fetchAlsoBoughtProducts(productId: string): Promise<Product[]> {
+  const res = await fetch(`${API_BASE}/products/${encodeURIComponent(productId)}/also-bought`);
+  if (!res.ok) return [];
+  const data = await res.json().catch(() => ({}));
+  return Array.isArray(data.products) ? data.products : [];
+}
+
+export async function fetchBuyAgainProducts(): Promise<Product[]> {
+  const res = await fetch(`${API_BASE}/products/buy-again`, { headers: await authHeaders() });
+  if (!res.ok) return [];
+  const data = await res.json().catch(() => ({}));
+  return Array.isArray(data.products) ? data.products : [];
+}
+
+export async function fetchProductQuestions(productId: string): Promise<ProductQuestion[]> {
+  const res = await fetch(`${API_BASE}/products/${encodeURIComponent(productId)}/questions`);
+  if (!res.ok) return [];
+  const data = await res.json().catch(() => ({}));
+  return Array.isArray(data.questions) ? data.questions : [];
+}
+
+export async function askProductQuestion(
+  productId: string,
+  question: string
+): Promise<ProductQuestion> {
+  const res = await fetch(`${API_BASE}/products/${encodeURIComponent(productId)}/questions`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify({ question }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data.error as string) || i18n.t("productQa.submitFailed"));
+  return data.question as ProductQuestion;
 }

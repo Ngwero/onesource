@@ -6,6 +6,7 @@ import {
   suggestRelatedTerms,
   facetCount,
   countByCategory,
+  countByBrand,
   type ShopFilters,
   DEFAULT_SHOP_FILTERS,
   type PriceRangeId,
@@ -27,6 +28,7 @@ type Props = {
 
 function buildFacetCounts(products: Product[]) {
   const categories = countByCategory(products);
+  const brands = countByBrand(products);
   const prices = {
     "under-15k": facetCount(products, (p) => p.price < 15000),
     "15k-50k": facetCount(products, (p) => p.price >= 15000 && p.price < 50000),
@@ -42,6 +44,7 @@ function buildFacetCounts(products: Product[]) {
     rating3: facetCount(products, (p) => p.rating >= 3),
     rating2: facetCount(products, (p) => p.rating >= 2),
     categories,
+    brands,
     prices,
   };
 }

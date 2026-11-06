@@ -27,8 +27,9 @@ import '../widgets/loading_view.dart';
 import '../widgets/product_card_details.dart';
 import '../widgets/product_image_zoom.dart';
 import '../widgets/product_recommendation_row.dart';
+import '../widgets/product_reviews_panel.dart';
 import '../widgets/quantity_stepper.dart';
-import '../widgets/rating_stars.dart';
+import '../services/api_client.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({super.key, required this.productId});
@@ -42,6 +43,7 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with SingleTickerProviderStateMixin {
   int _qty = 1;
   late final TabController _tabs;
+  List<Product> _alsoBought = const [];
 
   @override
   void initState() {
@@ -50,7 +52,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
     _tabs.addListener(() => setState(() {}));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(searchCatalogProvider(_shop).future);
+      _loadAlsoBought();
     });
+  }
+
+  Future<void> _loadAlsoBought() async {
+    final products = await apiClientProvider.fetchAlsoBought(widget.productId);
+    if (!mounted) return;
+    setState(() => _alsoBought = products);
   }
 
   bool _recorded = false;
@@ -270,6 +279,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         title: s.get('product.customersAlsoViewed'),
                         subtitle: s.get('product.customersAlsoViewedSubtitle'),
                         products: alsoLike,
+                        viewAllLabel: s.get('common.browseAll'),
+                        onViewAll: () => context.go(
+                          cosmetics ? '/cosmetics/shop' : kitchen ? '/kitchen/shop' : '/shop',
+                        ),
+                        onAdd: addToCart,
+                      ),
+                    ],
+                    if (_alsoBought.isNotEmpty) ...[
+                      const SizedBox(height: 28),
+                      ProductRecommendationRow(
+                        title: s.get('product.customersAlsoBought'),
+                        subtitle: s.get('product.customersAlsoBoughtSubtitle'),
+                        products: _alsoBought,
                         viewAllLabel: s.get('common.browseAll'),
                         onViewAll: () => context.go(
                           cosmetics ? '/cosmetics/shop' : kitchen ? '/kitchen/shop' : '/shop',
@@ -574,8 +596,14 @@ class _HighlightStats extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.tr;
     final items = <({String value, String label})>[
-      (value: product.rating.toStringAsFixed(1), label: s.get('app.product.rating')),
-      (value: '${product.reviewCount}', label: s.get('common.reviews')),
+      (
+        value: product.hasVerifiedRating ? product.rating.toStringAsFixed(1) : '—',
+        label: s.get('app.product.rating'),
+      ),
+      (
+        value: product.hasVerifiedRating ? '${product.reviewCount}' : '0',
+        label: s.get('common.reviews'),
+      ),
       (
         value: product.stockQuantity != null ? '${product.stockQuantity}' : '—',
         label: s.get('app.product.stock'),
@@ -701,19 +729,7 @@ class _TabContent extends StatelessWidget {
               ),
             ],
           ),
-        2 => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RatingStars(rating: product.rating, reviewCount: product.reviewCount),
-              const SizedBox(height: 12),
-              Text(
-                product.reviewCount > 0
-                    ? s.t('app.product.ratedBy', {'count': product.reviewCount})
-                    : s.get('app.product.noReviews'),
-                style: const TextStyle(color: AppColors.textMuted, height: 1.5, fontSize: 14),
-              ),
-            ],
-          ),
+        2 => ProductReviewsPanel(product: product),
         _ => _DetailsTab(product: product),
       },
     );

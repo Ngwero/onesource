@@ -37,6 +37,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   _Payment _payment = _Payment.cash;
   bool _submitting = false;
   String? _error;
+  String? _reservationId;
+  late final String _idempotencyKey =
+      'chk-${DateTime.now().microsecondsSinceEpoch}';
 
   @override
   void initState() {
@@ -48,11 +51,40 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       final meta = user?.userMetadata?['full_name'];
       if (meta is String) _name.text = meta;
       if (mounted) _city.text = context.tr.get('checkout.defaultCity');
+      _startReservation();
     });
+  }
+
+  Future<void> _startReservation() async {
+    final items = ref
+        .read(cartProvider)
+        .where((i) => !isExportProduct(i.product))
+        .toList();
+    if (items.isEmpty) return;
+    try {
+      final hold = await ref.read(checkoutApiClientProvider).reserveCheckout([
+        for (final i in items) (productId: i.product.id, quantity: i.quantity),
+      ]);
+      if (!mounted) {
+        final id = hold['reservationId'] as String?;
+        if (id != null) {
+          await ref.read(checkoutApiClientProvider).releaseCheckoutReservation(id);
+        }
+        return;
+      }
+      setState(() => _reservationId = hold['reservationId'] as String?);
+    } catch (e) {
+      if (mounted) setState(() => _error = formatCheckoutError(e));
+    }
   }
 
   @override
   void dispose() {
+    final id = _reservationId;
+    if (id != null) {
+      // Fire-and-forget; dispose cannot await.
+      apiClientProvider.releaseCheckoutReservation(id);
+    }
     for (final c in [_name, _email, _phone, _address, _address2, _city, _district, _notes]) {
       c.dispose();
     }
@@ -96,6 +128,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         city: _city.text.trim(),
         district: opt(_district),
         notes: notes,
+        reservationId: _reservationId,
+        idempotencyKey: _idempotencyKey,
         subtotal: subtotal,
         deliveryFee: totals.delivery.toDouble(),
         total: totals.total,
@@ -113,6 +147,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       );
 
       final order = await ref.read(checkoutApiClientProvider).placeOrder(payload);
+      _reservationId = null;
       // The cart outlives this route. Complete a successful order even when
       // the shopper has left checkout, without accessing a disposed widget ref.
       if (cart.mounted) {

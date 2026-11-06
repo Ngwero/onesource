@@ -27,9 +27,12 @@ class CartLineItem extends ConsumerWidget {
     final product = item.product;
     final formatPrice = ref.watch(formatPriceProvider);
 
+    final title = context.tr.productTitle(product);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
+      child: Semantics(
+        label: '$title, ${formatPrice(product.price)}, qty ${item.quantity}',
+        child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
         clipBehavior: Clip.antiAlias,
@@ -128,6 +131,7 @@ class CartLineItem extends ConsumerWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -26,6 +26,54 @@ const phraseKey = (value) => normalizedWords(value).join(' ');
 
 export function searchAlternatives(query) { return taxonomy.collections[phraseKey(query)] ?? [query]; }
 
+/** Single-edit typo suggestions against known correction targets / keys. */
+function editDistanceOne(a, b) {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  if (a === b) return true;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i += 1;
+      j += 1;
+      continue;
+    }
+    edits += 1;
+    if (edits > 1) return false;
+    if (a.length > b.length) i += 1;
+    else if (a.length < b.length) j += 1;
+    else {
+      i += 1;
+      j += 1;
+    }
+  }
+  edits += a.length - i + (b.length - j);
+  return edits <= 1;
+}
+
+const typoDictionary = [
+  ...Object.keys(taxonomy.corrections),
+  ...Object.values(taxonomy.corrections),
+  ...Object.keys(taxonomy.plurals),
+  ...Object.values(taxonomy.plurals),
+];
+
+/** When a token is unknown, suggest close corrections (typo tolerance). */
+export function typoSuggestions(token) {
+  const word = singular(String(token || "").toLowerCase());
+  if (!word || word.length < 4) return [];
+  if (taxonomy.corrections[word]) return [taxonomy.corrections[word]];
+  const hits = [];
+  for (const candidate of typoDictionary) {
+    if (editDistanceOne(word, candidate)) {
+      hits.push(taxonomy.corrections[candidate] ?? singular(candidate));
+    }
+    if (hits.length >= 4) break;
+  }
+  return [...new Set(hits)].filter((hit) => hit && hit !== word);
+}
+
 export function queryVariants(query) {
   const key = phraseKey(query);
   const aliases = Object.entries(taxonomy.plurals).filter(([, value]) => value === key).map(([word]) => word);
@@ -113,7 +161,8 @@ function evaluate(product, query) {
     ...tagsFor(title, shop), ...(product.searchTags ?? [])];
   const words = [...title, '|', ...fields.filter(Boolean).flatMap((field) => [...normalizedWords(field), '|'])];
   for (const term of terms) {
-    if (!includesPhrase(words, term.words)) return -1;
+    const typoWords = term.words.map((word) => typoSuggestions(word)[0] ?? word);
+    if (!includesPhrase(words, term.words) && !includesPhrase(words, typoWords)) return -1;
     const excluded = term.groups.some((group) => (!shop || group.shop === shop) &&
       group.excludeWords.some((excludedPhrase) => includesPhrase(title, excludedPhrase)) &&
       !group.excludeWords.some((excludedPhrase) => includesPhrase(title, excludedPhrase) &&

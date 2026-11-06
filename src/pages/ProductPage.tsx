@@ -7,6 +7,7 @@ import { useAisleNeighbours } from "../hooks/useAisleNeighbours";
 import { StarRating } from "../components/StarRating";
 import { ProductRelatedSection } from "../components/product/ProductRelatedSection";
 import { ProductCustomersAlsoViewedSection } from "../components/product/ProductCustomersAlsoViewedSection";
+import { ProductAlsoBoughtSection } from "../components/product/ProductAlsoBoughtSection";
 import { pickCustomersAlsoViewed } from "../utils/productRecommendations";
 import { PageContainer } from "../components/PageContainer";
 import { NotFoundPage } from "./NotFoundPage";
@@ -21,6 +22,8 @@ import {
   ProductDescriptionSection,
 } from "../components/product/ProductDetailsBlock";
 import { ProductReviewsSection } from "../components/product/ProductReviewsSection";
+import { ProductQaSection } from "../components/product/ProductQaSection";
+import { getVerifiedRating } from "../utils/productRating";
 import { useSavedList } from "../context/SavedListContext";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
@@ -339,13 +342,27 @@ function ProductPageContent() {
               <h1 className="pdp-title">{localized.localizedTitle}</h1>
 
               <div className="pdp-rating-row">
-                <StarRating rating={product.rating} size="md" variant="brand" />
-                <Link to="#pdp-reviews" className="pdp-ratings-link">
-                  {product.reviewCount.toLocaleString()} {t("product.ratingsShort")}
-                </Link>
-                {product.rating >= 4 && product.reviewCount > 50 && (
-                  <span className="pdp-choice-badge">{t("product.amazonChoice")}</span>
-                )}
+                {(() => {
+                  const verified = getVerifiedRating(product);
+                  if (!verified) {
+                    return (
+                      <Link to="#pdp-reviews" className="pdp-ratings-link">
+                        {t("reviews.empty")}
+                      </Link>
+                    );
+                  }
+                  return (
+                    <>
+                      <StarRating rating={verified.rating} size="md" variant="brand" />
+                      <Link to="#pdp-reviews" className="pdp-ratings-link">
+                        {verified.count.toLocaleString()} {t("product.ratingsShort")}
+                      </Link>
+                      {verified.rating >= 4 && verified.count > 50 && (
+                        <span className="pdp-choice-badge">{t("product.amazonChoice")}</span>
+                      )}
+                    </>
+                  );
+                })()}
                 {product.prime && (
                   <span className="pdp-prime-inline">
                     <span className="font-bold text-prime">{t("common.prime")}</span>
@@ -418,6 +435,7 @@ function ProductPageContent() {
             product={product}
             customersSay={pageContent.customersSay}
           />
+          <ProductQaSection productId={product.id} />
         </div>
 
       </PageContainer>
@@ -429,6 +447,7 @@ function ProductPageContent() {
       />
 
       <ProductCustomersAlsoViewedSection products={alsoViewed} />
+      <ProductAlsoBoughtSection productId={product.id} />
 
       {!cosmeticsPdp && (
         <ProductMobileBuyBar

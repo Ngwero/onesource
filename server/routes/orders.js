@@ -1,8 +1,24 @@
 import { Router } from "express";
 import { requireSupabase } from "../lib/supabase.js";
 import { hasPublishedColumn } from "../lib/productColumns.js";
-import { parseOrderRequest, priceOrderFromCatalogue } from "../lib/orderPricing.js";
-import { reserveStock, releaseStock } from "../lib/stockReservation.js";
+import {
+  parseOrderRequest,
+  priceOrderFromCatalogue,
+  ORDER_CURRENCY,
+} from "../lib/orderPricing.js";
+import {
+  holdCheckoutStock,
+  releaseCheckoutHold,
+  claimStockForOrder,
+  markHoldConverted,
+  rollbackClaimedStock,
+} from "../lib/stockReservation.js";
+import {
+  readIdempotencyKey,
+  orderRequestFingerprint,
+  lookupIdempotency,
+  persistIdempotency,
+} from "../lib/idempotency.js";
 import {
   sendOrderConfirmedEmail,
   sendOrderDispatchedEmail,
@@ -100,12 +116,78 @@ export function createOrdersRouter({ getDb = requireSupabase } = {}) {
       subtotal: priced.subtotal,
       delivery_fee: priced.delivery_fee,
       total: priced.total,
-      currency: "UGX",
+      currency: priced.currency || ORDER_CURRENCY,
     };
   }
 
+  /** Start checkout: hold stock for ~10 minutes. */
+  router.post("/reserve", async (req, res) => {
+    try {
+      const items = Array.isArray(req.body?.items) ? req.body.items : [];
+      const lines = items
+        .map((row) => ({
+          product_id: String(row.productId ?? row.product_id ?? "").trim(),
+          quantity: Math.floor(Number(row.quantity)),
+        }))
+        .filter((row) => row.product_id && row.quantity > 0);
+      if (!lines.length) {
+        return res.status(400).json({ error: "items required" });
+      }
+      const db = getDb();
+      const rows = await loadCatalogueRows(
+        db,
+        lines.map((line) => line.product_id)
+      );
+      const priced = priceOrderFromCatalogue(
+        lines.map((line) => ({
+          productId: line.product_id,
+          quantity: line.quantity,
+        })),
+        rows
+      );
+      if (priced.error) {
+        return res.status(priced.status || 400).json({
+          error: priced.error,
+          ...(priced.productId ? { productId: priced.productId } : {}),
+        });
+      }
+      const hold = await holdCheckoutStock(db, priced.items);
+      if (!hold.ok) {
+        return res.status(409).json({
+          error: hold.error,
+          ...(hold.productId ? { productId: hold.productId } : {}),
+        });
+      }
+      res.status(201).json({
+        reservationId: hold.reservationId,
+        expiresAt: hold.expiresAt,
+        expiresInMs: hold.expiresInMs,
+        subtotal: priced.subtotal,
+        deliveryFee: priced.delivery_fee,
+        total: priced.total,
+        currency: priced.currency,
+        items: priced.items,
+      });
+    } catch (e) {
+      console.error("[orders] POST /reserve", e.message);
+      res.status(500).json({ error: e.message || "Failed to reserve stock" });
+    }
+  });
+
+  /** Abandon checkout: release a hold early. */
+  router.delete("/reserve/:id", async (req, res) => {
+    try {
+      const db = getDb();
+      await releaseCheckoutHold(db, req.params.id);
+      res.json({ ok: true });
+    } catch (e) {
+      console.error("[orders] DELETE /reserve", e.message);
+      res.status(500).json({ error: e.message || "Failed to release reservation" });
+    }
+  });
+
   router.post("/", async (req, res) => {
-    let reserved = null;
+    let claim = null;
     let db;
     try {
       const parsed = parseOrderRequest(req.body);
@@ -114,7 +196,22 @@ export function createOrdersRouter({ getDb = requireSupabase } = {}) {
       }
 
       parsed.contact.user_id = req.auth?.id || null;
+      const idempotencyKey = readIdempotencyKey(req);
+      const fingerprint = orderRequestFingerprint(parsed);
       db = getDb();
+
+      if (idempotencyKey) {
+        const prior = await lookupIdempotency(db, idempotencyKey);
+        if (prior) {
+          if (prior.fingerprint !== fingerprint) {
+            return res.status(409).json({
+              error: "Idempotency key was already used with a different request",
+            });
+          }
+          return res.status(prior.responseStatus || 201).json(prior.responseBody);
+        }
+      }
+
       const rows = await loadCatalogueRows(
         db,
         parsed.lines.map((line) => line.productId)
@@ -127,11 +224,14 @@ export function createOrdersRouter({ getDb = requireSupabase } = {}) {
         });
       }
 
-      reserved = await reserveStock(db, priced.items);
-      if (!reserved.ok) {
-        return res.status(409).json({
-          error: reserved.error,
-          ...(reserved.productId ? { productId: reserved.productId } : {}),
+      const reservationId =
+        String(req.body?.reservationId ?? req.body?.reservation_id ?? "").trim() ||
+        null;
+      claim = await claimStockForOrder(db, priced.items, { reservationId });
+      if (!claim.ok) {
+        return res.status(claim.status || 409).json({
+          error: claim.error,
+          ...(claim.productId ? { productId: claim.productId } : {}),
         });
       }
 
@@ -155,7 +255,11 @@ export function createOrdersRouter({ getDb = requireSupabase } = {}) {
         throw itemsErr;
       }
 
-      reserved = null;
+      if (claim.consumedHold && claim.reservationId) {
+        await markHoldConverted(db, claim.reservationId, order.id);
+      }
+      claim = null;
+
       const { data: fullOrder, error: fetchErr } = await db
         .from("orders")
         .select(ORDER_SELECT)
@@ -170,13 +274,23 @@ export function createOrdersRouter({ getDb = requireSupabase } = {}) {
           .catch((e) => console.error("[orders] placed email failed:", e.message));
       }
 
-      res.status(201).json({
+      const body = {
         order: decorateOrder({ ...order, ...orderRow, order_items: itemRows }),
         ...(!req.auth ? { accessToken: createOrderAccessToken(order.id) } : {}),
-      });
+      };
+      if (idempotencyKey) {
+        await persistIdempotency(db, {
+          key: idempotencyKey,
+          fingerprint,
+          orderId: order.id,
+          responseStatus: 201,
+          responseBody: body,
+        });
+      }
+      res.status(201).json(body);
     } catch (e) {
-      if (reserved?.ok && db) {
-        await releaseStock(db, reserved.reserved, { via: reserved.via }).catch((releaseErr) => {
+      if (claim?.ok && db) {
+        await rollbackClaimedStock(db, claim).catch((releaseErr) => {
           console.error("[orders] stock release failed:", releaseErr.message);
         });
       }

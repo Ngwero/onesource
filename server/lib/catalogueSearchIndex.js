@@ -1,4 +1,4 @@
-import { normalizedWords, getProductSearchTags, queryGroups, searchScore, productMatchesSearch, rankSearchResults, searchAlternatives } from '../../shared/productSearch.mjs';
+import { normalizedWords, getProductSearchTags, queryGroups, searchScore, productMatchesSearch, rankSearchResults, searchAlternatives, typoSuggestions } from '../../shared/productSearch.mjs';
 
 /** Compact inverted index. Intersect rare words first, then validate phrases and
  * exclusions using the same matcher as web/mobile. No descriptions/images held here.
@@ -13,6 +13,10 @@ export function createCatalogueSearchIndex(products) {
       postings.get(word).add(index);
     }
   }
+  function resolveTerm(term) {
+    if (postings.has(term)) return [term];
+    return typoSuggestions(term).filter((hint) => postings.has(hint));
+  }
   return {
     size: products.length,
     search(query) {
@@ -23,7 +27,12 @@ export function createCatalogueSearchIndex(products) {
       }
       const terms = [...new Set(queryGroups(query).flatMap(({direct}) => direct.split(' ')))];
       if (!terms.length) return [];
-      const lists = terms.map((term) => postings.get(term));
+      const resolved = terms.map(resolveTerm);
+      if (resolved.some((opts) => !opts.length)) return [];
+      // Prefer exact tokens; otherwise try the first typo suggestion per term.
+      // Score with the original query so ranking matches productMatchesSearch / rankSearchResults.
+      const chosen = resolved.map((opts) => opts[0]);
+      const lists = chosen.map((term) => postings.get(term));
       if (lists.some((list) => !list)) return [];
       lists.sort((a,b) => a.size - b.size);
       return [...lists[0]].filter((index) => lists.every((list) => list.has(index)))
